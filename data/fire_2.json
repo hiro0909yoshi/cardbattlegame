@@ -85,7 +85,7 @@
       "ap": 30,
       "hp": 30,
       "ability": "奮闘・アルカナアーツ",
-      "ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに呪い天駆]",
+      "ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに刻印天駆]",
       "ability_parsed": {
         "keywords": [
           "奮闘",
@@ -120,7 +120,7 @@
       "ap": 30,
       "hp": 60,
       "ability": "堅守・アルカナアーツ",
-      "ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに呪い通行料1/2]",
+      "ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに刻印通行料1/2]",
       "ability_parsed": {
         "keywords": [
           "堅守",
@@ -130,7 +130,7 @@
           {
             "id": "barnacle_mystic_001",
             "name": "通行料半減",
-            "description": "対象敵ドミニオに通行料半減の呪いをかける（3ターン）",
+            "description": "対象敵ドミニオに通行料半減の刻印をかける（3ターン）",
             "spell_id": 9001,
             "cost": 50
           }

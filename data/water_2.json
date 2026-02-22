@@ -55,14 +55,14 @@
       "ap": 20,
       "hp": 40,
       "ability": "堅守・アルカナアーツ",
-      "ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに呪いダイス1～3]",
+      "ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに刻印ダイス1～3]",
       "ability_parsed": {
         "keywords": [
           "堅守",
           "アルカナアーツ"
         ],
         "mystic_art": {
-          "name": "ダイス1～3呪い",
+          "name": "ダイス1～3刻印",
           "cost": 50,
           "spell_id": 9029
         }
@@ -268,7 +268,7 @@
       "ap": 30,
       "hp": 30,
       "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに呪い消沈]",
+      "ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに刻印消沈]",
       "ability_parsed": {
         "keywords": [
           "アルカナアーツ"

@@ -1,924 +1,924 @@
 {
   "cards": [
-	{
-	  "id": 1,
-	  "name": "アームドパラディン",
-	  "dev_name": "アームドパラディン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 200,
-		"lands_required": [
-		  "fire",
+    {
+      "id": 1,
+      "name": "アームドパラディン",
+      "dev_name": "アームドパラディン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 200,
+        "lands_required": [
+          "fire",
           "fire"
-		]
-	  },
-	  "ap": 0,
-	  "hp": 50,
-	  "ability": "AP変動",
-	  "ability_detail": "AP+火地配置数×10；無効化[巻物]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 0,
+      "hp": 50,
+      "ability": "AP変動",
+      "ability_detail": "AP+火地配置数×10；無効化[巻物]",
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "land_count_multiplier",
-			"stat": "ap",
-			"elements": [
-			  "fire",
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "scroll_attack"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "land_count_multiplier",
+            "stat": "ap",
+            "elements": [
+              "fire",
               "earth"
-			],
-			"multiplier": 10,
-			"description": "火と土の土地配置数×10をSTに加算"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 2,
-	  "name": "アモン",
-	  "dev_name": "アモン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 70
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "共鳴・結界・アルカナアーツ",
-	  "ability_detail": "共鳴[地]・AP&HP+20；結界；アルカナアーツ[EP50・対象敵に30ダメージ]",
-	  "ability_parsed": {
-		"keywords": [
-		  "共鳴",
-		  "結界",
+            ],
+            "multiplier": 10,
+            "description": "火と土の土地配置数×10をSTに加算"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "アモン",
+      "dev_name": "アモン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 70
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "共鳴・結界・アルカナアーツ",
+      "ability_detail": "共鳴[地]・AP&HP+20；結界；アルカナアーツ[EP50・対象敵に30ダメージ]",
+      "ability_parsed": {
+        "keywords": [
+          "共鳴",
+          "結界",
           "アルカナアーツ"
-		],
-		"keyword_conditions": {
-		  "共鳴": {
-			"element": "earth",
-			"stat_bonus": {
-			  "ap": 20,
-			  "hp": 20
-			}
-		  }
-		},
-		"mystic_arts": [
-		  {
-			"id": "amon_mystic_001",
-			"name": "バイタリティ",
-			"description": "対象ドミニオに呪い\"暁光\"；カードを1枚引く",
-			"spell_id": 2066,
-			"cost": 50
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 3,
-	  "name": "アングリーモブ",
-	  "dev_name": "アングリーモブ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 50,
-		"lands_required": [
+        ],
+        "keyword_conditions": {
+          "共鳴": {
+            "element": "earth",
+            "stat_bonus": {
+              "ap": 20,
+              "hp": 20
+            }
+          }
+        },
+        "mystic_arts": [
+          {
+            "id": "amon_mystic_001",
+            "name": "バイタリティ",
+            "description": "対象ドミニオに刻印\"暁光\"；カードを1枚引く",
+            "spell_id": 2066,
+            "cost": 50
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "アングリーモブ",
+      "dev_name": "アングリーモブ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 50,
+        "lands_required": [
           "fire"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "Aボタン連打",
-	  "ability_detail": "Aボタン連打でAP上昇"
-	},
-	{
-	  "id": 4,
-	  "name": "ウリエル",
-	  "dev_name": "ウリエル",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 90
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強化・世界消去",
-	  "ability_detail": "強化[呪い付きクリーチャー]；アルカナアーツ[EP50・世界呪いを消す]",
-	  "ability_parsed": {
-		"keywords": [
-		  "強化",
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "Aボタン連打",
+      "ability_detail": "Aボタン連打でAP上昇"
+    },
+    {
+      "id": 4,
+      "name": "ウリエル",
+      "dev_name": "ウリエル",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 90
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "強化・世界消去",
+      "ability_detail": "強化[刻印付きクリーチャー]；アルカナアーツ[EP50・世界刻印を消す]",
+      "ability_parsed": {
+        "keywords": [
+          "強化",
           "アルカナアーツ"
-		],
-		"keyword_conditions": {
-		  "強化": {
-			"condition_type": "has_mark"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "has_mark"
-			  }
-			]
-		  }
-		],
-		"mystic_arts": [
-		  {
-			"name": "世界呪い除去",
-			"cost": 50,
-			"spell_id": 9025
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 5,
-	  "name": "オールドウィロウ",
-	  "dev_name": "オールドウィロウ",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 70,
-		"lands_required": [
-		  "fire",
+        ],
+        "keyword_conditions": {
+          "強化": {
+            "condition_type": "has_mark"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "has_mark"
+              }
+            ]
+          }
+        ],
+        "mystic_arts": [
+          {
+            "name": "世界刻印除去",
+            "cost": 50,
+            "spell_id": 9025
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "オールドウィロウ",
+      "dev_name": "オールドウィロウ",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 70,
+        "lands_required": [
+          "fire",
           "fire"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 20,
-	  "hp": 40,
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 20,
+      "hp": 40,
+      "restrictions": {
+        "cannot_use": [
           "武器,アクセサリ,巻物"
-		]
-	  },
-	  "ability": "堅守",
-	  "ability_detail": "堅守；拘束[火]",
-	  "ability_parsed": {
-		"keywords": [
-		  "堅守",
+        ]
+      },
+      "ability": "堅守",
+      "ability_detail": "堅守；拘束[火]",
+      "ability_parsed": {
+        "keywords": [
+          "堅守",
           "拘束"
-		],
-		"trap_stop": {
-		  "elements": [
+        ],
+        "trap_stop": {
+          "elements": [
             "fire"
-		  ]
-		}
-	  }
-	},
-	{
-	  "id": 6,
-	  "name": "ガスクラウド",
-	  "dev_name": "ガスクラウド",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 45
-	  },
-	  "restrictions": {
-		"cannot_use": [
+          ]
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "ガスクラウド",
+      "dev_name": "ガスクラウド",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 45
+      },
+      "restrictions": {
+        "cannot_use": [
           "防具"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "無効化",
-	  "ability_detail": "無効化[1/2]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "無効化",
+      "ability_detail": "無効化[1/2]",
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "all_attacks",
-			"reduction_rate": 0.5
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 7,
-	  "name": "キメラ",
-	  "dev_name": "キメラ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "all_attacks",
+            "reduction_rate": 0.5
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "キメラ",
+      "dev_name": "キメラ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
           "fire"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 50,
-	  "ability": "先制",
-	  "ability_detail": "先制；周回ごとにAP+10",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30,
+      "hp": 50,
+      "ability": "先制",
+      "ability_detail": "先制；周回ごとにAP+10",
+      "ability_parsed": {
+        "keywords": [
           "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "first_strike"
-		  },
-		  {
-			"effect_type": "per_lap_permanent_bonus",
-			"stat": "ap",
-			"value": 10
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 8,
-	  "name": "キングバラン",
-	  "dev_name": "キングバラン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 100
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ],
+        "effects": [
+          {
+            "effect_type": "first_strike"
+          },
+          {
+            "effect_type": "per_lap_permanent_bonus",
+            "stat": "ap",
+            "value": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "name": "キングバラン",
+      "dev_name": "キングバラン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 100
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 50,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 9,
-	  "name": "グラディエーター",
-	  "dev_name": "グラディエーター",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 75
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物",
+        ]
+      },
+      "ap": 60,
+      "hp": 50,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 9,
+      "name": "グラディエーター",
+      "dev_name": "グラディエーター",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 75
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物",
           "防具"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強化",
-	  "ability_detail": "強化[火水地風]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "強化",
+      "ability_detail": "強化[火水地風]",
+      "ability_parsed": {
+        "keywords": [
           "強化"
-		],
-		"keyword_conditions": {
-		  "強化": {
-			"condition_type": "enemy_is_element",
-			"elements": [
-			  "fire",
-			  "water",
-			  "earth",
+        ],
+        "keyword_conditions": {
+          "強化": {
+            "condition_type": "enemy_is_element",
+            "elements": [
+              "fire",
+              "water",
+              "earth",
               "wind"
-			]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "fire",
-				  "water",
-				  "earth",
+            ]
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "fire",
+                  "water",
+                  "earth",
                   "wind"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 10,
-	  "name": "クリーピングフレイム",
-	  "dev_name": "クリーピングフレイム",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 55
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物",
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "name": "クリーピングフレイム",
+      "dev_name": "クリーピングフレイム",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 55
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物",
           "防具"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 30,
-	  "hp": 50,
-	  "ability": "堅守・アルカナアーツ",
-	  "ability_detail": "堅守；アルカナアーツ[EP30・1マス移動]",
-	  "ability_parsed": {
-		"keywords": [
-		  "堅守",
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 30,
+      "hp": 50,
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；アルカナアーツ[EP30・1マス移動]",
+      "ability_parsed": {
+        "keywords": [
+          "堅守",
           "アルカナアーツ"
-		],
-		"mystic_art": {
-		  "name": "1マス移動",
-		  "cost": 30,
-		  "target_type": "self",
-		  "effects": [
-			{
-			  "effect_type": "move_self",
-			  "steps": 1,
-			  "exclude_enemy_creatures": true
-			}
-		  ]
-		}
-	  }
-	},
-	{
-	  "id": 11,
-	  "name": "ケットシー",
-	  "dev_name": "ケットシー",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 50
-	  },
-	  "restrictions": {
-		"cannot_summon": [
+        ],
+        "mystic_art": {
+          "name": "1マス移動",
+          "cost": 30,
+          "target_type": "self",
+          "effects": [
+            {
+              "effect_type": "move_self",
+              "steps": 1,
+              "exclude_enemy_creatures": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 11,
+      "name": "ケットシー",
+      "dev_name": "ケットシー",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 50
+      },
+      "restrictions": {
+        "cannot_summon": [
           "water"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "無効化・結界",
-	  "ability_detail": "無効化[AP40以上]；結界",
-	  "ability_parsed": {
-		"keywords": [
-		  "無効化",
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "無効化・結界",
+      "ability_detail": "無効化[AP40以上]；結界",
+      "ability_parsed": {
+        "keywords": [
+          "無効化",
           "結界"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "ap_threshold",
-			"threshold": 40
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 12,
-	  "name": "コンジャラー",
-	  "dev_name": "コンジャラー",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 45
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "ap_threshold",
+            "threshold": 40
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "name": "コンジャラー",
+      "dev_name": "コンジャラー",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 45
+      },
+      "restrictions": {
+        "cannot_use": [
           "武器"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "術強化",
-	  "ability_detail": "術強化；アルカナアーツ[EP80・好きな空地にバーアルを召喚し自滅]",
-	  "ability_parsed": {
-		"keywords": [
-		  "術強化",
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "術強化",
+      "ability_detail": "術強化；アルカナアーツ[EP80・好きな空地にバーアルを召喚し自滅]",
+      "ability_parsed": {
+        "keywords": [
+          "術強化",
           "アルカナアーツ"
-		],
-		"keyword_conditions": {
-		  "術強化": {
-			"scroll_type": "base_ap"
-		  }
-		},
-		"mystic_arts": [
-		  {
-			"name": "バーアル召喚",
-			"cost": 80,
-			"spell_id": 9054
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 13,
-	  "name": "サルファバルーン",
-	  "dev_name": "サルファバルーン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 20,
-		"lands_required": [
+        ],
+        "keyword_conditions": {
+          "術強化": {
+            "scroll_type": "base_ap"
+          }
+        },
+        "mystic_arts": [
+          {
+            "name": "バーアル召喚",
+            "cost": 80,
+            "spell_id": 9054
+          }
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "name": "サルファバルーン",
+      "dev_name": "サルファバルーン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 20,
+        "lands_required": [
           "fire"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 10,
-	  "hp": 40,
-	  "ability": "自破壊時HP-40",
-	  "ability_detail": "自破壊時、敵のHP-40",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "damage_enemy",
-			"trigger": "on_death",
-			"target": "enemy",
-			"damage": 40
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 14,
-	  "name": "シールドメイデン",
-	  "dev_name": "シールドメイデン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 80
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "奮闘",
-	  "ability_detail": "奮闘"
-	},
-	{
-	  "id": 15,
-	  "name": "ジェネラルカン",
-	  "dev_name": "ジェネラルカン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 65,
-		"lands_required": [
+        ]
+      },
+      "ap": 10,
+      "hp": 40,
+      "ability": "自破壊時HP-40",
+      "ability_detail": "自破壊時、敵のHP-40",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "damage_enemy",
+            "trigger": "on_death",
+            "target": "enemy",
+            "damage": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "name": "シールドメイデン",
+      "dev_name": "シールドメイデン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 80
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "奮闘",
+      "ability_detail": "奮闘"
+    },
+    {
+      "id": 15,
+      "name": "ジェネラルカン",
+      "dev_name": "ジェネラルカン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 65,
+        "lands_required": [
           "fire"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
           "アクセサリ"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "先制・AP変動",
-	  "ability_detail": "先制；AP+MHP50以上配置数×5",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "先制・AP変動",
+      "ability_detail": "先制；AP+MHP50以上配置数×5",
+      "ability_parsed": {
+        "keywords": [
           "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "conditional_land_count",
-			"stat": "ap",
-			"multiplier": 5,
-			"creature_condition": {
-			  "condition_type": "mhp_above",
-			  "value": 50
-			},
-			"description": "AP+|AP-|AP=MHP50以上配置数×5"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 16,
-	  "name": "シグルド",
-	  "dev_name": "シグルド",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
+        ],
+        "effects": [
+          {
+            "effect_type": "conditional_land_count",
+            "stat": "ap",
+            "multiplier": 5,
+            "creature_condition": {
+              "condition_type": "mhp_above",
+              "value": 50
+            },
+            "description": "AP+|AP-|AP=MHP50以上配置数×5"
+          }
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "name": "シグルド",
+      "dev_name": "シグルド",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
           "fire"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "即死・無効化",
-	  "ability_detail": "即死[AP50以上・60%]；無効化[MHP50以上]",
-	  "ability_parsed": {
-		"keywords": [
-		  "即死",
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "即死・無効化",
+      "ability_detail": "即死[AP50以上・60%]；無効化[MHP50以上]",
+      "ability_parsed": {
+        "keywords": [
+          "即死",
           "無効化"
-		],
-		"keyword_conditions": {
-		  "即死": {
-			"condition_type": "defender_ap_check",
-			"operator": ">=",
-			"value": 50,
-			"probability": 60
-		  },
-		  "無効化": {
-			"nullify_type": "mhp_above",
-			"value": 50
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 17,
-	  "name": "シャラザード",
-	  "dev_name": "シャラザード",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 50
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "加勢・アルカナアーツ",
-	  "ability_detail": "加勢[火地]；アルカナアーツ[EP30・全セブターの呪いを消す]",
-	  "ability_parsed": {
-		"keywords": [
-		  "加勢",
+        ],
+        "keyword_conditions": {
+          "即死": {
+            "condition_type": "defender_ap_check",
+            "operator": ">=",
+            "value": 50,
+            "probability": 60
+          },
+          "無効化": {
+            "nullify_type": "mhp_above",
+            "value": 50
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "name": "シャラザード",
+      "dev_name": "シャラザード",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 50
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "加勢・アルカナアーツ",
+      "ability_detail": "加勢[火地]；アルカナアーツ[EP30・全セブターの刻印を消す]",
+      "ability_parsed": {
+        "keywords": [
+          "加勢",
           "アルカナアーツ"
-		],
-		"keyword_conditions": {
-		  "加勢": {
-			"target_elements": [
-			  "fire",
+        ],
+        "keyword_conditions": {
+          "加勢": {
+            "target_elements": [
+              "fire",
               "earth"
-			]
-		  }
-		},
-		"mystic_arts": [
-		  {
-			"name": "全プレイヤー呪い除去",
-			"cost": 30,
-			"spell_id": 9026
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 18,
-	  "name": "ショッカー",
-	  "dev_name": "ショッカー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 70
-	  },
-	  "ap": 10,
-	  "hp": 40,
-	  "ability": "先制・敵ダウン",
-	  "ability_detail": "先制；攻撃成功時、敵をダウン；奮闘",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
+            ]
+          }
+        },
+        "mystic_arts": [
+          {
+            "name": "全プレイヤー刻印除去",
+            "cost": 30,
+            "spell_id": 9026
+          }
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "name": "ショッカー",
+      "dev_name": "ショッカー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 70
+      },
+      "ap": 10,
+      "hp": 40,
+      "ability": "先制・敵ダウン",
+      "ability_detail": "先制；攻撃成功時、敵をダウン；奮闘",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
           "奮闘"
-		],
-		"effects": [
-		  {
-			"effect_type": "down_enemy",
-			"trigger": "on_attack_success"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 19,
-	  "name": "ティアマト",
-	  "dev_name": "ティアマト",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 110,
-		"lands_required": [
-		  "fire",
+        ],
+        "effects": [
+          {
+            "effect_type": "down_enemy",
+            "trigger": "on_attack_success"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "name": "ティアマト",
+      "dev_name": "ティアマト",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 110,
+        "lands_required": [
+          "fire",
           "fire"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 60,
-	  "ability": "先制・強化・属性変化",
-	  "ability_detail": "先制；強化[水]；属性変化[火]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
+        ]
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "先制・強化・属性変化",
+      "ability_detail": "先制；強化[水]；属性変化[火]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
           "強化"
-		],
-		"keyword_conditions": {
-		  "強化": {
-			"condition_type": "enemy_is_element",
-			"elements": [
-			  "water",
+        ],
+        "keyword_conditions": {
+          "強化": {
+            "condition_type": "enemy_is_element",
+            "elements": [
+              "water",
               "wind"
-			]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "water",
+            ]
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "water",
                   "wind"
-				]
-			  }
-			]
-		  },
-		  {
-			"trigger": "on_battle_won",
-			"effect_type": "change_tile_element",
-			"element": "fire"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 20,
-	  "name": "デスサイズ",
-	  "dev_name": "デスサイズ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 15,
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"cannot_use": [
+                ]
+              }
+            ]
+          },
+          {
+            "trigger": "on_battle_won",
+            "effect_type": "change_tile_element",
+            "element": "fire"
+          }
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "name": "デスサイズ",
+      "dev_name": "デスサイズ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 15,
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_use": [
           "武器"
-		]
-	  },
-	  "ap": 70,
-	  "hp": 10,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP50・マミーに変身]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 70,
+      "hp": 10,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP50・マミーに変身]",
+      "ability_parsed": {
+        "keywords": [
           "アルカナアーツ"
-		],
-		"mystic_arts": [
-		  {
-			"name": "マミーに変身",
-			"cost": 50,
-			"spell_id": 9046
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 21,
-	  "name": "デスリーチ",
-	  "dev_name": "デスリーチ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 20,
-		"lands_required": [
+        ],
+        "mystic_arts": [
+          {
+            "name": "マミーに変身",
+            "cost": 50,
+            "spell_id": 9046
+          }
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "name": "デスリーチ",
+      "dev_name": "デスリーチ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 20,
+        "lands_required": [
           "fire"
-		]
-	  },
-	  "restrictions": {
-		"cannot_summon": [
+        ]
+      },
+      "restrictions": {
+        "cannot_summon": [
           "wind"
-		],
-		"cannot_use": [
-		  "巻物",
+        ],
+        "cannot_use": [
+          "巻物",
           "防具"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
+      "ability_parsed": {
+        "keywords": [
           "アルカナアーツ"
-		],
-		"mystic_art": {
-		  "name": "破壊移動",
-		  "cost": 80,
-		  "target_type": "creature",
-		  "target_info": {
-			"owner_filter": "enemy",
-			"hp_reduced": true,
-			"is_down": true
-		  },
-		  "effects": [
-			{
-			  "effect_type": "destroy_and_move",
-			  "description": "対象を破壊し、そこに移動"
-			}
-		  ]
-		}
-	  }
-	},
-	{
-	  "id": 22,
-	  "name": "デッドウォーロード",
-	  "dev_name": "デッドウォーロード",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 60,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "合成",
-	  "ability_detail": "合成[地・ST&MHP+20]；鼓舞[侵略側・AP+10]",
-	  "synthesis": {
-		"type": "element",
-		"condition": "earth",
-		"effect_type": "stat_boost",
-		"effect": {
-		  "ap": 20,
-		  "mhp": 20
-		}
-	  },
-	  "ability_parsed": {
-		"keywords": [
-		  "合成",
+        ],
+        "mystic_art": {
+          "name": "破壊移動",
+          "cost": 80,
+          "target_type": "creature",
+          "target_info": {
+            "owner_filter": "enemy",
+            "hp_reduced": true,
+            "is_down": true
+          },
+          "effects": [
+            {
+              "effect_type": "destroy_and_move",
+              "description": "対象を破壊し、そこに移動"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 22,
+      "name": "デッドウォーロード",
+      "dev_name": "デッドウォーロード",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 60,
+        "cards_sacrifice": 1
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "合成",
+      "ability_detail": "合成[地・ST&MHP+20]；鼓舞[侵略側・AP+10]",
+      "synthesis": {
+        "type": "element",
+        "condition": "earth",
+        "effect_type": "stat_boost",
+        "effect": {
+          "ap": 20,
+          "mhp": 20
+        }
+      },
+      "ability_parsed": {
+        "keywords": [
+          "合成",
           "鼓舞"
-		],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "battle_role",
-				  "role": "attacker"
-				}
-			  ]
-			},
-			"bonus": {
-			  "ap": 10
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 23,
-	  "name": "ドゥームデボラー",
-	  "dev_name": "ドゥームデボラー",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 50
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ],
+        "effects": [
+          {
+            "effect_type": "support",
+            "target": {
+              "scope": "all_creatures",
+              "conditions": [
+                {
+                  "condition_type": "battle_role",
+                  "role": "attacker"
+                }
+              ]
+            },
+            "bonus": {
+              "ap": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "name": "ドゥームデボラー",
+      "dev_name": "ドゥームデボラー",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 50
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "自ダイス3以下の場合、ST&MHP+10；アルカナアーツ[EP0・MHP×2EPを得て、ST&MHP-10]",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "dice_condition_bonus",
-			"dice_check": {
-			  "operator": "<=",
-			  "value": 3
-			},
-			"stat_changes": {
-			  "ap": 10,
-			  "max_hp": 10
-			},
-			"description": "ダイス3以下でST&MHP+10（永続）"
-		  }
-		],
-		"keywords": [
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "アルカナアーツ",
+      "ability_detail": "自ダイス3以下の場合、ST&MHP+10；アルカナアーツ[EP0・MHP×2EPを得て、ST&MHP-10]",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "dice_condition_bonus",
+            "dice_check": {
+              "operator": "<=",
+              "value": 3
+            },
+            "stat_changes": {
+              "ap": 10,
+              "max_hp": 10
+            },
+            "description": "ダイス3以下でST&MHP+10（永続）"
+          }
+        ],
+        "keywords": [
           "アルカナアーツ"
-		]
-	  },
-	  "mystic_arts": {
-		"cost": 0,
-		"spell_id": 9034
-	  }
-	},
-	{
-	  "id": 24,
-	  "name": "ドモビー",
-	  "dev_name": "ドモビー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 20
-	  },
-	  "ap": 10,
-	  "hp": 20,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP80・対象自ドミニオに呪い結界]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "mystic_arts": {
+        "cost": 0,
+        "spell_id": 9034
+      }
+    },
+    {
+      "id": 24,
+      "name": "ドモビー",
+      "dev_name": "ドモビー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 20
+      },
+      "ap": 10,
+      "hp": 20,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP80・対象自ドミニオに刻印結界]",
+      "ability_parsed": {
+        "keywords": [
           "アルカナアーツ"
-		],
-		"mystic_arts": [
-		  {
-			"id": "domovoi_mystic_001",
-			"name": "結界付与",
-			"description": "対象自ドミニオのクリーチャーに結界を付与",
-			"spell_id": 9022,
-			"cost": 80
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 25,
-	  "name": "ナイトエラント",
-	  "dev_name": "ナイトエラント",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"ep": 60,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 40,
-	  "hp": 30,
-	  "ability": "合成・反射",
-	  "ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
-	  "synthesis": {
-		"type": "element",
-		"condition": "earth",
-		"effect_type": "transform",
-		"transform_to": 1
-	  },
-	  "ability_parsed": {
-		"keywords": [
-		  "合成",
+        ],
+        "mystic_arts": [
+          {
+            "id": "domovoi_mystic_001",
+            "name": "結界付与",
+            "description": "対象自ドミニオのクリーチャーに結界を付与",
+            "spell_id": 9022,
+            "cost": 80
+          }
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "name": "ナイトエラント",
+      "dev_name": "ナイトエラント",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "ep": 60,
+        "cards_sacrifice": 1
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "合成・反射",
+      "ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
+      "synthesis": {
+        "type": "element",
+        "condition": "earth",
+        "effect_type": "transform",
+        "transform_to": 1
+      },
+      "ability_parsed": {
+        "keywords": [
+          "合成",
           "反射[1/2]"
-		],
-		"effects": [
-		  {
-			"effect_type": "synthesis",
-			"target_element": "earth",
-			"target_name": "アームドパラディン"
-		  },
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 0.5,
-			"self_damage_ratio": 0.5,
-			"attack_types": [
+        ],
+        "effects": [
+          {
+            "effect_type": "synthesis",
+            "target_element": "earth",
+            "target_name": "アームドパラディン"
+          },
+          {
+            "effect_type": "reflect_damage",
+            "reflect_ratio": 0.5,
+            "self_damage_ratio": 0.5,
+            "attack_types": [
               "normal"
-			],
-			"triggers": [
+            ],
+            "triggers": [
               "on_damaged"
-			]
-		  }
-		]
-	  }
-	}
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

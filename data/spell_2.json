@@ -44,7 +44,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象ドミニオに呪い\"暁光\"(戦闘中、AP&HP+20)；カードを1枚引く",
+      "effect": "対象ドミニオに刻印\"暁光\"(戦闘中、AP&HP+20)；カードを1枚引く",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -79,7 +79,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "対象ドミニオに呪い\"奮闘\"(5R間、奮闘を得る)",
+      "effect": "対象ドミニオに刻印\"奮闘\"(5R間、奮闘を得る)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -109,7 +109,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "対象ドミニオに呪い\"消沈\"",
+      "effect": "対象ドミニオに刻印\"消沈\"",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -139,7 +139,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "対象ドミニオに呪い\"賞金\"(移動・交換不可、武器で破壊した場合30EP0)",
+      "effect": "対象ドミニオに刻印\"賞金\"(移動・交換不可、武器で破壊した場合30EP0)",
       "effect_parsed": {
         "target_type": "land",
         "target_info": {
@@ -174,7 +174,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "全セプターに呪い\"休戦\"(2R間、侵略できない)",
+      "effect": "全セプターに刻印\"休戦\"(2R間、侵略できない)",
       "effect_parsed": {
         "target_type": "all_players",
         "effects": [
@@ -202,7 +202,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象セプターに呪い\"祝福\"(5R間、スペルの対象に選べない)",
+      "effect": "対象セプターに刻印\"祝福\"(5R間、スペルの対象に選べない)",
       "effect_parsed": {
         "target_type": "player",
         "target_info": {
@@ -234,7 +234,7 @@
       "cost": {
         "ep": 80
       },
-      "effect": "対象ドミニオに呪い\"安寧\"(侵略を受けず、通行料は0EP)",
+      "effect": "対象ドミニオに刻印\"安寧\"(侵略を受けず、通行料は0EP)",
       "effect_parsed": {
         "target_type": "creature",
         "effects": [
@@ -263,7 +263,7 @@
       "cost": {
         "ep": 20
       },
-      "effect": "全呪いを消し、消した呪いの種類×50EPを得る",
+      "effect": "全刻印を消し、消した刻印の種類×50EPを得る",
       "effect_parsed": {
         "target_type": "none",
         "effects": [
@@ -488,7 +488,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "世界呪い\"愚者\"(6R間、クリーチャー配置時、EP以外のコストは無視される)",
+      "effect": "世界刻印\"愚者\"(6R間、クリーチャー配置時、EP以外のコストは無視される)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -544,7 +544,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象ドミニオに呪い\"焦土\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
+      "effect": "対象ドミニオに刻印\"焦土\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
       "effect_parsed": {
         "target_type": "land",
         "target_filter": "has_creature",
@@ -586,7 +586,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "対象敵セプターに呪い\"免罪\"(2R間、通行料を取れない)",
+      "effect": "対象敵セプターに刻印\"免罪\"(2R間、通行料を取れない)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "enemy",
@@ -679,7 +679,7 @@
       "cost": {
         "ep": 100
       },
-      "effect": "全ドミニオに呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
+      "effect": "全ドミニオに刻印\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
       "effect_parsed": {
         "target_type": "all_creatures",
         "target_info": {
@@ -743,7 +743,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "対象自ドミニオに呪い\"快足\"(アルカナアーツ[EP50・対象セプターに呪い\"ダイス5\"])",
+      "effect": "対象自ドミニオに刻印\"快足\"(アルカナアーツ[EP50・対象セプターに刻印\"ダイス5\"])",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -804,7 +804,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "対象セプターに呪い\"ダイス6～8\"(2R間、ダイスを6～8にする)",
+      "effect": "対象セプターに刻印\"ダイス6～8\"(2R間、ダイスを6～8にする)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -832,7 +832,7 @@
       "cost": {
         "ep": 80
       },
-      "effect": "全ブリードクリーチャーをダウンさせ、呪い\"消沈\"をつける",
+      "effect": "全ブリードクリーチャーをダウンさせ、刻印\"消沈\"をつける",
       "cpu_rule": {
         "pattern": "skip",
         "priority": "low"
@@ -875,7 +875,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "対象ドミニオに呪い\"錯乱\"；カードを1枚引く",
+      "effect": "対象ドミニオに刻印\"錯乱\"；カードを1枚引く",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -993,7 +993,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象セプターに呪い\"ダイス1\"(次のダイスを1にする)",
+      "effect": "対象セプターに刻印\"ダイス1\"(次のダイスを1にする)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -1021,7 +1021,7 @@
       "cost": {
         "ep": 10
       },
-      "effect": "対象セプターに呪い\"ダイス3\"(次のダイスを3にする)",
+      "effect": "対象セプターに刻印\"ダイス3\"(次のダイスを3にする)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -1049,7 +1049,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "対象セプターに呪い\"ダイス6\"(次のダイスを6にする)",
+      "effect": "対象セプターに刻印\"ダイス6\"(次のダイスを6にする)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -1077,7 +1077,7 @@
       "cost": {
         "ep": 80
       },
-      "effect": "対象セプターに呪い\"ダイス8\"(次のダイスを8にする)",
+      "effect": "対象セプターに刻印\"ダイス8\"(次のダイスを8にする)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -1105,7 +1105,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "世界呪い\"節制\"(6R間、順位が下のセプターのドミニオに侵略できない)",
+      "effect": "世界刻印\"節制\"(6R間、順位が下のセプターのドミニオに侵略できない)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -1196,7 +1196,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "対象ドミニオに呪い\"重結界\"(結界と堅守を持つ)",
+      "effect": "対象ドミニオに刻印\"重結界\"(結界と堅守を持つ)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1299,7 +1299,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "全ドミニオに呪い\"堅牢\"",
+      "effect": "全ドミニオに刻印\"堅牢\"",
       "effect_parsed": {
         "target_type": "all_creatures",
         "target_info": {
@@ -1355,7 +1355,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "世界呪い\"女帝\"(6R間、全セプターはスペルの対象に選べない)",
+      "effect": "世界刻印\"女帝\"(6R間、全セプターはスペルの対象に選べない)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -1382,7 +1382,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "世界呪い\"隠者\"(6R間、同クリーチャー2体配置なら戦闘時破壊)",
+      "effect": "世界刻印\"隠者\"(6R間、同クリーチャー2体配置なら戦闘時破壊)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -1455,7 +1455,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "対象ドミニオに呪い\"硬化\"(無効化[通常攻撃]を得て、防具使用不可)",
+      "effect": "対象ドミニオに刻印\"硬化\"(無効化[通常攻撃]を得て、防具使用不可)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1485,7 +1485,7 @@
       "cost": {
         "ep": 60
       },
-      "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は200EPになる)",
+      "effect": "対象セプターに刻印\"通行料200\"(3R間、通行料は200EPになる)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -1543,7 +1543,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "対象セプターに呪い\"天使\"(クリーチャーとアイテム0EP、スペルは無効化され呪いは消える)",
+      "effect": "対象セプターに刻印\"天使\"(クリーチャーとアイテム0EP、スペルは無効化され刻印は消える)",
       "effect_parsed": {
         "target_type": "player",
         "target_info": {
@@ -1628,7 +1628,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象ドミニオに呪い\"狂星\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
+      "effect": "対象ドミニオに刻印\"狂星\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1763,7 +1763,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "使用者に呪い\"解放\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
+      "effect": "使用者に刻印\"解放\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
       "effect_parsed": {
         "target_type": "self",
         "effects": [
@@ -1847,7 +1847,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "全セプターの手札の呪いカードを破壊",
+      "effect": "全セプターの手札の刻印カードを破壊",
       "effect_parsed": {
         "target_type": "self",
         "effects": [

@@ -172,7 +172,7 @@
       "cost": {
         "ep": 80
       },
-      "effect": "全ドミニオに呪い\"枷\"",
+      "effect": "全ドミニオに刻印\"枷\"",
       "effect_parsed": {
         "target_type": "all_creatures",
         "target_info": {},
@@ -255,7 +255,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "世界呪い\"太陽\"(6R、カード使用EPは袋1.5倍、冠袋2倍)",
+      "effect": "世界刻印\"太陽\"(6R、カード使用EPは袋1.5倍、冠袋2倍)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -344,7 +344,7 @@
       "cost": {
         "ep": 100
       },
-      "effect": "呪い付きで召喚条件の無い対象クリーチャーを手札に戻す",
+      "effect": "刻印付きで召喚条件の無い対象クリーチャーを手札に戻す",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -428,7 +428,7 @@
       "cost": {
         "ep": 60
       },
-      "effect": "対象ドミニオに呪い\"祭壇\"(無効化[通常攻撃]、敵にEP100を与える)",
+      "effect": "対象ドミニオに刻印\"祭壇\"(無効化[通常攻撃]、敵にEP100を与える)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -539,7 +539,7 @@
       "cost": {
         "ep": 60
       },
-      "effect": "全セプターに呪い\"反転\"",
+      "effect": "全セプターに刻印\"反転\"",
       "effect_parsed": {
         "target_type": "all_players",
         "effects": [
@@ -593,7 +593,7 @@
       "cost": {
         "ep": 100
       },
-      "effect": "対象ドミニオに呪い\"停滞\"(2R間、1度だけ拘束)",
+      "effect": "対象ドミニオに刻印\"停滞\"(2R間、1度だけ拘束)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -684,7 +684,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象ドミニオに呪い\"通行料1.5倍\"；カードを1枚引く",
+      "effect": "対象ドミニオに刻印\"通行料1.5倍\"；カードを1枚引く",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -775,7 +775,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "全セプターに呪い\"禁呪\"(次R、スペルを使用できない)",
+      "effect": "全セプターに刻印\"禁呪\"(次R、スペルを使用できない)",
       "effect_parsed": {
         "target_type": "all_players",
         "effects": [
@@ -950,7 +950,7 @@
       "cost": {
         "ep": 100
       },
-      "effect": "対象ドミニオに呪い\"崩壊\"",
+      "effect": "対象ドミニオに刻印\"崩壊\"",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1043,7 +1043,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "対象クリーチャー1体に呪い\"零落\"(アルカナアーツ[EP50・対象クリーチャー1体のMHP-10])",
+      "effect": "対象クリーチャー1体に刻印\"零落\"(アルカナアーツ[EP50・対象クリーチャー1体のMHP-10])",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1080,7 +1080,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "世界呪い\"恋人\"(6R間、火と地、水と風が連鎖)",
+      "effect": "世界刻印\"恋人\"(6R間、火と地、水と風が連鎖)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -1347,7 +1347,7 @@
       "cost": {
         "ep": 20
       },
-      "effect": "対象ドミニオに呪い\"天駆\"(離れた空地にも移動できる)",
+      "effect": "対象ドミニオに刻印\"天駆\"(離れた空地にも移動できる)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1405,7 +1405,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "世界呪い\"皇帝\"(6R間、全ドミニオは領土守護)",
+      "effect": "世界刻印\"皇帝\"(6R間、全ドミニオは領土守護)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -1432,7 +1432,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "世界呪い\"女教皇\"(6R間、呪いのついた全クリーチャーは結界)",
+      "effect": "世界刻印\"女教皇\"(6R間、刻印のついた全クリーチャーは結界)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [
@@ -1518,7 +1518,7 @@
       "cost": {
         "ep": 20
       },
-      "effect": "対象セプターに呪い\"巡礼\"(ダイスを2回,2～4にし、50EPを得る)",
+      "effect": "対象セプターに刻印\"巡礼\"(ダイスを2回,2～4にし、50EPを得る)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "any",
@@ -1615,7 +1615,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "対象ドミニオに呪い\"衰月\"(戦闘中、AP&HP-20)；カードを1枚引く",
+      "effect": "対象ドミニオに刻印\"衰月\"(戦闘中、AP&HP-20)；カードを1枚引く",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1651,7 +1651,7 @@
         "ep": 20,
         "cards_sacrifice": 1
       },
-      "effect": "対象ドミニオに呪い\"暗転\"；合成[クリーチャー・ダウンした全クリーチャー]",
+      "effect": "対象ドミニオに刻印\"暗転\"；合成[クリーチャー・ダウンした全クリーチャー]",
       "synthesis": {
         "type": "creature",
         "target_override": {
@@ -1717,7 +1717,7 @@
         "ep": 100,
         "cards_sacrifice": 1
       },
-      "effect": "MHP30以下の全クリーチャーに呪い\"消沈\"",
+      "effect": "MHP30以下の全クリーチャーに刻印\"消沈\"",
       "effect_parsed": {
         "target_type": "all_creatures",
         "target_info": {
@@ -1824,7 +1824,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "対象ドミニオに呪い\"昇華\"(レベルアップか地形変化でMHP+20)",
+      "effect": "対象ドミニオに刻印\"昇華\"(レベルアップか地形変化でMHP+20)",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
@@ -1855,7 +1855,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "使用者に呪い\"徴収\"(5R間、他のセプターが得た通行料の50%を得る)",
+      "effect": "使用者に刻印\"徴収\"(5R間、他のセプターが得た通行料の50%を得る)",
       "effect_parsed": {
         "target_type": "player",
         "target_filter": "self",
@@ -1883,7 +1883,7 @@
       "cost": {
         "ep": 20
       },
-      "effect": "対象自ドミニオに呪い\"吸魔\"(アルカナアーツ[EP20・対象敵セプターからEPの10%を奪う])",
+      "effect": "対象自ドミニオに刻印\"吸魔\"(アルカナアーツ[EP20・対象敵セプターからEPの10%を奪う])",
       "effect_parsed": {
         "target_type": "land",
         "target_info": {
@@ -1944,7 +1944,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "世界呪い\"吊人\"(6R間、アルカナアーツ、自破壊時、戦闘終了時は発動しない)",
+      "effect": "世界刻印\"吊人\"(6R間、アルカナアーツ、自破壊時、戦闘終了時は発動しない)",
       "effect_parsed": {
         "target_type": "world",
         "effects": [

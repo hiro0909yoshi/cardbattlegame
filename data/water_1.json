@@ -1,860 +1,860 @@
 {
   "cards": [
-	{
-	  "id": 100.0,
-	  "name": "G・イール",
-	  "dev_name": "G・イール",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 60.0,
-		"lands_required": [
+    {
+      "id": 100.0,
+      "name": "G・イール",
+      "dev_name": "G・イール",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 60.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 50.0,
-	  "ability": "無効化",
-	  "ability_detail": "無効化[地風]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 50.0,
+      "ability": "無効化",
+      "ability_detail": "無効化[地風]",
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "element",
-			"elements": [
-			  "earth",
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "element",
+            "elements": [
+              "earth",
               "wind"
-			]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 101.0,
-	  "name": "G・ノーチラス",
-	  "dev_name": "G・ノーチラス",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 80.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器",
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 101.0,
+      "name": "G・ノーチラス",
+      "dev_name": "G・ノーチラス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 80.0
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器",
           "巻物"
-		],
-		"cannot_summon": [
+        ],
+        "cannot_summon": [
           "fire"
-		]
-	  },
-	  "ap": 10.0,
-	  "hp": 70.0,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 102.0,
-	  "name": "アイスウォール",
-	  "dev_name": "アイスウォール",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 25.0
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "巻物",
+        ]
+      },
+      "ap": 10.0,
+      "hp": 70.0,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 102.0,
+      "name": "アイスウォール",
+      "dev_name": "アイスウォール",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 25.0
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "巻物",
           "防具"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 0.0,
-	  "hp": 40.0,
-	  "ability": "堅守",
-	  "ability_detail": "堅守；HP+20",
-	  "ability_parsed": {
-		"keywords": [],
-		"effects": [
-		  {
-			"effect_type": "constant_stat_bonus",
-			"stat": "hp",
-			"value": 20.0,
-			"description": "HP+20"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 103.0,
-	  "name": "アクアデューク",
-	  "dev_name": "アクアデューク",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 60.0,
-		"lands_required": [
-		  "water",
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 0.0,
+      "hp": 40.0,
+      "ability": "堅守",
+      "ability_detail": "堅守；HP+20",
+      "ability_parsed": {
+        "keywords": [],
+        "effects": [
+          {
+            "effect_type": "constant_stat_bonus",
+            "stat": "hp",
+            "value": 20.0,
+            "description": "HP+20"
+          }
+        ]
+      }
+    },
+    {
+      "id": 103.0,
+      "name": "アクアデューク",
+      "dev_name": "アクアデューク",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 60.0,
+        "lands_required": [
+          "water",
           "water"
-		]
-	  },
-	  "ap": 50.0,
-	  "hp": 50.0,
-	  "ability": "加勢・無効化",
-	  "ability_detail": "加勢[水]；防具使用時、無効化[通常攻撃]；堅牢",
-	  "ability_parsed": {
-		"keywords": [
-		  "加勢",
-		  "無効化",
+        ]
+      },
+      "ap": 50.0,
+      "hp": 50.0,
+      "ability": "加勢・無効化",
+      "ability_detail": "加勢[水]；防具使用時、無効化[通常攻撃]；堅牢",
+      "ability_parsed": {
+        "keywords": [
+          "加勢",
+          "無効化",
           "堅牢"
-		],
-		"keyword_conditions": {
-		  "加勢": {
-			"target_elements": [
+        ],
+        "keyword_conditions": {
+          "加勢": {
+            "target_elements": [
               "water"
-			]
-		  },
-		  "無効化": {
-			"nullify_type": "normal_attack",
-			"conditions": [
-			  {
-				"condition_type": "item_equipped",
-				"item_type": "armor"
-			  }
-			]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 104.0,
-	  "name": "アクアホーン",
-	  "dev_name": "アクアホーン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 70.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+            ]
+          },
+          "無効化": {
+            "nullify_type": "normal_attack",
+            "conditions": [
+              {
+                "condition_type": "item_equipped",
+                "item_type": "armor"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 104.0,
+      "name": "アクアホーン",
+      "dev_name": "アクアホーン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 70.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		],
-		"cannot_summon": [
+        ],
+        "cannot_summon": [
           "fire"
-		]
-	  },
-	  "ap": 50.0,
-	  "hp": 30.0,
-	  "ability": "無効化・アルカナアーツ",
-	  "ability_detail": "無効化[水地]；アルカナアーツ[EP30・ミストウィングに変身　]",
-	  "ability_parsed": {
-		"keywords": [
-		  "無効化",
+        ]
+      },
+      "ap": 50.0,
+      "hp": 30.0,
+      "ability": "無効化・アルカナアーツ",
+      "ability_detail": "無効化[水地]；アルカナアーツ[EP30・ミストウィングに変身　]",
+      "ability_parsed": {
+        "keywords": [
+          "無効化",
           "アルカナアーツ"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "element",
-			"elements": [
-			  "water",
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "element",
+            "elements": [
+              "water",
               "earth"
-			]
-		  }
-		},
-		"mystic_arts": [
-		  {
-			"name": "ミストウィングに変身",
-			"cost": 30.0,
-			"spell_id": 9049.0
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 105.0,
-	  "name": "アクアリング",
-	  "dev_name": "アクアリング",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 40.0
-	  },
-	  "ap": 20.0,
-	  "hp": 30.0,
-	  "ability": "無効化",
-	  "ability_detail": "無効化[MHP30以下]",
-	  "ability_parsed": {
-		"keywords": [
+            ]
+          }
+        },
+        "mystic_arts": [
+          {
+            "name": "ミストウィングに変身",
+            "cost": 30.0,
+            "spell_id": 9049.0
+          }
+        ]
+      }
+    },
+    {
+      "id": 105.0,
+      "name": "アクアリング",
+      "dev_name": "アクアリング",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 40.0
+      },
+      "ap": 20.0,
+      "hp": 30.0,
+      "ability": "無効化",
+      "ability_detail": "無効化[MHP30以下]",
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "mhp_below",
-			"value": 30.0
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 106.0,
-	  "name": "アブサス",
-	  "dev_name": "アブサス",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 40.0,
-		"lands_required": [
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "mhp_below",
+            "value": 30.0
+          }
+        }
+      }
+    },
+    {
+      "id": 106.0,
+      "name": "アブサス",
+      "dev_name": "アブサス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 40.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器",
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器",
           "アクセサリ"
-		]
-	  },
-	  "ap": 20.0,
-	  "hp": 40.0,
-	  "ability": "無効化",
-	  "ability_detail": "戦闘地がレベル3以上の場合、無効化[通常攻撃]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 20.0,
+      "hp": 40.0,
+      "ability": "無効化",
+      "ability_detail": "戦闘地がレベル3以上の場合、無効化[通常攻撃]",
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "normal_attack",
-			"conditions": [
-			  {
-				"condition_type": "land_level_check",
-				"operator": ">=",
-				"value": 3.0
-			  }
-			]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 107.0,
-	  "name": "アマゾン",
-	  "dev_name": "アマゾン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 70.0
-	  },
-	  "ap": 40.0,
-	  "hp": 40.0,
-	  "ability": "アイテム不使用時・吸魔",
-	  "ability_detail": "アイテム不使用時、吸魔[周回数×30EP]",
-	  "ability_parsed": {
-		"keywords": [
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "normal_attack",
+            "conditions": [
+              {
+                "condition_type": "land_level_check",
+                "operator": ">=",
+                "value": 3.0
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 107.0,
+      "name": "アマゾン",
+      "dev_name": "アマゾン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 70.0
+      },
+      "ap": 40.0,
+      "hp": 40.0,
+      "ability": "アイテム不使用時・吸魔",
+      "ability_detail": "アイテム不使用時、吸魔[周回数×30EP]",
+      "ability_parsed": {
+        "keywords": [
           "吸魔"
-		],
-		"effects": [
-		  {
-			"effect_type": "magic_steal_no_item",
-			"multiplier": 30.0
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 108.0,
-	  "name": "アルプ",
-	  "dev_name": "アルプ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 40.0
-	  },
-	  "restrictions": {
-		"cannot_summon": [
+        ],
+        "effects": [
+          {
+            "effect_type": "magic_steal_no_item",
+            "multiplier": 30.0
+          }
+        ]
+      }
+    },
+    {
+      "id": 108.0,
+      "name": "アルプ",
+      "dev_name": "アルプ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 40.0
+      },
+      "restrictions": {
+        "cannot_summon": [
           "fire"
-		]
-	  },
-	  "ap": 20.0,
-	  "hp": 20.0,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP50・対象敵クリーチャーをダウン]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 20.0,
+      "hp": 20.0,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP50・対象敵クリーチャーをダウン]",
+      "ability_parsed": {
+        "keywords": [
           "アルカナアーツ"
-		]
-	  },
-	  "mystic_arts": {
-		"cost": 50.0,
-		"spell_id": 9037.0
-	  }
-	},
-	{
-	  "id": 109.0,
-	  "name": "アンダイン",
-	  "dev_name": "アンダイン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 55.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "mystic_arts": {
+        "cost": 50.0,
+        "spell_id": 9037.0
+      }
+    },
+    {
+      "id": 109.0,
+      "name": "アンダイン",
+      "dev_name": "アンダイン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 55.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "防具"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 30.0,
-	  "ability": "HP+水自ドミニオ数×20",
-	  "ability_detail": "HP=水自ドミニオ数×20；無効化[水]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 30.0,
+      "ability": "HP+水自ドミニオ数×20",
+      "ability_detail": "HP=水自ドミニオ数×20；無効化[水]",
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "element_match",
-			"element": "water"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "land_count_multiplier",
-			"stat": "hp",
-			"elements": [
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "element_match",
+            "element": "water"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "land_count_multiplier",
+            "stat": "hp",
+            "elements": [
               "water"
-			],
-			"multiplier": 20.0,
-			"operation": "set",
-			"description": "HP=水自ドミニオ数×20"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 110.0,
-	  "name": "アンフィビアン",
-	  "dev_name": "アンフィビアン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 60.0
-	  },
-	  "ap": 40.0,
-	  "hp": 30.0,
-	  "ability": "戦闘地が水風の場合",
-	  "ability_detail": "戦闘地が水風の場合、AP+20；堅牢",
-	  "ability_parsed": {
-		"keywords": [
+            ],
+            "multiplier": 20.0,
+            "operation": "set",
+            "description": "HP=水自ドミニオ数×20"
+          }
+        ]
+      }
+    },
+    {
+      "id": 110.0,
+      "name": "アンフィビアン",
+      "dev_name": "アンフィビアン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 60.0
+      },
+      "ap": 40.0,
+      "hp": 30.0,
+      "ability": "戦闘地が水風の場合",
+      "ability_detail": "戦闘地が水風の場合、AP+20；堅牢",
+      "ability_parsed": {
+        "keywords": [
           "堅牢"
-		],
-		"effects": [
-		  {
-			"effect_type": "battle_land_element_bonus",
-			"stat": "ap",
-			"value": 20.0,
-			"condition": {
-			  "battle_land_elements": [
-				"water",
+        ],
+        "effects": [
+          {
+            "effect_type": "battle_land_element_bonus",
+            "stat": "ap",
+            "value": 20.0,
+            "condition": {
+              "battle_land_elements": [
+                "water",
                 "wind"
-			  ]
-			},
-			"description": "戦闘地が水風の場合、AP+20"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 111.0,
-	  "name": "イエティ",
-	  "dev_name": "イエティ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 60.0,
-		"lands_required": [
+              ]
+            },
+            "description": "戦闘地が水風の場合、AP+20"
+          }
+        ]
+      }
+    },
+    {
+      "id": 111.0,
+      "name": "イエティ",
+      "dev_name": "イエティ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 60.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 40.0,
-	  "hp": 40.0,
-	  "ability": "即死・無効化",
-	  "ability_detail": "即死[火・60%]；無効化[火]",
-	  "ability_parsed": {
-		"keywords": [
-		  "即死",
+        ]
+      },
+      "ap": 40.0,
+      "hp": 40.0,
+      "ability": "即死・無効化",
+      "ability_detail": "即死[火・60%]；無効化[火]",
+      "ability_parsed": {
+        "keywords": [
+          "即死",
           "無効化"
-		],
-		"keyword_conditions": {
-		  "即死": {
-			"condition_type": "enemy_is_element",
-			"elements": "fire",
-			"probability": 60.0
-		  },
-		  "無効化": {
-			"nullify_type": "element",
-			"element": "fire"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 112.0,
-	  "name": "イド",
-	  "dev_name": "イド",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 50.0,
-		"lands_required": [
+        ],
+        "keyword_conditions": {
+          "即死": {
+            "condition_type": "enemy_is_element",
+            "elements": "fire",
+            "probability": 60.0
+          },
+          "無効化": {
+            "nullify_type": "element",
+            "element": "fire"
+          }
+        }
+      }
+    },
+    {
+      "id": 112.0,
+      "name": "イド",
+      "dev_name": "イド",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 50.0,
+        "lands_required": [
           "water"
-		],
-		"cards_sacrifice": 1.0
-	  },
-	  "ap": 40.0,
-	  "hp": 30.0,
-	  "ability": "合成・無効化",
-	  "ability_detail": "合成[クリーチャー・供物クリーチャーに変身]；無効化[巻物]",
-	  "synthesis": {
-		"type": "creature",
-		"effect_type": "transform",
-		"transform_to": "sacrifice"
-	  },
-	  "ability_parsed": {
-		"keywords": [
+        ],
+        "cards_sacrifice": 1.0
+      },
+      "ap": 40.0,
+      "hp": 30.0,
+      "ability": "合成・無効化",
+      "ability_detail": "合成[クリーチャー・供物クリーチャーに変身]；無効化[巻物]",
+      "synthesis": {
+        "type": "creature",
+        "effect_type": "transform",
+        "transform_to": "sacrifice"
+      },
+      "ability_parsed": {
+        "keywords": [
           "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 113.0,
-	  "name": "エキノダーム",
-	  "dev_name": "エキノダーム",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 70.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "scroll_attack"
+          }
+        }
+      }
+    },
+    {
+      "id": 113.0,
+      "name": "エキノダーム",
+      "dev_name": "エキノダーム",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 70.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 20.0,
-	  "hp": 40.0,
-	  "ability": "再生・奮闘",
-	  "ability_detail": "再生；奮闘",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 20.0,
+      "hp": 40.0,
+      "ability": "再生・奮闘",
+      "ability_detail": "再生；奮闘",
+      "ability_parsed": {
+        "keywords": [
           "再生"
-		]
-	  }
-	},
-	{
-	  "id": 114.0,
-	  "name": "オトヒメ",
-	  "dev_name": "オトヒメ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 70.0,
-		"lands_required": [
+        ]
+      }
+    },
+    {
+      "id": 114.0,
+      "name": "オトヒメ",
+      "dev_name": "オトヒメ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 70.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "ap": 40.0,
-	  "hp": 40.0,
-	  "ability": "鼓舞・崩壊",
-	  "ability_detail": "鼓舞[防御側・HP+10]；戦闘後、敵に呪い崩壊",
-	  "ability_parsed": {
-		"keywords": [
-		  "鼓舞",
+        ]
+      },
+      "ap": 40.0,
+      "hp": 40.0,
+      "ability": "鼓舞・崩壊",
+      "ability_detail": "鼓舞[防御側・HP+10]；戦闘後、敵に刻印崩壊",
+      "ability_parsed": {
+        "keywords": [
+          "鼓舞",
           "崩壊"
-		],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "battle_role",
-				  "role": "defender"
-				}
-			  ]
-			},
-			"bonus": {
-			  "hp": 10.0
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 115.0,
-	  "name": "オドントティラヌス",
-	  "dev_name": "オドントティラヌス",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 70.0,
-		"lands_required": [
+        ],
+        "effects": [
+          {
+            "effect_type": "support",
+            "target": {
+              "scope": "all_creatures",
+              "conditions": [
+                {
+                  "condition_type": "battle_role",
+                  "role": "defender"
+                }
+              ]
+            },
+            "bonus": {
+              "hp": 10.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 115.0,
+      "name": "オドントティラヌス",
+      "dev_name": "オドントティラヌス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 70.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 50.0,
-	  "hp": 50.0,
-	  "ability": "共鳴",
-	  "ability_detail": "共鳴[風・AP+20、HP+10]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 50.0,
+      "hp": 50.0,
+      "ability": "共鳴",
+      "ability_detail": "共鳴[風・AP+20、HP+10]",
+      "ability_parsed": {
+        "keywords": [
           "共鳴"
-		],
-		"keyword_conditions": {
-		  "共鳴": {
-			"element": "wind",
-			"stat_bonus": {
-			  "ap": 20.0,
-			  "hp": 10.0
-			}
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 116.0,
-	  "name": "カイザーペンギン",
-	  "dev_name": "カイザーペンギン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 90.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ],
+        "keyword_conditions": {
+          "共鳴": {
+            "element": "wind",
+            "stat_bonus": {
+              "ap": 20.0,
+              "hp": 10.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 116.0,
+      "name": "カイザーペンギン",
+      "dev_name": "カイザーペンギン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 90.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 50.0,
-	  "ability": "アイテム破壊",
-	  "ability_detail": "アイテム破壊[道具か巻物か加勢クリーチャー]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 50.0,
+      "ability": "アイテム破壊",
+      "ability_detail": "アイテム破壊[道具か巻物か加勢クリーチャー]",
+      "ability_parsed": {
+        "keywords": [
           "アイテム破壊"
-		],
-		"effects": [
-		  {
-			"effect_type": "destroy_item",
-			"target_types": [
-			  "道具",
-			  "巻物",
+        ],
+        "effects": [
+          {
+            "effect_type": "destroy_item",
+            "target_types": [
+              "道具",
+              "巻物",
               "加勢クリーチャー"
-			],
-			"triggers": [
+            ],
+            "triggers": [
               "before_battle"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 117.0,
-	  "name": "カワヒメ",
-	  "dev_name": "カワヒメ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 70.0
-	  },
-	  "restrictions": {
-		"cannot_summon": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 117.0,
+      "name": "カワヒメ",
+      "dev_name": "カワヒメ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 70.0
+      },
+      "restrictions": {
+        "cannot_summon": [
           "fire"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 40.0,
-	  "ability": "奮闘・アルカナアーツ",
-	  "ability_detail": "奮闘；アルカナアーツ[EP30・対象クリーチャーのAP+10]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 40.0,
+      "ability": "奮闘・アルカナアーツ",
+      "ability_detail": "奮闘；アルカナアーツ[EP30・対象クリーチャーのAP+10]",
+      "ability_parsed": {
+        "keywords": [
           "奮闘"
-		]
-	  },
-	  "mystic_arts": {
-		"cost": 30.0,
-		"spell_id": 9032.0
-	  }
-	},
-	{
-	  "id": 118.0,
-	  "name": "キロネックス",
-	  "dev_name": "キロネックス",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 50.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      },
+      "mystic_arts": {
+        "cost": 30.0,
+        "spell_id": 9032.0
+      }
+    },
+    {
+      "id": 118.0,
+      "name": "キロネックス",
+      "dev_name": "キロネックス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 50.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 50.0,
-	  "ability": "防御側なら即死",
-	  "ability_detail": "防御側なら即死[全・80%]；自破壊時、100EPを失う",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 50.0,
+      "ability": "防御側なら即死",
+      "ability_detail": "防御側なら即死[全・80%]；自破壊時、100EPを失う",
+      "ability_parsed": {
+        "keywords": [
           "即死"
-		],
-		"keyword_conditions": {
-		  "即死": {
-			"condition_type": "defender_role",
-			"elements": "全",
-			"probability": 80.0
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 119.0,
-	  "name": "キングトータス",
-	  "dev_name": "キングトータス",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 100.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ],
+        "keyword_conditions": {
+          "即死": {
+            "condition_type": "defender_role",
+            "elements": "全",
+            "probability": 80.0
+          }
+        }
+      }
+    },
+    {
+      "id": 119.0,
+      "name": "キングトータス",
+      "dev_name": "キングトータス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 100.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		]
-	  },
-	  "ap": 50.0,
-	  "hp": 60.0,
-	  "ability": "後手",
-	  "ability_detail": "後手",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 50.0,
+      "hp": 60.0,
+      "ability": "後手",
+      "ability_detail": "後手",
+      "ability_parsed": {
+        "keywords": [
           "後手"
-		]
-	  }
-	},
-	{
-	  "id": 120.0,
-	  "name": "グルイースラッグ",
-	  "dev_name": "グルイースラッグ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 60.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+        ]
+      }
+    },
+    {
+      "id": 120.0,
+      "name": "グルイースラッグ",
+      "dev_name": "グルイースラッグ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 60.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "巻物"
-		],
-		"cannot_summon": [
+        ],
+        "cannot_summon": [
           "fire"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 40.0,
-	  "ability": "移動侵略を受けない",
-	  "ability_detail": "移動侵略を受けない",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 40.0,
+      "ability": "移動侵略を受けない",
+      "ability_detail": "移動侵略を受けない",
+      "ability_parsed": {
+        "keywords": [
           "鉄壁"
-		]
-	  }
-	},
-	{
-	  "id": 121.0,
-	  "name": "ケルピー",
-	  "dev_name": "ケルピー",
-	  "rate": 69.0,
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 80.0,
-		"lands_required": [
+        ]
+      }
+    },
+    {
+      "id": 121.0,
+      "name": "ケルピー",
+      "dev_name": "ケルピー",
+      "rate": 69.0,
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 80.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "アクセサリ",
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
+          "アクセサリ",
           "巻物"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 30.0,
-	  "ability": "拘束",
-	  "ability_detail": "拘束[水]",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 30.0,
+      "ability": "拘束",
+      "ability_detail": "拘束[水]",
+      "ability_parsed": {
+        "keywords": [
           "拘束"
-		],
-		"trap_stop": {
-		  "elements": [
+        ],
+        "trap_stop": {
+          "elements": [
             "water"
-		  ]
-		}
-	  }
-	},
-	{
-	  "id": 122.0,
-	  "name": "ゴーストシップ",
-	  "dev_name": "ゴーストシップ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 75.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
+          ]
+        }
+      }
+    },
+    {
+      "id": 122.0,
+      "name": "ゴーストシップ",
+      "dev_name": "ゴーストシップ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 75.0
+      },
+      "restrictions": {
+        "cannot_use": [
           "防具"
-		]
-	  },
-	  "ap": 40.0,
-	  "hp": 30.0,
-	  "ability": "共鳴・無効化",
-	  "ability_detail": "共鳴[風・HP+30]；無効化[AP40以下]",
-	  "ability_parsed": {
-		"keywords": [
-		  "共鳴",
+        ]
+      },
+      "ap": 40.0,
+      "hp": 30.0,
+      "ability": "共鳴・無効化",
+      "ability_detail": "共鳴[風・HP+30]；無効化[AP40以下]",
+      "ability_parsed": {
+        "keywords": [
+          "共鳴",
           "無効化"
-		],
-		"keyword_conditions": {
-		  "共鳴": {
-			"element": "wind",
-			"stat_bonus": {
-			  "ap": 0.0,
-			  "hp": 30.0
-			}
-		  },
-		  "無効化": {
-			"nullify_type": "ap_below",
-			"value": 40.0
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 123.0,
-	  "name": "シーボンズ",
-	  "dev_name": "シーボンズ",
-	  "rate": 100.0,
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 40.0
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器",
-		  "防具",
-		  "アクセサリ",
+        ],
+        "keyword_conditions": {
+          "共鳴": {
+            "element": "wind",
+            "stat_bonus": {
+              "ap": 0.0,
+              "hp": 30.0
+            }
+          },
+          "無効化": {
+            "nullify_type": "ap_below",
+            "value": 40.0
+          }
+        }
+      }
+    },
+    {
+      "id": 123.0,
+      "name": "シーボンズ",
+      "dev_name": "シーボンズ",
+      "rate": 100.0,
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 40.0
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器",
+          "防具",
+          "アクセサリ",
           "巻物"
-		],
-		"cannot_summon": [
-		  "fire",
+        ],
+        "cannot_summon": [
+          "fire",
           "earth"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 10.0,
-	  "hp": 40.0,
-	  "ability": "堅守・戦闘中能力無効",
-	  "ability_detail": "堅守；戦闘中能力無効",
-	  "ability_parsed": {
-		"keywords": [
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 10.0,
+      "hp": 40.0,
+      "ability": "堅守・戦闘中能力無効",
+      "ability_detail": "堅守；戦闘中能力無効",
+      "ability_parsed": {
+        "keywords": [
           "堅守"
-		],
-		"effects": [
-		  {
-			"effect_type": "nullify_all_enemy_abilities",
-			"trigger": "battle_preparation"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 124.0,
-	  "name": "スキュラ",
-	  "dev_name": "スキュラ",
-	  "rate": 90.0,
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "water",
-	  "cost": {
-		"ep": 60.0,
-		"lands_required": [
+        ],
+        "effects": [
+          {
+            "effect_type": "nullify_all_enemy_abilities",
+            "trigger": "battle_preparation"
+          }
+        ]
+      }
+    },
+    {
+      "id": 124.0,
+      "name": "スキュラ",
+      "dev_name": "スキュラ",
+      "rate": 90.0,
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "ep": 60.0,
+        "lands_required": [
           "water"
-		]
-	  },
-	  "ap": 30.0,
-	  "hp": 40.0,
-	  "ability": "戦闘後、敵に呪い免罪",
-	  "ability_detail": "戦闘後、敵に呪い免罪",
-	  "ability_parsed": {
-		"nullify_triggers": [
+        ]
+      },
+      "ap": 30.0,
+      "hp": 40.0,
+      "ability": "戦闘後、敵に刻印免罪",
+      "ability_detail": "戦闘後、敵に刻印免罪",
+      "ability_parsed": {
+        "nullify_triggers": [
           "on_attack_success"
-		],
-		"effects": [
-		  {
-			"effect_type": "apply_curse",
-			"trigger": "on_battle_end",
-			"target": "enemy",
-			"curse_type": "creature_toll_disable",
-			"name": "免罪"
-		  }
-		]
-	  }
-	}
+        ],
+        "effects": [
+          {
+            "effect_type": "apply_curse",
+            "trigger": "on_battle_end",
+            "target": "enemy",
+            "curse_type": "creature_toll_disable",
+            "name": "免罪"
+          }
+        ]
+      }
+    }
   ]
 }

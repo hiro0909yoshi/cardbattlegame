@@ -1,1980 +1,1980 @@
 {
   "cards": [
-	{
-	  "id": 1000,
-	  "name": "クイックチャーム",
-	  "dev_name": "アージェントキー",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "AP+10；先制",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 10
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_first_strike"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1001,
-	  "name": "グレートヘルム",
-	  "dev_name": "アーメット",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 45
-	  },
-	  "effect": "AP-10；HP+40",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": -10,
-		  "hp": 40
-		}
-	  }
-	},
-	{
-	  "id": 1002,
-	  "name": "デモンマスク",
-	  "dev_name": "アングリーマスク",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "HP+30；追加ダメージ[自分が受けたダメージ]",
-	  "effect_parsed": {
-		"keywords": [
+    {
+      "id": 1000,
+      "name": "クイックチャーム",
+      "dev_name": "アージェントキー",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "AP+10；先制",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 10
+        },
+        "effects": [
+          {
+            "effect_type": "grant_first_strike"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1001,
+      "name": "グレートヘルム",
+      "dev_name": "アーメット",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 45
+      },
+      "effect": "AP-10；HP+40",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": -10,
+          "hp": 40
+        }
+      }
+    },
+    {
+      "id": 1002,
+      "name": "デモンマスク",
+      "dev_name": "アングリーマスク",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "HP+30；追加ダメージ[自分が受けたダメージ]",
+      "effect_parsed": {
+        "keywords": [
           "反射[全・自傷]"
-		],
-		"stat_bonus": {
-		  "hp": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 1.0,
-			"self_damage_ratio": 1.0,
-			"attack_types": [
-			  "normal",
+        ],
+        "stat_bonus": {
+          "hp": 30
+        },
+        "effects": [
+          {
+            "effect_type": "reflect_damage",
+            "reflect_ratio": 1.0,
+            "self_damage_ratio": 1.0,
+            "attack_types": [
+              "normal",
               "scroll"
-			],
-			"triggers": [
-			  "on_battle_end",
+            ],
+            "triggers": [
+              "on_battle_end",
               "reflect"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1003,
-	  "name": "ウィンドエッジ",
-	  "dev_name": "イーグルレイピア",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "AP+30；先制",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_first_strike"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1004,
-	  "name": "ディスペルオーブ",
-	  "dev_name": "ウォーロックディスク",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 110
-	  },
-	  "effect": "戦闘中能力無効",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "nullify_all_enemy_abilities",
-			"trigger": "battle_preparation"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1005,
-	  "name": "フェニックスメイル",
-	  "dev_name": "エターナルメイル",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "HP+40；復帰[ブック]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 40
-		},
-		"effects": [
-		  {
-			"effect_type": "item_return",
-			"trigger": "after_item_use",
-			"return_type": "return_to_deck"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1006,
-	  "name": "セイクリッドケープ",
-	  "dev_name": "エンジェルケープ",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "HP+40；アイテム破壊・盗み無効",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 40
-		},
-		"effects": [
-		  {
-			"effect_type": "nullify_item_manipulation",
-			"triggers": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1003,
+      "name": "ウィンドエッジ",
+      "dev_name": "イーグルレイピア",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "AP+30；先制",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30
+        },
+        "effects": [
+          {
+            "effect_type": "grant_first_strike"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1004,
+      "name": "ディスペルオーブ",
+      "dev_name": "ウォーロックディスク",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 110
+      },
+      "effect": "戦闘中能力無効",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "nullify_all_enemy_abilities",
+            "trigger": "battle_preparation"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1005,
+      "name": "フェニックスメイル",
+      "dev_name": "エターナルメイル",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "HP+40；復帰[ブック]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 40
+        },
+        "effects": [
+          {
+            "effect_type": "item_return",
+            "trigger": "after_item_use",
+            "return_type": "return_to_deck"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1006,
+      "name": "セイクリッドケープ",
+      "dev_name": "エンジェルケープ",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "HP+40；アイテム破壊・盗み無効",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 40
+        },
+        "effects": [
+          {
+            "effect_type": "nullify_item_manipulation",
+            "triggers": [
               "before_battle"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1007,
-	  "name": "フォースストライク",
-	  "dev_name": "オーラストライク",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 90
-	  },
-	  "effect": "術攻撃[AP=基本AP]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "base_ap"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1008,
-	  "name": "ガーディアンブレイド",
-	  "dev_name": "カタパルト",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+30；HP+30",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30,
-		  "hp": 30
-		}
-	  }
-	},
-	{
-	  "id": 1009,
-	  "name": "ツヴァイハンダー",
-	  "dev_name": "クレイモア",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+50",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 50
-		}
-	  }
-	},
-	{
-	  "id": 1010,
-	  "name": "イビルアイ",
-	  "dev_name": "グレムリンアイ",
-	  "rate": 110,
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "アイテム破壊[レア度N以外]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "destroy_item",
-			"target_types": [
-			  "武器",
-			  "防具",
-			  "アクセサリ",
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1007,
+      "name": "フォースストライク",
+      "dev_name": "オーラストライク",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 90
+      },
+      "effect": "術攻撃[AP=基本AP]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "base_ap"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1008,
+      "name": "ガーディアンブレイド",
+      "dev_name": "カタパルト",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+30；HP+30",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30,
+          "hp": 30
+        }
+      }
+    },
+    {
+      "id": 1009,
+      "name": "ツヴァイハンダー",
+      "dev_name": "クレイモア",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+50",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 50
+        }
+      }
+    },
+    {
+      "id": 1010,
+      "name": "イビルアイ",
+      "dev_name": "グレムリンアイ",
+      "rate": 110,
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "アイテム破壊[レア度N以外]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "destroy_item",
+            "target_types": [
+              "武器",
+              "防具",
+              "アクセサリ",
               "巻物"
-			],
-			"rarity_exclude": [
+            ],
+            "rarity_exclude": [
               "N"
-			],
-			"triggers": [
+            ],
+            "triggers": [
               "before_battle"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1011,
-	  "name": "レガシーオーブ",
-	  "dev_name": "ゴールドグース",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 0
-	  },
-	  "effect": "形見[MHP×7EP]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "legacy_magic",
-			"trigger": "on_death",
-			"multiplier": 7
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1012,
-	  "name": "トレジャーメイス",
-	  "dev_name": "ゴールドハンマー",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+40；攻撃で敵非破壊時、蓄魔[EP200]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 40
-		},
-		"effects": [
-		  {
-			"effect_type": "magic_on_enemy_survive",
-			"trigger": "on_attack_success",
-			"amount": 200,
-			"condition": "enemy_alive"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1013,
-	  "name": "ヴァンパイアリング",
-	  "dev_name": "サキュバスリング",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "APドレイン；先制",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "ap_drain",
-			"trigger": "on_attack_success",
-			"target": "enemy"
-		  },
-		  {
-			"effect_type": "grant_first_strike"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1014,
-	  "name": "シェイドエッジ",
-	  "dev_name": "シェイドクロー",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 90
-	  },
-	  "effect": "AP+敵と同属性の配置数×10",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "same_element_as_enemy_count",
-			"multiplier": 10,
-			"stat": "ap"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1015,
-	  "name": "ファントムブレイズ",
-	  "dev_name": "シャドウブレイズ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "術攻撃[AP40]；敵と同じクリーチャー配置時、術強化",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "fixed_ap",
-			"value": 40
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "術強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "same_creature_count_check",
-				"operator": ">=",
-				"value": 2
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1016,
-	  "name": "ドミニオンリング",
-	  "dev_name": "シルバープロウ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "土地レベルアップ；AP+10；HP+20",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 10,
-		  "hp": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "level_up_on_win",
-			"trigger": "on_battle_end",
-			"condition": "win"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1017,
-	  "name": "サイレントローブ",
-	  "dev_name": "スクイドマントル",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "HP+40；敵の攻撃成功時能力無効",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 40
-		},
-		"nullify_triggers": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1011,
+      "name": "レガシーオーブ",
+      "dev_name": "ゴールドグース",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 0
+      },
+      "effect": "形見[MHP×7EP]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "legacy_magic",
+            "trigger": "on_death",
+            "multiplier": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": 1012,
+      "name": "トレジャーメイス",
+      "dev_name": "ゴールドハンマー",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+40；攻撃で敵非破壊時、蓄魔[EP200]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 40
+        },
+        "effects": [
+          {
+            "effect_type": "magic_on_enemy_survive",
+            "trigger": "on_attack_success",
+            "amount": 200,
+            "condition": "enemy_alive"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1013,
+      "name": "ヴァンパイアリング",
+      "dev_name": "サキュバスリング",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "APドレイン；先制",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "ap_drain",
+            "trigger": "on_attack_success",
+            "target": "enemy"
+          },
+          {
+            "effect_type": "grant_first_strike"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1014,
+      "name": "シェイドエッジ",
+      "dev_name": "シェイドクロー",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 90
+      },
+      "effect": "AP+敵と同属性の配置数×10",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "same_element_as_enemy_count",
+            "multiplier": 10,
+            "stat": "ap"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1015,
+      "name": "ファントムブレイズ",
+      "dev_name": "シャドウブレイズ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "術攻撃[AP40]；敵と同じクリーチャー配置時、術強化",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "fixed_ap",
+            "value": 40
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "術強化",
+            "skill_conditions": [
+              {
+                "condition_type": "same_creature_count_check",
+                "operator": ">=",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1016,
+      "name": "ドミニオンリング",
+      "dev_name": "シルバープロウ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "土地レベルアップ；AP+10；HP+20",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 10,
+          "hp": 20
+        },
+        "effects": [
+          {
+            "effect_type": "level_up_on_win",
+            "trigger": "on_battle_end",
+            "condition": "win"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1017,
+      "name": "サイレントローブ",
+      "dev_name": "スクイドマントル",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "HP+40；敵の攻撃成功時能力無効",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 40
+        },
+        "nullify_triggers": [
           "on_attack_success"
-		]
-	  }
-	},
-	{
-	  "id": 1018,
-	  "name": "ブリガンダイン",
-	  "dev_name": "スケールアーマー",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "HP+40",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 40
-		}
-	  }
-	},
-	{
-	  "id": 1019,
-	  "name": "タイダルアーマー",
-	  "dev_name": "ストームアーマー",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "HP+水風自ドミニオ数×20",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "owned_land_count_bonus",
-			"elements": [
-			  "water",
+        ]
+      }
+    },
+    {
+      "id": 1018,
+      "name": "ブリガンダイン",
+      "dev_name": "スケールアーマー",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "HP+40",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 40
+        }
+      }
+    },
+    {
+      "id": 1019,
+      "name": "タイダルアーマー",
+      "dev_name": "ストームアーマー",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "HP+水風自ドミニオ数×20",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "owned_land_count_bonus",
+            "elements": [
+              "water",
               "wind"
-			],
-			"multiplier": 20,
-			"stat": "hp"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1020,
-	  "name": "タイダルコーザー",
-	  "dev_name": "ストームコーザー",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 55
-	  },
-	  "effect": "AP+60；HP-30",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 60,
-		  "hp": -30
-		}
-	  }
-	},
-	{
-	  "id": 1021,
-	  "name": "タイダルシールド",
-	  "dev_name": "ストームシールド",
-	  "rate": 130,
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "水風使用時、無効化[通常攻撃]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "normal_attack"
-			},
-			"triggers": [
+            ],
+            "multiplier": 20,
+            "stat": "hp"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1020,
+      "name": "タイダルコーザー",
+      "dev_name": "ストームコーザー",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 55
+      },
+      "effect": "AP+60；HP-30",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 60,
+          "hp": -30
+        }
+      }
+    },
+    {
+      "id": 1021,
+      "name": "タイダルシールド",
+      "dev_name": "ストームシールド",
+      "rate": 130,
+      "rarity": "R",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "水風使用時、無効化[通常攻撃]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "normal_attack"
+            },
+            "triggers": [
               "nullify"
-			],
-			"condition": {
-			  "condition_type": "user_element",
-			  "elements": [
-				"water",
+            ],
+            "condition": {
+              "condition_type": "user_element",
+              "elements": [
+                "water",
                 "wind"
-			  ]
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1022,
-	  "name": "タイダルスピア",
-	  "dev_name": "ストームスピア",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "AP+20；水風使用時、強化",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "user_element",
-				"elements": [
-				  "water",
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 1022,
+      "name": "タイダルスピア",
+      "dev_name": "ストームスピア",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "AP+20；水風使用時、強化",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "強化",
+            "skill_conditions": [
+              {
+                "condition_type": "user_element",
+                "elements": [
+                  "water",
                   "wind"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1023,
-	  "name": "タイダルハルバード",
-	  "dev_name": "ストームハルバード",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "AP+水風配置数×5；強化[火地]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "element_count_bonus",
-			"elements": [
-			  "water",
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1023,
+      "name": "タイダルハルバード",
+      "dev_name": "ストームハルバード",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "AP+水風配置数×5；強化[火地]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "element_count_bonus",
+            "elements": [
+              "water",
               "wind"
-			],
-			"multiplier": 5,
-			"stat": "ap"
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "fire",
+            ],
+            "multiplier": 5,
+            "stat": "ap"
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "強化",
+            "skill_conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "fire",
                   "earth"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1024,
-	  "name": "ライトニングオーブ",
-	  "dev_name": "スパークボール",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "術攻撃[AP40]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "fixed_ap",
-			"value": 40
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1025,
-	  "name": "ソーンシールド",
-	  "dev_name": "スパイクシールド",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "反射[1/2]",
-	  "effect_parsed": {
-		"keywords": [
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1024,
+      "name": "ライトニングオーブ",
+      "dev_name": "スパークボール",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "術攻撃[AP40]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "fixed_ap",
+            "value": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": 1025,
+      "name": "ソーンシールド",
+      "dev_name": "スパイクシールド",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "反射[1/2]",
+      "effect_parsed": {
+        "keywords": [
           "反射[1/2]"
-		],
-		"effects": [
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 0.5,
-			"self_damage_ratio": 0.5,
-			"attack_types": [
+        ],
+        "effects": [
+          {
+            "effect_type": "reflect_damage",
+            "reflect_ratio": 0.5,
+            "self_damage_ratio": 0.5,
+            "attack_types": [
               "normal"
-			],
-			"triggers": [
-			  "on_battle_end",
+            ],
+            "triggers": [
+              "on_battle_end",
               "reflect"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1026,
-	  "name": "イージスシールド",
-	  "dev_name": "スフィアシールド",
-	  "rate": 140,
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "AP=0；無効化[通常攻撃]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 0,
-		  "force_ap": true
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "normal_attack"
-			},
-			"triggers": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1026,
+      "name": "イージスシールド",
+      "dev_name": "スフィアシールド",
+      "rate": 140,
+      "rarity": "R",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "AP=0；無効化[通常攻撃]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 0,
+          "force_ap": true
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "normal_attack"
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1027,
-	  "name": "グロウメイル",
-	  "dev_name": "スペクターローブ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "AP+HP+10~70",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "random_stat_bonus",
-			"ap_range": {
-			  "min": 10,
-			  "max": 70
-			},
-			"hp_range": {
-			  "min": 10,
-			  "max": 70
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1028,
-	  "name": "ハンドクロスボウ",
-	  "dev_name": "スリング",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "AP&HP+10；先制",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 10,
-		  "hp": 10
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_first_strike"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1029,
-	  "name": "ドレインメイル",
-	  "dev_name": "ゼラチンアーマー",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "HP+40；蓄魔[受けたダメージ×5EP]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 40
-		},
-		"effects": [
-		  {
-			"effect_type": "magic_from_damage",
-			"trigger": "after_battle",
-			"multiplier": 5
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1030,
-	  "name": "リターンレイ",
-	  "dev_name": "ソウルレイ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "術攻撃[AP30]；復帰[手札]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "fixed_ap",
-			"value": 30
-		  },
-		  {
-			"effect_type": "item_return",
-			"trigger": "after_item_use",
-			"return_type": "return_to_hand"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1031,
-	  "name": "フロストクレスト",
-	  "dev_name": "ターコイズアムル",
-	  "rate": 100,
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "即死[水地・60%]；無効化[水地]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "即死",
-			"skill_params": {
-			  "probability": 60,
-			  "target_elements": [
-				"water",
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1027,
+      "name": "グロウメイル",
+      "dev_name": "スペクターローブ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "AP+HP+10~70",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "random_stat_bonus",
+            "ap_range": {
+              "min": 10,
+              "max": 70
+            },
+            "hp_range": {
+              "min": 10,
+              "max": 70
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 1028,
+      "name": "ハンドクロスボウ",
+      "dev_name": "スリング",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "AP&HP+10；先制",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 10,
+          "hp": 10
+        },
+        "effects": [
+          {
+            "effect_type": "grant_first_strike"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1029,
+      "name": "ドレインメイル",
+      "dev_name": "ゼラチンアーマー",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "HP+40；蓄魔[受けたダメージ×5EP]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 40
+        },
+        "effects": [
+          {
+            "effect_type": "magic_from_damage",
+            "trigger": "after_battle",
+            "multiplier": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": 1030,
+      "name": "リターンレイ",
+      "dev_name": "ソウルレイ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "術攻撃[AP30]；復帰[手札]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "fixed_ap",
+            "value": 30
+          },
+          {
+            "effect_type": "item_return",
+            "trigger": "after_item_use",
+            "return_type": "return_to_hand"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1031,
+      "name": "フロストクレスト",
+      "dev_name": "ターコイズアムル",
+      "rate": 100,
+      "rarity": "S",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "即死[水地・60%]；無効化[水地]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "即死",
+            "skill_params": {
+              "probability": 60,
+              "target_elements": [
+                "water",
                 "earth"
-			  ]
-			}
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "element",
-			  "elements": [
-				"water",
+              ]
+            }
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "element",
+              "elements": [
+                "water",
                 "earth"
-			  ]
-			},
-			"triggers": [
+              ]
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1032,
-	  "name": "アダマンタイト",
-	  "dev_name": "ダイヤアーマー",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "AP-30；HP+60；後手",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": -30,
-		  "hp": 60
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_last_strike"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1033,
-	  "name": "ハーフプレート",
-	  "dev_name": "チェインメイル",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 10
-	  },
-	  "effect": "HP+30",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 30
-		}
-	  }
-	},
-	{
-	  "id": 1034,
-	  "name": "リンクソード",
-	  "dev_name": "チェーンソー",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+戦闘地の連鎖数×20",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "chain_count_ap_bonus",
-			"multiplier": 20
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1035,
-	  "name": "ブリザードロッド",
-	  "dev_name": "チリングブラスト",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 90
-	  },
-	  "effect": "術攻撃[AP=水風自ドミニオ数×10]；術強化[火地]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "land_count",
-			"elements": [
-			  "water",
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1032,
+      "name": "アダマンタイト",
+      "dev_name": "ダイヤアーマー",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "AP-30；HP+60；後手",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": -30,
+          "hp": 60
+        },
+        "effects": [
+          {
+            "effect_type": "grant_last_strike"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1033,
+      "name": "ハーフプレート",
+      "dev_name": "チェインメイル",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 10
+      },
+      "effect": "HP+30",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 30
+        }
+      }
+    },
+    {
+      "id": 1034,
+      "name": "リンクソード",
+      "dev_name": "チェーンソー",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+戦闘地の連鎖数×20",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "chain_count_ap_bonus",
+            "multiplier": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": 1035,
+      "name": "ブリザードロッド",
+      "dev_name": "チリングブラスト",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 90
+      },
+      "effect": "術攻撃[AP=水風自ドミニオ数×10]；術強化[火地]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "land_count",
+            "elements": [
+              "water",
               "wind"
-			],
-			"multiplier": 10
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "術強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "fire",
+            ],
+            "multiplier": 10
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "術強化",
+            "skill_conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "fire",
                   "earth"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1036,
-	  "name": "コピースパイク",
-	  "dev_name": "ツインスパイク",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "AP+20；変質[使用クリーチャー]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "transform",
-			"trigger": "on_attack_success",
-			"transform_type": "forced_copy_attacker",
-			"target": "opponent",
-			"revert_after_battle": false
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1037,
-	  "name": "ディバインハロー",
-	  "dev_name": "ティアリングハロー",
-	  "rate": 75,
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "術攻撃[AP30]；無以外使用時、術強化；アイテム破壊・盗み無効",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "fixed_ap",
-			"value": 30
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "術強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "user_element",
-				"elements": [
-				  "fire",
-				  "water",
-				  "earth",
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1036,
+      "name": "コピースパイク",
+      "dev_name": "ツインスパイク",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "AP+20；変質[使用クリーチャー]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20
+        },
+        "effects": [
+          {
+            "effect_type": "transform",
+            "trigger": "on_attack_success",
+            "transform_type": "forced_copy_attacker",
+            "target": "opponent",
+            "revert_after_battle": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 1037,
+      "name": "ディバインハロー",
+      "dev_name": "ティアリングハロー",
+      "rate": 75,
+      "rarity": "S",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "術攻撃[AP30]；無以外使用時、術強化；アイテム破壊・盗み無効",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "fixed_ap",
+            "value": 30
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "術強化",
+            "skill_conditions": [
+              {
+                "condition_type": "user_element",
+                "elements": [
+                  "fire",
+                  "water",
+                  "earth",
                   "wind"
-				]
-			  }
-			]
-		  },
-		  {
-			"effect_type": "nullify_item_manipulation"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1038,
-	  "name": "グレイブストーン",
-	  "dev_name": "トゥームストーン",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 0
-	  },
-	  "effect": "自破壊時、手札6枚までカードを引く；アイテム破壊・盗み無効",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "draw_cards_on_death",
-			"trigger": "on_death",
-			"target_hand_size": 6
-		  },
-		  {
-			"effect_type": "nullify_item_manipulation",
-			"triggers": [
+                ]
+              }
+            ]
+          },
+          {
+            "effect_type": "nullify_item_manipulation"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1038,
+      "name": "グレイブストーン",
+      "dev_name": "トゥームストーン",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 0
+      },
+      "effect": "自破壊時、手札6枚までカードを引く；アイテム破壊・盗み無効",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "draw_cards_on_death",
+            "trigger": "on_death",
+            "target_hand_size": 6
+          },
+          {
+            "effect_type": "nullify_item_manipulation",
+            "triggers": [
               "before_battle"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1039,
-	  "name": "フレイムクレスト",
-	  "dev_name": "トパーズアムル",
-	  "rate": 100,
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "即死[火風・60%]；無効化[火風]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "即死",
-			"skill_params": {
-			  "probability": 60,
-			  "target_elements": [
-				"fire",
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1039,
+      "name": "フレイムクレスト",
+      "dev_name": "トパーズアムル",
+      "rate": 100,
+      "rarity": "S",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "即死[火風・60%]；無効化[火風]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "即死",
+            "skill_params": {
+              "probability": 60,
+              "target_elements": [
+                "fire",
                 "wind"
-			  ]
-			}
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "element",
-			  "elements": [
-				"fire",
+              ]
+            }
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "element",
+              "elements": [
+                "fire",
                 "wind"
-			  ]
-			},
-			"triggers": [
+              ]
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1040,
-	  "name": "トライデント",
-	  "dev_name": "トライデント",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+40；HP+20",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 40,
-		  "hp": 20
-		}
-	  }
-	},
-	{
-	  "id": 1041,
-	  "name": "ドラゴンソウル",
-	  "dev_name": "ドラゴンオーブ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "変身[いずれかのドラゴン]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "transform",
-			"trigger": "on_battle_start",
-			"transform_type": "random_by_race",
-			"race": "ドラゴン",
-			"target": "self",
-			"revert_after_battle": true
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1042,
-	  "name": "パイルバンカー",
-	  "dev_name": "ドリルランス",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+20；刺突",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "刺突"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1043,
-	  "name": "ダブルダガー",
-	  "dev_name": "トンファ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "2回攻撃",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_double_attack"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1044,
-	  "name": "バーニングコア",
-	  "dev_name": "ナパームアロー",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+30；HP+20；報復[敵のMHP-40]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30,
-		  "hp": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "revenge_mhp_damage",
-			"trigger": "on_death",
-			"damage": 40
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1045,
-	  "name": "カメレオンクローク",
-	  "dev_name": "ニュートラルクローク",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "HP+40；属性変化[無]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 40
-		},
-		"effects": [
-		  {
-			"effect_type": "change_element",
-			"target_element": "neutral"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1046,
-	  "name": "リザレクトスカラベ",
-	  "dev_name": "ネクロスカラベ",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "蘇生[スケルトン]",
-	  "effect_parsed": {
-		"keywords": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1040,
+      "name": "トライデント",
+      "dev_name": "トライデント",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+40；HP+20",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 40,
+          "hp": 20
+        }
+      }
+    },
+    {
+      "id": 1041,
+      "name": "ドラゴンソウル",
+      "dev_name": "ドラゴンオーブ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "変身[いずれかのドラゴン]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "transform",
+            "trigger": "on_battle_start",
+            "transform_type": "random_by_race",
+            "race": "ドラゴン",
+            "target": "self",
+            "revert_after_battle": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 1042,
+      "name": "パイルバンカー",
+      "dev_name": "ドリルランス",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+20；刺突",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "刺突"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1043,
+      "name": "ダブルダガー",
+      "dev_name": "トンファ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "2回攻撃",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_double_attack"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1044,
+      "name": "バーニングコア",
+      "dev_name": "ナパームアロー",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+30；HP+20；報復[敵のMHP-40]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30,
+          "hp": 20
+        },
+        "effects": [
+          {
+            "effect_type": "revenge_mhp_damage",
+            "trigger": "on_death",
+            "damage": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": 1045,
+      "name": "カメレオンクローク",
+      "dev_name": "ニュートラルクローク",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "HP+40；属性変化[無]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 40
+        },
+        "effects": [
+          {
+            "effect_type": "change_element",
+            "target_element": "neutral"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1046,
+      "name": "リザレクトスカラベ",
+      "dev_name": "ネクロスカラベ",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "蘇生[スケルトン]",
+      "effect_parsed": {
+        "keywords": [
           "蘇生"
-		],
-		"effects": [
-		  {
-			"effect_type": "revive",
-			"trigger": "on_death",
-			"revive_type": "forced",
-			"creature_id": 420
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1047,
-	  "name": "グールブラスト",
-	  "dev_name": "ネクロプラズマ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "術攻撃[AP50]；変身[スケルトン]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "fixed_ap",
-			"value": 50
-		  },
-		  {
-			"effect_type": "transform",
-			"trigger": "on_battle_start",
-			"transform_type": "forced",
-			"creature_id": 420,
-			"target": "self",
-			"revert_after_battle": true
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1048,
-	  "name": "デスペラード",
-	  "dev_name": "バーニングハート",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "AP&HP+20；相討",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20,
-		  "hp": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "instant_death",
-			"trigger": "on_death",
-			"probability": 100,
-			"target": "attacker"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1049,
-	  "name": "ヴォルケーノロッド",
-	  "dev_name": "バーニングロッド",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"ep": 90
-	  },
-	  "effect": "術攻撃[AP=火地自ドミニオ数×10]；術強化[水風]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "scroll_attack",
-			"scroll_type": "land_count",
-			"elements": [
-			  "fire",
+        ],
+        "effects": [
+          {
+            "effect_type": "revive",
+            "trigger": "on_death",
+            "revive_type": "forced",
+            "creature_id": 420
+          }
+        ]
+      }
+    },
+    {
+      "id": 1047,
+      "name": "グールブラスト",
+      "dev_name": "ネクロプラズマ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "術攻撃[AP50]；変身[スケルトン]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "fixed_ap",
+            "value": 50
+          },
+          {
+            "effect_type": "transform",
+            "trigger": "on_battle_start",
+            "transform_type": "forced",
+            "creature_id": 420,
+            "target": "self",
+            "revert_after_battle": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 1048,
+      "name": "デスペラード",
+      "dev_name": "バーニングハート",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "AP&HP+20；相討",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20,
+          "hp": 20
+        },
+        "effects": [
+          {
+            "effect_type": "instant_death",
+            "trigger": "on_death",
+            "probability": 100,
+            "target": "attacker"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1049,
+      "name": "ヴォルケーノロッド",
+      "dev_name": "バーニングロッド",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "巻物",
+      "cost": {
+        "ep": 90
+      },
+      "effect": "術攻撃[AP=火地自ドミニオ数×10]；術強化[水風]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "scroll_attack",
+            "scroll_type": "land_count",
+            "elements": [
+              "fire",
               "earth"
-			],
-			"multiplier": 10
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "術強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "water",
+            ],
+            "multiplier": 10
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "術強化",
+            "skill_conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "water",
                   "wind"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1050,
-	  "name": "カースウィップ",
-	  "dev_name": "バインドウィップ",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "AP+30；攻撃成功時、敵に呪い\"消沈\"",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "apply_curse",
-			"trigger": "on_attack_success",
-			"curse_type": "battle_disable",
-			"name": "消沈"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1051,
-	  "name": "フォートレスブレイカー",
-	  "dev_name": "バタリングラム",
-	  "rate": 70,
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "AP+30；即死[堅守]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "即死",
-			"skill_params": {
-			  "probability": 100,
-			  "target_type": "defensive"
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1052,
-	  "name": "パリィシールド",
-	  "dev_name": "バックラー",
-	  "rate": 70,
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "無効化[AP30以下]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "ap_below",
-			  "value": 30
-			},
-			"triggers": [
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1050,
+      "name": "カースウィップ",
+      "dev_name": "バインドウィップ",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "AP+30；攻撃成功時、敵に刻印\"消沈\"",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30
+        },
+        "effects": [
+          {
+            "effect_type": "apply_curse",
+            "trigger": "on_attack_success",
+            "curse_type": "battle_disable",
+            "name": "消沈"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1051,
+      "name": "フォートレスブレイカー",
+      "dev_name": "バタリングラム",
+      "rate": 70,
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "AP+30；即死[堅守]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "即死",
+            "skill_params": {
+              "probability": 100,
+              "target_type": "defensive"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 1052,
+      "name": "パリィシールド",
+      "dev_name": "バックラー",
+      "rate": 70,
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "無効化[AP30以下]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "ap_below",
+              "value": 30
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1053,
-	  "name": "ブロードアックス",
-	  "dev_name": "バトルアックス",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "AP+40",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 40
-		}
-	  }
-	},
-	{
-	  "id": 1054,
-	  "name": "チャクラム",
-	  "dev_name": "ブーメラン",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "AP+20；HP+10；復帰[手札]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20,
-		  "hp": 10
-		},
-		"effects": [
-		  {
-			"effect_type": "item_return",
-			"trigger": "after_item_use",
-			"return_type": "return_to_hand"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1055,
-	  "name": "ナレッジリング",
-	  "dev_name": "フォースアンクレット",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "HP+自手札数×10",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "hand_count_multiplier",
-			"stat": "hp",
-			"multiplier": 10
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1056,
-	  "name": "コモンズブレイド",
-	  "dev_name": "ブラックソード",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "AP+40；レアリティNが使用時、強化",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 40
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "user_rarity",
-				"rarities": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1053,
+      "name": "ブロードアックス",
+      "dev_name": "バトルアックス",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "AP+40",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 40
+        }
+      }
+    },
+    {
+      "id": 1054,
+      "name": "チャクラム",
+      "dev_name": "ブーメラン",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "AP+20；HP+10；復帰[手札]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20,
+          "hp": 10
+        },
+        "effects": [
+          {
+            "effect_type": "item_return",
+            "trigger": "after_item_use",
+            "return_type": "return_to_hand"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1055,
+      "name": "ナレッジリング",
+      "dev_name": "フォースアンクレット",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "HP+自手札数×10",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "hand_count_multiplier",
+            "stat": "hp",
+            "multiplier": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": 1056,
+      "name": "コモンズブレイド",
+      "dev_name": "ブラックソード",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "AP+40；レアリティNが使用時、強化",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 40
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "強化",
+            "skill_conditions": [
+              {
+                "condition_type": "user_rarity",
+                "rarities": [
                   "N"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1057,
-	  "name": "スペクトルワンド",
-	  "dev_name": "プリズムワンド",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "敵と属性が違う場合、AP&HP+40",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "element_mismatch_bonus",
-			"stat_bonus": {
-			  "ap": 40,
-			  "hp": 40
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1058,
-	  "name": "フルプレート",
-	  "dev_name": "プレートメイル",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "HP+50",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 50
-		}
-	  }
-	},
-	{
-	  "id": 1059,
-	  "name": "ペトリファクト",
-	  "dev_name": "ペトリフストーン",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "AP=0；HP=80",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "fixed_stat",
-			"stat": "ap",
-			"value": 0,
-			"operation": "set"
-		  },
-		  {
-			"effect_type": "fixed_stat",
-			"stat": "hp",
-			"value": 80,
-			"operation": "set"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1060,
-	  "name": "ジャイアントキラー",
-	  "dev_name": "ボーパルソード",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "AP+30；強化[MHP40以上]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "enemy_max_hp_check",
-				"operator": ">=",
-				"value": 40
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1061,
-	  "name": "ガイアアーマー",
-	  "dev_name": "マグマアーマー",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "HP+火地自ドミニオ数×20",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "owned_land_count_bonus",
-			"elements": [
-			  "fire",
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1057,
+      "name": "スペクトルワンド",
+      "dev_name": "プリズムワンド",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "敵と属性が違う場合、AP&HP+40",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "element_mismatch_bonus",
+            "stat_bonus": {
+              "ap": 40,
+              "hp": 40
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 1058,
+      "name": "フルプレート",
+      "dev_name": "プレートメイル",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "HP+50",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 50
+        }
+      }
+    },
+    {
+      "id": 1059,
+      "name": "ペトリファクト",
+      "dev_name": "ペトリフストーン",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "AP=0；HP=80",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "fixed_stat",
+            "stat": "ap",
+            "value": 0,
+            "operation": "set"
+          },
+          {
+            "effect_type": "fixed_stat",
+            "stat": "hp",
+            "value": 80,
+            "operation": "set"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1060,
+      "name": "ジャイアントキラー",
+      "dev_name": "ボーパルソード",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "AP+30；強化[MHP40以上]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "強化",
+            "skill_conditions": [
+              {
+                "condition_type": "enemy_max_hp_check",
+                "operator": ">=",
+                "value": 40
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1061,
+      "name": "ガイアアーマー",
+      "dev_name": "マグマアーマー",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "HP+火地自ドミニオ数×20",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "owned_land_count_bonus",
+            "elements": [
+              "fire",
               "earth"
-			],
-			"multiplier": 20,
-			"stat": "hp"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1062,
-	  "name": "ガイアシールド",
-	  "dev_name": "マグマシールド",
-	  "rate": 130,
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "火地使用時、無効化[通常攻撃]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "normal_attack"
-			},
-			"triggers": [
+            ],
+            "multiplier": 20,
+            "stat": "hp"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1062,
+      "name": "ガイアシールド",
+      "dev_name": "マグマシールド",
+      "rate": 130,
+      "rarity": "R",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "火地使用時、無効化[通常攻撃]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "normal_attack"
+            },
+            "triggers": [
               "nullify"
-			],
-			"condition": {
-			  "condition_type": "user_element",
-			  "elements": [
-				"fire",
+            ],
+            "condition": {
+              "condition_type": "user_element",
+              "elements": [
+                "fire",
                 "earth"
-			  ]
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1063,
-	  "name": "ガイアハンマー",
-	  "dev_name": "マグマハンマー",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "AP+20；火地使用時、強化",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "強化",
-			"condition": {
-			  "condition_type": "user_element",
-			  "elements": [
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 1063,
+      "name": "ガイアハンマー",
+      "dev_name": "マグマハンマー",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "AP+20；火地使用時、強化",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "強化",
+            "condition": {
+              "condition_type": "user_element",
+              "elements": [
                 "fire"
-			  ]
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1064,
-	  "name": "ガイアフレイル",
-	  "dev_name": "マグマフレイル",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "AP+火地配置数×5；強化[水風]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "element_count_bonus",
-			"elements": [
-			  "fire",
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 1064,
+      "name": "ガイアフレイル",
+      "dev_name": "マグマフレイル",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "AP+火地配置数×5；強化[水風]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "element_count_bonus",
+            "elements": [
+              "fire",
               "earth"
-			],
-			"multiplier": 5,
-			"stat": "ap"
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "強化",
-			"skill_conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "water",
+            ],
+            "multiplier": 5,
+            "stat": "ap"
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "強化",
+            "skill_conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "water",
                   "wind"
-				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1065,
-	  "name": "ルーンシールド",
-	  "dev_name": "マジックシールド",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "HP+30；無効化[巻物]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "scroll_attack"
-			},
-			"triggers": [
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1065,
+      "name": "ルーンシールド",
+      "dev_name": "マジックシールド",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "HP+30；無効化[巻物]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 30
+        },
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "scroll_attack"
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1066,
-	  "name": "リフレクトガード",
-	  "dev_name": "ミラーホブロン",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "敵アイテム未使用時、反射[全]",
-	  "effect_parsed": {
-		"keywords": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1066,
+      "name": "リフレクトガード",
+      "dev_name": "ミラーホブロン",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "敵アイテム未使用時、反射[全]",
+      "effect_parsed": {
+        "keywords": [
           "反射[全]"
-		],
-		"effects": [
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 1.0,
-			"self_damage_ratio": 0.0,
-			"attack_types": [
-			  "normal",
+        ],
+        "effects": [
+          {
+            "effect_type": "reflect_damage",
+            "reflect_ratio": 1.0,
+            "self_damage_ratio": 0.0,
+            "attack_types": [
+              "normal",
               "scroll"
-			],
-			"triggers": [
-			  "on_battle_end",
+            ],
+            "triggers": [
+              "on_battle_end",
               "reflect"
-			],
-			"conditions": [
-			  {
-				"condition_type": "enemy_no_item"
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1067,
-	  "name": "カースセイバー",
-	  "dev_name": "ムーンシミター",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "AP+30；攻撃成功時、敵に呪い\"免罪\"",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "apply_curse",
-			"trigger": "on_attack_success",
-			"curse_type": "creature_toll_disable",
-			"name": "免罪"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1068,
-	  "name": "マサムネ",
-	  "dev_name": "ムラサメ",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "AP+20；敵の攻撃無効化・反射無効",
-	  "effect_parsed": {
-		"keywords": [
+            ],
+            "conditions": [
+              {
+                "condition_type": "enemy_no_item"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1067,
+      "name": "カースセイバー",
+      "dev_name": "ムーンシミター",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "AP+30；攻撃成功時、敵に刻印\"免罪\"",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30
+        },
+        "effects": [
+          {
+            "effect_type": "apply_curse",
+            "trigger": "on_attack_success",
+            "curse_type": "creature_toll_disable",
+            "name": "免罪"
+          }
+        ]
+      }
+    },
+    {
+      "id": 1068,
+      "name": "マサムネ",
+      "dev_name": "ムラサメ",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "AP+20；敵の攻撃無効化・反射無効",
+      "effect_parsed": {
+        "keywords": [
           "反射無効"
-		],
-		"stat_bonus": {
-		  "ap": 20
-		},
-		"nullify_triggers": [
-		  "reflect",
+        ],
+        "stat_bonus": {
+          "ap": 20
+        },
+        "nullify_triggers": [
+          "reflect",
           "nullify"
-		],
-		"effects": [
-		  {
-			"effect_type": "nullify_reflect",
-			"triggers": [
+        ],
+        "effects": [
+          {
+            "effect_type": "nullify_reflect",
+            "triggers": [
               "before_attack"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1069,
-	  "name": "ミラーシールド",
-	  "dev_name": "メイガスミラー",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "HP+20；反射[巻物]",
-	  "effect_parsed": {
-		"keywords": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1069,
+      "name": "ミラーシールド",
+      "dev_name": "メイガスミラー",
+      "rarity": "S",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "HP+20；反射[巻物]",
+      "effect_parsed": {
+        "keywords": [
           "反射[巻物]"
-		],
-		"stat_bonus": {
-		  "hp": 20
-		},
-		"effects": [
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 1.0,
-			"self_damage_ratio": 0.0,
-			"attack_types": [
+        ],
+        "stat_bonus": {
+          "hp": 20
+        },
+        "effects": [
+          {
+            "effect_type": "reflect_damage",
+            "reflect_ratio": 1.0,
+            "self_damage_ratio": 0.0,
+            "attack_types": [
               "scroll"
-			],
-			"triggers": [
-			  "on_battle_end",
+            ],
+            "triggers": [
+              "on_battle_end",
               "reflect"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1070,
-	  "name": "クロー",
-	  "dev_name": "メイス",
-	  "rarity": "C",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 0
-	  },
-	  "effect": "AP+20",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 20
-		}
-	  }
-	},
-	{
-	  "id": 1071,
-	  "name": "ヘクスシール",
-	  "dev_name": "ラグドール",
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "無効化[巻物]；無効化[自分よりAPの大きなクリーチャー]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "scroll_attack"
-			},
-			"triggers": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1070,
+      "name": "クロー",
+      "dev_name": "メイス",
+      "rarity": "C",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 0
+      },
+      "effect": "AP+20",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 20
+        }
+      }
+    },
+    {
+      "id": 1071,
+      "name": "ヘクスシール",
+      "dev_name": "ラグドール",
+      "rarity": "R",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "無効化[巻物]；無効化[自分よりAPの大きなクリーチャー]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "scroll_attack"
+            },
+            "triggers": [
               "nullify"
-			]
-		  },
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "attacker_ap_above",
-			  "use_base_ap": true
-			},
-			"triggers": [
+            ]
+          },
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "attacker_ap_above",
+              "use_base_ap": true
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1072,
-	  "name": "ブレイクアーマー",
-	  "dev_name": "リアクトアーマー",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "HP+30；アイテム破壊[武器]",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "hp": 30
-		},
-		"effects": [
-		  {
-			"effect_type": "destroy_item",
-			"target_types": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1072,
+      "name": "ブレイクアーマー",
+      "dev_name": "リアクトアーマー",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "防具",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "HP+30；アイテム破壊[武器]",
+      "effect_parsed": {
+        "stat_bonus": {
+          "hp": 30
+        },
+        "effects": [
+          {
+            "effect_type": "destroy_item",
+            "target_types": [
               "武器"
-			],
-			"triggers": [
+            ],
+            "triggers": [
               "before_battle"
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 1073,
-	  "name": "ウォーハンマー",
-	  "dev_name": "ロングソード",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "武器",
-	  "cost": {
-		"ep": 10
-	  },
-	  "effect": "AP+30",
-	  "effect_parsed": {
-		"stat_bonus": {
-		  "ap": 30
-		}
-	  }
-	},
-	{
-	  "id": 1074,
-	  "name": "ミラクルシール",
-	  "dev_name": "ワンダーチャーム",
-	  "rate": 120,
-	  "rarity": "R",
-	  "type": "item",
-	  "item_type": "アクセサリ",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "無効化[通常攻撃の80%]",
-	  "effect_parsed": {
-		"effects": [
-		  {
-			"effect_type": "grant_skill",
-			"skill": "無効化",
-			"skill_params": {
-			  "nullify_type": "normal_attack",
-			  "reduction_rate": 0.2
-			},
-			"triggers": [
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1073,
+      "name": "ウォーハンマー",
+      "dev_name": "ロングソード",
+      "rarity": "N",
+      "type": "item",
+      "item_type": "武器",
+      "cost": {
+        "ep": 10
+      },
+      "effect": "AP+30",
+      "effect_parsed": {
+        "stat_bonus": {
+          "ap": 30
+        }
+      }
+    },
+    {
+      "id": 1074,
+      "name": "ミラクルシール",
+      "dev_name": "ワンダーチャーム",
+      "rate": 120,
+      "rarity": "R",
+      "type": "item",
+      "item_type": "アクセサリ",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "無効化[通常攻撃の80%]",
+      "effect_parsed": {
+        "effects": [
+          {
+            "effect_type": "grant_skill",
+            "skill": "無効化",
+            "skill_params": {
+              "nullify_type": "normal_attack",
+              "reduction_rate": 0.2
+            },
+            "triggers": [
               "nullify"
-			]
-		  }
-		]
-	  }
-	}
+            ]
+          }
+        ]
+      }
+    }
   ]
 }
