@@ -495,7 +495,7 @@
 			"ap": 40.0,
 			"hp": 40.0,
 			"ability": "鼓舞・崩壊",
-			"ability_detail": "鼓舞[防御側・HP+10]；戦闘後、敵に刻印崩壊",
+			"ability_detail": "鼓舞[防御側・HP+10]；戦闘後、敵に刻印[崩壊]",
 			"ability_parsed": {
 				"keywords": [
 					"鼓舞",
@@ -839,8 +839,8 @@
 			},
 			"ap": 30.0,
 			"hp": 40.0,
-			"ability": "戦闘後、敵に刻印免罪",
-			"ability_detail": "戦闘後、敵に刻印免罪",
+			"ability": "戦闘後、敵に刻印[免罪]",
+			"ability_detail": "戦闘後、敵に刻印[免罪]",
 			"ability_parsed": {
 				"nullify_triggers": [
 					"on_attack_success"

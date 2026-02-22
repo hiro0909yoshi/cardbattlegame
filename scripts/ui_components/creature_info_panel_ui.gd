@@ -262,21 +262,22 @@ func _update_right_panel():
 	if curse_label:
 		var curse = data.get("curse", {})
 		if curse.is_empty():
-			curse_label.text = "【刻印】なし"
+			curse_label.text = "刻印[なし]"
 		else:
 			var curse_name = curse.get("name", "不明")
 			var duration = curse.get("duration", -1)
+			var curse_text = CurseDescriptions.expand_curse_text("刻印[%s]" % curse_name)
 			if duration > 0:
-				curse_label.text = "【刻印】%s（残り%dターン）" % [curse_name, duration]
+				curse_label.text = "%s（残り%dターン）" % [curse_text, duration]
 			else:
-				curse_label.text = "【刻印】%s" % curse_name
-	
+				curse_label.text = curse_text
+
 	# スキル
 	if skill_container and skill_label:
 		var ability_detail = data.get("ability_detail", data.get("ability", ""))
 		if not ability_detail.is_empty():
 			skill_container.visible = true
-			skill_label.text = ability_detail
+			skill_label.text = CurseDescriptions.expand_curse_text(ability_detail)
 		else:
 			skill_container.visible = false
 	

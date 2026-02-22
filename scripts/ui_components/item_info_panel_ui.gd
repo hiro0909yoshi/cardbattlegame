@@ -205,7 +205,7 @@ func _update_right_panel():
 			effect_container.visible = false
 		else:
 			effect_container.visible = true
-			effect_label.text = effect_text
+			effect_label.text = CurseDescriptions.expand_curse_text(effect_text)
 
 
 func _update_item_type_icon(item_type: String) -> void:

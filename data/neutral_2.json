@@ -139,7 +139,7 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP40・対象自クリーチャーに刻印\"地形効果\"]",
+			"ability_detail": "アルカナアーツ[EP40・対象自クリーチャーに刻印[地形効果]]",
 			"mystic_arts": {
 				"cost": 40,
 				"spell_id": 9019

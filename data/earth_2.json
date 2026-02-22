@@ -761,7 +761,7 @@
 			"ap": 40,
 			"hp": 30,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP50・これに刻印\"安寧\"]",
+			"ability_detail": "アルカナアーツ[EP50・これに刻印[安寧]]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"

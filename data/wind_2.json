@@ -212,7 +212,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "先制・攻撃成功時",
-			"ability_detail": "先制；攻撃成功時、敵に刻印\"消沈\"",
+			"ability_detail": "先制；攻撃成功時、敵に刻印[消沈]",
 			"ability_parsed": {
 				"keywords": [
 					"先制"
@@ -335,7 +335,7 @@
 			"ap": 30,
 			"hp": 20,
 			"ability": "結界・アルカナアーツ",
-			"ability_detail": "結界；アルカナアーツ[EP50・対象セプターに刻印\"結界\"]",
+			"ability_detail": "結界；アルカナアーツ[EP50・対象セプターに刻印[結界]]",
 			"ability_parsed": {
 				"keywords": [
 					"結界",
@@ -471,7 +471,7 @@
 			"ap": 20,
 			"hp": 40,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP50・使用者に刻印\"ダイス6\"]",
+			"ability_detail": "アルカナアーツ[EP50・使用者に刻印[ダイス6]]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"

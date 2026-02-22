@@ -85,7 +85,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "奮闘・アルカナアーツ",
-			"ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに刻印天駆]",
+			"ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに刻印[天駆]]",
 			"ability_parsed": {
 				"keywords": [
 					"奮闘",
@@ -120,7 +120,7 @@
 			"ap": 30,
 			"hp": 60,
 			"ability": "堅守・アルカナアーツ",
-			"ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに刻印通行料1/2]",
+			"ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに刻印[通行料1/2]]",
 			"ability_parsed": {
 				"keywords": [
 					"堅守",

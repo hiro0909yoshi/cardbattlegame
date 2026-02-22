@@ -208,7 +208,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "先制・アルカナアーツ",
-			"ability_detail": "先制；アルカナアーツ[EP40・対象ドミニオに刻印\"暁光\"]",
+			"ability_detail": "先制；アルカナアーツ[EP40・対象ドミニオに刻印[暁光]]",
 			"ability_parsed": {
 				"keywords": [
 					"先制",
@@ -652,7 +652,7 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "合成・攻撃成功時",
-			"ability_detail": "合成[水・セイリュウに変身]；攻撃成功時、敵に刻印\"衰弱\"",
+			"ability_detail": "合成[水・セイリュウに変身]；攻撃成功時、敵に刻印[衰弱]",
 			"synthesis": {
 				"type": "element",
 				"condition": "water",

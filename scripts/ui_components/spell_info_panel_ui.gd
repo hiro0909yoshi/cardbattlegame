@@ -196,7 +196,10 @@ func _update_right_panel():
 	# 効果テキスト
 	if effect_label:
 		var effect_text = data.get("effect", "")
-		effect_label.text = effect_text if not effect_text.is_empty() else "効果なし"
+		if not effect_text.is_empty():
+			effect_label.text = CurseDescriptions.expand_curse_text(effect_text)
+		else:
+			effect_label.text = "効果なし"
 
 func _update_cost_icons(cards_sacrifice: int) -> void:
 	"""犠牲カードアイコンを更新"""

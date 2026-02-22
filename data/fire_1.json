@@ -74,7 +74,7 @@
 					{
 						"id": "amon_mystic_001",
 						"name": "バイタリティ",
-						"description": "対象ドミニオに刻印\"暁光\"；カードを1枚引く",
+						"description": "対象ドミニオに刻印[暁光]；カードを1枚引く",
 						"spell_id": 2066,
 						"cost": 50
 					}
@@ -858,7 +858,7 @@
 			"ap": 10,
 			"hp": 20,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP80・対象自ドミニオに刻印結界]",
+			"ability_detail": "アルカナアーツ[EP80・対象自ドミニオに刻印[結界]]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"

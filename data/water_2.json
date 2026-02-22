@@ -55,7 +55,7 @@
 			"ap": 20,
 			"hp": 40,
 			"ability": "堅守・アルカナアーツ",
-			"ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに刻印ダイス1～3]",
+			"ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに刻印[ダイス1～3]]",
 			"ability_parsed": {
 				"keywords": [
 					"堅守",
@@ -268,7 +268,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに刻印消沈]",
+			"ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに刻印[消沈]]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"

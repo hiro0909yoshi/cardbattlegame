@@ -169,7 +169,7 @@ func update_world_curse_label():
 	else:
 		var curse_name = world_curse.get("name", "世界刻印")
 		var duration = world_curse.get("duration", 0)
-		world_curse_label.text = "[color=purple]世界: %s (%dR)[/color]" % [curse_name, duration]
+		world_curse_label.text = "[color=purple]世界刻印[%s]{%dR}[/color]" % [curse_name, duration]
 		world_curse_label.visible = true
 
 # 単一パネルを更新
@@ -209,7 +209,7 @@ func build_player_info_text(player, player_id: int) -> String:
 	# プレイヤー刻印があれば別行で表示
 	if player.curse and not player.curse.is_empty():
 		var curse_name = player.curse.get("name", "刻印")
-		text += "\n[color=red]呪: " + curse_name + "[/color]"
+		text += "\n[color=red]刻印[" + curse_name + "][/color]"
 	
 	return text
 

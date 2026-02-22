@@ -571,7 +571,7 @@
 			"ap": 20,
 			"hp": 20,
 			"ability": "結界・アルカナアーツ",
-			"ability_detail": "結界；アルカナアーツ[EP30・対象敵クリーチャーに刻印\"枷\"]",
+			"ability_detail": "結界；アルカナアーツ[EP30・対象敵クリーチャーに刻印[枷]]",
 			"ability_parsed": {
 				"keywords": [
 					"結界",
@@ -652,7 +652,7 @@
 			"ap": 20,
 			"hp": 40,
 			"ability": "堅守・アルカナアーツ",
-			"ability_detail": "堅守；アルカナアーツ[EP40・対象敵クリーチャーに刻印\"暗転\"]",
+			"ability_detail": "堅守；アルカナアーツ[EP40・対象敵クリーチャーに刻印[暗転]]",
 			"ability_parsed": {
 				"keywords": [
 					"堅守"
@@ -736,7 +736,7 @@
 			"ap": 40,
 			"hp": 40,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP30・対象敵ドミニオに刻印\"衰弱\"]",
+			"ability_detail": "アルカナアーツ[EP30・対象敵ドミニオに刻印[衰弱]]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"

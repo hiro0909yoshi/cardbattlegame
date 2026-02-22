@@ -90,7 +90,7 @@ func build_status_text(player_id: int) -> String:
 	# プレイヤー刻印があればアイコン表示
 	if player.curse and not player.curse.is_empty():
 		var curse_name = player.curse.get("name", "刻印")
-		text += " [" + curse_name + "]"
+		text += " 刻印[" + curse_name + "]"
 	
 	text += "\n"
 	text += "EP: " + str(player.magic_power) + "EP\n"
@@ -131,8 +131,7 @@ func build_status_text(player_id: int) -> String:
 		if not world_curse.is_empty():
 			var curse_name = world_curse.get("name", "不明")
 			var duration = world_curse.get("duration", 0)
-			text += "[b][color=purple]世界刻印[/color][/b]\n"
-			text += curse_name + " (残り" + str(duration) + "R)\n\n"
+			text += "[b][color=purple]世界刻印[" + curse_name + "]{残り" + str(duration) + "R}[/color][/b]\n\n"
 	
 	# 土地情報
 	text += "[b][color=yellow]保有土地[/color][/b]\n"

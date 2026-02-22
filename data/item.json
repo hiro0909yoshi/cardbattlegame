@@ -1303,7 +1303,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "AP+30；攻撃成功時、敵に刻印\"消沈\"",
+	  "effect": "AP+30；攻撃成功時、敵に刻印[消沈]",
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "ap": 30
@@ -1768,7 +1768,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "AP+30；攻撃成功時、敵に刻印\"免罪\"",
+	  "effect": "AP+30；攻撃成功時、敵に刻印[免罪]",
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "ap": 30
