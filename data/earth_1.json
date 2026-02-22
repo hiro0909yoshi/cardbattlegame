@@ -1,783 +1,783 @@
 {
-  "cards": [
-    {
-      "id": 200,
-      "name": "アースズピリット",
-      "dev_name": "アースズピリット",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 40,
-      "hp": 30,
-      "ability": "",
-      "ability_detail": "配置ドミニオでレベルアップか地形変化時、MHP+10"
-    },
-    {
-      "id": 201,
-      "name": "アネイマブル",
-      "dev_name": "アネイマブル",
-      "rarity": "R",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 30,
-        "lands_required": [
-          "earth"
-        ],
-        "cards_sacrifice": 1
-      },
-      "ap": 50,
-      "hp": 10,
-      "ability": "後手・即死・殲滅",
-      "ability_detail": "後手；即死[70%]；殲滅[倒手の同種カード全て・80%]",
-      "ability_parsed": {
-        "keywords": [
-          "後手",
-          "即死"
-        ],
-        "keyword_conditions": {
-          "即死": {
-            "condition_type": "none",
-            "probability": 70
-          }
-        },
-        "effects": [
-          {
-            "trigger": "on_kill",
-            "effect_type": "annihilate",
-            "probability": 80
-          }
-        ]
-      }
-    },
-    {
-      "id": 202,
-      "name": "ウッドフォーク",
-      "dev_name": "ウッドフォーク",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 75
-      },
-      "restrictions": {
-        "cannot_use": [
-          "武器"
-        ]
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "加勢",
-      "ability_detail": "加勢",
-      "ability_parsed": {
-        "keywords": [
-          "加勢"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "all"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 203,
-      "name": "オドラデク",
-      "dev_name": "オドラデク",
-      "rarity": "R",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 40
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "加勢・堅牢",
-      "ability_detail": "加勢；堅牢",
-      "ability_parsed": {
-        "keywords": [
-          "加勢",
-          "堅牢"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "all"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 204,
-      "name": "ガーゴイル",
-      "dev_name": "ガーゴイル",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "ap": 30,
-      "hp": 50,
-      "ability": "先制・防御時AP=50",
-      "ability_detail": "先制；防御時、AP=50",
-      "ability_parsed": {
-        "keywords": [
-          "先制"
-        ],
-        "effects": [
-          {
-            "effect_type": "defender_fixed_ap",
-            "value": 50,
-            "description": "防御時、AP=50"
-          }
-        ]
-      }
-    },
-    {
-      "id": 205,
-      "name": "カクタスウォール",
-      "dev_name": "カクタスウォール",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 50
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 10,
-      "hp": 50,
-      "ability": "堅守・再生",
-      "ability_detail": "堅守；敵が水風の場合、HP+50；再生",
-      "ability_parsed": {
-        "keywords": [
-          "再生"
-        ],
-        "effects": [
-          {
-            "effect_type": "enemy_element_bonus",
-            "stat": "hp",
-            "value": 50,
-            "condition": {
-              "enemy_elements": [
-                "water",
-                "wind"
-              ]
-            },
-            "description": "敵が水風の場合、HP+50"
-          }
-        ]
-      }
-    },
-    {
-      "id": 206,
-      "name": "ギガンテリウム",
-      "dev_name": "ギガンテリウム",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 50,
-      "hp": 60,
-      "ability": "♡付きドミニオで戦闘中",
-      "ability_detail": "♡付きドミニオで戦闘中、HP-20",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "hp_penalty",
-            "condition": "has_mark",
-            "amount": 20
-          }
-        ]
-      }
-    },
-    {
-      "id": 207,
-      "name": "キャプテンコック",
-      "dev_name": "キャプテンコック",
-      "rarity": "R",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 50,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "奮闘・アルカナアーツ",
-      "ability_detail": "奮闘；アルカナアーツ[EP60・対象自クリーチャーのダウンを解除]",
-      "ability_parsed": {
-        "keywords": [
-          "奮闘",
-          "アルカナアーツ"
-        ],
-        "mystic_arts": [
-          {
-            "name": "ダウン解除",
-            "cost": 60,
-            "spell_id": 9044
-          }
-        ]
-      }
-    },
-    {
-      "id": 208,
-      "name": "グーバ",
-      "dev_name": "グーバ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 0
-      },
-      "ap": 0,
-      "hp": 10,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 209,
-      "name": "グーバクイーン",
-      "dev_name": "グーバクイーン",
-      "rate": 79,
-      "rarity": "R",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 25,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "武器"
-        ]
-      },
-      "ap": 10,
-      "hp": 40,
-      "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP20・選んだ空地にグーバを配置]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ],
-        "mystic_arts": [
-          {
-            "name": "グーバ配置",
-            "cost": 20,
-            "spell_id": 9055
-          }
-        ]
-      }
-    },
-    {
-      "id": 210,
-      "name": "グリーンオーガ",
-      "dev_name": "グリーンオーガ",
-      "race": "オーガ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 80
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 211,
-      "name": "グリマルキン",
-      "dev_name": "グリマルキン",
-      "rarity": "R",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 40,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "加勢・結界",
-      "ability_detail": "加勢[火地]；結界",
-      "ability_parsed": {
-        "keywords": [
-          "加勢",
-          "結界"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "fire",
-              "earth"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 212,
-      "name": "グレートタスカー",
-      "dev_name": "グレートタスカー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 80,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 60,
-      "hp": 50,
-      "ability": "無効化",
-      "ability_detail": "無効化[先制の能力を持つクリーチャー]",
-      "ability_parsed": {
-        "keywords": [
-          "無効化"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "has_ability",
-            "ability": "先制"
-          }
-        }
-      }
-    },
-    {
-      "id": 213,
-      "name": "グロウホーン",
-      "dev_name": "グロウホーン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 50,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 50,
-      "hp": 40,
-      "ability": "共鳴",
-      "ability_detail": "共鳴[火・AP&HP+20]",
-      "ability_parsed": {
-        "keywords": [
-          "共鳴"
-        ],
-        "keyword_conditions": {
-          "共鳴": {
-            "element": "fire",
-            "stat_bonus": {
-              "ap": 20,
-              "hp": 20
-            }
-          }
-        }
-      }
-    },
-    {
-      "id": 214,
-      "name": "コアトリクエ",
-      "dev_name": "コアトリクエ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "ap": 30,
-      "hp": 50,
-      "ability": "アルカナアーツ",
-      "ability_detail": "ブックが相手より多い場合、AP&HP+20；アルカナアーツ[EP50・対象ブックの上1枚を破壊]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ]
-      },
-      "mystic_arts": {
-        "cost": 50,
-        "spell_id": 9038
-      }
-    },
-    {
-      "id": 215,
-      "name": "コカトリス",
-      "dev_name": "コカトリス",
-      "rarity": "S",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 50,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "変質",
-      "ability_detail": "変質[ストーンウォール]",
-      "ability_parsed": {
-        "keywords": [
-          "変質"
-        ],
-        "effects": [
-          {
-            "effect_type": "transform",
-            "trigger": "on_attack_success",
-            "target": "opponent",
-            "transform_type": "forced",
-            "creature_id": 222,
-            "revert_after_battle": false
-          }
-        ]
-      }
-    },
-    {
-      "id": 216,
-      "name": "サクヤ",
-      "dev_name": "サクヤ",
-      "rarity": "S",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 30,
-        "lands_required": [
-          "earth"
-        ]
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "wind"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP120・対象自ドミニオを地に変える]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ]
-      },
-      "mystic_arts": {
-        "cost": 120,
-        "spell_id": 9040
-      }
-    },
-    {
-      "id": 217,
-      "name": "ジャッカロープ",
-      "dev_name": "ジャッカロープ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "加勢・変身",
-      "ability_detail": "加勢[火地]；スペル破壊時、グレートタスカーに変身",
-      "ability_parsed": {
-        "keywords": [
-          "加勢"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "fire",
-              "earth"
-            ]
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "transform",
-            "trigger": "on_spell_death",
-            "transform_to": 212
-          }
-        ]
-      }
-    },
-    {
-      "id": 218,
-      "name": "ジャングラバー",
-      "dev_name": "ジャングラバー",
-      "rarity": "R",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 40
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "結界・アルカナアーツ",
-      "ability_detail": "結界；アルカナアーツ[EP30・対象敵クリーチャーに刻印\"枷\"]",
-      "ability_parsed": {
-        "keywords": [
-          "結界",
-          "アルカナアーツ"
-        ],
-        "mystic_art": {
-          "name": "移動封じ",
-          "cost": 30,
-          "spell_id": 9013
-        }
-      }
-    },
-    {
-      "id": 219,
-      "name": "シルバンダッチェス",
-      "dev_name": "シルバンダッチェス",
-      "rarity": "S",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 60,
-        "lands_required": [
-          "earth",
-          "earth"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "加勢・アイテム破壊・再生",
-      "ability_detail": "加勢[地]；アイテム破壊[道具か巻物か加勢クリーチャー]；再生",
-      "ability_parsed": {
-        "keywords": [
-          "加勢",
-          "アイテム破壊",
-          "再生"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "earth"
-            ]
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "destroy_item",
-            "target_types": [
-              "道具",
-              "巻物",
-              "加勢クリーチャー"
-            ],
-            "triggers": [
-              "before_battle"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 220,
-      "name": "スクリーマー",
-      "dev_name": "スクリーマー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 30
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "wind"
-        ],
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 20,
-      "hp": 40,
-      "ability": "堅守・アルカナアーツ",
-      "ability_detail": "堅守；アルカナアーツ[EP40・対象敵クリーチャーに刻印\"暗転\"]",
-      "ability_parsed": {
-        "keywords": [
-          "堅守"
-        ],
-        "effects": []
-      },
-      "mystic_arts": {
-        "cost": 40,
-        "spell_id": 9018
-      }
-    },
-    {
-      "id": 221,
-      "name": "スクリリン",
-      "dev_name": "スクリリン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 50
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "加勢",
-      "ability_detail": "加勢",
-      "ability_parsed": {
-        "keywords": [
-          "加勢"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "all"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 222,
-      "name": "ストーンウォール",
-      "dev_name": "ストーンウォール",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 25
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具",
-          "巻物"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 0,
-      "hp": 60,
-      "ability": "堅守",
-      "ability_detail": "堅守"
-    },
-    {
-      "id": 223,
-      "name": "スピットコブラ",
-      "dev_name": "スピットコブラ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 80
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP30・対象敵ドミニオに刻印\"衰弱\"]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ],
-        "mystic_art": {
-          "name": "衰弱刻印",
-          "cost": 30,
-          "spell_id": 9028
-        }
-      }
-    },
-    {
-      "id": 224,
-      "name": "スプラウトリング",
-      "dev_name": "スプラウトリング",
-      "rarity": "N",
-      "type": "creature",
-      "element": "earth",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "地形効果・アルカナアーツ",
-      "ability_detail": "火から地形効果を得る；アルカナアーツ[EP50・オールドウィロウに変身]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ],
-        "effects": [],
-        "extra_land_elements": [
-          "fire"
-        ],
-        "mystic_arts": [
-          {
-            "name": "オールドウィロウに変身",
-            "cost": 50,
-            "spell_id": 9020
-          }
-        ]
-      }
-    }
-  ]
+	"cards": [
+		{
+			"id": 200,
+			"name": "ソイルブレス",
+			"dev_name": "アースズピリット",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 60
+			},
+			"ap": 40,
+			"hp": 30,
+			"ability": "",
+			"ability_detail": "配置ドミニオでレベルアップか地形変化時、MHP+10"
+		},
+		{
+			"id": 201,
+			"name": "デスブルーム",
+			"dev_name": "アネイマブル",
+			"rarity": "R",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 30,
+				"lands_required": [
+					"earth"
+				],
+				"cards_sacrifice": 1
+			},
+			"ap": 50,
+			"hp": 10,
+			"ability": "後手・即死・殲滅",
+			"ability_detail": "後手；即死[70%]；殲滅[倒手の同種カード全て・80%]",
+			"ability_parsed": {
+				"keywords": [
+					"後手",
+					"即死"
+				],
+				"keyword_conditions": {
+					"即死": {
+						"condition_type": "none",
+						"probability": 70
+					}
+				},
+				"effects": [
+					{
+						"trigger": "on_kill",
+						"effect_type": "annihilate",
+						"probability": 80
+					}
+				]
+			}
+		},
+		{
+			"id": 202,
+			"name": "グリーンメンター",
+			"dev_name": "ウッドフォーク",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 75
+			},
+			"restrictions": {
+				"cannot_use": [
+					"武器"
+				]
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "加勢",
+			"ability_detail": "加勢",
+			"ability_parsed": {
+				"keywords": [
+					"加勢"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"all"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 203,
+			"name": "ヴォイドパペット",
+			"dev_name": "オドラデク",
+			"rarity": "R",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 40
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "加勢・堅牢",
+			"ability_detail": "加勢；堅牢",
+			"ability_parsed": {
+				"keywords": [
+					"加勢",
+					"堅牢"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"all"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 204,
+			"name": "ロックウォッチャー",
+			"dev_name": "ガーゴイル",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"ap": 30,
+			"hp": 50,
+			"ability": "先制・防御時AP=50",
+			"ability_detail": "先制；防御時、AP=50",
+			"ability_parsed": {
+				"keywords": [
+					"先制"
+				],
+				"effects": [
+					{
+						"effect_type": "defender_fixed_ap",
+						"value": 50,
+						"description": "防御時、AP=50"
+					}
+				]
+			}
+		},
+		{
+			"id": 205,
+			"name": "スパインウォール",
+			"dev_name": "カクタスウォール",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 50
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 10,
+			"hp": 50,
+			"ability": "堅守・再生",
+			"ability_detail": "堅守；敵が水風の場合、HP+50；再生",
+			"ability_parsed": {
+				"keywords": [
+					"再生"
+				],
+				"effects": [
+					{
+						"effect_type": "enemy_element_bonus",
+						"stat": "hp",
+						"value": 50,
+						"condition": {
+							"enemy_elements": [
+								"water",
+								"wind"
+							]
+						},
+						"description": "敵が水風の場合、HP+50"
+					}
+				]
+			}
+		},
+		{
+			"id": 206,
+			"name": "ワイルドモノリス",
+			"dev_name": "ギガンテリウム",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 50,
+			"hp": 60,
+			"ability": "♡付きドミニオで戦闘中",
+			"ability_detail": "♡付きドミニオで戦闘中、HP-20",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "hp_penalty",
+						"condition": "has_mark",
+						"amount": 20
+					}
+				]
+			}
+		},
+		{
+			"id": 207,
+			"name": "ネヴァーフォール",
+			"dev_name": "キャプテンコック",
+			"rarity": "R",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 50,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "奮闘・アルカナアーツ",
+			"ability_detail": "奮闘；アルカナアーツ[EP60・対象自クリーチャーのダウンを解除]",
+			"ability_parsed": {
+				"keywords": [
+					"奮闘",
+					"アルカナアーツ"
+				],
+				"mystic_arts": [
+					{
+						"name": "ダウン解除",
+						"cost": 60,
+						"spell_id": 9044
+					}
+				]
+			}
+		},
+		{
+			"id": 208,
+			"name": "ダートリング",
+			"dev_name": "グーバ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 0
+			},
+			"ap": 0,
+			"hp": 10,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 209,
+			"name": "ダートブリーダー",
+			"dev_name": "グーバクイーン",
+			"rate": 79,
+			"rarity": "R",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 25,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"武器"
+				]
+			},
+			"ap": 10,
+			"hp": 40,
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP20・選んだ空地にグーバを配置]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				],
+				"mystic_arts": [
+					{
+						"name": "グーバ配置",
+						"cost": 20,
+						"spell_id": 9055
+					}
+				]
+			}
+		},
+		{
+			"id": 210,
+			"name": "アースオーガ",
+			"dev_name": "グリーンオーガ",
+			"race": "オーガ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 80
+			},
+			"ap": 40,
+			"hp": 50,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 211,
+			"name": "ルーンキャット",
+			"dev_name": "グリマルキン",
+			"rarity": "R",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 40,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "加勢・結界",
+			"ability_detail": "加勢[火地]；結界",
+			"ability_parsed": {
+				"keywords": [
+					"加勢",
+					"結界"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"fire",
+							"earth"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 212,
+			"name": "アンチストライカー",
+			"dev_name": "グレートタスカー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 80,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 60,
+			"hp": 50,
+			"ability": "無効化",
+			"ability_detail": "無効化[先制の能力を持つクリーチャー]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "has_ability",
+						"ability": "先制"
+					}
+				}
+			}
+		},
+		{
+			"id": 213,
+			"name": "フレイムシンビオス",
+			"dev_name": "グロウホーン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 50,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 50,
+			"hp": 40,
+			"ability": "共鳴",
+			"ability_detail": "共鳴[火・AP&HP+20]",
+			"ability_parsed": {
+				"keywords": [
+					"共鳴"
+				],
+				"keyword_conditions": {
+					"共鳴": {
+						"element": "fire",
+						"stat_bonus": {
+							"ap": 20,
+							"hp": 20
+						}
+					}
+				}
+			}
+		},
+		{
+			"id": 214,
+			"name": "ブックバーナー",
+			"dev_name": "コアトリクエ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"ap": 30,
+			"hp": 50,
+			"ability": "アルカナアーツ",
+			"ability_detail": "ブックが相手より多い場合、AP&HP+20；アルカナアーツ[EP50・対象ブックの上1枚を破壊]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				]
+			},
+			"mystic_arts": {
+				"cost": 50,
+				"spell_id": 9038
+			}
+		},
+		{
+			"id": 215,
+			"name": "ゴルゴンゲイズ",
+			"dev_name": "コカトリス",
+			"rarity": "S",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 50,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "変質",
+			"ability_detail": "変質[ストーンウォール]",
+			"ability_parsed": {
+				"keywords": [
+					"変質"
+				],
+				"effects": [
+					{
+						"effect_type": "transform",
+						"trigger": "on_attack_success",
+						"target": "opponent",
+						"transform_type": "forced",
+						"creature_id": 222,
+						"revert_after_battle": false
+					}
+				]
+			}
+		},
+		{
+			"id": 216,
+			"name": "サクラシャーマン",
+			"dev_name": "サクヤ",
+			"rarity": "S",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 30,
+				"lands_required": [
+					"earth"
+				]
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"wind"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP120・対象自ドミニオを地に変える]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				]
+			},
+			"mystic_arts": {
+				"cost": 120,
+				"spell_id": 9040
+			}
+		},
+		{
+			"id": 217,
+			"name": "トリガーバニー",
+			"dev_name": "ジャッカロープ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 60
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "加勢・変身",
+			"ability_detail": "加勢[火地]；スペル破壊時、グレートタスカーに変身",
+			"ability_parsed": {
+				"keywords": [
+					"加勢"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"fire",
+							"earth"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "transform",
+						"trigger": "on_spell_death",
+						"transform_to": 212
+					}
+				]
+			}
+		},
+		{
+			"id": 218,
+			"name": "ジャングルウォーデン",
+			"dev_name": "ジャングラバー",
+			"rarity": "R",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 40
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "結界・アルカナアーツ",
+			"ability_detail": "結界；アルカナアーツ[EP30・対象敵クリーチャーに刻印\"枷\"]",
+			"ability_parsed": {
+				"keywords": [
+					"結界",
+					"アルカナアーツ"
+				],
+				"mystic_art": {
+					"name": "移動封じ",
+					"cost": 30,
+					"spell_id": 9013
+				}
+			}
+		},
+		{
+			"id": 219,
+			"name": "シルヴァンクイーン",
+			"dev_name": "シルバンダッチェス",
+			"rarity": "S",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 60,
+				"lands_required": [
+					"earth",
+					"earth"
+				]
+			},
+			"ap": 50,
+			"hp": 50,
+			"ability": "加勢・アイテム破壊・再生",
+			"ability_detail": "加勢[地]；アイテム破壊[道具か巻物か加勢クリーチャー]；再生",
+			"ability_parsed": {
+				"keywords": [
+					"加勢",
+					"アイテム破壊",
+					"再生"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"earth"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "destroy_item",
+						"target_types": [
+							"道具",
+							"巻物",
+							"加勢クリーチャー"
+						],
+						"triggers": [
+							"before_battle"
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 220,
+			"name": "カースドシュラウド",
+			"dev_name": "スクリーマー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 30
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"wind"
+				],
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 20,
+			"hp": 40,
+			"ability": "堅守・アルカナアーツ",
+			"ability_detail": "堅守；アルカナアーツ[EP40・対象敵クリーチャーに刻印\"暗転\"]",
+			"ability_parsed": {
+				"keywords": [
+					"堅守"
+				],
+				"effects": []
+			},
+			"mystic_arts": {
+				"cost": 40,
+				"spell_id": 9018
+			}
+		},
+		{
+			"id": 221,
+			"name": "マイクロメンター",
+			"dev_name": "スクリリン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 50
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "加勢",
+			"ability_detail": "加勢",
+			"ability_parsed": {
+				"keywords": [
+					"加勢"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"all"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 222,
+			"name": "メガリスガード",
+			"dev_name": "ストーンウォール",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 25
+			},
+			"restrictions": {
+				"cannot_use": [
+					"防具",
+					"巻物"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 0,
+			"hp": 60,
+			"ability": "堅守",
+			"ability_detail": "堅守"
+		},
+		{
+			"id": 223,
+			"name": "ブライトコブラ",
+			"dev_name": "スピットコブラ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 80
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP30・対象敵ドミニオに刻印\"衰弱\"]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				],
+				"mystic_art": {
+					"name": "衰弱刻印",
+					"cost": 30,
+					"spell_id": 9028
+				}
+			}
+		},
+		{
+			"id": 224,
+			"name": "ブルームリング",
+			"dev_name": "スプラウトリング",
+			"rarity": "N",
+			"type": "creature",
+			"element": "earth",
+			"cost": {
+				"ep": 60
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "地形効果・アルカナアーツ",
+			"ability_detail": "火から地形効果を得る；アルカナアーツ[EP50・オールドウィロウに変身]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				],
+				"effects": [],
+				"extra_land_elements": [
+					"fire"
+				],
+				"mystic_arts": [
+					{
+						"name": "オールドウィロウに変身",
+						"cost": 50,
+						"spell_id": 9020
+					}
+				]
+			}
+		}
+	]
 }

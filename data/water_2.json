@@ -1,811 +1,811 @@
 {
-  "cards": [
-    {
-      "id": 125,
-      "name": "スラッジタイタン",
-      "dev_name": "スラッジタイタン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 90
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具",
-          "アクセサリ"
-        ]
-      },
-      "ap": 50,
-      "hp": 60,
-      "ability": "戦闘開始時HP減少・再生",
-      "ability_detail": "戦闘開始時、HP減少していたら自滅；再生",
-      "ability_parsed": {
-        "keywords": [
-          "再生"
-        ],
-        "effects": [
-          {
-            "effect_type": "self_destruct",
-            "condition": "hp_damaged"
-          }
-        ]
-      }
-    },
-    {
-      "id": 126,
-      "name": "スワンプスボーン",
-      "dev_name": "スワンプスボーン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 20
-      },
-      "restrictions": {
-        "cannot_use": [
-          "武器",
-          "巻物"
-        ],
-        "cannot_summon": [
-          "fire"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 20,
-      "hp": 40,
-      "ability": "堅守・アルカナアーツ",
-      "ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに刻印ダイス1～3]",
-      "ability_parsed": {
-        "keywords": [
-          "堅守",
-          "アルカナアーツ"
-        ],
-        "mystic_art": {
-          "name": "ダイス1～3刻印",
-          "cost": 50,
-          "spell_id": 9029
-        }
-      }
-    },
-    {
-      "id": 127,
-      "name": "ゼラチンウォール",
-      "dev_name": "ゼラチンウォール",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 30
-      },
-      "restrictions": {
-        "cannot_use": [
-          "武器",
-          "巻物"
-        ],
-        "cannot_summon": [
-          "fire"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 10,
-      "hp": 50,
-      "ability": "堅守・蓄魔",
-      "ability_detail": "堅守；蓄魔[受けたダメージ×5EP]",
-      "ability_parsed": {
-        "keywords": [
-          "堅守"
-        ],
-        "effects": [
-          {
-            "effect_type": "magic_gain_on_damage",
-            "multiplier": 5
-          }
-        ]
-      }
-    },
-    {
-      "id": 128,
-      "name": "ディープシードラゴン",
-      "dev_name": "ディープシードラゴン",
-      "race": "ドラゴン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 80,
-        "lands_required": [
-          "water",
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具"
-        ],
-        "cannot_summon": [
-          "fire"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "先制・術攻撃",
-      "ability_detail": "先制；術攻撃[AP=基本AP]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
-          "術攻撃"
-        ],
-        "keyword_conditions": {
-          "術攻撃": {
-            "scroll_type": "base_ap"
-          }
-        },
-        "effects": []
-      }
-    },
-    {
-      "id": 129,
-      "name": "テンタクルズ",
-      "dev_name": "テンタクルズ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "再生",
-      "ability_detail": "再生；カード獲得[5枚になるまで]",
-      "ability_parsed": {
-        "keywords": [
-          "再生"
-        ],
-        "skill_ids": [
-          9002
-        ]
-      }
-    },
-    {
-      "id": 130,
-      "name": "トリトン",
-      "dev_name": "トリトン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "アイテム使用時術強化",
-      "ability_detail": "アイテム使用の戦闘後、カード獲得；術強化",
-      "ability_parsed": {
-        "keywords": [
-          "術強化"
-        ],
-        "keyword_conditions": {
-          "術強化": {
-            "scroll_type": "base_ap"
-          }
-        },
-        "skill_ids": [
-          9003
-        ],
-        "effects": [
-          {
-            "effect_type": "draw_cards",
-            "trigger": "on_battle_end",
-            "condition": "self_item_used",
-            "count": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": 131,
-      "name": "ネッシー",
-      "dev_name": "ネッシー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 45,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具"
-        ]
-      },
-      "ap": 20,
-      "hp": 40,
-      "ability": "水で戦闘中HP+ドミニオレベル×10",
-      "ability_detail": "水で戦闘中、HP+ドミニオレベル×10",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "battle_land_level_bonus",
-            "condition": {
-              "battle_land_element": "water"
-            },
-            "stat": "hp",
-            "multiplier": 10,
-            "description": "水で戦闘中、HP+ドミニオレベル×10"
-          }
-        ]
-      }
-    },
-    {
-      "id": 132,
-      "name": "ハイド",
-      "dev_name": "ハイド",
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 20,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "fire"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに刻印消沈]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ],
-        "mystic_arts": [
-          {
-            "name": "消沈",
-            "cost": 50,
-            "spell_id": 2068
-          }
-        ],
-        "effects": []
-      }
-    },
-    {
-      "id": 133,
-      "name": "バハムート",
-      "dev_name": "バハムート",
-      "rarity": "R",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 110,
-        "lands_required": [
-          "water",
-          "water"
-        ]
-      },
-      "ap": 60,
-      "hp": 60,
-      "ability": "先制・属性変化・再生",
-      "ability_detail": "先制；属性変化[水]；再生",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
-          "再生"
-        ],
-        "effects": [
-          {
-            "trigger": "on_battle_won",
-            "effect_type": "change_tile_element",
-            "element": "water"
-          }
-        ]
-      }
-    },
-    {
-      "id": 134,
-      "name": "ビジランテ",
-      "dev_name": "ビジランテ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 50,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "Aボタン連打",
-      "ability_detail": "Aボタン連打でHP上昇"
-    },
-    {
-      "id": 135,
-      "name": "ヒッポカンパス",
-      "dev_name": "ヒッポカンパス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 40,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ],
-        "cannot_summon": [
-          "earth"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "無効化・アルカナアーツ",
-      "ability_detail": "無効化[無]；アルカナアーツ[EP60・ケルピーに変身]",
-      "ability_parsed": {
-        "keywords": [
-          "無効化",
-          "アルカナアーツ"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "element",
-            "element": "neutral"
-          }
-        },
-        "mystic_arts": [
-          {
-            "name": "ケルピーに変身",
-            "cost": 60,
-            "spell_id": 9047
-          }
-        ]
-      }
-    },
-    {
-      "id": 136,
-      "name": "フェイト",
-      "dev_name": "フェイト",
-      "rarity": "R",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 10,
-      "hp": 40,
-      "ability": "カード引き・アルカナアーツ",
-      "ability_detail": "形見[カード1枚]；アルカナアーツ[EP40・カードを1枚引く]",
-      "ability_parsed": {
-        "keywords": [
-          "形見",
-          "アルカナアーツ"
-        ],
-        "effects": [
-          {
-            "effect_type": "legacy_card",
-            "trigger": "on_death",
-            "card_count": 1
-          }
-        ],
-        "mystic_arts": [
-          {
-            "name": "カードドロー",
-            "cost": 40,
-            "spell_id": 9042
-          }
-        ]
-      }
-    },
-    {
-      "id": 137,
-      "name": "ブラッドプリン",
-      "dev_name": "ブラッドプリン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 50
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "加勢・MHP+加勢クリーチャーのHP",
-      "ability_detail": "加勢[水地風]；戦闘前、MHP+加勢クリーチャーのHP",
-      "ability_parsed": {
-        "keywords": [
-          "加勢"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "water",
-              "earth",
-              "wind"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 138,
-      "name": "ブルーオーガ",
-      "dev_name": "ブルーオーガ",
-      "race": "オーガ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 80
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 139,
-      "name": "ヘルグラマイト",
-      "dev_name": "ヘルグラマイト",
-      "rarity": "R",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 60,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "蘇生[サーペントフライ]",
-      "ability_detail": "蘇生[サーペントフライ]",
-      "ability_parsed": {
-        "keywords": [
-          "蘇生"
-        ],
-        "effects": [
-          {
-            "effect_type": "revive",
-            "trigger": "on_death",
-            "revive_type": "forced",
-            "creature_id": 316
-          }
-        ]
-      }
-    },
-    {
-      "id": 140,
-      "name": "マイコロン",
-      "dev_name": "マイコロン",
-      "rarity": "R",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 35
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "武器",
-          "巻物"
-        ]
-      },
-      "ap": 10,
-      "hp": 30,
-      "ability": "敵攻撃成功の戦闘後・再生",
-      "ability_detail": "敵攻撃成功の戦闘後、ランダムな空地にマイコロンを配置；再生",
-      "ability_parsed": {
-        "keywords": [
-          "再生"
-        ],
-        "effects": [
-          {
-            "effect_type": "spawn_copy_on_defend_survive",
-            "trigger": "on_battle_end",
-            "target": "random_empty_tile",
-            "inherit": {
-              "base_up": true,
-              "current_hp": true,
-              "curse": false
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 141,
-      "name": "マカラ",
-      "dev_name": "マカラ",
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 65
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "武器",
-          "巻物"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 30,
-      "hp": 40,
-      "ability": "堅守・アルカナアーツ",
-      "ability_detail": "堅守；奮闘；アルカナアーツ[EP100・配置ドミニオを水に変える]",
-      "ability_parsed": {
-        "keywords": [
-          "堅守",
-          "奮闘",
-          "アルカナアーツ"
-        ]
-      },
-      "mystic_arts": {
-        "cost": 100,
-        "spell_id": 9039
-      }
-    },
-    {
-      "id": 142,
-      "name": "ミストウィング",
-      "dev_name": "ミストウィング",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 70
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ],
-        "cannot_summon": [
-          "earth"
-        ]
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "無効化・アルカナアーツ",
-      "ability_detail": "無効化[火風]；アルカナアーツ[EP30・アクアホーンに変身]",
-      "ability_parsed": {
-        "keywords": [
-          "無効化",
-          "アルカナアーツ"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "element",
-            "elements": [
-              "fire",
-              "wind"
-            ]
-          }
-        },
-        "mystic_arts": [
-          {
-            "name": "アクアホーンに変身",
-            "cost": 30,
-            "spell_id": 9048
-          }
-        ]
-      }
-    },
-    {
-      "id": 143,
-      "name": "メガロドン",
-      "dev_name": "メガロドン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 40
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ],
-        "cannot_summon": [
-          "fire",
-          "earth",
-          "wind"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 144,
-      "name": "ラハブ",
-      "dev_name": "ラハブ",
-      "rarity": "R",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 80,
-        "lands_required": [
-          "water",
-          "water"
-        ],
-        "cards_sacrifice": 1
-      },
-      "restrictions": {
-        "cannot_use": [
-          "アクセサリ"
-        ],
-        "cannot_summon": [
-          "earth"
-        ]
-      },
-      "ap": 60,
-      "hp": 60,
-      "ability": "無効化・鼓舞",
-      "ability_detail": "無効化[AP50以上]；鼓舞[水風・HP+10]",
-      "ability_parsed": {
-        "keywords": [
-          "無効化",
-          "鼓舞"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "ap_above",
-            "value": 50
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "support",
-            "target": {
-              "scope": "all_creatures",
-              "conditions": [
-                {
-                  "condition_type": "element",
-                  "elements": [
-                    "water",
-                    "wind"
-                  ]
-                }
-              ]
-            },
-            "bonus": {
-              "hp": 10
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 145,
-      "name": "リザードマン",
-      "dev_name": "リザードマン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "先制",
-      "ability_detail": "先制",
-      "ability_parsed": {
-        "keywords": [
-          "先制"
-        ],
-        "effects": []
-      }
-    },
-    {
-      "id": 146,
-      "name": "リリス",
-      "dev_name": "リリス",
-      "rate": 65,
-      "rarity": "S",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 0,
-      "hp": 30,
-      "ability": "AP+自手札数×10",
-      "ability_detail": "AP+自手札数×10",
-      "ability_parsed": {
-        "keywords": [],
-        "effects": [
-          {
-            "effect_type": "hand_count_multiplier",
-            "stat": "ap",
-            "multiplier": 10,
-            "description": "AP+自手札数×10"
-          }
-        ]
-      }
-    },
-    {
-      "id": 147,
-      "name": "ルーンアデプト",
-      "dev_name": "ルーンアデプト",
-      "rarity": "R",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 50,
-        "lands_required": [
-          "water"
-        ]
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "武器",
-          "防具"
-        ]
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "術強化・アルカナアーツ",
-      "ability_detail": "術強化；結界；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
-      "ability_parsed": {
-        "keywords": [
-          "術強化",
-          "結界",
-          "アルカナアーツ"
-        ],
-        "keyword_conditions": {
-          "術強化": {
-            "scroll_type": "base_ap"
-          }
-        },
-        "mystic_arts": [
-          {
-            "name": "スペル借用",
-            "cost": 100,
-            "spell_id": 9058
-          }
-        ]
-      }
-    },
-    {
-      "id": 150,
-      "name": "ブルーコボルト",
-      "dev_name": "ブルーコボルト",
-      "race": "コボルト",
-      "rarity": "C",
-      "type": "creature",
-      "element": "water",
-      "cost": {
-        "ep": 20
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "",
-      "ability_detail": ""
-    }
-  ]
+	"cards": [
+		{
+			"id": 125,
+			"name": "グラスジャイアント",
+			"dev_name": "スラッジタイタン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 90
+			},
+			"restrictions": {
+				"cannot_use": [
+					"防具",
+					"アクセサリ"
+				]
+			},
+			"ap": 50,
+			"hp": 60,
+			"ability": "戦闘開始時HP減少・再生",
+			"ability_detail": "戦闘開始時、HP減少していたら自滅；再生",
+			"ability_parsed": {
+				"keywords": [
+					"再生"
+				],
+				"effects": [
+					{
+						"effect_type": "self_destruct",
+						"condition": "hp_damaged"
+					}
+				]
+			}
+		},
+		{
+			"id": 126,
+			"name": "マーシュヘクス",
+			"dev_name": "スワンプスボーン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 20
+			},
+			"restrictions": {
+				"cannot_use": [
+					"武器",
+					"巻物"
+				],
+				"cannot_summon": [
+					"fire"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 20,
+			"hp": 40,
+			"ability": "堅守・アルカナアーツ",
+			"ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに刻印ダイス1～3]",
+			"ability_parsed": {
+				"keywords": [
+					"堅守",
+					"アルカナアーツ"
+				],
+				"mystic_art": {
+					"name": "ダイス1～3刻印",
+					"cost": 50,
+					"spell_id": 9029
+				}
+			}
+		},
+		{
+			"id": 127,
+			"name": "マナアブソーバー",
+			"dev_name": "ゼラチンウォール",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 30
+			},
+			"restrictions": {
+				"cannot_use": [
+					"武器",
+					"巻物"
+				],
+				"cannot_summon": [
+					"fire"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 10,
+			"hp": 50,
+			"ability": "堅守・蓄魔",
+			"ability_detail": "堅守；蓄魔[受けたダメージ×5EP]",
+			"ability_parsed": {
+				"keywords": [
+					"堅守"
+				],
+				"effects": [
+					{
+						"effect_type": "magic_gain_on_damage",
+						"multiplier": 5
+					}
+				]
+			}
+		},
+		{
+			"id": 128,
+			"name": "ティダルガルム",
+			"dev_name": "ディープシードラゴン",
+			"race": "ドラゴン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 80,
+				"lands_required": [
+					"water",
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"防具"
+				],
+				"cannot_summon": [
+					"fire"
+				]
+			},
+			"ap": 50,
+			"hp": 50,
+			"ability": "先制・術攻撃",
+			"ability_detail": "先制；術攻撃[AP=基本AP]",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"術攻撃"
+				],
+				"keyword_conditions": {
+					"術攻撃": {
+						"scroll_type": "base_ap"
+					}
+				},
+				"effects": []
+			}
+		},
+		{
+			"id": 129,
+			"name": "ハーヴェストアーム",
+			"dev_name": "テンタクルズ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 40,
+			"hp": 50,
+			"ability": "再生",
+			"ability_detail": "再生；カード獲得[5枚になるまで]",
+			"ability_parsed": {
+				"keywords": [
+					"再生"
+				],
+				"skill_ids": [
+					9002
+				]
+			}
+		},
+		{
+			"id": 130,
+			"name": "シーソルジャー",
+			"dev_name": "トリトン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 70
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "アイテム使用時術強化",
+			"ability_detail": "アイテム使用の戦闘後、カード獲得；術強化",
+			"ability_parsed": {
+				"keywords": [
+					"術強化"
+				],
+				"keyword_conditions": {
+					"術強化": {
+						"scroll_type": "base_ap"
+					}
+				},
+				"skill_ids": [
+					9003
+				],
+				"effects": [
+					{
+						"effect_type": "draw_cards",
+						"trigger": "on_battle_end",
+						"condition": "self_item_used",
+						"count": 1
+					}
+				]
+			}
+		},
+		{
+			"id": 131,
+			"name": "ディープレジェンド",
+			"dev_name": "ネッシー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 45,
+				"lands_required": [
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"防具"
+				]
+			},
+			"ap": 20,
+			"hp": 40,
+			"ability": "水で戦闘中HP+ドミニオレベル×10",
+			"ability_detail": "水で戦闘中、HP+ドミニオレベル×10",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "battle_land_level_bonus",
+						"condition": {
+							"battle_land_element": "water"
+						},
+						"stat": "hp",
+						"multiplier": 10,
+						"description": "水で戦闘中、HP+ドミニオレベル×10"
+					}
+				]
+			}
+		},
+		{
+			"id": 132,
+			"name": "バインドサーペント",
+			"dev_name": "ハイド",
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 20,
+				"lands_required": [
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"fire"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに刻印消沈]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				],
+				"mystic_arts": [
+					{
+						"name": "消沈",
+						"cost": 50,
+						"spell_id": 2068
+					}
+				],
+				"effects": []
+			}
+		},
+		{
+			"id": 133,
+			"name": "エターナルリヴァイア",
+			"dev_name": "バハムート",
+			"rarity": "R",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 110,
+				"lands_required": [
+					"water",
+					"water"
+				]
+			},
+			"ap": 60,
+			"hp": 60,
+			"ability": "先制・属性変化・再生",
+			"ability_detail": "先制；属性変化[水]；再生",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"再生"
+				],
+				"effects": [
+					{
+						"trigger": "on_battle_won",
+						"effect_type": "change_tile_element",
+						"element": "water"
+					}
+				]
+			}
+		},
+		{
+			"id": 134,
+			"name": "バーストディフェンダー",
+			"dev_name": "ビジランテ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 50,
+				"lands_required": [
+					"water"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "Aボタン連打",
+			"ability_detail": "Aボタン連打でHP上昇"
+		},
+		{
+			"id": 135,
+			"name": "タイダルジェイラー",
+			"dev_name": "ヒッポカンパス",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 40,
+				"lands_required": [
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				],
+				"cannot_summon": [
+					"earth"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "無効化・アルカナアーツ",
+			"ability_detail": "無効化[無]；アルカナアーツ[EP60・ケルピーに変身]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化",
+					"アルカナアーツ"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "element",
+						"element": "neutral"
+					}
+				},
+				"mystic_arts": [
+					{
+						"name": "ケルピーに変身",
+						"cost": 60,
+						"spell_id": 9047
+					}
+				]
+			}
+		},
+		{
+			"id": 136,
+			"name": "ドゥームリーパー",
+			"dev_name": "フェイト",
+			"rarity": "R",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 60
+			},
+			"ap": 10,
+			"hp": 40,
+			"ability": "カード引き・アルカナアーツ",
+			"ability_detail": "形見[カード1枚]；アルカナアーツ[EP40・カードを1枚引く]",
+			"ability_parsed": {
+				"keywords": [
+					"形見",
+					"アルカナアーツ"
+				],
+				"effects": [
+					{
+						"effect_type": "legacy_card",
+						"trigger": "on_death",
+						"card_count": 1
+					}
+				],
+				"mystic_arts": [
+					{
+						"name": "カードドロー",
+						"cost": 40,
+						"spell_id": 9042
+					}
+				]
+			}
+		},
+		{
+			"id": 137,
+			"name": "ライフリンク",
+			"dev_name": "ブラッドプリン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 50
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "加勢・MHP+加勢クリーチャーのHP",
+			"ability_detail": "加勢[水地風]；戦闘前、MHP+加勢クリーチャーのHP",
+			"ability_parsed": {
+				"keywords": [
+					"加勢"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"water",
+							"earth",
+							"wind"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 138,
+			"name": "タイダルオーガ",
+			"dev_name": "ブルーオーガ",
+			"race": "オーガ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 80
+			},
+			"ap": 40,
+			"hp": 50,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 139,
+			"name": "コクーンラーヴァ",
+			"dev_name": "ヘルグラマイト",
+			"rarity": "R",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 60,
+				"lands_required": [
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "蘇生[サーペントフライ]",
+			"ability_detail": "蘇生[サーペントフライ]",
+			"ability_parsed": {
+				"keywords": [
+					"蘇生"
+				],
+				"effects": [
+					{
+						"effect_type": "revive",
+						"trigger": "on_death",
+						"revive_type": "forced",
+						"creature_id": 316
+					}
+				]
+			}
+		},
+		{
+			"id": 140,
+			"name": "ミラーファンガス",
+			"dev_name": "マイコロン",
+			"rarity": "R",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 35
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"武器",
+					"巻物"
+				]
+			},
+			"ap": 10,
+			"hp": 30,
+			"ability": "敵攻撃成功の戦闘後・再生",
+			"ability_detail": "敵攻撃成功の戦闘後、ランダムな空地にマイコロンを配置；再生",
+			"ability_parsed": {
+				"keywords": [
+					"再生"
+				],
+				"effects": [
+					{
+						"effect_type": "spawn_copy_on_defend_survive",
+						"trigger": "on_battle_end",
+						"target": "random_empty_tile",
+						"inherit": {
+							"base_up": true,
+							"current_hp": true,
+							"curse": false
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": 141,
+			"name": "フォーエヴァーガード",
+			"dev_name": "マカラ",
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 65
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"武器",
+					"巻物"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 30,
+			"hp": 40,
+			"ability": "堅守・アルカナアーツ",
+			"ability_detail": "堅守；奮闘；アルカナアーツ[EP100・配置ドミニオを水に変える]",
+			"ability_parsed": {
+				"keywords": [
+					"堅守",
+					"奮闘",
+					"アルカナアーツ"
+				]
+			},
+			"mystic_arts": {
+				"cost": 100,
+				"spell_id": 9039
+			}
+		},
+		{
+			"id": 142,
+			"name": "トランスフェザー",
+			"dev_name": "ミストウィング",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 70
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				],
+				"cannot_summon": [
+					"earth"
+				]
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "無効化・アルカナアーツ",
+			"ability_detail": "無効化[火風]；アルカナアーツ[EP30・アクアホーンに変身]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化",
+					"アルカナアーツ"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "element",
+						"elements": [
+							"fire",
+							"wind"
+						]
+					}
+				},
+				"mystic_arts": [
+					{
+						"name": "アクアホーンに変身",
+						"cost": 30,
+						"spell_id": 9048
+					}
+				]
+			}
+		},
+		{
+			"id": 143,
+			"name": "プレデタージョーズ",
+			"dev_name": "メガロドン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 40
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				],
+				"cannot_summon": [
+					"fire",
+					"earth",
+					"wind"
+				]
+			},
+			"ap": 50,
+			"hp": 50,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 144,
+			"name": "ウェーブフォートレス",
+			"dev_name": "ラハブ",
+			"rarity": "R",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 80,
+				"lands_required": [
+					"water",
+					"water"
+				],
+				"cards_sacrifice": 1
+			},
+			"restrictions": {
+				"cannot_use": [
+					"アクセサリ"
+				],
+				"cannot_summon": [
+					"earth"
+				]
+			},
+			"ap": 60,
+			"hp": 60,
+			"ability": "無効化・鼓舞",
+			"ability_detail": "無効化[AP50以上]；鼓舞[水風・HP+10]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化",
+					"鼓舞"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "ap_above",
+						"value": 50
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "support",
+						"target": {
+							"scope": "all_creatures",
+							"conditions": [
+								{
+									"condition_type": "element",
+									"elements": [
+										"water",
+										"wind"
+									]
+								}
+							]
+						},
+						"bonus": {
+							"hp": 10
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": 145,
+			"name": "ブリッツクロウラー",
+			"dev_name": "リザードマン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 70
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "先制",
+			"ability_detail": "先制",
+			"ability_parsed": {
+				"keywords": [
+					"先制"
+				],
+				"effects": []
+			}
+		},
+		{
+			"id": 146,
+			"name": "デッキイーター",
+			"dev_name": "リリス",
+			"rate": 65,
+			"rarity": "S",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 60
+			},
+			"ap": 0,
+			"hp": 30,
+			"ability": "AP+自手札数×10",
+			"ability_detail": "AP+自手札数×10",
+			"ability_parsed": {
+				"keywords": [],
+				"effects": [
+					{
+						"effect_type": "hand_count_multiplier",
+						"stat": "ap",
+						"multiplier": 10,
+						"description": "AP+自手札数×10"
+					}
+				]
+			}
+		},
+		{
+			"id": 147,
+			"name": "マジックバンディット",
+			"dev_name": "ルーンアデプト",
+			"rarity": "R",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 50,
+				"lands_required": [
+					"water"
+				]
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"武器",
+					"防具"
+				]
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "術強化・アルカナアーツ",
+			"ability_detail": "術強化；結界；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
+			"ability_parsed": {
+				"keywords": [
+					"術強化",
+					"結界",
+					"アルカナアーツ"
+				],
+				"keyword_conditions": {
+					"術強化": {
+						"scroll_type": "base_ap"
+					}
+				},
+				"mystic_arts": [
+					{
+						"name": "スペル借用",
+						"cost": 100,
+						"spell_id": 9058
+					}
+				]
+			}
+		},
+		{
+			"id": 150,
+			"name": "ブルーコボルト",
+			"dev_name": "ブルーコボルト",
+			"race": "コボルト",
+			"rarity": "C",
+			"type": "creature",
+			"element": "water",
+			"cost": {
+				"ep": 20
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "",
+			"ability_detail": ""
+		}
+	]
 }

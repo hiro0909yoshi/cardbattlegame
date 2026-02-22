@@ -1,906 +1,906 @@
 {
-  "cards": [
-    {
-      "id": 26,
-      "name": "ネビロス",
-      "dev_name": "ネビロス",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "fire"
-        ]
-      },
-      "ap": 50,
-      "hp": 40,
-      "ability": "強化",
-      "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強化",
-      "ability_parsed": {
-        "keywords": [
-          "強化"
-        ],
-        "keyword_conditions": {
-          "強化": {
-            "condition_type": "enemy_no_item"
-          }
-        },
-        "skill_ids": [
-          9002
-        ],
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "enemy_no_item"
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 27,
-      "name": "バーアル",
-      "dev_name": "バーアル",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 40,
-        "lands_required": [
-          "fire"
-        ],
-        "cards_sacrifice": 1
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "先制",
-      "ability_detail": "先制；代償[ランダムな手札1枚]",
-      "ability_parsed": {
-        "keywords": [
-          "先制"
-        ],
-        "effects": []
-      }
-    },
-    {
-      "id": 28,
-      "name": "バードメイデン",
-      "dev_name": "バードメイデン",
-      "rarity": "R",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 65
-      },
-      "restrictions": {
-        "cannot_use": [
-          "武器"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "奮闘・アルカナアーツ",
-      "ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに刻印天駆]",
-      "ability_parsed": {
-        "keywords": [
-          "奮闘",
-          "アルカナアーツ"
-        ],
-        "mystic_art": {
-          "name": "天駆付与",
-          "cost": 50,
-          "spell_id": 9014
-        }
-      }
-    },
-    {
-      "id": 29,
-      "name": "バーナックル",
-      "dev_name": "バーナックル",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "wind"
-        ],
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 30,
-      "hp": 60,
-      "ability": "堅守・アルカナアーツ",
-      "ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに刻印通行料1/2]",
-      "ability_parsed": {
-        "keywords": [
-          "堅守",
-          "アルカナアーツ"
-        ],
-        "mystic_arts": [
-          {
-            "id": "barnacle_mystic_001",
-            "name": "通行料半減",
-            "description": "対象敵ドミニオに通行料半減の刻印をかける（3ターン）",
-            "spell_id": 9001,
-            "cost": 50
-          }
-        ]
-      }
-    },
-    {
-      "id": 30,
-      "name": "バーンタイタン",
-      "dev_name": "バーンタイタン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 90
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "water"
-        ],
-        "cannot_use": [
-          "防具",
-          "巻物"
-        ]
-      },
-      "ap": 60,
-      "hp": 60,
-      "ability": "自ドミニオHP-30",
-      "ability_detail": "自ドミニオが5つ以上の場合、AP&HP-30",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "owned_land_threshold",
-            "threshold": 5,
-            "operation": "gte",
-            "stat_changes": {
-              "ap": -30,
-              "hp": -30
-            },
-            "description": "自ドミニオが5つ以上の場合、AP&HP-30"
-          }
-        ]
-      }
-    },
-    {
-      "id": 31,
-      "name": "ハイプクイーン",
-      "dev_name": "ハイプクイーン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 40,
-        "lands_required": [
-          "fire"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 20,
-      "hp": 40,
-      "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP20・手札にハイプワーカーを加える]",
-      "ability_parsed": {
-        "keywords": [
-          "アルカナアーツ"
-        ],
-        "mystic_arts": [
-          {
-            "name": "ハイプワーカー生成",
-            "cost": 20,
-            "spell_id": 9053
-          }
-        ]
-      }
-    },
-    {
-      "id": 32,
-      "name": "ハイプワーカー",
-      "dev_name": "ハイプワーカー",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 30
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "AP&HP変動",
-      "ability_detail": "AP&HP+ハイプワーカー配置数×10",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "specific_creature_count",
-            "target_name": "ハイプワーカー",
-            "multiplier": 10,
-            "include_self": true,
-            "stat_changes": {
-              "ap": true,
-              "hp": true
-            },
-            "description": "AP&HP+ハイプワーカー配置数×10"
-          }
-        ]
-      }
-    },
-    {
-      "id": 33,
-      "name": "バイロクルス",
-      "dev_name": "バイロクルス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 30,
-        "cards_sacrifice": 1
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "water"
-        ],
-        "cannot_use": [
-          "武器"
-        ]
-      },
-      "ap": 10,
-      "hp": 40,
-      "ability": "合成・無効化",
-      "ability_detail": "合成[スペル・ヘルバイロンに変身]；無効化[巻物]",
-      "synthesis": {
-        "type": "spell",
-        "effect_type": "transform",
-        "transform_to": 43
-      },
-      "ability_parsed": {
-        "keywords": [
-          "無効化"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "scroll_attack"
-          }
-        }
-      }
-    },
-    {
-      "id": 34,
-      "name": "バイロマンサー",
-      "dev_name": "バイロマンサー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 30,
-      "hp": 50,
-      "ability": "術攻撃",
-      "ability_detail": "術攻撃[AP30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
-      "ability_parsed": {
-        "keywords": [
-          "術攻撃"
-        ],
-        "keyword_conditions": {
-          "術攻撃": {
-            "scroll_type": "fixed_ap",
-            "value": 30
-          }
-        }
-      }
-    },
-    {
-      "id": 35,
-      "name": "バルキリー",
-      "dev_name": "バルキリー",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "fire"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "加勢・先制・敵破壊時AP+10",
-      "ability_detail": "加勢[無火地]；先制；敵破壊時、AP+10",
-      "ability_parsed": {
-        "keywords": [
-          "加勢",
-          "先制"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
-              "neutral",
-              "fire",
-              "earth"
-            ]
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "on_enemy_destroy_permanent",
-            "stat_changes": {
-              "ap": 10
-            },
-            "description": "敵破壊時、AP+10（永続）"
-          }
-        ]
-      }
-    },
-    {
-      "id": 36,
-      "name": "ピュトン",
-      "dev_name": "ピュトン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 75,
-        "lands_required": [
-          "fire"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具"
-        ]
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "刺突・侵略時蓄魔",
-      "ability_detail": "刺突[敵AP40以上]；侵略時、蓄魔[EP100]",
-      "ability_parsed": {
-        "keywords": [
-          "刺突"
-        ],
-        "keyword_conditions": {
-          "刺突": {
-            "condition_type": "defender_ap_check",
-            "operator": ">=",
-            "value": 40
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "magic_gain_on_invasion",
-            "amount": 100
-          }
-        ]
-      }
-    },
-    {
-      "id": 37,
-      "name": "ファイアードレイク",
-      "dev_name": "ファイアードレイク",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 80
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "AP+火配置数×5",
-      "ability_detail": "AP+火配置数×5",
-      "ability_parsed": {
-        "keywords": [],
-        "effects": [
-          {
-            "effect_type": "land_count_multiplier",
-            "stat": "ap",
-            "elements": [
-              "fire"
-            ],
-            "multiplier": 5,
-            "operation": "add",
-            "description": "AP+|AP-|AP=火配置数×5"
-          }
-        ]
-      }
-    },
-    {
-      "id": 38,
-      "name": "ファイアービーク",
-      "dev_name": "ファイアービーク",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 95,
-        "lands_required": [
-          "fire"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物",
-          "防具"
-        ]
-      },
-      "ap": 50,
-      "hp": 40,
-      "ability": "先制・刺突・強化",
-      "ability_detail": "先制；刺突[水風]；強化[水風]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
-          "刺突",
-          "強化"
-        ],
-        "keyword_conditions": {
-          "刺突": {
-            "condition_type": "enemy_is_element",
-            "elements": [
-              "water",
-              "wind"
-            ]
-          },
-          "強化": {
-            "condition_type": "enemy_is_element",
-            "elements": [
-              "water",
-              "wind"
-            ]
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "enemy_is_element",
-                "elements": [
-                  "water",
-                  "wind"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 39,
-      "name": "フェイ",
-      "dev_name": "フェイ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "water"
-        ]
-      },
-      "ap": 20,
-      "hp": 40,
-      "ability": "アルカナアーツ・術強化",
-      "ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；術強化",
-      "ability_parsed": {
-        "keywords": [
-          "術強化"
-        ],
-        "keyword_conditions": {
-          "術強化": {
-            "scroll_type": "base_ap"
-          }
-        }
-      },
-      "mystic_arts": {
-        "cost": 50,
-        "spell_id": 9031
-      }
-    },
-    {
-      "id": 40,
-      "name": "フェニックス",
-      "dev_name": "フェニックス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 40
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 40,
-      "hp": 30,
-      "ability": "復活",
-      "ability_detail": "復活",
-      "ability_parsed": {
-        "keywords": [],
-        "effects": [
-          {
-            "effect_type": "revive_to_hand",
-            "trigger": "on_death"
-          }
-        ]
-      }
-    },
-    {
-      "id": 41,
-      "name": "フレイムデューク",
-      "dev_name": "フレイムデューク",
-      "rarity": "R",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 60,
-        "lands_required": [
-          "fire",
-          "fire"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "先制・強化",
-      "ability_detail": "先制；武器使用時、強化；帰還[ブック]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
-          "強化"
-        ],
-        "keyword_conditions": {
-          "強化": {
-            "condition_type": "with_weapon"
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "with_weapon"
-              }
-            ]
-          },
-          {
-            "effect_type": "item_return",
-            "trigger": "after_item_use",
-            "return_type": "return_to_deck",
-            "target": "all_items"
-          }
-        ]
-      }
-    },
-    {
-      "id": 42,
-      "name": "フロギストン",
-      "dev_name": "フロギストン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 35
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "強化",
-      "ability_detail": "強化[MHP40以下]",
-      "ability_parsed": {
-        "keywords": [
-          "強化"
-        ],
-        "keyword_conditions": {
-          "強化": {
-            "condition_type": "mhp_below",
-            "value": 40
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "mhp_below",
-                "value": 40
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 43,
-      "name": "ヘルバイロン",
-      "dev_name": "ヘルバイロン",
-      "rarity": "R",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 80,
-        "lands_required": [
-          "fire",
-          "fire"
-        ],
-        "cards_sacrifice": 1
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "wind"
-        ],
-        "cannot_use": [
-          "アクセサリ"
-        ]
-      },
-      "ap": 70,
-      "hp": 60,
-      "ability": "鼓舞・アルカナアーツ",
-      "ability_detail": "鼓舞[火地・AP+10]；アルカナアーツ[EP30・クリーチャー破壊数×30EPを得る]",
-      "ability_parsed": {
-        "keywords": [
-          "鼓舞",
-          "アルカナアーツ"
-        ],
-        "effects": [
-          {
-            "effect_type": "support",
-            "target": {
-              "scope": "all_creatures",
-              "conditions": [
-                {
-                  "condition_type": "element",
-                  "elements": [
-                    "fire",
-                    "earth"
-                  ]
-                }
-              ]
-            },
-            "bonus": {
-              "ap": 10
-            }
-          }
-        ]
-      },
-      "mystic_arts": {
-        "cost": 30,
-        "spell_id": 9035
-      }
-    },
-    {
-      "id": 44,
-      "name": "ボルカニックドラゴン",
-      "dev_name": "ボルカニックドラゴン",
-      "race": "ドラゴン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 80,
-        "lands_required": [
-          "fire",
-          "fire"
-        ]
-      },
-      "restrictions": {
-        "cannot_summon": [
-          "water"
-        ],
-        "cannot_use": [
-          "防具"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "先制・術攻撃",
-      "ability_detail": "先制；術攻撃[AP=基本AP]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
-          "術攻撃"
-        ],
-        "keyword_conditions": {
-          "術攻撃": {
-            "scroll_type": "base_ap"
-          }
-        },
-        "effects": []
-      }
-    },
-    {
-      "id": 45,
-      "name": "ミノタウロス",
-      "dev_name": "ミノタウロス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 46,
-      "name": "ムシュフシュ",
-      "dev_name": "ムシュフシュ",
-      "rarity": "R",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70,
-        "lands_required": [
-          "fire"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
-          "巻物"
-        ]
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "共鳴・強化",
-      "ability_detail": "共鳴[地・AP+20、HP+10]；強化[火地]",
-      "ability_parsed": {
-        "keywords": [
-          "共鳴",
-          "強化"
-        ],
-        "keyword_conditions": {
-          "共鳴": {
-            "element": "earth",
-            "stat_bonus": {
-              "ap": 20,
-              "hp": 10
-            }
-          },
-          "強化": {
-            "condition_type": "enemy_is_element",
-            "elements": [
-              "fire",
-              "earth"
-            ]
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "enemy_is_element",
-                "elements": [
-                  "fire",
-                  "earth"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 47,
-      "name": "ラーバキン",
-      "dev_name": "ラーバキン",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 60,
-      "hp": 30,
-      "ability": "AP+現R数、HP+現R数",
-      "ability_detail": "AP+現R数、HP+現R数",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "turn_number_bonus",
-            "ap_mode": "subtract",
-            "hp_mode": "add"
-          }
-        ]
-      }
-    },
-    {
-      "id": 48,
-      "name": "レッドオーガ",
-      "dev_name": "レッドオーガ",
-      "race": "オーガ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 80
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 49,
-      "name": "ローンビースト",
-      "dev_name": "ローンビースト",
-      "rarity": "S",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 80
-      },
-      "ap": 20,
-      "hp": 40,
-      "ability": "HP+基本AP",
-      "ability_detail": "HP+基本AP；隣が自ドミニオなら強化",
-      "ability_parsed": {
-        "keywords": [
-          "強化"
-        ],
-        "keyword_conditions": {
-          "強化": {
-            "condition_type": "adjacent_ally_land"
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "adjacent_ally_land"
-              }
-            ]
-          },
-          {
-            "effect_type": "base_ap_to_hp",
-            "description": "HP+基礎AP"
-          }
-        ]
-      }
-    },
-    {
-      "id": 50,
-      "name": "レッドコボルト",
-      "dev_name": "レッドコボルト",
-      "race": "コボルト",
-      "rarity": "C",
-      "type": "creature",
-      "element": "fire",
-      "cost": {
-        "ep": 20
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "",
-      "ability_detail": ""
-    }
-  ]
+	"cards": [
+		{
+			"id": 26,
+			"name": "ダークハーヴェスト",
+			"dev_name": "ネビロス",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"ap": 50,
+			"hp": 40,
+			"ability": "強化",
+			"ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強化",
+			"ability_parsed": {
+				"keywords": [
+					"強化"
+				],
+				"keyword_conditions": {
+					"強化": {
+						"condition_type": "enemy_no_item"
+					}
+				},
+				"skill_ids": [
+					9002
+				],
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "enemy_no_item"
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 27,
+			"name": "インフェルノロード",
+			"dev_name": "バーアル",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 40,
+				"lands_required": [
+					"fire"
+				],
+				"cards_sacrifice": 1
+			},
+			"ap": 50,
+			"hp": 50,
+			"ability": "先制",
+			"ability_detail": "先制；代償[ランダムな手札1枚]",
+			"ability_parsed": {
+				"keywords": [
+					"先制"
+				],
+				"effects": []
+			}
+		},
+		{
+			"id": 28,
+			"name": "スカイメイデン",
+			"dev_name": "バードメイデン",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 65
+			},
+			"restrictions": {
+				"cannot_use": [
+					"武器"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "奮闘・アルカナアーツ",
+			"ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに刻印天駆]",
+			"ability_parsed": {
+				"keywords": [
+					"奮闘",
+					"アルカナアーツ"
+				],
+				"mystic_art": {
+					"name": "天駆付与",
+					"cost": 50,
+					"spell_id": 9014
+				}
+			}
+		},
+		{
+			"id": 29,
+			"name": "マグマシェル",
+			"dev_name": "バーナックル",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"wind"
+				],
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 30,
+			"hp": 60,
+			"ability": "堅守・アルカナアーツ",
+			"ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに刻印通行料1/2]",
+			"ability_parsed": {
+				"keywords": [
+					"堅守",
+					"アルカナアーツ"
+				],
+				"mystic_arts": [
+					{
+						"id": "barnacle_mystic_001",
+						"name": "通行料半減",
+						"description": "対象敵ドミニオに通行料半減の刻印をかける（3ターン）",
+						"spell_id": 9001,
+						"cost": 50
+					}
+				]
+			}
+		},
+		{
+			"id": 30,
+			"name": "インフェルノタイタン",
+			"dev_name": "バーンタイタン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 90
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"water"
+				],
+				"cannot_use": [
+					"防具",
+					"巻物"
+				]
+			},
+			"ap": 60,
+			"hp": 60,
+			"ability": "自ドミニオHP-30",
+			"ability_detail": "自ドミニオが5つ以上の場合、AP&HP-30",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "owned_land_threshold",
+						"threshold": 5,
+						"operation": "gte",
+						"stat_changes": {
+							"ap": -30,
+							"hp": -30
+						},
+						"description": "自ドミニオが5つ以上の場合、AP&HP-30"
+					}
+				]
+			}
+		},
+		{
+			"id": 31,
+			"name": "ハイヴマザー",
+			"dev_name": "ハイプクイーン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 40,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 20,
+			"hp": 40,
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP20・手札にハイプワーカーを加える]",
+			"ability_parsed": {
+				"keywords": [
+					"アルカナアーツ"
+				],
+				"mystic_arts": [
+					{
+						"name": "ハイプワーカー生成",
+						"cost": 20,
+						"spell_id": 9053
+					}
+				]
+			}
+		},
+		{
+			"id": 32,
+			"name": "ハイヴソルジャー",
+			"dev_name": "ハイプワーカー",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 30
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "AP&HP変動",
+			"ability_detail": "AP&HP+ハイプワーカー配置数×10",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "specific_creature_count",
+						"target_name": "ハイプワーカー",
+						"multiplier": 10,
+						"include_self": true,
+						"stat_changes": {
+							"ap": true,
+							"hp": true
+						},
+						"description": "AP&HP+ハイプワーカー配置数×10"
+					}
+				]
+			}
+		},
+		{
+			"id": 33,
+			"name": "イグニスラーヴァ",
+			"dev_name": "バイロクルス",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 30,
+				"cards_sacrifice": 1
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"water"
+				],
+				"cannot_use": [
+					"武器"
+				]
+			},
+			"ap": 10,
+			"hp": 40,
+			"ability": "合成・無効化",
+			"ability_detail": "合成[スペル・ヘルバイロンに変身]；無効化[巻物]",
+			"synthesis": {
+				"type": "spell",
+				"effect_type": "transform",
+				"transform_to": 43
+			},
+			"ability_parsed": {
+				"keywords": [
+					"無効化"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "scroll_attack"
+					}
+				}
+			}
+		},
+		{
+			"id": 34,
+			"name": "パイロマンサー",
+			"dev_name": "バイロマンサー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70
+			},
+			"ap": 30,
+			"hp": 50,
+			"ability": "術攻撃",
+			"ability_detail": "術攻撃[AP30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
+			"ability_parsed": {
+				"keywords": [
+					"術攻撃"
+				],
+				"keyword_conditions": {
+					"術攻撃": {
+						"scroll_type": "fixed_ap",
+						"value": 30
+					}
+				}
+			}
+		},
+		{
+			"id": 35,
+			"name": "スレイヤーメイデン",
+			"dev_name": "バルキリー",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "加勢・先制・敵破壊時AP+10",
+			"ability_detail": "加勢[無火地]；先制；敵破壊時、AP+10",
+			"ability_parsed": {
+				"keywords": [
+					"加勢",
+					"先制"
+				],
+				"keyword_conditions": {
+					"加勢": {
+						"target_elements": [
+							"neutral",
+							"fire",
+							"earth"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "on_enemy_destroy_permanent",
+						"stat_changes": {
+							"ap": 10
+						},
+						"description": "敵破壊時、AP+10（永続）"
+					}
+				]
+			}
+		},
+		{
+			"id": 36,
+			"name": "レイドワイバーン",
+			"dev_name": "ピュトン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 75,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"防具"
+				]
+			},
+			"ap": 40,
+			"hp": 50,
+			"ability": "刺突・侵略時蓄魔",
+			"ability_detail": "刺突[敵AP40以上]；侵略時、蓄魔[EP100]",
+			"ability_parsed": {
+				"keywords": [
+					"刺突"
+				],
+				"keyword_conditions": {
+					"刺突": {
+						"condition_type": "defender_ap_check",
+						"operator": ">=",
+						"value": 40
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "magic_gain_on_invasion",
+						"amount": 100
+					}
+				]
+			}
+		},
+		{
+			"id": 37,
+			"name": "ドミニオドレイク",
+			"dev_name": "ファイアードレイク",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 80
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "AP+火配置数×5",
+			"ability_detail": "AP+火配置数×5",
+			"ability_parsed": {
+				"keywords": [],
+				"effects": [
+					{
+						"effect_type": "land_count_multiplier",
+						"stat": "ap",
+						"elements": [
+							"fire"
+						],
+						"multiplier": 5,
+						"operation": "add",
+						"description": "AP+|AP-|AP=火配置数×5"
+					}
+				]
+			}
+		},
+		{
+			"id": 38,
+			"name": "インフェルノイーグル",
+			"dev_name": "ファイアービーク",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 95,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物",
+					"防具"
+				]
+			},
+			"ap": 50,
+			"hp": 40,
+			"ability": "先制・刺突・強化",
+			"ability_detail": "先制；刺突[水風]；強化[水風]",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"刺突",
+					"強化"
+				],
+				"keyword_conditions": {
+					"刺突": {
+						"condition_type": "enemy_is_element",
+						"elements": [
+							"water",
+							"wind"
+						]
+					},
+					"強化": {
+						"condition_type": "enemy_is_element",
+						"elements": [
+							"water",
+							"wind"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "enemy_is_element",
+								"elements": [
+									"water",
+									"wind"
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 39,
+			"name": "フレイムピクシー",
+			"dev_name": "フェイ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"water"
+				]
+			},
+			"ap": 20,
+			"hp": 40,
+			"ability": "アルカナアーツ・術強化",
+			"ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；術強化",
+			"ability_parsed": {
+				"keywords": [
+					"術強化"
+				],
+				"keyword_conditions": {
+					"術強化": {
+						"scroll_type": "base_ap"
+					}
+				}
+			},
+			"mystic_arts": {
+				"cost": 50,
+				"spell_id": 9031
+			}
+		},
+		{
+			"id": 40,
+			"name": "フェニックス",
+			"dev_name": "フェニックス",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 40
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 40,
+			"hp": 30,
+			"ability": "復活",
+			"ability_detail": "復活",
+			"ability_parsed": {
+				"keywords": [],
+				"effects": [
+					{
+						"effect_type": "revive_to_hand",
+						"trigger": "on_death"
+					}
+				]
+			}
+		},
+		{
+			"id": 41,
+			"name": "アーセナルデューク",
+			"dev_name": "フレイムデューク",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 60,
+				"lands_required": [
+					"fire",
+					"fire"
+				]
+			},
+			"ap": 50,
+			"hp": 50,
+			"ability": "先制・強化",
+			"ability_detail": "先制；武器使用時、強化；帰還[ブック]",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"強化"
+				],
+				"keyword_conditions": {
+					"強化": {
+						"condition_type": "with_weapon"
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "with_weapon"
+							}
+						]
+					},
+					{
+						"effect_type": "item_return",
+						"trigger": "after_item_use",
+						"return_type": "return_to_deck",
+						"target": "all_items"
+					}
+				]
+			}
+		},
+		{
+			"id": 42,
+			"name": "シンダーハンター",
+			"dev_name": "フロギストン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 35
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "強化",
+			"ability_detail": "強化[MHP40以下]",
+			"ability_parsed": {
+				"keywords": [
+					"強化"
+				],
+				"keyword_conditions": {
+					"強化": {
+						"condition_type": "mhp_below",
+						"value": 40
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "mhp_below",
+								"value": 40
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 43,
+			"name": "カラミティバイロン",
+			"dev_name": "ヘルバイロン",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 80,
+				"lands_required": [
+					"fire",
+					"fire"
+				],
+				"cards_sacrifice": 1
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"wind"
+				],
+				"cannot_use": [
+					"アクセサリ"
+				]
+			},
+			"ap": 70,
+			"hp": 60,
+			"ability": "鼓舞・アルカナアーツ",
+			"ability_detail": "鼓舞[火地・AP+10]；アルカナアーツ[EP30・クリーチャー破壊数×30EPを得る]",
+			"ability_parsed": {
+				"keywords": [
+					"鼓舞",
+					"アルカナアーツ"
+				],
+				"effects": [
+					{
+						"effect_type": "support",
+						"target": {
+							"scope": "all_creatures",
+							"conditions": [
+								{
+									"condition_type": "element",
+									"elements": [
+										"fire",
+										"earth"
+									]
+								}
+							]
+						},
+						"bonus": {
+							"ap": 10
+						}
+					}
+				]
+			},
+			"mystic_arts": {
+				"cost": 30,
+				"spell_id": 9035
+			}
+		},
+		{
+			"id": 44,
+			"name": "エラプションドレイク",
+			"dev_name": "ボルカニックドラゴン",
+			"race": "ドラゴン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 80,
+				"lands_required": [
+					"fire",
+					"fire"
+				]
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"water"
+				],
+				"cannot_use": [
+					"防具"
+				]
+			},
+			"ap": 50,
+			"hp": 50,
+			"ability": "先制・術攻撃",
+			"ability_detail": "先制；術攻撃[AP=基本AP]",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"術攻撃"
+				],
+				"keyword_conditions": {
+					"術攻撃": {
+						"scroll_type": "base_ap"
+					}
+				},
+				"effects": []
+			}
+		},
+		{
+			"id": 45,
+			"name": "ファイアブル",
+			"dev_name": "ミノタウロス",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 60
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 46,
+			"name": "メソポタミアサーペント",
+			"dev_name": "ムシュフシュ",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"cannot_use": [
+					"巻物"
+				]
+			},
+			"ap": 40,
+			"hp": 50,
+			"ability": "共鳴・強化",
+			"ability_detail": "共鳴[地・AP+20、HP+10]；強化[火地]",
+			"ability_parsed": {
+				"keywords": [
+					"共鳴",
+					"強化"
+				],
+				"keyword_conditions": {
+					"共鳴": {
+						"element": "earth",
+						"stat_bonus": {
+							"ap": 20,
+							"hp": 10
+						}
+					},
+					"強化": {
+						"condition_type": "enemy_is_element",
+						"elements": [
+							"fire",
+							"earth"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "enemy_is_element",
+								"elements": [
+									"fire",
+									"earth"
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 47,
+			"name": "クロノフレイム",
+			"dev_name": "ラーバキン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 70
+			},
+			"ap": 60,
+			"hp": 30,
+			"ability": "AP+現R数、HP+現R数",
+			"ability_detail": "AP+現R数、HP+現R数",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "turn_number_bonus",
+						"ap_mode": "subtract",
+						"hp_mode": "add"
+					}
+				]
+			}
+		},
+		{
+			"id": 48,
+			"name": "レッドオーガ",
+			"dev_name": "レッドオーガ",
+			"race": "オーガ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 80
+			},
+			"ap": 40,
+			"hp": 50,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 49,
+			"name": "ローンウルフ",
+			"dev_name": "ローンビースト",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 80
+			},
+			"ap": 20,
+			"hp": 40,
+			"ability": "HP+基本AP",
+			"ability_detail": "HP+基本AP；隣が自ドミニオなら強化",
+			"ability_parsed": {
+				"keywords": [
+					"強化"
+				],
+				"keyword_conditions": {
+					"強化": {
+						"condition_type": "adjacent_ally_land"
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "adjacent_ally_land"
+							}
+						]
+					},
+					{
+						"effect_type": "base_ap_to_hp",
+						"description": "HP+基礎AP"
+					}
+				]
+			}
+		},
+		{
+			"id": 50,
+			"name": "レッドコボルト",
+			"dev_name": "レッドコボルト",
+			"race": "コボルト",
+			"rarity": "C",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"ep": 20
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "",
+			"ability_detail": ""
+		}
+	]
 }
