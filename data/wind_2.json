@@ -72,7 +72,7 @@
 		},
 		{
 			"id": 329,
-			"name": "テュポーン",
+			"name": "ハヌマーン",
 			"dev_name": "テュポーン",
 			"rarity": "R",
 			"type": "creature",
@@ -608,7 +608,7 @@
 		},
 		{
 			"id": 344,
-			"name": "ライトニングドラゴン",
+			"name": "ビャッコ",
 			"dev_name": "ライトニングドラゴン",
 			"race": "ドラゴン",
 			"rarity": "R",
@@ -717,7 +717,7 @@
 		},
 		{
 			"id": 347,
-			"name": "ストームロード",
+			"name": "セト",
 			"dev_name": "ロードオブペイン",
 			"rarity": "S",
 			"type": "creature",
@@ -775,7 +775,7 @@
 		},
 		{
 			"id": 348,
-			"name": "ワイバーン",
+			"name": "ホルス",
 			"dev_name": "ワイバーン",
 			"rarity": "N",
 			"type": "creature",

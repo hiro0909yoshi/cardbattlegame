@@ -2,7 +2,7 @@
 	"cards": [
 		{
 			"id": 225,
-			"name": "グランドマスター",
+			"name": "ドルイド",
 			"dev_name": "セージ",
 			"rarity": "S",
 			"type": "creature",
@@ -590,7 +590,7 @@
 		},
 		{
 			"id": 241,
-			"name": "イグニスシャーマン",
+			"name": "バステト",
 			"dev_name": "モルモ",
 			"rarity": "S",
 			"type": "creature",
@@ -636,7 +636,7 @@
 		},
 		{
 			"id": 242,
-			"name": "ミッドガルズオルム",
+			"name": "ゲンブ",
 			"dev_name": "ヨルムンガンド",
 			"rarity": "R",
 			"type": "creature",
