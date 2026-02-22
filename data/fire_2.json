@@ -2,7 +2,7 @@
 	"cards": [
 		{
 			"id": 26,
-			"name": "ダークハーヴェスト",
+			"name": "ラクシャーサ",
 			"dev_name": "ネビロス",
 			"rarity": "S",
 			"type": "creature",
@@ -286,7 +286,7 @@
 		},
 		{
 			"id": 34,
-			"name": "パイロマンサー",
+			"name": "ウィスプ",
 			"dev_name": "バイロマンサー",
 			"rarity": "S",
 			"type": "creature",

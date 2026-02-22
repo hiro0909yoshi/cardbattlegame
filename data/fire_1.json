@@ -364,7 +364,7 @@
 		},
 		{
 			"id": 11,
-			"name": "シャムキャット",
+			"name": "カーバンクル",
 			"dev_name": "ケットシー",
 			"rarity": "R",
 			"type": "creature",
@@ -482,7 +482,7 @@
 		},
 		{
 			"id": 15,
-			"name": "レギオンカン",
+			"name": "マルコシアス",
 			"dev_name": "ジェネラルカン",
 			"rarity": "S",
 			"type": "creature",
