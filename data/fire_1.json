@@ -181,7 +181,7 @@
 		},
 		{
 			"id": 6,
-			"name": "スモークファントム",
+			"name": "ジャックオランタン",
 			"dev_name": "ガスクラウド",
 			"rarity": "N",
 			"type": "creature",
@@ -756,7 +756,7 @@
 		},
 		{
 			"id": 22,
-			"name": "アンデッドジェネラル",
+			"name": "アークデーモン",
 			"dev_name": "デッドウォーロード",
 			"rarity": "R",
 			"type": "creature",
