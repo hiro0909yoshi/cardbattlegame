@@ -2,7 +2,7 @@
 	"cards": [
 		{
 			"id": 125,
-			"name": "グラスジャイアント",
+			"name": "カリュブディス",
 			"dev_name": "スラッジタイタン",
 			"rarity": "N",
 			"type": "creature",
@@ -249,7 +249,7 @@
 		},
 		{
 			"id": 132,
-			"name": "バインドサーペント",
+			"name": "ダゴン",
 			"dev_name": "ハイド",
 			"rarity": "S",
 			"type": "creature",
@@ -572,7 +572,7 @@
 		},
 		{
 			"id": 142,
-			"name": "トランスフェザー",
+			"name": "スキュラ",
 			"dev_name": "ミストウィング",
 			"rarity": "N",
 			"type": "creature",
@@ -642,7 +642,7 @@
 		},
 		{
 			"id": 144,
-			"name": "ウェーブフォートレス",
+			"name": "アヌビス",
 			"dev_name": "ラハブ",
 			"rarity": "R",
 			"type": "creature",
