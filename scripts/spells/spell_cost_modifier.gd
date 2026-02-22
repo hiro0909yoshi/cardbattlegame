@@ -3,14 +3,14 @@ extends RefCounted
 
 ## コスト操作スペルシステム
 ## - エンジェルギフト（2117）: クリーチャー/アイテム0EP、スペル無効化で解除
-## - ライズオブサン（2009）: カード使用コスト倍率（世界呪い）
+## - ライズオブサン（2009）: カード使用コスト倍率（世界刻印）
 
 var spell_curse = null
 var player_system: PlayerSystem = null
 var game_flow_manager = null  # 後方互換用
 
 # === 直接参照（GFM経由を廃止） ===
-var spell_world_curse = null  # SpellWorldCurse: 世界呪い
+var spell_world_curse = null  # SpellWorldCurse: 世界刻印
 
 ## セットアップ
 func setup(p_spell_curse, p_player_system: PlayerSystem, p_game_flow_manager = null):
@@ -41,12 +41,12 @@ func apply_life_force(target_player_id: int) -> Dictionary:
 	spell_curse.curse_player(target_player_id, "life_force", -1, params)
 	
 	var player_name = _get_player_name(target_player_id)
-	print("[エンジェルギフト] %s に呪い「天使」を付与" % player_name)
+	print("[エンジェルギフト] %s に刻印「天使」を付与" % player_name)
 	
 	return {"success": true, "message": "%s に天使を付与" % player_name}
 
 
-## エンジェルギフト呪いを持っているかチェック
+## エンジェルギフト刻印を持っているかチェック
 func has_life_force(player_id: int) -> bool:
 	if not player_system or player_id < 0 or player_id >= player_system.players.size():
 		return false
@@ -62,12 +62,12 @@ func check_spell_nullify(player_id: int) -> Dictionary:
 	if not has_life_force(player_id):
 		return {"nullified": false, "curse_removed": false, "message": ""}
 	
-	# 呪いを解除
+	# 刻印を解除
 	if spell_curse:
 		spell_curse.remove_curse_from_player(player_id)
 	
 	var player_name = _get_player_name(player_id)
-	var message = "【天使】%s のスペルは無効化された！呪いが解除された" % player_name
+	var message = "【天使】%s のスペルは無効化された！刻印が解除された" % player_name
 	print(message)
 	
 	return {
@@ -83,13 +83,13 @@ func get_modified_cost(player_id: int, card: Dictionary) -> int:
 	var card_type = card.get("type", "")
 	var original_cost = _get_card_cost(card)
 	
-	# エンジェルギフト呪いチェック（コスト0化）
+	# エンジェルギフト刻印チェック（コスト0化）
 	if has_life_force(player_id):
 		if card_type == "creature" or card_type == "item":
 			print("[エンジェルギフト] %s のコスト: %d → 0" % [card.get("name", "?"), original_cost])
 			return 0
 	
-	# ライズオブサン（世界呪い）チェック - SpellWorldCurseに委譲
+	# ライズオブサン（世界刻印）チェック - SpellWorldCurseに委譲
 	if spell_world_curse:
 		var multiplier = spell_world_curse.get_cost_multiplier_for_card(card)
 		if multiplier != 1.0:

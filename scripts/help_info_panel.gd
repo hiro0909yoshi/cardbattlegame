@@ -301,7 +301,7 @@ func _setup_creature_annotations() -> void:
 		var target_pos = _get_label_left_center(item_annotation)
 		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.6, 0.4, 0.8),510)
 	
-	# 9. 呪い（テキストサイズに合わせた矩形）
+	# 9. 刻印（テキストサイズに合わせた矩形）
 	if curse_label and curse_annotation:
 		var source_rect = _get_text_fitted_rect(curse_label)
 		var target_pos = _get_label_left_center(curse_annotation)

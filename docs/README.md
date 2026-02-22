@@ -46,7 +46,7 @@ docs/
 | [tile_system.md](design/tile_system.md) | タイルタイプ・TileHelper・地形効果・レベルシステム |
 | [tile_creature_separation_plan.md](design/tile_creature_separation_plan.md) | タイル・クリーチャー分離設計 |
 | [land_system.md](design/land_system.md) | 隣接判定・土地ボーナス・ダウン状態・ドミニオオーダー |
-| [toll_system.md](design/toll_system.md) | 通行料計算・呪い効果 |
+| [toll_system.md](design/toll_system.md) | 通行料計算・刻印効果 |
 | [map_system.md](design/map_system.md) | マップシステム設計 |
 
 ### バトルシステム
@@ -201,13 +201,13 @@ docs/
 | ダイス操作 | [ダイス操作.md](design/spells/ダイス操作.md) |
 | ダメージ操作 | [ダメージ操作.md](design/spells/ダメージ操作.md) |
 | プレイヤー移動 | [プレイヤー移動.md](design/spells/プレイヤー移動.md) |
-| 世界呪い | [世界呪い.md](design/spells/世界呪い.md) |
-| 呪い効果 | [呪い効果.md](design/spells/呪い効果.md) |
-| 呪い除去 | [呪い除去.md](design/spells/呪い除去.md) |
+| 世界刻印 | [世界刻印.md](design/spells/世界刻印.md) |
+| 刻印効果 | [刻印効果.md](design/spells/刻印効果.md) |
+| 刻印除去 | [刻印除去.md](design/spells/刻印除去.md) |
 | 変身 | [変身.md](design/spells/変身.md) |
 | 手札操作 | [手札操作.md](design/spells/手札操作.md) |
-| 戦闘制限呪い | [戦闘制限呪い.md](design/spells/戦闘制限呪い.md) |
-| 通行料呪い | [通行料呪い.md](design/spells/通行料呪い.md) |
+| 戦闘制限刻印 | [戦闘制限刻印.md](design/spells/戦闘制限刻印.md) |
+| 通行料刻印 | [通行料刻印.md](design/spells/通行料刻印.md) |
 | 結界 | [結界.md](design/spells/結界.md) |
 | ドミニオ変更 | [ドミニオ変更.md](design/spells/ドミニオ変更.md) |
 | EP増減 | [EP増減.md](design/spells/EP増減.md) |
@@ -236,13 +236,13 @@ docs/
 - **スキルシステム**: 29種類のスキル仕様書完成、実装完了
 - **スペルシステム**: 20カテゴリのスペル効果仕様書完成、大部分実装完了
 - **アルカナアーツシステム**: 3方式対応（既存スペル参照/アルカナアーツ専用スペル/直接effects）
-- **呪いシステム**: クリーチャー/プレイヤー/世界呪の3種類実装完了
+- **刻印システム**: クリーチャー/プレイヤー/世界呪の3種類実装完了
 - **効果システム**: Phase 1-3実装完了
 - **条件付きバフ**: 全クリーチャー実装完了
 - **堅守クリーチャー**: 全21体実装完了
 - **バトルテストツール**: 基本機能完成
 - **土地システム**: 隣接判定・ダウン状態・ドミニオオーダー実装完了
-- **通行料システム**: 計算・呪い効果実装完了
+- **通行料システム**: 計算・刻印効果実装完了
 - **周回システム**: チェックポイント・ボーナス適用実装完了
 - **ラウンド数カウンター**: 実装完了
 - **破壊数カウンター**: LapSystem内で実装完了

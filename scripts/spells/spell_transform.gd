@@ -144,7 +144,7 @@ func _execute_transform(tile: Object, old_creature: Dictionary, new_creature: Di
 	var tile_owner_id = tile.owner_id
 	
 	# 新しいクリーチャーデータを作成
-	# 注意: 呪い(curses)は引き継がない（変身で消える）
+	# 注意: 刻印(curses)は引き継がない（変身で消える）
 	var transformed_creature = new_creature.duplicate(true)
 	
 	# アイテムを引き継ぐ

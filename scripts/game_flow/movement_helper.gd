@@ -11,9 +11,9 @@ static func get_move_destinations(
 	move_type_override: String = ""  # スペルなどで強制的に移動タイプを指定
 ) -> Array:
 	
-	# 枷呪いチェック
+	# 枷刻印チェック
 	if has_move_disable_curse(creature_data):
-		print("[MovementHelper] 枷呪いにより移動できません")
+		print("[MovementHelper] 枷刻印により移動できません")
 		return []
 	
 	# 移動タイプの判定（オーバーライドがあればそれを優先）
@@ -83,7 +83,7 @@ static func get_move_destinations(
 			return _get_tiles_within_steps(board_system, from_tile_index, 2)
 		"adjacent_enemy":  # 隣接する敵ドミニオのみ（アウトレイジ用）
 			return _get_adjacent_enemy_tiles(board_system, from_tile_index)
-		"remote_move":  # 天駆呪い（全空き地 + 隣接タイル）
+		"remote_move":  # 天駆刻印（全空き地 + 隣接タイル）
 			var all_vacant = _get_all_vacant_tiles(board_system)
 			# 隣接タイルも追加（通常移動）
 			var adjacent_destinations = []
@@ -176,7 +176,7 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 
 	return destinations
 
-## 枷呪いを持っているかチェック
+## 枷刻印を持っているかチェック
 static func has_move_disable_curse(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -194,7 +194,7 @@ static func detect_move_type(creature_data: Dictionary) -> String:
 	if not creature_data:
 		return "adjacent"
 	
-	# 天駆呪いチェック（全空き地に移動可能）
+	# 天駆刻印チェック（全空き地に移動可能）
 	if has_remote_move_curse(creature_data):
 		return "remote_move"
 	
@@ -214,7 +214,7 @@ static func detect_move_type(creature_data: Dictionary) -> String:
 	return "adjacent"
 
 
-## 天駆呪いを持っているかチェック
+## 天駆刻印を持っているかチェック
 static func has_remote_move_curse(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -334,7 +334,7 @@ static func _get_all_vacant_tiles(board_system: Node) -> Array:
 static func _filter_invalid_destinations(board_system: Node, tile_indices: Array, current_player_id: int, creature_data: Dictionary = {}) -> Array:
 	var valid_tiles = []
 
-	# SpellCurseToll参照を取得（peace呪いチェック用）
+	# SpellCurseToll参照を取得（peace刻印チェック用）
 	var spell_curse_toll = null
 	if board_system.has_meta("spell_curse_toll"):
 		spell_curse_toll = board_system.get_meta("spell_curse_toll")
@@ -363,20 +363,20 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
 			continue
 
-		# peace呪いチェック（敵ドミニオへの移動除外）
+		# peace刻印チェック（敵ドミニオへの移動除外）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			if spell_curse_toll.has_peace_curse(tile_index):
-				continue  # peace呪いがある敵ドミニオは枷
+				continue  # peace刻印がある敵ドミニオは枷
 
 		# クリーチャー鉄壁チェック（グルイースラッグ、ランドアーチン等）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			if not tile.creature_data.is_empty() and spell_curse_toll.is_creature_invasion_immune(tile.creature_data):
 				continue  # 鉄壁のクリーチャーがいる敵ドミニオは枷
 
-		# プレイヤー休戦呪いチェック（トゥルース：全敵ドミニオへの移動除外）
+		# プレイヤー休戦刻印チェック（トゥルース：全敵ドミニオへの移動除外）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			if spell_curse_toll.is_player_invasion_disabled(current_player_id):
-				continue  # 休戦呪いで敵ドミニオは枷
+				continue  # 休戦刻印で敵ドミニオは枷
 
 		# テンパランスロウ（節制）チェック - SpellWorldCurseに委譲
 		if tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
@@ -414,11 +414,11 @@ static func execute_creature_move(
 	if from_tile_node.has_method("update_display"):
 		from_tile_node.update_display()
 	
-	# 移動による呪い消滅
+	# 移動による刻印消滅
 	if creature_data.has("curse"):
 		var curse_name = creature_data["curse"].get("name", "不明")
 		creature_data.erase("curse")
-		print("[MovementHelper] 呪い消滅（移動）: ", curse_name)
+		print("[MovementHelper] 刻印消滅（移動）: ", curse_name)
 	
 	# 移動先に配置（3Dカードも作成される）
 	to_tile_node.place_creature(creature_data)

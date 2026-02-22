@@ -7,7 +7,7 @@ class_name SpellMagic
 
 var player_system_ref: PlayerSystem = null
 var board_system_ref = null  # BoardSystem3D
-var spell_curse_ref = null  # SpellCurse（呪い連携用）
+var spell_curse_ref = null  # SpellCurse（刻印連携用）
 var spell_cast_notification_ui = null  # 通知UI
 
 # === 直接参照（GFM経由を廃止） ===
@@ -590,7 +590,7 @@ func apply_bounty_reward(loser_creature: Dictionary, winner_creature: Dictionary
 	if loser_creature.is_empty():
 		return result
 	
-	# 敗者の呪いを確認
+	# 敗者の刻印を確認
 	var curse = loser_creature.get("curse", {})
 	if curse.is_empty():
 		return result
@@ -684,10 +684,10 @@ func _format_drain_notification(from_id: int, to_id: int, amount: int, source: S
 	return text
 
 # ========================================
-# 土地呪い（ブラストトラップ等）
+# 土地刻印（ブラストトラップ等）
 # ========================================
 
-## 土地呪い発動（移動完了時に呼ばれる公開メソッド）
+## 土地刻印発動（移動完了時に呼ばれる公開メソッド）
 func trigger_land_curse(tile_index: int, stopped_player_id: int) -> void:
 	if not board_system_ref:
 		return
@@ -695,7 +695,7 @@ func trigger_land_curse(tile_index: int, stopped_player_id: int) -> void:
 	var tile_info = board_system_ref.get_tile_info(tile_index)
 	_check_and_trigger_land_curse(tile_index, stopped_player_id, tile_info)
 
-## 土地呪いチェック＆発動
+## 土地刻印チェック＆発動
 func _check_and_trigger_land_curse(tile_index: int, stopped_player_id: int, tile_info: Dictionary) -> void:
 	var creature = tile_info.get("creature", {})
 	if creature.is_empty():
@@ -718,19 +718,19 @@ func _check_and_trigger_land_curse(tile_index: int, stopped_player_id: int, tile
 	if owner_id == stopped_player_id:
 		return  # 自分の土地には発動しない
 	
-	print("[土地呪い発動] %s (タイル%d)" % [params.get("name", curse_type), tile_index])
+	print("[土地刻印発動] %s (タイル%d)" % [params.get("name", curse_type), tile_index])
 	
-	# 呪い効果を実行
+	# 刻印効果を実行
 	var curse_effects = params.get("curse_effects", [])
 	for effect in curse_effects:
 		_apply_land_curse_effect(effect, tile_index, stopped_player_id, creature)
 	
-	# one_shot の場合は呪いを削除
+	# one_shot の場合は刻印を削除
 	if params.get("one_shot", false):
 		creature.erase("curse")
-		print("[土地呪い] 1回発動のため呪いを解除")
+		print("[土地刻印] 1回発動のため刻印を解除")
 
-## 土地呪い効果を適用
+## 土地刻印効果を適用
 func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_player_id: int, creature: Dictionary) -> void:
 	var effect_type = effect.get("effect_type", "")
 	var target = effect.get("target", "")
@@ -744,7 +744,7 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 				var reduction = int(current_magic * percentage / 100.0)
 				if reduction > 0:
 					player_system_ref.add_magic(stopped_player_id, -reduction)
-					print("[土地呪い効果] プレイヤー%d のEP -%dEP (%d%%)" % [stopped_player_id + 1, reduction, percentage])
+					print("[土地刻印効果] プレイヤー%d のEP -%dEP (%d%%)" % [stopped_player_id + 1, reduction, percentage])
 		
 		"damage_creature":
 			# 土地のクリーチャーにダメージ
@@ -755,7 +755,7 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 					var current_hp = creature.get("current_hp", creature.get("hp", 0))
 					var new_hp = max(0, current_hp - amount)
 					creature["current_hp"] = new_hp
-					print("[土地呪い効果] %s に %dダメージ (HP: %d → %d)" % [creature.get("name", "?"), amount, current_hp, new_hp])
+					print("[土地刻印効果] %s に %dダメージ (HP: %d → %d)" % [creature.get("name", "?"), amount, current_hp, new_hp])
 					
 					# HP0で破壊（SpellDamage経由で死亡効果を処理）
 					if new_hp <= 0:
@@ -766,7 +766,7 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 							# フォールバック
 							board_system_ref.remove_creature(tile_index)
 							board_system_ref.set_tile_owner(tile_index, -1)
-						print("[土地呪い効果] %s は破壊されました" % creature.get("name", "?"))
+						print("[土地刻印効果] %s は破壊されました" % creature.get("name", "?"))
 
 # ========================================
 # アルカナアーツ用効果（ゴールドトーテム等）

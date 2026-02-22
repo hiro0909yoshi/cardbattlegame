@@ -156,24 +156,24 @@ func try_pay_toll_with_sale(payer_id, receiver_id, toll_amount):
 
 ---
 
-### Phase 3: 呪いシステムの統合（優先度：中）
+### Phase 3: 刻印システムの統合（優先度：中）
 
-#### 1. 呪い判定の追加
+#### 1. 刻印判定の追加
 
 **実装箇所**: `scripts/spells/spell_curse_toll.gd` （新規作成予定）
 
 **修正対象**: `tile_data_manager.calculate_toll()`
 
-**呪いの適用タイミング**:
+**刻印の適用タイミング**:
 ```gdscript
 func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 	var base_toll = calculate_toll(tile_index)
 	
-	# 支払い側の呪いをチェック
+	# 支払い側の刻印をチェック
 	if spell_curse.get_player_curse(payer_id).curse_type == "toll_disable":
 		return 0  # 無効化
 	
-	# 受け取り側の呪いをチェック
+	# 受け取り側の刻印をチェック
 	var receiver_curse = spell_curse.get_creature_curse(tile_index)
 	if receiver_curse.curse_type == "toll_multiplier":
 		base_toll *= receiver_curse.params.multiplier
@@ -209,7 +209,7 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
    ↓
 3. 土地売却機能 (3-4時間)
    ↓
-4. 呪いシステム統合 (2-3時間)
+4. 刻印システム統合 (2-3時間)
    ↓
 5. UI自動更新 (1時間)
 ```
@@ -228,13 +228,13 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 
 - [ ] 土地売却時にTEPが正しく更新されるか
 - [ ] 勝利判定がTEPで行われるか
-- [ ] 呪いが通行料に正しく適用されるか
+- [ ] 刻印が通行料に正しく適用されるか
 
 ### Manual Tests
 
 - [ ] UI表示が正確か
 - [ ] 売却フロー全体が機能するか
-- [ ] 呪いの優先順位が正しいか
+- [ ] 刻印の優先順位が正しいか
 
 ---
 
@@ -253,17 +253,17 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 - チェックポイント
 - ワープゲート
 
-### 3. 呪いの優先順位
+### 3. 刻印の優先順位
 
-支払い側の呪い > 受け取り側の呪い > 基本通行料
+支払い側の刻印 > 受け取り側の刻印 > 基本通行料
 
 ---
 
 ## 関連ドキュメント
 
 - [通行料システム仕様書](toll_system_spec.md) - 新仕様確定
-- [呪い効果システム](spells/呪い効果.md) - 呪いの基盤
-- [通行料呪い仕様](spells/通行料呪い.md) - 通行料関連呪い
+- [刻印効果システム](spells/刻印効果.md) - 刻印の基盤
+- [通行料刻印仕様](spells/通行料刻印.md) - 通行料関連刻印
 
 ---
 

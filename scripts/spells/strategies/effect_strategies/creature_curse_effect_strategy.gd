@@ -1,4 +1,4 @@
-## CreatureCurseEffectStrategy - クリーチャー呪い効果の戦略実装
+## CreatureCurseEffectStrategy - クリーチャー刻印効果の戦略実装
 ## skill_nullify, battle_disable, ap_nullify, stat_reduce, random_stat_curse,
 ## command_growth_curse, plague_curse, creature_curse, forced_stop, indomitable,
 ## land_effect_disable, land_effect_grant, metal_form, magic_barrier, destroy_after_battle,
@@ -77,13 +77,13 @@ func execute(context: Dictionary) -> Dictionary:
 		"stat_reduce":
 			effect_message = "ステータス低下"
 		"random_stat_curse":
-			effect_message = "ランダムな呪い"
+			effect_message = "ランダムな刻印"
 		"command_growth_curse":
-			effect_message = "昇華呪い"
+			effect_message = "昇華刻印"
 		"plague_curse":
-			effect_message = "疫病の呪い"
+			effect_message = "疫病の刻印"
 		"creature_curse":
-			effect_message = "クリーチャー呪い"
+			effect_message = "クリーチャー刻印"
 		"forced_stop":
 			effect_message = "停滞"
 		"indomitable":
@@ -99,15 +99,15 @@ func execute(context: Dictionary) -> Dictionary:
 		"destroy_after_battle":
 			effect_message = "戦闘後消滅"
 		"bounty_curse":
-			effect_message = "報奨金の呪い"
+			effect_message = "報奨金の刻印"
 		"grant_mystic_arts":
 			effect_message = "神秘術付与"
 		"land_curse":
-			effect_message = "土地呪い"
+			effect_message = "土地刻印"
 		"apply_curse":
-			effect_message = "呪い適用"
+			effect_message = "刻印適用"
 		_:
-			effect_message = "呪い効果実行"
+			effect_message = "刻印効果実行"
 
 	# target_type チェック（元のロジックを再現）
 	var target_type = target_data.get("type", "")

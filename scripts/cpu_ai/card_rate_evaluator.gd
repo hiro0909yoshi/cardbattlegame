@@ -104,7 +104,7 @@ const SPELL_EFFECT_BONUS = {
 	"gain_magic_from_spell_cost": 40,    # クレアボヤンス
 	"balance_all_magic": 60,             # レディビジョン
 	
-	# 呪い系
+	# 刻印系
 	"creature_curse": 40,                # イモビライズ, エアリアル, マジックシェルター
 	"player_curse": 50,                  # クワイエチュード, ブレス, トゥルース
 	"world_curse": 70,                   # ライズオブサン, ボンドオブラバーズ, インペリアルガード 等

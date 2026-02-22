@@ -275,7 +275,7 @@ func _evaluate_condition(mystic_data: Dictionary, context: Dictionary, base_scor
 	if target.is_empty():
 		return {"should_use": false, "score": 0.0, "target": null}
 	
-	# ターゲットスコアが負の場合は使用しない（有利な呪いを上書きしたくない等）
+	# ターゲットスコアが負の場合は使用しない（有利な刻印を上書きしたくない等）
 	if target_score < 0:
 		return {"should_use": false, "score": target_score, "target": null}
 	
@@ -374,11 +374,11 @@ func _get_default_targets(mystic_data: Dictionary, context: Dictionary) -> Array
 	# TargetSelectionHelperの共通ロジックを使用
 	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
 	
-	# 移動系呪いの場合、堅守クリーチャーを除外
+	# 移動系刻印の場合、堅守クリーチャーを除外
 	if _is_movement_curse(mystic_data):
 		targets = targets.filter(func(t): return not _is_defensive_creature(t.get("creature", {})))
 	
-	# 呪いアルカナアーツの場合、追加のフィルタリングを適用
+	# 刻印アルカナアーツの場合、追加のフィルタリングを適用
 	if target_type == "creature" and target_resolver:
 		var curse_info = target_resolver.analyze_curse_spell(mystic_data)
 		if curse_info.is_curse:
@@ -399,7 +399,7 @@ func _select_best_target_with_score(targets: Array, mystic_data: Dictionary, con
 	var damage_value = context.get("damage_value", 0)
 	var is_damage_spell = damage_value > 0
 	
-	# 呪いアルカナアーツかどうか判定
+	# 刻印アルカナアーツかどうか判定
 	var curse_info = _analyze_curse_mystic(mystic_data)
 	
 	var best_target = targets[0]
@@ -451,7 +451,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			var damage_ratio = float(damage_value) / float(current_hp)
 			score += min(damage_ratio, 1.0)
 	
-	# 呪いアルカナアーツの場合、既存の呪い状態でスコア調整
+	# 刻印アルカナアーツの場合、既存の刻印状態でスコア調整
 	if curse_info.get("is_curse", false):
 		score += _calculate_curse_overwrite_score(creature, player_id, owner_id, curse_info.get("is_beneficial", false))
 	
@@ -478,7 +478,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	return score
 
 
-## 呪いアルカナアーツかどうか判定
+## 刻印アルカナアーツかどうか判定
 func _analyze_curse_mystic(mystic_data: Dictionary) -> Dictionary:
 	var result = {"is_curse": false, "is_beneficial": false}
 	
@@ -501,7 +501,7 @@ func _analyze_curse_mystic(mystic_data: Dictionary) -> Dictionary:
 			
 			break
 		
-		# effect_type自体が呪いリストに含まれる場合（stat_boost, dice_fixed等）
+		# effect_type自体が刻印リストに含まれる場合（stat_boost, dice_fixed等）
 		if effect_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES \
 			or effect_type in CpuCurseEvaluator.BENEFICIAL_PLAYER_CURSES:
 			result.is_curse = true
@@ -516,7 +516,7 @@ func _analyze_curse_mystic(mystic_data: Dictionary) -> Dictionary:
 	return result
 
 
-## 呪い上書きスコアを計算
+## 刻印上書きスコアを計算
 func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, _spell_is_beneficial: bool) -> float:
 	var curse_benefit = CpuCurseEvaluator.get_creature_curse_benefit(creature)
 
@@ -527,18 +527,18 @@ func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owne
 	if curse_benefit != 0:
 		if is_own:
 			if curse_benefit > 0:
-				score = -300.0  # 自分の有利な呪いを消したくない
+				score = -300.0  # 自分の有利な刻印を消したくない
 			else:
-				score = 150.0   # 不利な呪いを消したい
+				score = 150.0   # 不利な刻印を消したい
 		else:
 			if curse_benefit > 0:
-				score = 150.0   # 敵の有利な呪いを消したい
+				score = 150.0   # 敵の有利な刻印を消したい
 			else:
-				score = -300.0  # 敵の不利な呪いを残したい
+				score = -300.0  # 敵の不利な刻印を残したい
 	
 	# デバッグログ
 	var creature_name = creature.get("name", "?")
-	print("[MysticAI] 呪いスコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
+	print("[MysticAI] 刻印スコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
 	
 	return score
 
@@ -730,7 +730,7 @@ func _get_strategic_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 	return {"type": "self", "player_id": context.player_id}
 
 
-## 移動系呪いかどうかをチェック（天駆等）
+## 移動系刻印かどうかをチェック（天駆等）
 func _is_movement_curse(mystic_data: Dictionary) -> bool:
 	var effect_parsed = mystic_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
@@ -762,7 +762,7 @@ func _is_defensive_creature(creature_data: Dictionary) -> bool:
 func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Array:
 	var effect_parsed = mystic_data.get("effect_parsed", {})
 	
-	# 世界呪いコンテキスト構築
+	# 世界刻印コンテキスト構築
 	var context = _build_world_curse_context()
 	
 	var filtered = []
@@ -784,7 +784,7 @@ func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Ar
 	
 	return filtered
 
-## 世界呪いコンテキストを構築
+## 世界刻印コンテキストを構築
 func _build_world_curse_context() -> Dictionary:
 	var context = {}
 	# 直接参照を優先

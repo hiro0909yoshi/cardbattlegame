@@ -119,7 +119,7 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 			if stat == "hp" or stat == "both":
 				var random_hp = randi() % (max_value - min_value + 1) + min_value
 				# current_hpにランダム値を設定（temporary_bonus_hpは0のまま）
-				# これにより二重計算を防ぐ。呪い等の後続効果はtemporary_bonus_hpに加算される
+				# これにより二重計算を防ぐ。刻印等の後続効果はtemporary_bonus_hpに加算される
 				participant.current_hp = random_hp
 				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
 					  " HP=", random_hp, " (", min_value, "~", max_value, ")")
@@ -160,7 +160,7 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 			if has_nullify_ability:
 				break
 	
-	# 3. 敵に skill_nullify 呪いがついているかチェック
+	# 3. 敵に skill_nullify 刻印がついているかチェック
 	var enemy_curse = enemy_participant.creature_data.get("curse", {})
 	var enemy_has_skill_nullify = enemy_curse.get("curse_type") == "skill_nullify"
 	
@@ -178,7 +178,7 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 			  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	elif enemy_has_skill_nullify:
 		var curse_name = enemy_curse.get("name", "錯乱")
-		print("【呪い発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
+		print("【刻印発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	
 	# 敵のクリーチャー固有スキルを無効化
 	if enemy_participant.creature_data.has("ability_parsed"):

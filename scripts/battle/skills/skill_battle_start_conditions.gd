@@ -6,7 +6,7 @@
 ##
 ## 【該当クリーチャー】
 ## - スラッジタイタン (ID: 125): HP減少中なら自滅
-## - ギガンテリウム (ID: 206): 呪い付きならHP-20
+## - ギガンテリウム (ID: 206): 刻印付きならHP-20
 ##
 ## @version 1.0
 ## @date 2025-12-06
@@ -72,7 +72,7 @@ static func _check_condition(condition: String, participant, _context: Dictionar
 			return participant.is_damaged()
 		
 		"has_mark":
-			# 自分のクリーチャーが呪いを持っているか
+			# 自分のクリーチャーが刻印を持っているか
 			var creature_data = participant.creature_data
 			return creature_data.has("curse") and not creature_data.get("curse", {}).is_empty()
 		

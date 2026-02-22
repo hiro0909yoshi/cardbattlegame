@@ -77,14 +77,14 @@ func swap_attacker_defender():
 	attacker_has_adjacent = defender_has_adjacent
 	defender_has_adjacent = temp_adjacent
 
-	# ========== 新規追加: 呪いスペル入れ替え ==========
+	# ========== 新規追加: 刻印スペル入れ替え ==========
 	var temp_curse_spell = attacker_curse_spell_id
 	attacker_curse_spell_id = defender_curse_spell_id
 	defender_curse_spell_id = temp_curse_spell
 
-## ========== 新規追加: 呪いスペル設定 ==========
+## ========== 新規追加: 刻印スペル設定 ==========
 
-## 呪いスペルID（0 = 呪いなし）
+## 刻印スペルID（0 = 刻印なし）
 var attacker_curse_spell_id: int = 0
 var defender_curse_spell_id: int = 0
 

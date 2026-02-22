@@ -40,7 +40,7 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 		if not tile.creature_data.is_empty():
 			_apply_level_up_buff(tile.creature_data)
 		
-		# 昇華呪いトリガー（ドミナントグロース）
+		# 昇華刻印トリガー（ドミナントグロース）
 		_trigger_command_growth(handler, handler.selected_tile_index)
 	
 	# ダウン状態設定（奮闘チェック）
@@ -357,20 +357,20 @@ static func confirm_move(handler, dest_tile_index: int):
 			# バウダーイーター: 分裂移動
 			var split_result = SkillCreatureSpawn.process_boulder_eater_split(creature_data)
 			
-			# 移動元に元のクリーチャーを残す（呪い維持、ダウン状態も維持）
+			# 移動元に元のクリーチャーを残す（刻印維持、ダウン状態も維持）
 			# 移動元は既に配置済みなので何もしない（削除していないので）
 			
-			# 移動先にコピーを配置（呪い除去済み）
+			# 移動先にコピーを配置（刻印除去済み）
 			var copy_data = split_result["copy"]
 			dest_tile.place_creature(copy_data)
 			
 			print("[LandActionHelper] バウダーイーター分裂: 移動元に残留 + 移動先にコピー配置")
 		else:
-			# 通常移動: 移動による呪い消滅
+			# 通常移動: 移動による刻印消滅
 			if creature_data.has("curse"):
 				var curse_name = creature_data["curse"].get("name", "不明")
 				creature_data.erase("curse")
-				print("[LandActionHelper] 呪い消滅（移動）: ", curse_name)
+				print("[LandActionHelper] 刻印消滅（移動）: ", curse_name)
 			
 			# place_creature()を使って3Dカードも含めて正しく配置
 			dest_tile.place_creature(creature_data)
@@ -407,16 +407,16 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.close_dominio_order()
 		
 	else:
-		# 敵の土地の場合: peace呪いチェック
+		# 敵の土地の場合: peace刻印チェック
 		var spell_curse_toll = null
 		if handler.board_system.has_meta("spell_curse_toll"):
 			spell_curse_toll = handler.board_system.get_meta("spell_curse_toll")
 		
-		# peace呪いがあれば移動・戦闘不可
+		# peace刻印があれば移動・戦闘不可
 		if spell_curse_toll and spell_curse_toll.has_peace_curse(dest_tile_index):
-			# peace呪いで移動・戦闘不可
+			# peace刻印で移動・戦闘不可
 			if handler._message_service:
-				handler._message_service.show_toast("peace呪い: このタイルへは侵略できません")
+				handler._message_service.show_toast("peace刻印: このタイルへは侵略できません")
 			# 移動元にクリーチャーを戻す
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
@@ -432,11 +432,11 @@ static func confirm_move(handler, dest_tile_index: int):
 				handler.close_dominio_order()
 				return
 		
-		# プレイヤー休戦呪いチェック（トゥルース）
+		# プレイヤー休戦刻印チェック（トゥルース）
 		var current_player_id = handler.board_system.current_player_index if handler.board_system else 0
 		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(current_player_id):
 			if handler._message_service:
-				handler._message_service.show_toast("休戦呪い: 侵略できません")
+				handler._message_service.show_toast("休戦刻印: 侵略できません")
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
 			return
@@ -451,19 +451,19 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# バトル発生
 		
-		# バウダーイーターの場合: 戦闘用にコピーを生成（呪い除去）
+		# バウダーイーターの場合: 戦闘用にコピーを生成（刻印除去）
 		var battle_creature_data = creature_data
 		if is_boulder_eater:
 			var split_result = SkillCreatureSpawn.process_boulder_eater_split(creature_data)
-			battle_creature_data = split_result["copy"]  # 呪い除去済みコピーで戦闘
+			battle_creature_data = split_result["copy"]  # 刻印除去済みコピーで戦闘
 			# 元のドミニオにはオリジナルが残る（既に削除していないので何もしない）
 			print("[LandActionHelper] バウダーイーター分裂: 元のドミニオに残留、コピーで戦闘")
 		else:
-			# 通常移動: 移動による呪い消滅（バトル前に消す）
+			# 通常移動: 移動による刻印消滅（バトル前に消す）
 			if creature_data.has("curse"):
 				var curse_name = creature_data["curse"].get("name", "不明")
 				creature_data.erase("curse")
-				print("[LandActionHelper] 呪い消滅（移動侵略）: ", curse_name)
+				print("[LandActionHelper] 刻印消滅（移動侵略）: ", curse_name)
 			battle_creature_data = creature_data
 		
 		# 移動元情報を保存（敗北時に戻すため - バウダーイーター以外）
@@ -565,7 +565,7 @@ static func _apply_level_up_buff(creature_data: Dictionary):
 		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] レベルアップ MHP-10 (合計: %d)" % creature_data["base_up_hp"])
 
-## 昇華呪いをトリガー（ドミナントグロース）
+## 昇華刻印をトリガー（ドミナントグロース）
 static func _trigger_command_growth(handler, tile_index: int) -> void:
 	if not handler.game_flow_manager:
 		return
@@ -574,7 +574,7 @@ static func _trigger_command_growth(handler, tile_index: int) -> void:
 	if not spell_curse:
 		return
 	
-	# 昇華呪いがあればトリガー
+	# 昇華刻印があればトリガー
 	var result = spell_curse.trigger_command_growth(tile_index)
 	
 	if result.get("triggered", false):
@@ -661,7 +661,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# タイルを再取得（属性変更後のインスタンス）
 	tile = handler.board_system.tile_nodes[tile_index]
 	
-	# 昇華呪いトリガー（ドミナントグロース）
+	# 昇華刻印トリガー（ドミナントグロース）
 	_trigger_command_growth(handler, tile_index)
 	
 	# ダウン状態設定（奮闘チェック）

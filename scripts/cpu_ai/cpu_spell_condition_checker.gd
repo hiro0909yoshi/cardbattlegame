@@ -138,7 +138,7 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 		"standing_on_vacant_land":
 			return _check_standing_on_vacant_land(context)
 		
-		# 呪い関連
+		# 刻印関連
 		"has_any_curse":
 			return _check_has_any_curse(context)
 		"has_world_curse":
@@ -287,20 +287,20 @@ func _check_self_creature_damaged(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	return board_analyzer.has_damaged_creature(player_id)
 
-## 呪い付きクリーチャーがいるか（自分の）
+## 刻印付きクリーチャーがいるか（自分の）
 func _check_has_cursed_creature(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	return board_analyzer.has_cursed_creature(player_id)
 
-## 何らかの呪いがあるか
+## 何らかの刻印があるか
 func _check_has_any_curse(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	
-	# クリーチャー呪いチェック
+	# クリーチャー刻印チェック
 	if board_analyzer.has_cursed_creature(player_id):
 		return true
 	
-	# プレイヤー呪いチェック
+	# プレイヤー刻印チェック
 	if player_system and player_id >= 0 and player_id < player_system.players.size():
 		var player = player_system.players[player_id]
 		if player and player.curse.size() > 0:
@@ -308,15 +308,15 @@ func _check_has_any_curse(context: Dictionary) -> bool:
 	
 	return false
 
-## 世界呪いがあるか
+## 世界刻印があるか
 func _check_has_world_curse(_ctx: Dictionary) -> bool:
-	# target_resolver から game_stats 経由で世界呪いをチェック
+	# target_resolver から game_stats 経由で世界刻印をチェック
 	if target_resolver and target_resolver.game_stats:
 		var world_curse = target_resolver.game_stats.get("world_curse", {})
 		return not world_curse.is_empty()
 	return false
 
-## プレイヤー呪いがあるか
+## プレイヤー刻印があるか
 func _check_has_player_curse(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	if not player_system:

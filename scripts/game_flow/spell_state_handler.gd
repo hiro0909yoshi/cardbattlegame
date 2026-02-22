@@ -38,7 +38,7 @@ var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立�
 # 外部スペルモード（魔法タイル等で使用）
 # trueの場合、手札からの削除・捨て札処理をスキップ
 var is_external_spell_mode: bool = false
-var is_magic_tile_mode: bool = false  # マジックタイル経由（呪いduration調整用）
+var is_magic_tile_mode: bool = false  # マジックタイル経由（刻印duration調整用）
 var _external_spell_cancelled: bool = false  # キャンセルフラグ
 var _external_spell_no_target: bool = false  # 対象不在フラグ
 

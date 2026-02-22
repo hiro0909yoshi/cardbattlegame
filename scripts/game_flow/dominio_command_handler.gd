@@ -97,9 +97,9 @@ var _show_action_menu_cb: Callable = Callable()
 var _highlight_terrain_button_cb: Callable = Callable()
 
 # === 直接参照（GFM経由を廃止） ===
-var spell_world_curse = null  # SpellWorldCurse: 世界呪い
+var spell_world_curse = null  # SpellWorldCurse: 世界刻印
 var spell_land = null  # SpellLand: 土地操作
-var spell_curse = null  # SpellCurse: 呪い管理
+var spell_curse = null  # SpellCurse: 刻印管理
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 
 func set_battle_status_overlay(overlay) -> void:

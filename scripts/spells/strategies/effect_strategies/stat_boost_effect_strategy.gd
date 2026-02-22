@@ -1,4 +1,4 @@
-## StatBoostEffectStrategy - ステータス呪い効果の戦略実装
+## StatBoostEffectStrategy - ステータス刻印効果の戦略実装
 ## stat_boost (1個)
 class_name StatBoostEffectStrategy
 extends SpellStrategy

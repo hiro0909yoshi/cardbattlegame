@@ -166,7 +166,7 @@ func get_tiles_in_range(from_tile: int, min_dist: int, max_dist: int) -> Array:
 # 移動制御系
 # ========================================
 
-## 反転呪いを全セプターに付与（カオスパニック 2019）
+## 反転刻印を全セプターに付与（カオスパニック 2019）
 ## 刻印付与と同時にcame_fromを入れ替えて逆走させる
 func apply_movement_reverse_curse(duration: int = 1) -> void:
 	for player_id in range(player_system.players.size()):
@@ -289,7 +289,7 @@ func get_available_directions(player_id: int) -> Array:
 	if player.buffs.has("direction_choice"):
 		return [1, -1]  # 順方向、逆方向
 	
-	# 反転呪いチェック
+	# 反転刻印チェック
 	var curse = spell_curse.get_player_curse(player_id)
 	if curse.get("curse_type") == "movement_reverse":
 		return [-1]
@@ -307,7 +307,7 @@ func consume_direction_choice(player_id: int) -> void:
 func get_final_direction(player_id: int, chosen_direction: int) -> int:
 	var base_direction = 1
 	
-	# 反転呪いチェック
+	# 反転刻印チェック
 	var curse = spell_curse.get_player_curse(player_id)
 	if curse.get("curse_type") == "movement_reverse":
 		base_direction = -1

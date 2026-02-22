@@ -27,7 +27,7 @@ class PlayerData:
 	var current_direction: int = 1  # 現在の移動方向（1=順方向, -1=逆方向）
 	var came_from: int = -1  # 前にいたタイル（分岐判定用）
 	var last_choice_tile: int = -1
-	var curse: Dictionary = {}  # 呪い効果（SpellCurseで管理）
+	var curse: Dictionary = {}  # 刻印効果（SpellCurseで管理）
 	var buffs: Dictionary = {}  # バフ効果（方向選択権等）
 	var magic_stones: Dictionary = {"fire": 0, "water": 0, "earth": 0, "wind": 0}  # 魔法石所持数
 	var destroyed_count: int = 0  # バトルで破壊されたクリーチャー数

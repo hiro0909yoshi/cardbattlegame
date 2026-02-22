@@ -258,18 +258,18 @@ func _update_right_panel():
 		else:
 			item_label.text = "アイテム制限: なし"
 	
-	# 呪い
+	# 刻印
 	if curse_label:
 		var curse = data.get("curse", {})
 		if curse.is_empty():
-			curse_label.text = "【呪い】なし"
+			curse_label.text = "【刻印】なし"
 		else:
 			var curse_name = curse.get("name", "不明")
 			var duration = curse.get("duration", -1)
 			if duration > 0:
-				curse_label.text = "【呪い】%s（残り%dターン）" % [curse_name, duration]
+				curse_label.text = "【刻印】%s（残り%dターン）" % [curse_name, duration]
 			else:
-				curse_label.text = "【呪い】%s" % curse_name
+				curse_label.text = "【刻印】%s" % curse_name
 	
 	# スキル
 	if skill_container and skill_label:
@@ -367,7 +367,7 @@ func _calculate_land_bonus(creature_data: Dictionary) -> int:
 	var tile_element = tile_info.get("element", "")
 	var tile_level = tile_info.get("level", 1)
 	
-	# 属性一致判定（SpellCurseBattle経由で呪い効果等も考慮）
+	# 属性一致判定（SpellCurseBattle経由で刻印効果等も考慮）
 	if SpellCurseBattle.can_get_land_bonus(creature_data, tile_element):
 		return tile_level * 10
 	

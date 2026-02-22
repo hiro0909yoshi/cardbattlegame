@@ -1,4 +1,4 @@
-## PlayerCurseEffectStrategy - プレイヤー呪い効果の戦略実装
+## PlayerCurseEffectStrategy - プレイヤー刻印効果の戦略実装
 ## player_curse (1個)
 class_name PlayerCurseEffectStrategy
 extends SpellStrategy
@@ -59,7 +59,7 @@ func execute(context: Dictionary) -> Dictionary:
 	# 元のロジック (spell_effect_executor.gd Line 182-203) を再現
 	var curse_type = effect.get("curse_type", "")
 	var duration = effect.get("duration", -1)
-	var curse_name = effect.get("name", "呪い")
+	var curse_name = effect.get("name", "刻印")
 	var params = {
 		"name": curse_name,
 		"description": effect.get("description", "")
@@ -70,7 +70,7 @@ func execute(context: Dictionary) -> Dictionary:
 		if effect.has(key):
 			params[key] = effect.get(key)
 
-	# all_players の場合は全プレイヤーに呪いをかける
+	# all_players の場合は全プレイヤーに刻印をかける
 	if effect.get("all_players", false) or target_data.get("type") == "all_players":
 		var player_count = handler.player_system.players.size() if handler and handler.player_system else 2
 		var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0

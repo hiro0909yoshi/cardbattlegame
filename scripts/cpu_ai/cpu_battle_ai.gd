@@ -712,7 +712,7 @@ func evaluate_single_creature_battle(
 			if hand_utils.is_item_destroy_target(item_data, enemy_destroy_types):
 				continue  # このアイテムは破壊される
 		
-		# cannot_use制限チェック（リリース呪いで解除可能）
+		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(my_player_id):
 			var check_result = ItemUseRestriction.check_can_use(my_creature, item_data)
 			if not check_result.can_use:
@@ -836,7 +836,7 @@ func _simulate_worst_case_as_defender(
 	
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
-		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
+		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, enemy_item)
 			if not check_result.can_use:
@@ -938,7 +938,7 @@ func _check_instant_death_condition_for_cpu(condition: Dictionary, defender: Dic
 	return false
 
 
-## リリース呪いによるアイテム解放をチェック
+## リリース刻印によるアイテム解放をチェック
 ## @param player_id: チェックするプレイヤーID
 ## @return bool: アイテム制限が解除されているか
 func _is_item_restriction_released(player_id: int) -> bool:

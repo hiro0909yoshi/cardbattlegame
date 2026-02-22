@@ -124,7 +124,7 @@ func apply_clear_down_effect(handler: Node, tile_index: int) -> void:
 
 
 ## 全クリーチャー対象のeffects配列を実行（ダメージ/回復を自動判定）
-## 戻り値: 処理したかどうか（呪い効果等は未処理でfalse）
+## 戻り値: 処理したかどうか（刻印効果等は未処理でfalse）
 func execute_all_creatures_effects(handler: Node, effects: Array, target_info: Dictionary) -> bool:
 	# 効果タイプを判定
 	for effect in effects:
@@ -542,7 +542,7 @@ static func format_heal_notification(result: Dictionary, heal_value: int = -1) -
 # 衰弱（プレイグ）ダメージ処理
 # ============================================
 
-## 衰弱呪いをチェックしてダメージを適用（バトル終了後に呼び出す）
+## 衰弱刻印をチェックしてダメージを適用（バトル終了後に呼び出す）
 ## @param tile_index: バトルが行われた土地のインデックス
 ## @return Dictionary: {triggered: bool, damage: int, destroyed: bool, creature_name: String, ...}
 func apply_plague_damage(tile_index: int) -> Dictionary:
@@ -568,7 +568,7 @@ func apply_plague_damage(tile_index: int) -> Dictionary:
 	
 	var creature = tile.creature_data
 	
-	# 呪いチェック
+	# 刻印チェック
 	var curse = creature.get("curse", {})
 	if curse.get("curse_type") != "plague":
 		return result

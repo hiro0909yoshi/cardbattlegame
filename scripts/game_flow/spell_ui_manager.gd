@@ -228,14 +228,14 @@ func update_spell_phase_ui() -> void:
 
 	var hand_data = _card_system.get_all_cards_for_player(current_player.id)
 
-	# 禁呪呪いチェック
+	# 禁呪刻印チェック
 	var context = _build_spell_context()
 	var is_spell_disabled = SpellProtection.is_player_spell_disabled(current_player, context)
 
 	if is_spell_disabled:
 		_ui_manager.card_selection_filter = "spell_disabled"
 		if _ui_manager.phase_display and _ui_manager.phase_display.has_method("show_toast"):
-			_ui_manager.phase_display.show_toast("禁呪の呪いがかかっています")
+			_ui_manager.phase_display.show_toast("禁呪の刻印がかかっています")
 	else:
 		_ui_manager.card_selection_filter = "spell"
 
@@ -350,7 +350,7 @@ func clear_spell_cast_notification() -> void:
 		_spell_cast_notification_ui.hide()
 		_waiting_for_notification_click = false
 
-## スペル関連のコンテキストを構築（世界呪い等）
+## スペル関連のコンテキストを構築（世界刻印等）
 func _build_spell_context() -> Dictionary:
 	var context = {}
 

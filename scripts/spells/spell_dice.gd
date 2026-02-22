@@ -3,7 +3,7 @@ class_name SpellDice
 
 # ダイス操作スペル効果
 # プレイヤーのダイス結果を固定値や範囲指定に変更する
-# ドキュメント: docs/design/spells/呪い効果.md
+# ドキュメント: docs/design/spells/刻印効果.md
 
 # 参照
 var player_system: PlayerSystem
@@ -100,7 +100,7 @@ func _get_target_player_id(target_data: Dictionary, current_player_id: int) -> i
 # 汎用効果適用（統合版）
 # ========================================
 
-## スペル効果から呪いを適用（統合メソッド）
+## スペル効果から刻印を適用（統合メソッド）
 func apply_effect_from_parsed(effect: Dictionary, target_data: Dictionary, current_player_id: int):
 	var effect_type = effect.get("effect_type", "")
 	
@@ -151,7 +151,7 @@ func haste(player_id: int):
 	})
 
 # ========================================
-# ダイス判定（呪い適用）
+# ダイス判定（刻印適用）
 # ========================================
 
 # 3個目のダイスが必要か判定（フライ効果）
@@ -177,13 +177,13 @@ func get_multi_roll_count(player_id: int) -> int:
 		return curse.get("params", {}).get("count", 1)
 	return 1
 
-# ダイス範囲呪い（dice_range または dice_range_magic）があるか判定
+# ダイス範囲刻印（dice_range または dice_range_magic）があるか判定
 func has_dice_range_curse(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
 	var curse_type = curse.get("curse_type", "")
 	return curse_type == "dice_range" or curse_type == "dice_range_magic"
 
-# ダイス範囲呪いの情報を取得（表示用）
+# ダイス範囲刻印の情報を取得（表示用）
 func get_dice_range_info(player_id: int) -> Dictionary:
 	var curse = spell_curse.get_player_curse(player_id)
 	var curse_type = curse.get("curse_type", "")
@@ -222,7 +222,7 @@ func process_magic_grant(player_id: int) -> Dictionary:
 		return {"message": "EP +" + str(magic_amount) + "EP 獲得！", "player_id": player_id}
 	return {}
 
-# ダイスロール時に呪いを適用
+# ダイスロール時に刻印を適用
 # 通常のダイスシステムから呼ばれる
 func get_modified_dice_value(player_id: int, original_value: int) -> int:
 	var curse = spell_curse.get_player_curse(player_id)
@@ -237,7 +237,7 @@ func get_modified_dice_value(player_id: int, original_value: int) -> int:
 		"dice_fixed":
 			# ダイス固定
 			var fixed_value = int(params.get("value", 6))
-			print("[ダイス呪い] ", curse.get("name", ""), " → ", fixed_value)
+			print("[ダイス刻印] ", curse.get("name", ""), " → ", fixed_value)
 			return fixed_value
 		
 		"dice_range":
@@ -245,7 +245,7 @@ func get_modified_dice_value(player_id: int, original_value: int) -> int:
 			var min_val = int(params.get("min", 1))
 			var max_val = int(params.get("max", 6))
 			var new_value = randi() % (max_val - min_val + 1) + min_val
-			print("[ダイス呪い] ", curse.get("name", ""), " → ", new_value, " (", min_val, "-", max_val, ")")
+			print("[ダイス刻印] ", curse.get("name", ""), " → ", new_value, " (", min_val, "-", max_val, ")")
 			return new_value
 		
 		"dice_multi":
@@ -257,7 +257,7 @@ func get_modified_dice_value(player_id: int, original_value: int) -> int:
 			var min_val = int(params.get("min", 1))
 			var max_val = int(params.get("max", 6))
 			var new_value = randi() % (max_val - min_val + 1) + min_val
-			print("[ダイス呪い] ", curse.get("name", ""), " → ", new_value, " (", min_val, "-", max_val, ")")
+			print("[ダイス刻印] ", curse.get("name", ""), " → ", new_value, " (", min_val, "-", max_val, ")")
 			return new_value
 		
 		_:

@@ -258,7 +258,7 @@ func simulate_battle(
 
 		print("[BattleSim] %s vs %s" % [atk_base, def_base])
 
-		# Line 2: スキル・呪い（効果がある場合のみ）
+		# Line 2: スキル・刻印（効果がある場合のみ）
 		var atk_effects = _get_effects_summary(attacker)
 		var def_effects = _get_effects_summary(defender)
 		if atk_effects != "なし" or def_effects != "なし":
@@ -318,7 +318,7 @@ func _create_participants(
 	attacker.base_up_ap = attacker_base_up_ap
 	attacker.current_hp = attacker_data.get("current_hp", attacker_base_hp + attacker_base_up_hp)
 	
-	# 呪い等のtemporary_effectsを反映
+	# 刻印等のtemporary_effectsを反映
 	battle_preparation.apply_effect_arrays(attacker, attacker_creature_data)
 	
 	if attacker_base_up_hp > 0 or attacker_base_up_ap > 0:
@@ -351,7 +351,7 @@ func _create_participants(
 	defender.base_up_ap = defender_base_up_ap
 	defender.current_hp = defender_data.get("current_hp", defender_base_hp + defender_base_up_hp)
 	
-	# 呪い等のtemporary_effectsを反映
+	# 刻印等のtemporary_effectsを反映
 	battle_preparation.apply_effect_arrays(defender, defender_creature_data)
 	
 	if defender_base_up_hp > 0 or defender_base_up_ap > 0:
@@ -633,7 +633,7 @@ func _get_attacker_death_damage(attacker_data: Dictionary) -> int:
 	
 	return 0
 
-## パーティシパントのスキル・呪い情報を収集（レベル1用）
+## パーティシパントのスキル・刻印情報を収集（レベル1用）
 func _get_effects_summary(participant) -> String:
 	var parts: Array[String] = []
 
@@ -652,7 +652,7 @@ func _get_effects_summary(participant) -> String:
 	if participant.has_squid_mantle:
 		parts.append("特殊攻撃無効")
 
-	# temporary_effects から呪い効果を収集
+	# temporary_effects から刻印効果を収集
 	var temp_effects = participant.creature_data.get("temporary_effects", [])
 	for eff in temp_effects:
 		var eff_name = eff.get("name", "")
@@ -661,10 +661,10 @@ func _get_effects_summary(participant) -> String:
 			eff_name = eff.get("effect_type", "効果")
 		parts.append("呪:" + str(eff_name))
 
-	# curse（プレイヤー呪い由来の効果）もチェック
+	# curse（プレイヤー刻印由来の効果）もチェック
 	var curse_effects = participant.creature_data.get("curse_effects", [])
 	for eff in curse_effects:
-		var eff_name = eff.get("name", eff.get("effect_type", "呪い"))
+		var eff_name = eff.get("name", eff.get("effect_type", "刻印"))
 		parts.append("呪:" + str(eff_name))
 
 	if parts.is_empty():

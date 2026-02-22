@@ -598,7 +598,7 @@ func _on_movement_completed(player_id: int, final_tile: int):
 	# リレー emit（Phase 2: GameFlowManager へ通知）
 	movement_completed.emit(player_id, final_tile)
 
-	# 土地呪いチェック（ブラストトラップ等）- 移動完了時に即発動
+	# 土地刻印チェック（ブラストトラップ等）- 移動完了時に即発動
 	# Item 3: Callable駆動化
 	if _trigger_land_curse_cb.is_valid():
 		_trigger_land_curse_cb.call(final_tile, current_player_index)
@@ -895,7 +895,7 @@ func restore_movement_selector_navigation() -> bool:
 			return true
 	return false
 
-## 逆移動呪い解除時のcame_from復元
+## 逆移動刻印解除時のcame_from復元
 func on_movement_reverse_curse_removed(player_id: int):
 	if movement_controller and movement_controller.has_method("on_movement_reverse_curse_removed"):
 		movement_controller.on_movement_reverse_curse_removed(player_id)
@@ -1111,7 +1111,7 @@ func get_battle_screen_manager():
 # TileDataManager 追加委譲メソッド（E用）
 # ========================================
 
-## 呪い込みの通行料を計算
+## 刻印込みの通行料を計算
 func calculate_toll_with_curse(tile_index: int, map_id: String = "") -> int:
 	if tile_data_manager and tile_data_manager.has_method("calculate_toll_with_curse"):
 		return tile_data_manager.calculate_toll_with_curse(tile_index, map_id)
@@ -1121,7 +1121,7 @@ func calculate_toll_with_curse(tile_index: int, map_id: String = "") -> int:
 # 分岐タイル管理
 # ========================================
 
-## 全ての分岐タイルの方向を切り替え（逆走呪い解除時）
+## 全ての分岐タイルの方向を切り替え（逆走刻印解除時）
 func toggle_all_branch_tiles() -> void:
 	if tile_nodes.is_empty():
 		return

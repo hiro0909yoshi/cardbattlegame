@@ -25,6 +25,6 @@ func _setup_content():
 	text += "・多くのスキルは自動的に発動します\n"
 	text += "・条件付きのスキルは条件を満たすと発動します\n\n"
 	text += "[b]注意点[/b]\n"
-	text += "・呪いによりスキルが無効化される場合があります\n"
+	text += "・刻印によりスキルが無効化される場合があります\n"
 	text += "[/font_size]"
 	content_label.text = text

@@ -1,4 +1,4 @@
-## TollCurseEffectStrategy - 通行料呪い効果の戦略実装
+## TollCurseEffectStrategy - 通行料刻印効果の戦略実装
 ## toll_share, toll_disable, toll_fixed, toll_multiplier, peace, curse_toll_half (6個)
 class_name TollCurseEffectStrategy
 extends SpellStrategy
@@ -77,7 +77,7 @@ func execute(context: Dictionary) -> Dictionary:
 		"curse_toll_half":
 			effect_message = "通行料を半減"
 		_:
-			effect_message = "通行料呪い"
+			effect_message = "通行料刻印"
 
 	# 元のロジック (spell_effect_executor.gd Line 176-180) を再現
 	var tile_index = target_data.get("tile_index", -1)

@@ -99,7 +99,7 @@ func _draw_hp_bar() -> void:
 	var is_dead = hp_data.get("current_hp", 0) <= 0
 	
 	# 各セグメントの現在残り値（実データから直接取得）
-	# マイナスのtemporary_bonus_hpはcurrent_hpに既に反映済み（スペクター、呪い等）
+	# マイナスのtemporary_bonus_hpはcurrent_hpに既に反映済み（スペクター、刻印等）
 	var green_remaining = 0 if is_dead else hp_data["current_hp"] + hp_data["item_bonus_hp"]
 	var cyan_remaining = 0 if is_dead else hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
 	var yellow_remaining = 0 if is_dead else hp_data["land_bonus_hp"]

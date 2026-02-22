@@ -43,7 +43,7 @@ func _init(board_sys: Object, player_sys: Object, spell_phase_handler: Object = 
 
 # ============ メイン効果適用 ============
 
-## 枷呪いをチェック
+## 枷刻印をチェック
 func _has_move_disable_curse(tile_index: int) -> bool:
 	var tile = board_system_ref.tile_nodes.get(tile_index)
 	if not tile or tile.creature_data.is_empty():
@@ -60,13 +60,13 @@ func _get_spell_curse_toll():
 	return null
 
 
-## 敵ドミニオへの侵略が可能かチェック（peace呪い + プレイヤー休戦呪い + テンパランスロウ + クリーチャー鉄壁）
+## 敵ドミニオへの侵略が可能かチェック（peace刻印 + プレイヤー休戦刻印 + テンパランスロウ + クリーチャー鉄壁）
 func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	var spell_curse_toll = _get_spell_curse_toll()
 	if not spell_curse_toll:
 		return true
 	
-	# peace呪いチェック（ドミニオ側の防御）
+	# peace刻印チェック（ドミニオ側の防御）
 	if spell_curse_toll.has_peace_curse(tile_index):
 		return false
 	
@@ -76,7 +76,7 @@ func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 		if spell_curse_toll.is_creature_invasion_immune(tile.creature_data):
 			return false
 	
-	# プレイヤー休戦呪いチェック（トゥルース）
+	# プレイヤー休戦刻印チェック（トゥルース）
 	if spell_curse_toll.is_player_invasion_disabled(player_id):
 		return false
 	
@@ -307,7 +307,7 @@ func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 		
 		# 敵ドミニオのみ（自ドミニオや空地は除外）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
-			# 侵略可能かチェック（peace呪い + トゥルース）
+			# 侵略可能かチェック（peace刻印 + トゥルース）
 			if not _can_invade_tile(tile_index, current_player_id):
 				continue
 			destinations.append(tile_index)
@@ -356,7 +356,7 @@ func _get_tiles_within_steps(from_tile_index: int, max_steps: int) -> Array:
 		var tile = board_system_ref.tile_nodes.get(tile_index)
 		if tile and not TileHelper.is_placeable_tile(tile):
 			continue  # 配置不可タイルは除外（クリーチャー移動）
-		# 敵ドミニオの場合は侵略可能かチェック（peace呪い + トゥルース）
+		# 敵ドミニオの場合は侵略可能かチェック（peace刻印 + トゥルース）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if not _can_invade_tile(tile_index, current_player_id):
 				continue
@@ -405,7 +405,7 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 			var tile = board_system_ref.tile_nodes.get(tile_index)
 			if tile and not TileHelper.is_placeable_tile(tile):
 				continue  # 配置不可タイルは除外（クリーチャー移動）
-			# 敵ドミニオの場合は侵略可能かチェック（peace呪い + トゥルース）
+			# 敵ドミニオの場合は侵略可能かチェック（peace刻印 + トゥルース）
 			if tile.owner_id != -1 and tile.owner_id != current_player_id:
 				if not _can_invade_tile(tile_index, current_player_id):
 					continue
@@ -422,7 +422,7 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
 	
-	# 枷呪いチェック
+	# 枷刻印チェック
 	if _has_move_disable_curse(from_tile_index):
 		return {"success": false, "reason": "move_disabled"}
 	
@@ -468,7 +468,7 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
 	
-	# 枷呪いチェック
+	# 枷刻印チェック
 	if _has_move_disable_curse(from_tile_index):
 		return {"success": false, "reason": "move_disabled"}
 	
@@ -543,7 +543,7 @@ func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatur
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
 	
-	# 枷呪いチェック
+	# 枷刻印チェック
 	if _has_move_disable_curse(from_tile_index):
 		return {"success": false, "reason": "move_disabled"}
 	
@@ -655,11 +655,11 @@ func _execute_move(from_tile: int, to_tile: int) -> void:
 	var creature_data = from_tile_node.creature_data.duplicate()
 	var owner_id = from_tile_node.owner_id
 	
-	# 移動による呪い消滅
+	# 移動による刻印消滅
 	if creature_data.has("curse"):
 		var curse_name = creature_data["curse"].get("name", "不明")
 		creature_data.erase("curse")
-		print("[SpellCreatureMove] 呪い消滅（移動）: ", curse_name)
+		print("[SpellCreatureMove] 刻印消滅（移動）: ", curse_name)
 	
 	# 移動元のクリーチャーを削除
 	board_system_ref.remove_creature(from_tile)

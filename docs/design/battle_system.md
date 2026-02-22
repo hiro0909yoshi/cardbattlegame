@@ -23,10 +23,10 @@ BattleParticipantとHP管理
    
 2. 効果配列適用 (apply_effect_arrays)
    ├─ permanent_effects を HP/AP に反映
-   └─ temporary_effects を HP/AP に反映（呪いなど）
+   └─ temporary_effects を HP/AP に反映（刻印など）
    
-3. 呪い変換 (_apply_creature_curses)
-   ├─ 呪い（stat_boost/stat_reduce）を temporary_effects に追加
+3. 刻印変換 (_apply_creature_curses)
+   ├─ 刻印（stat_boost/stat_reduce）を temporary_effects に追加
    └─ temporary_bonus_hp/ap を加算
    
 4. アイテム効果適用 (apply_item_effects)
@@ -72,7 +72,7 @@ HPフィールド一覧
 
 1. 土地ボーナス (land_bonus_hp - 最優先で消費、戦闘ごとに復活)
 2. 共鳴ボーナス (resonance_bonus_hp - バトル限定)
-3. 一時効果 (temporary_bonus_hp - 呪い等)
+3. 一時効果 (temporary_bonus_hp - 刻印等)
 4. スペルボーナス (spell_bonus_hp)
 5. アイテムボーナス (item_bonus_hp)
 6. 現在HP (current_hp - 最後に消費)
@@ -310,10 +310,10 @@ func _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_inde
 	return false
 ```
 バウンティハント（賞金）報酬
-敗北したクリーチャーに「賞金」呪いがある場合、勝者は報酬EPを獲得。
+敗北したクリーチャーに「賞金」刻印がある場合、勝者は報酬EPを獲得。
 ```
 発動タイミング: 各バトル結果処理の冒頭
-報酬: 呪いに設定された magic_amount
+報酬: 刻印に設定された magic_amount
 対象: ATTACKER_WIN時は防御側、DEFENDER_WIN時は攻撃側
 相打ち: 報酬なし（勝者がいない）
 ```
@@ -357,11 +357,11 @@ BattleParticipant の作成
 刺突スキル判定
 
 2. BattleCurseApplier
-役割: 呪い効果の適用
+役割: 刻印効果の適用
 
-呪い（stat_boost/stat_reduce）をtemporary_effectsに変換
+刻印（stat_boost/stat_reduce）をtemporary_effectsに変換
 永続・一時ボーナスHP/APの計算
-タイルベースの呪い判定
+タイルベースの刻印判定
 
 3. BattleItemApplier
 役割: アイテム効果の適用
@@ -389,7 +389,7 @@ BattlePreparation.prepare_participants()
   │   └─ temporary_effects を反映
   │
   ├─> BattleCurseApplier.apply_creature_curses()
-  │   └─ 呪い効果を temporary_effects に変換
+  │   └─ 刻印効果を temporary_effects に変換
   │
   ├─> BattleItemApplier.apply_item_effects()
   │   └─ アイテム効果を適用
@@ -404,6 +404,6 @@ BattlePreparation.prepare_participants()
 
 関連ファイル
 実装ファイル
-ファイル役割scripts/battle_system.gdバトルシステムメインロジックscripts/battle/battle_participant.gdBattleParticipantクラスscripts/skills/condition_checker.gdスキル条件判定scripts/skills/effect_combat.gdスキル効果適用scripts/battle/battle_preparation.gdバトル前準備（オーケストレーター）scripts/battle/battle_curse_applier.gd呪い効果適用scripts/battle/battle_item_applier.gdアイテム効果適用scripts/battle/battle_skill_granter.gdスキル付与処理
+ファイル役割scripts/battle_system.gdバトルシステムメインロジックscripts/battle/battle_participant.gdBattleParticipantクラスscripts/skills/condition_checker.gdスキル条件判定scripts/skills/effect_combat.gdスキル効果適用scripts/battle/battle_preparation.gdバトル前準備（オーケストレーター）scripts/battle/battle_curse_applier.gd刻印効果適用scripts/battle/battle_item_applier.gdアイテム効果適用scripts/battle/battle_skill_granter.gdスキル付与処理
 設計ドキュメント
 ドキュメント内容skills_design.mdスキルシステム全体設計land_system.md土地システム・土地ボーナスitem_system.mdアイテムシステム・アイテムフェーズ

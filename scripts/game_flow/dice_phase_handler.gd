@@ -98,7 +98,7 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 		dice2 = dice_result.dice2
 		total_dice = dice_result.total
 
-	# 呪いによるダイス変更を適用（dice_multi以外）
+	# 刻印によるダイス変更を適用（dice_multi以外）
 	if spell_dice and not needs_third:
 		total_dice = spell_dice.get_modified_dice_value(player_system.current_player_index, total_dice)
 
@@ -109,7 +109,7 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	dice_ui_big_result_requested.emit(modified_dice, 1.5)
 
 	# ダイス結果を詳細表示（上部）
-	# ダイス範囲呪いがある場合は特殊表示
+	# ダイス範囲刻印がある場合は特殊表示
 	if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):
 		var range_info = spell_dice.get_dice_range_info(player_system.current_player_index)
 		dice_ui_range_result_shown.emit(range_info.get("name", ""), modified_dice)

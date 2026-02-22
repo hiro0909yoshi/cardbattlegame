@@ -504,7 +504,7 @@ func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}) -
 		if cost > current_player.magic_power:
 			continue
 		
-		# cannot_use制限チェック（リリース呪いで解除可能）
+		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not defender.is_empty() and not _is_item_restriction_released(player_id):
 			var check_result = ItemUseRestriction.check_can_use(defender, card)
 			if not check_result.can_use:
@@ -556,7 +556,7 @@ func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info:
 	
 	# 各アイテムでシミュレーションしてワーストを探す
 	for item in attacker_items:
-		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
+		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, item)
 			if not check_result.can_use:
@@ -611,7 +611,7 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 		if card.get("item_type", "") == "巻物":
 			continue
 		
-		# cannot_use制限チェック（リリース呪いで解除可能）
+		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(player_id):
 			var check_result = ItemUseRestriction.check_can_use(defender, card)
 			if not check_result.can_use:
@@ -821,7 +821,7 @@ func _result_to_string(result: int) -> String:
 
 
 
-## リリース呪いによるアイテム解放をチェック
+## リリース刻印によるアイテム解放をチェック
 func _is_item_restriction_released(player_id: int) -> bool:
 	if not player_system or player_id < 0 or player_id >= player_system.players.size():
 		return false
@@ -834,7 +834,7 @@ func _calculate_toll(tile_index: int) -> int:
 	if tile_index < 0 or not board_system:
 		return 0
 	
-	# 呪い補正込みの通行料を返す
+	# 刻印補正込みの通行料を返す
 	if board_system:
 		return board_system.calculate_toll_with_curse(tile_index)
 	

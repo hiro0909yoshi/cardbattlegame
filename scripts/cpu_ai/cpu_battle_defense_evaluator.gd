@@ -73,7 +73,7 @@ func simulate_worst_case(
 	
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
-		# 防御側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
+		# 防御側クリーチャーのcannot_use制限をチェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(defender_owner):
 			var check_result = ItemUseRestriction.check_can_use(defender, enemy_item)
 			if not check_result.can_use:
@@ -201,7 +201,7 @@ func find_item_to_beat_worst_case(
 				print("    [スキップ] %s: 敵のアイテム破壊対象" % item.get("name", "?"))
 				continue
 		
-		# cannot_use制限チェック（リリース呪いで解除可能）
+		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, item)
 			if not check_result.can_use:
@@ -222,7 +222,7 @@ func find_item_to_beat_worst_case(
 	return result
 
 
-## リリース呪いによるアイテム解放をチェック
+## リリース刻印によるアイテム解放をチェック
 func _is_item_restriction_released(player_id: int) -> bool:
 	if not _player_system or player_id < 0 or player_id >= _player_system.players.size():
 		return false

@@ -119,7 +119,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	apply_effect_arrays(attacker, card_data)
 	apply_effect_arrays(defender, defender_creature)
 	
-	# 呪い適用はapply_pre_battle_skills()で実行（バトル画面セットアップ後）
+	# 刻印適用はapply_pre_battle_skills()で実行（バトル画面セットアップ後）
 	
 	# アイテムをitemsに追加（効果適用はアイテム破壊判定後に行う）
 	# 注意: 前回のバトルのアイテムが残っている可能性があるため、まずクリア
@@ -204,7 +204,7 @@ func calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> i
 	print("【土地ボーナス計算】クリーチャー:", creature_data.get("name", "?"), " 属性:", creature_element)
 	print("  タイル属性:", tile_element, " レベル:", tile_level)
 	
-	# SpellCurseBattleの統合判定を使用（通常属性一致 + 追加属性 + 呪い効果）
+	# SpellCurseBattleの統合判定を使用（通常属性一致 + 追加属性 + 刻印効果）
 	if SpellCurseBattle.can_get_land_bonus(creature_data, tile_element):
 		var bonus = tile_level * 10
 		print("  → 地形効果発動！ボーナス:", bonus)

@@ -737,7 +737,7 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 	if creature_data.has("cost_lands_required"):
 		var required_lands = creature_data.get("cost_lands_required", [])
 		if not required_lands.is_empty():
-			# フールズフリーダムまたはリリース呪い発動中は召喚条件を無視
+			# フールズフリーダムまたはリリース刻印発動中は召喚条件を無視
 			if _is_summon_condition_ignored(check_player_id):
 				pass  # 条件チェックをスキップ
 			elif tile_action_processor and check_player_id >= 0:
@@ -753,7 +753,7 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 	
 	# cost_cards_sacrifice チェック
 	if creature_data.has("cost_cards_sacrifice") and creature_data.get("cost_cards_sacrifice", 0) > 0:
-		# フールズフリーダムまたはリリース呪い発動中は召喚条件を無視
+		# フールズフリーダムまたはリリース刻印発動中は召喚条件を無視
 		if _is_summon_condition_ignored(check_player_id):
 			pass  # 条件チェックをスキップ
 		else:

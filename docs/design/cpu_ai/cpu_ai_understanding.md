@@ -530,7 +530,7 @@ effect_typeで識別する：
 | `condition` | ✅ 実装済 | 特定条件を満たしたら使用 | 属性変更、状況依存系 |
 | `enemy_hand` | ✅ 実装済 | 敵の手札を見て判断 | カード破壊、奪取系 |
 | `profit_calc` | ⚠️ 枠組みのみ | 損益計算して判断 | 蓄魔系（計算式未実装多数） |
-| `strategic` | ⚠️ 仮実装 | 戦略的判断（30%ランダム） | ダイス操作、世界呪い |
+| `strategic` | ⚠️ 仮実装 | 戦略的判断（30%ランダム） | ダイス操作、世界刻印 |
 | `skip` | ✅ 実装済 | CPUは使用しない | 複雑すぎるスペル |
 
 ---
@@ -575,7 +575,7 @@ effect_typeで識別する：
 | target_condition | 説明 |
 |------------------|------|
 | `element_mismatch_creatures` | 土地属性と不一致のクリーチャー |
-| `cursed_creatures` | 呪いがかかっているクリーチャー |
+| `cursed_creatures` | 刻印がかかっているクリーチャー |
 | `hp_reduced` | HPが減っているクリーチャー |
 | `low_mhp_creatures` | MHP30以下のクリーチャー |
 | `downed_high_mhp` | ダウン中でMHP高いクリーチャー |
@@ -587,7 +587,7 @@ effect_typeで識別する：
 | `can_kill_target` | ダメージ値で倒せる敵クリーチャー |
 | `most_common_element` | 最も多い属性のクリーチャー |
 | `has_summon_condition` | 召喚条件を持つクリーチャー |
-| `no_curse_no_mystic` | 呪いもアルカナアーツもないクリーチャー |
+| `no_curse_no_mystic` | 刻印もアルカナアーツもないクリーチャー |
 | `has_mystic_arts` | アルカナアーツを持つクリーチャー |
 
 #### プレイヤー条件
@@ -625,7 +625,7 @@ effect_typeで識別する：
 |-----------|------|
 | `has_downed_creature` | ダウン中の自クリーチャーがいる |
 | `self_creature_damaged` | HPが減った自クリーチャーがいる |
-| `has_cursed_creature` | 呪い付きクリーチャーがいる |
+| `has_cursed_creature` | 刻印付きクリーチャーがいる |
 | `standing_on_vacant_land` | 空き地に止まっている |
 
 #### クリーチャー交換
@@ -635,13 +635,13 @@ effect_typeで識別する：
 | `can_upgrade_creature` | 手札クリーチャーで属性一致に改善可能 |
 | `swap_improves_element_match` | 交換で属性一致が改善される |
 
-#### 呪い関連
+#### 刻印関連
 
 | condition | 説明 |
 |-----------|------|
-| `has_any_curse` | 何らかの呪いがある |
-| `has_world_curse` | 世界呪いがある |
-| `has_player_curse` | プレイヤー呪いがある |
+| `has_any_curse` | 何らかの刻印がある |
+| `has_world_curse` | 世界刻印がある |
+| `has_player_curse` | プレイヤー刻印がある |
 
 #### その他
 

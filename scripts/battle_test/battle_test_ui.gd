@@ -72,7 +72,7 @@ var last_focused_type: String = "creature"  # "creature" or "item"
 var visual_mode_check: CheckBox = null
 var auto_advance_check: CheckBox = null
 
-## ========== 新規追加: 呪いスペル選択UI ==========
+## ========== 新規追加: 刻印スペル選択UI ==========
 var attacker_curse_option: OptionButton = null
 var defender_curse_option: OptionButton = null
 
@@ -106,7 +106,7 @@ func _setup_ui():
 	# 入力フィールドのフォーカスイベントを設定
 	_setup_focus_tracking()
 
-	# ========== 新規追加: 呪いスペル選択UI ==========
+	# ========== 新規追加: 刻印スペル選択UI ==========
 	_setup_curse_ui()
 
 	# ========== 新規追加: ビジュアルモード設定UI ==========
@@ -143,7 +143,7 @@ func _setup_visual_mode_ui():
 
 	print("[BattleTestUI] ビジュアルモード設定UI作成完了")
 
-## ========== 新規追加: 呪いスペル選択UI作成 ==========
+## ========== 新規追加: 刻印スペル選択UI作成 ==========
 func _setup_curse_ui():
 	# アイテムリストの親コンテナを取得
 	var item_list_parent = attacker_item_list.get_parent()
@@ -151,12 +151,12 @@ func _setup_curse_ui():
 		push_error("[BattleTestUI] アイテムリストの親コンテナが見つかりません")
 		return
 
-	# 攻撃側呪いスペル選択コンテナ
+	# 攻撃側刻印スペル選択コンテナ
 	var attacker_curse_container = VBoxContainer.new()
 	attacker_curse_container.name = "AttackerCurseContainer"
 
 	var attacker_curse_label = Label.new()
-	attacker_curse_label.text = "攻撃側呪いスペル:"
+	attacker_curse_label.text = "攻撃側刻印スペル:"
 	attacker_curse_container.add_child(attacker_curse_label)
 
 	attacker_curse_option = OptionButton.new()
@@ -168,7 +168,7 @@ func _setup_curse_ui():
 	# アイテムリストの後ろに挿入
 	item_list_parent.add_child(attacker_curse_container)
 
-	# 防御側呪いスペル選択コンテナ
+	# 防御側刻印スペル選択コンテナ
 	var defender_item_list_parent = defender_item_list.get_parent()
 	if not defender_item_list_parent:
 		push_error("[BattleTestUI] 防御側アイテムリストの親コンテナが見つかりません")
@@ -178,7 +178,7 @@ func _setup_curse_ui():
 	defender_curse_container.name = "DefenderCurseContainer"
 
 	var defender_curse_label = Label.new()
-	defender_curse_label.text = "防御側呪いスペル:"
+	defender_curse_label.text = "防御側刻印スペル:"
 	defender_curse_container.add_child(defender_curse_label)
 
 	defender_curse_option = OptionButton.new()
@@ -190,9 +190,9 @@ func _setup_curse_ui():
 	# アイテムリストの後ろに挿入
 	defender_item_list_parent.add_child(defender_curse_container)
 
-	print("[BattleTestUI] 呪いスペル選択UI作成完了")
+	print("[BattleTestUI] 刻印スペル選択UI作成完了")
 
-## 呪いスペル選択肢を追加
+## 刻印スペル選択肢を追加
 func _populate_curse_options(option_button: OptionButton):
 	option_button.add_item("なし", 0)
 	option_button.add_item("ディジーズ (AP&HP-20)", 2054)
@@ -208,24 +208,24 @@ func _populate_curse_options(option_button: OptionButton):
 	option_button.add_item("シニリティ (崩壊)", 2032)
 	option_button.add_item("ディスエレメント (地形無効)", 2055)
 	option_button.add_item("ディラニー (MHP30以下不可)", 2057)
-	option_button.add_item("ハイプリーステス (呪い結界)", 2048)
+	option_button.add_item("ハイプリーステス (刻印結界)", 2048)
 	option_button.add_item("ハーミットズパラドックス (同種破壊)", 2111)
 	option_button.add_item("ライズアップ (奮闘)", 2067)
 	option_button.add_item("グラナイト (堅牢)", 2108)
 	option_button.add_item("ブラストトラップ (焦土)", 2083)
 	option_button.selected = 0  # デフォルト: なし
 
-## 攻撃側呪いスペル選択ハンドラー
+## 攻撃側刻印スペル選択ハンドラー
 func _on_attacker_curse_selected(index: int):
 	var spell_id = attacker_curse_option.get_item_id(index)
 	config.attacker_curse_spell_id = spell_id
-	print("[BattleTestUI] 攻撃側呪いスペル選択: ID=", spell_id)
+	print("[BattleTestUI] 攻撃側刻印スペル選択: ID=", spell_id)
 
-## 防御側呪いスペル選択ハンドラー
+## 防御側刻印スペル選択ハンドラー
 func _on_defender_curse_selected(index: int):
 	var spell_id = defender_curse_option.get_item_id(index)
 	config.defender_curse_spell_id = spell_id
-	print("[BattleTestUI] 防御側呪いスペル選択: ID=", spell_id)
+	print("[BattleTestUI] 防御側刻印スペル選択: ID=", spell_id)
 
 ## フォーカストラッキングを設定
 func _setup_focus_tracking():
@@ -1360,7 +1360,7 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 	defender.current_hp = defender_data.get("current_hp", defender_data.get("hp", 0))
 	defender.spell_magic_ref = spell_magic
 
-	# ========== 新規追加: 呪いスペル適用 ==========
+	# ========== 新規追加: 刻印スペル適用 ==========
 	if config.attacker_curse_spell_id > 0:
 		_apply_curse_spell_visual(attacker, config.attacker_curse_spell_id)
 	if config.defender_curse_spell_id > 0:
@@ -1408,18 +1408,18 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 
 	print("[ビジュアルモード] バトル%d完了" % battle_num)
 
-## ========== 新規追加: 呪いスペル適用（ビジュアルモード用） ==========
+## ========== 新規追加: 刻印スペル適用（ビジュアルモード用） ==========
 func _apply_curse_spell_visual(participant: BattleParticipant, spell_id: int):
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if not spell_data:
-		push_error("[BattleTestUI] 呪いスペルID ", spell_id, " が見つかりません")
+		push_error("[BattleTestUI] 刻印スペルID ", spell_id, " が見つかりません")
 		return
 
 	if not participant.creature_data.has("curse"):
 		participant.creature_data["curse"] = []
 
 	participant.creature_data["curse"].append(spell_data.duplicate(true))
-	print("[ビジュアルモード] ", participant.creature_data.get("name", "?"), " に呪いスペル適用: ", spell_data.get("name", "?"))
+	print("[ビジュアルモード] ", participant.creature_data.get("name", "?"), " に刻印スペル適用: ", spell_data.get("name", "?"))
 
 ## ユーザークリック待ち
 func _wait_for_user_click():

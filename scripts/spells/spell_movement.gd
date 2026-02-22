@@ -1,8 +1,8 @@
 extends RefCounted
 class_name SpellMovement
 
-# 移動関連の呪い・スキル処理
-# - 拘束呪い (forced_stop): スペルで付与、誰でも止める、1回で消滅
+# 移動関連の刻印・スキル処理
+# - 拘束刻印 (forced_stop): スペルで付与、誰でも止める、1回で消滅
 # - 拘束スキル (trap_stop): クリーチャースキル、所有者以外を止める、永続
 
 # 参照
@@ -23,7 +23,7 @@ func setup(cm, bs):
 
 ## 拘束判定を行う（tile_nodesを直接渡すバージョン）
 ## 戻り値: { "stopped": bool, "reason": String, "source_type": String }
-## source_type: "curse" = 呪い, "skill" = スキル, "" = 拘束なし
+## source_type: "curse" = 刻印, "skill" = スキル, "" = 拘束なし
 func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_nodes: Dictionary, consume: bool = true) -> Dictionary:
 	var result = {"stopped": false, "reason": "", "source_type": ""}
 	
@@ -38,12 +38,12 @@ func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_n
 	var creature = tile.creature_data
 	var tile_owner_id = tile.owner_id
 	
-	# 1. 呪い"停滞"チェック（誰でも止まる）
+	# 1. 刻印"停滞"チェック（誰でも止まる）
 	if _has_forced_stop_curse(creature):
 		result["stopped"] = true
-		result["reason"] = "停滞の呪いで拘束された！"
+		result["reason"] = "停滞の刻印で拘束された！"
 		result["source_type"] = "curse"
-		# consume=trueの場合のみ呪いを消費（シミュレーション時はfalse）
+		# consume=trueの場合のみ刻印を消費（シミュレーション時はfalse）
 		if consume:
 			_consume_forced_stop_curse(creature)
 		return result
@@ -66,10 +66,10 @@ func check_forced_stop(tile_index: int, moving_player_id: int) -> Dictionary:
 	return check_forced_stop_with_tiles(tile_index, moving_player_id, board_system.tile_nodes)
 
 # =============================================================================
-# 呪い"停滞" (forced_stop)
+# 刻印"停滞" (forced_stop)
 # =============================================================================
 
-## 停滞呪いを付与
+## 停滞刻印を付与
 func apply_forced_stop_curse(tile_index: int, duration: int = 2) -> bool:
 	if not creature_manager:
 		return false
@@ -78,7 +78,7 @@ func apply_forced_stop_curse(tile_index: int, duration: int = 2) -> bool:
 	if creature.is_empty():
 		return false
 	
-	# 既存の呪いを上書き
+	# 既存の刻印を上書き
 	creature["curse"] = {
 		"curse_type": "forced_stop",
 		"name": "停滞",
@@ -91,14 +91,14 @@ func apply_forced_stop_curse(tile_index: int, duration: int = 2) -> bool:
 	print("[刻印付与] 停滞 → タイル", tile_index, " (", duration, "R)")
 	return true
 
-## 停滞呪いを持っているか
+## 停滞刻印を持っているか
 func _has_forced_stop_curse(creature: Dictionary) -> bool:
 	if not creature.has("curse"):
 		return false
 	var curse = creature["curse"]
 	return curse.get("curse_type", "") == "forced_stop"
 
-## 停滞呪いを消費（1回使用で消滅）
+## 停滞刻印を消費（1回使用で消滅）
 func _consume_forced_stop_curse(creature: Dictionary) -> void:
 	if not creature.has("curse"):
 		return
@@ -113,9 +113,9 @@ func _consume_forced_stop_curse(creature: Dictionary) -> void:
 	uses -= 1
 	
 	if uses <= 0:
-		# 呪い削除
+		# 刻印削除
 		creature.erase("curse")
-		print("[呪い消滅] 停滞（使用済み）")
+		print("[刻印消滅] 停滞（使用済み）")
 	else:
 		params["uses_remaining"] = uses
 
@@ -200,10 +200,10 @@ func _get_tile_element(tile) -> String:
 	return ""
 
 # =============================================================================
-# 奮闘呪い (indomitable)
+# 奮闘刻印 (indomitable)
 # =============================================================================
 
-## 奮闘呪いを付与
+## 奮闘刻印を付与
 func apply_indomitable_curse(tile_index: int, duration: int = 5) -> bool:
 	if not creature_manager:
 		return false
@@ -212,7 +212,7 @@ func apply_indomitable_curse(tile_index: int, duration: int = 5) -> bool:
 	if creature.is_empty():
 		return false
 	
-	# 既存の呪いを上書き
+	# 既存の刻印を上書き
 	creature["curse"] = {
 		"curse_type": "indomitable",
 		"name": "奮闘",
@@ -223,7 +223,7 @@ func apply_indomitable_curse(tile_index: int, duration: int = 5) -> bool:
 	print("[刻印付与] 奮闘 → タイル", tile_index, " (", duration, "R)")
 	return true
 
-## 奮闘呪いを持っているか（静的メソッド）
+## 奮闘刻印を持っているか（静的メソッド）
 static func has_indomitable_curse(creature: Dictionary) -> bool:
 	if creature.is_empty():
 		return false
@@ -294,7 +294,7 @@ func set_down_state_for_tile(tile_index: int, tile_nodes: Dictionary) -> bool:
 # SpellPhaseHandler連携用
 # =============================================================================
 
-## スペル効果から呪いを付与（SpellCurse経由で呼ばれる想定）
+## スペル効果から刻印を付与（SpellCurse経由で呼ばれる想定）
 func apply_curse_from_effect(tile_index: int, effect: Dictionary) -> bool:
 	var effect_type = effect.get("effect_type", "")
 	

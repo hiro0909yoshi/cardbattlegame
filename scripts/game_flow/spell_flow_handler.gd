@@ -112,7 +112,7 @@ func _get_spell_cost(spell_card: Dictionary) -> int:
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		base_cost = cost_data.get("ep", 0)
 
-	# ライズオブサン（世界呪い）でコスト倍率を適用
+	# ライズオブサン（世界刻印）でコスト倍率を適用
 	if _spell_cost_modifier:
 		return _spell_cost_modifier.get_modified_cost(_spell_state.current_player_id, spell_card)
 
@@ -173,7 +173,7 @@ func use_spell(spell_card: Dictionary):
 	if _player_system:
 		_player_system.add_magic(_spell_state.current_player_id, -cost)
 
-	# エンジェルギフト呪いチェック（スペル無効化）
+	# エンジェルギフト刻印チェック（スペル無効化）
 	if _spell_cost_modifier:
 		var nullify_result = _spell_cost_modifier.check_spell_nullify(_spell_state.current_player_id)
 		if nullify_result.get("nullified", false):
@@ -261,7 +261,7 @@ func use_spell(spell_card: Dictionary):
 		var target_data = {"type": "all_players"}
 		_start_confirmation_phase("all_players", target_info, target_data)
 	elif target_type == "world":
-		# 世界呪い → 確認フェーズへ
+		# 世界刻印 → 確認フェーズへ
 		var target_data = {"type": "world"}
 		_start_confirmation_phase("world", target_info, target_data)
 	elif not target_type.is_empty() and target_type != "none":

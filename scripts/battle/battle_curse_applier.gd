@@ -1,11 +1,11 @@
 extends Node
 class_name BattleCurseApplier
 
-# 呪い効果を temporary_effects に変換して適用
+# 刻印効果を temporary_effects に変換して適用
 
-## 呪いをtemporary_effectsに変換して適用
+## 刻印をtemporary_effectsに変換して適用
 func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> void:
-	# クリーチャーデータから呪いを取得
+	# クリーチャーデータから刻印を取得
 	var creature_data = participant.creature_data
 	
 	if not creature_data or creature_data.is_empty() or not creature_data.has("curse"):
@@ -16,7 +16,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 	var params = curse.get("params", {})
 	var curse_name = curse.get("name", "")
 	
-	# 呪いタイプに応じてtemporary_effectsに追加
+	# 刻印タイプに応じてtemporary_effectsに追加
 	match curse_type:
 		"stat_boost":
 			var value = params.get("value", 20)
@@ -38,7 +38,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 				"removable": true,
 				"lost_on_move": true
 			})
-			print("[呪い変換] stat_boost: HP+", value, ", AP+", value)
+			print("[刻印変換] stat_boost: HP+", value, ", AP+", value)
 			
 			# 効果を計算に反映（current_hpには加算しない、ボーナスフィールドのみ）
 			participant.temporary_bonus_hp += value
@@ -78,17 +78,17 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			if value < 0 and (stat == "hp" or stat == "both"):
 				var effective_max_hp = participant.get_effective_max_hp()
 				if participant.current_hp > effective_max_hp:
-					print("[呪い変換] current_hpを有効MHPに制限: ", participant.current_hp, " → ", effective_max_hp)
+					print("[刻印変換] current_hpを有効MHPに制限: ", participant.current_hp, " → ", effective_max_hp)
 					participant.current_hp = effective_max_hp
 			
 			# ログ出力
 			match stat:
 				"hp":
-					print("[呪い変換] stat_reduce: HP", value)
+					print("[刻印変換] stat_reduce: HP", value)
 				"ap":
-					print("[呪い変換] stat_reduce: AP", value)
+					print("[刻印変換] stat_reduce: AP", value)
 				_:
-					print("[呪い変換] stat_reduce: HP", value, ", AP", value)
+					print("[刻印変換] stat_reduce: HP", value, ", AP", value)
 		
 		"ap_nullify":
 			# 基礎APを0に固定（バフ・アイテムは加算可能）
@@ -104,7 +104,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 				"removable": true,
 				"lost_on_move": true
 			})
-			print("[呪い変換] ap_nullify: 基礎AP=0 (", base_ap, "+", base_up_ap, " → 0)")
+			print("[刻印変換] ap_nullify: 基礎AP=0 (", base_ap, "+", base_up_ap, " → 0)")
 			
 			# 効果を計算に反映（基礎APを打ち消す）
 			participant.temporary_bonus_ap += nullify_value
@@ -123,7 +123,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 				var base_up_ap = participant.creature_data.get("base_up_ap", 0)
 				participant.temporary_bonus_ap = random_ap - (base_ap + base_up_ap)
 				participant.current_ap = random_ap
-				print("[呪い変換] random_stat: AP=", random_ap, " (", min_value, "~", max_value, ")")
+				print("[刻印変換] random_stat: AP=", random_ap, " (", min_value, "~", max_value, ")")
 			
 			# HPをランダムに設定
 			if stat == "hp" or stat == "both":
@@ -132,7 +132,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
 				participant.temporary_bonus_hp = random_hp - (base_hp + base_up_hp)
 				participant.current_hp = random_hp
-				print("[呪い変換] random_stat: HP=", random_hp, " (", min_value, "~", max_value, ")")
+				print("[刻印変換] random_stat: HP=", random_hp, " (", min_value, "~", max_value, ")")
 			
 			# temporary_effectsに記録（表示用）
 			participant.temporary_effects.append({
@@ -147,7 +147,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			return
 		
 		"metal_form", "magic_barrier":
-			# 無効化[通常攻撃]を付与（呪いによる無効化スキル）
+			# 無効化[通常攻撃]を付与（刻印による無効化スキル）
 			# ability_parsedにkeyword_conditionsとして追加
 			var ability_parsed = participant.creature_data.get("ability_parsed", {})
 			if not ability_parsed.has("keywords"):
@@ -179,7 +179,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 				"removable": true,
 				"lost_on_move": true
 			})
-			print("[呪い変換] ", curse_type, ": 無効化[通常攻撃]を付与")
+			print("[刻印変換] ", curse_type, ": 無効化[通常攻撃]を付与")
 			
 			# magic_barrierの場合、EP移動パラメータを記録
 			if curse_type == "magic_barrier":
@@ -190,7 +190,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 					"source": "curse",
 					"source_name": curse_name
 				})
-				print("[呪い変換] magic_barrier: 攻撃無効化時に", ep_transfer, "EP移動")
+				print("[刻印変換] magic_barrier: 攻撃無効化時に", ep_transfer, "EP移動")
 	
 	# current_hpとcurrent_apを更新
 	participant.current_ap += participant.temporary_bonus_ap

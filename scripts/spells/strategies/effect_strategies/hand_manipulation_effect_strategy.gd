@@ -73,7 +73,7 @@ func execute(context: Dictionary) -> Dictionary:
 		"destroy_selected_card":
 			effect_message = "敵のカードを破壊！"
 		"destroy_curse_cards":
-			effect_message = "呪いカードを破壊！"
+			effect_message = "刻印カードを破壊！"
 		"draw":
 			effect_message = "カードをドロー"
 		"draw_cards":

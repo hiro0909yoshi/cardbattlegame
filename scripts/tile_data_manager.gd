@@ -11,7 +11,7 @@ var tile_nodes = {}  # tile_index -> BaseTile
 
 # サブシステム参照
 var tile_info_display: TileInfoDisplay = null
-var spell_curse_toll = null  # タイル呪い通行料補正用
+var spell_curse_toll = null  # タイル刻印通行料補正用
 var player_system = null  # PlayerSystem 参照（連鎖計算のチーム判定用）
 
 # === 直接参照（GFM経由を廃止） ===
@@ -224,8 +224,8 @@ func calculate_toll(tile_index: int, _map_id: String = "") -> int:
 	
 	return final_toll
 
-## 呪い補正込みの通行料を計算（表示・AI判断用）
-## player_id依存の呪い（toll_disable, toll_share等）は含まない
+## 刻印補正込みの通行料を計算（表示・AI判断用）
+## player_id依存の刻印（toll_disable, toll_share等）は含まない
 func calculate_toll_with_curse(tile_index: int, map_id: String = "") -> int:
 	var base_toll = calculate_toll(tile_index, map_id)
 	if spell_curse_toll:

@@ -268,7 +268,7 @@ func _requires_card_sacrifice(card_data: Dictionary) -> bool:
 	return SummonConditionChecker.requires_card_sacrifice(card_data)
 
 
-## コスト計算（エンジェルギフト呪い対応）
+## コスト計算（エンジェルギフト刻印対応）
 func _calculate_cost(card_data: Dictionary, player_id: int) -> int:
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
@@ -277,7 +277,7 @@ func _calculate_cost(card_data: Dictionary, player_id: int) -> int:
 	else:
 		cost = cost_data
 	
-	# エンジェルギフト呪いチェック
+	# エンジェルギフト刻印チェック
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(player_id, card_data)
 	

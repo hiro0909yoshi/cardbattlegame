@@ -140,7 +140,7 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	_is_current_phase_attacker = is_attacker_phase  # 攻撃側か防御側かを記録
 	merged_creature_data = {}  # 合体データをリセット
 	
-	# 消沈呪いチェック（防御側のみ呪いを持つ可能性がある）
+	# 消沈刻印チェック（防御側のみ刻印を持つ可能性がある）
 	if SpellCurseBattle.has_battle_disable(creature_data):
 		print("【消沈】", creature_data.get("name", "?"), " はアイテム・加勢使用不可 → 強制パス")
 		pass_item()
@@ -240,7 +240,7 @@ func _show_item_selection_ui():
 	var has_merge = has_merge_skill()
 	var merge_partner_id = get_merge_partner_id()
 
-	# metal_form呪いがある場合、防具使用不可
+	# metal_form刻印がある場合、防具使用不可
 	var has_metal_form = SpellCurseBattle.has_metal_form(battle_creature_data)
 	if has_metal_form:
 		print("【メタルフォーム】", battle_creature_data.get("name", "?"), " は防具使用不可")
@@ -278,19 +278,19 @@ func _show_item_selection_ui():
 	# フィルター設定（Signal駆動）
 	var blocked_types: Array = []
 
-	# metal_form呪いがある場合、防具をブロック
+	# metal_form刻印がある場合、防具をブロック
 	if has_metal_form:
 		blocked_types.append("防具")
 
-	# cannot_use制限をチェック（デバッグフラグまたはリリース呪いで無効化可能）
+	# cannot_use制限をチェック（デバッグフラグまたはリリース刻印で無効化可能）
 	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-	# リリース呪いチェック
+	# リリース刻印チェック
 	if not disable_cannot_use and player_system and current_player_id < player_system.players.size():
 		var player = player_system.players[current_player_id]
 		var player_dict = {"curse": player.curse}
 		if SpellRestriction.is_item_restriction_released(player_dict):
 			disable_cannot_use = true
-			print("【リリース呪い】アイテム制限を無視")
+			print("【リリース刻印】アイテム制限を無視")
 	if not disable_cannot_use:
 		var cannot_use_list = ItemUseRestriction.get_cannot_use_list(battle_creature_data)
 		if not cannot_use_list.is_empty():
@@ -327,10 +327,10 @@ func use_item(item_card: Dictionary):
 	var card_type = item_card.get("type", "")
 	var card_id = item_card.get("id", -1)
 	
-	# アイテムの場合、cannot_use制限をチェック（デバッグフラグまたはリリース呪いで無効化可能）
+	# アイテムの場合、cannot_use制限をチェック（デバッグフラグまたはリリース刻印で無効化可能）
 	if card_type == "item":
 		var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-		# リリース呪いチェック
+		# リリース刻印チェック
 		if not disable_cannot_use and player_system and current_player_id < player_system.players.size():
 			var player = player_system.players[current_player_id]
 			var player_dict = {"curse": player.curse}
@@ -383,7 +383,7 @@ func use_item(item_card: Dictionary):
 	else:
 		cost = cost_data
 	
-	# エンジェルギフト呪いチェック（アイテムコスト0化）
+	# エンジェルギフト刻印チェック（アイテムコスト0化）
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_id, item_card)
 	
@@ -497,7 +497,7 @@ func _can_afford_card(card_data: Dictionary) -> bool:
 	else:
 		cost = cost_data
 	
-	# エンジェルギフト呪いチェック（アイテムコスト0化）
+	# エンジェルギフト刻印チェック（アイテムコスト0化）
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_id, card_data)
 	
@@ -589,7 +589,7 @@ func preselect_defender_item(defender_player_id: int, defender_creature: Diction
 	
 	print("[CPU防御事前選択] 開始: %s vs %s" % [defender_creature.get("name", "?"), attacker_creature.get("name", "?")])
 	
-	# 消沈呪いチェック
+	# 消沈刻印チェック
 	if SpellCurseBattle.has_battle_disable(defender_creature):
 		print("[CPU防御事前選択] 消沈 → 終了")
 		_defender_preselection_done = true

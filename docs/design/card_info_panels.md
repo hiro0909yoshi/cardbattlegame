@@ -119,7 +119,7 @@ const FONT_SIZE_RATIO = 0.018        # 画面高さの1.8%（×1.65倍で使用�
 │  │        │  │ HP: 60 / 60    AP: 60       │                    │
 │  │        │  │ 配置制限: なし アイテム: なし │                    │
 │  │        │  │                             │                    │
-│  │        │  │ 【呪い】なし                │                    │
+│  │        │  │ 【刻印】なし                │                    │
 │  │        │  │ 【スキル】先制; 強化[水]... │                    │
 │  └────────┘  └─────────────────────────────┘                    │
 │   左パネル              右パネル                                 │
@@ -184,7 +184,7 @@ func _update_card_display():
 | 4 | HP / AP | `hp`, `ap`, `current_hp` | `HP: 60 / 60  AP: 60` |
 | 5 | 配置制限 | `restrictions.cannot_summon` | `配置制限: なし` |
 | 6 | アイテム制限 | `restrictions.cannot_use` | `アイテム: なし` |
-| 7 | 呪い | `curse` | `【呪い】なし` または `【呪い】○○（残りNターン）` |
+| 7 | 刻印 | `curse` | `【刻印】なし` または `【刻印】○○（残りNターン）` |
 | 8 | スキル | `ability_parsed.keywords` | 条件付き表示 |
 | 9 | アルカナアーツ | `ability_parsed.mystic_art` | 条件付き表示 |
 
@@ -206,21 +206,21 @@ else:
 	lands_required = data.get("cost_lands_required", [])  # 正規化フィールド
 ```
 
-### 呪い表示
+### 刻印表示
 
-クリーチャーの呪いは`curse`辞書から取得：
+クリーチャーの刻印は`curse`辞書から取得：
 
 ```gdscript
 var curse = data.get("curse", {})
 if curse.is_empty():
-	curse_label.text = "【呪い】なし"
+	curse_label.text = "【刻印】なし"
 else:
 	var curse_name = curse.get("name", "不明")
 	var duration = curse.get("duration", -1)
 	if duration > 0:
-		curse_label.text = "【呪い】%s（残り%dターン）" % [curse_name, duration]
+		curse_label.text = "【刻印】%s（残り%dターン）" % [curse_name, duration]
 	else:
-		curse_label.text = "【呪い】%s" % curse_name
+		curse_label.text = "【刻印】%s" % curse_name
 ```
 
 ### 属性表示変換
@@ -791,6 +791,6 @@ if card_display and is_instance_valid(card_display):
 | 2025/12/11 | レイアウト更新、半透明オーバーレイ追加 |
 | 2025/12/11 | 実装完了部分を反映、画面サイズ対応設計追加、クラス設計詳細化 |
 | 2025/12/12 | UI調整（パネル位置180px上、カード位置50px上、右パネル高さ2/3、フォント1.65倍） |
-| 2025/12/12 | ダブルクリック召喚、戻るボタン時のホバー解除、呪い表示修正（curse形式対応） |
+| 2025/12/12 | ダブルクリック召喚、戻るボタン時のホバー解除、刻印表示修正（curse形式対応） |
 | 2025/12/16 | ファイル名変更（creature_info_panel.md → card_info_panels.md）、スペル/アイテムパネル追記 |
 | 2025/12/17 | スペル使用後の手札選択時のインフォパネル表示を追加 |

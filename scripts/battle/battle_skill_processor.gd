@@ -57,12 +57,12 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	var SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
 	
 	# ============================================================
-	# 【Phase 0-C】呪い適用（バトル画面セットアップ後・エフェクト表示可能）
+	# 【Phase 0-C】刻印適用（バトル画面セットアップ後・エフェクト表示可能）
 	# ============================================================
 	await _apply_curse_effects(attacker, defender, battle_tile_index)
 	
 	# ============================================================
-	# 【Phase 0-N】沈黙チェック（呪い適用後）
+	# 【Phase 0-N】沈黙チェック（刻印適用後）
 	# ============================================================
 	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) \
 		or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender) \
@@ -84,7 +84,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 				var defender_item_name = _get_warlock_disk_name(defender)
 				await battle_screen_manager.show_skill_activation("defender", "%s を使用" % defender_item_name, {})
 			else:
-				# クリーチャー能力 or skill_nullify呪い → 「戦闘中能力無効」
+				# クリーチャー能力 or skill_nullify刻印 → 「戦闘中能力無効」
 				var skill_name = SkillDisplayConfig.get_skill_name("nullify_abilities")
 				if _has_skill_nullify_curse(attacker) or _has_nullify_creature_ability(attacker):
 					await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
@@ -674,8 +674,8 @@ func _get_warlock_disk_name(participant: BattleParticipant) -> String:
 	return "ウォーロックディスク"
 
 
-## 呪い効果を適用（バトル画面セットアップ後に呼び出し）
-## エフェクト表示付きで呪いを適用する
+## 刻印効果を適用（バトル画面セットアップ後に呼び出し）
+## エフェクト表示付きで刻印を適用する
 func _apply_curse_effects(attacker: BattleParticipant, defender: BattleParticipant, battle_tile_index: int) -> void:
 	# battle_preparationからcurse_applierを取得
 	if not battle_preparation_ref:
@@ -685,27 +685,27 @@ func _apply_curse_effects(attacker: BattleParticipant, defender: BattleParticipa
 	if not curse_applier:
 		return
 	
-	# 攻撃側の呪い適用（移動侵略の場合のみ呪いがある可能性）
+	# 攻撃側の刻印適用（移動侵略の場合のみ刻印がある可能性）
 	var attacker_before = _snapshot_stats(attacker)
 	curse_applier.apply_creature_curses(attacker, battle_tile_index)
 	await _show_curse_effect_if_changed(attacker, attacker_before, "attacker")
 	
-	# 防御側の呪い適用
+	# 防御側の刻印適用
 	var defender_before = _snapshot_stats(defender)
 	curse_applier.apply_creature_curses(defender, battle_tile_index)
 	await _show_curse_effect_if_changed(defender, defender_before, "defender")
 
 
-## 呪い効果によるステータス変化があった場合にエフェクト表示
+## 刻印効果によるステータス変化があった場合にエフェクト表示
 func _show_curse_effect_if_changed(participant: BattleParticipant, before: Dictionary, side: String) -> void:
 	if not battle_screen_manager:
 		return
 	
-	# 呪い情報を取得
+	# 刻印情報を取得
 	var curse = participant.creature_data.get("curse", {})
 	var curse_type = curse.get("curse_type", "")
 	var curse_name = curse.get("name", "")
-	var display_name = "呪い[%s]" % curse_name if curse_name else "呪い"
+	var display_name = "刻印[%s]" % curse_name if curse_name else "刻印"
 	
 	# ステータスが変化していなければ表示しない
 	var hp_changed = participant.current_hp != before.get("current_hp", 0) or \
@@ -713,28 +713,28 @@ func _show_curse_effect_if_changed(participant: BattleParticipant, before: Dicti
 	var ap_changed = participant.current_ap != before.get("current_ap", 0)
 	
 	if not hp_changed and not ap_changed:
-		# 無効化系の呪いもチェック
+		# 無効化系の刻印もチェック
 		if curse_type in ["metal_form", "magic_barrier"]:
 			await battle_screen_manager.show_skill_activation(side, display_name, {})
 		return
 	
 	var hp_data = _create_hp_data(participant)
 	
-	# 呪い名表示 + HP/AP更新
+	# 刻印名表示 + HP/AP更新
 	await battle_screen_manager.show_skill_activation(side, display_name, {
 		"hp_data": hp_data,
 		"ap": participant.current_ap
 	})
 
 
-## 呪いによるステータス変更効果をバトル画面に表示
+## 刻印によるステータス変更効果をバトル画面に表示
 ## 対象: stat_boost, stat_reduce, ap_nullify, random_stat
 ## 注: この関数は後方互換性のために残しているが、_apply_curse_effectsを使用推奨
 func _show_curse_stat_effect_if_any(participant: BattleParticipant, side: String) -> void:
 	if not battle_screen_manager:
 		return
 	
-	# 呪いがない場合は表示しない
+	# 刻印がない場合は表示しない
 	var curse = participant.creature_data.get("curse", {})
 	if curse.is_empty():
 		return
@@ -742,17 +742,17 @@ func _show_curse_stat_effect_if_any(participant: BattleParticipant, side: String
 	var curse_type = curse.get("curse_type", "")
 	var curse_name = curse.get("name", "")
 	
-	# ステータス変更系の呪いのみ表示（無効化系は効果発揮時に表示）
+	# ステータス変更系の刻印のみ表示（無効化系は効果発揮時に表示）
 	var stat_change_curses = ["stat_boost", "stat_reduce", "ap_nullify", "random_stat"]
 	if not curse_type in stat_change_curses:
 		return
 	
-	# 「呪い[呪い名]」形式で表示
-	var display_name = "呪い[%s]" % curse_name if curse_name else "呪い"
+	# 「刻印[刻印名]」形式で表示
+	var display_name = "刻印[%s]" % curse_name if curse_name else "刻印"
 	
 	var hp_data = _create_hp_data(participant)
 	
-	# 呪い名表示 + HP/AP更新
+	# 刻印名表示 + HP/AP更新
 	await battle_screen_manager.show_skill_activation(side, display_name, {
 		"hp_data": hp_data,
 		"ap": participant.current_ap
@@ -1010,7 +1010,7 @@ func _has_warlock_disk(participant: BattleParticipant) -> bool:
 	
 	return false
 
-## skill_nullify 呪いを持っているかチェック
+## skill_nullify 刻印を持っているかチェック
 func _has_skill_nullify_curse(participant: BattleParticipant) -> bool:
 	return SpellCurseBattle.has_skill_nullify(participant.creature_data)
 

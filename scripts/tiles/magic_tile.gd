@@ -234,7 +234,7 @@ func _execute_spell(spell_data: Dictionary, player_id: int) -> Dictionary:
 	
 	# 外部スペル実行（対象選択UIなど全てSpellPhaseHandlerが処理）
 	# 戻り値: Dictionary {status: String, warped: bool}
-	# 第3引数: マジックタイル経由フラグ（呪いduration調整用）
+	# 第3引数: マジックタイル経由フラグ（刻印duration調整用）
 	var result = await spell_phase_handler.execute_external_spell(spell_data, player_id, true)
 	print("[MagicTile] スペル実行結果: %s" % result)
 	return result

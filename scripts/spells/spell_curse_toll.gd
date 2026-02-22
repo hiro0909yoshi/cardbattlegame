@@ -1,10 +1,10 @@
 extends Node
 class_name SpellCurseToll
 
-# 通行料呪いシステム
-# セプター呪い: toll_share, toll_disable, toll_fixed
-# ドミニオ呪い: toll_multiplier, peace
-# ドキュメント: docs/design/spells/通行料呪い_final.md
+# 通行料刻印システム
+# セプター刻印: toll_share, toll_disable, toll_fixed
+# ドミニオ刻印: toll_multiplier, peace
+# ドキュメント: docs/design/spells/通行料刻印_final.md
 
 # 参照
 var spell_curse: SpellCurse
@@ -80,10 +80,10 @@ func apply_creature_toll_disable(tile_index: int, duration: int = -1):
 	})
 
 # ========================================
-# 汎用呪い適用（アルカナアーツ用）
+# 汎用刻印適用（アルカナアーツ用）
 # ========================================
 
-## スペル効果から通行料呪いを適用
+## スペル効果から通行料刻印を適用
 func apply_curse_from_effect(effect: Dictionary, tile_index: int, player_id: int = -1, caster_id: int = -1):
 	var effect_type = effect.get("effect_type", "")
 	var duration = effect.get("duration", -1)
@@ -117,21 +117,21 @@ func apply_curse_from_effect(effect: Dictionary, tile_index: int, player_id: int
 # ========================================
 
 ## 最終通行料を計算（Dictionary 形式で戻る）
-## ドミニオ呪い（peace, toll_multiplier）とセプター呪い（toll_disable, toll_fixed, toll_share）を適用
+## ドミニオ刻印（peace, toll_multiplier）とセプター刻印（toll_disable, toll_fixed, toll_share）を適用
 func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base_toll: int) -> Dictionary:
 	var final_toll = base_toll
 	var bonus_toll = 0
 	var bonus_receiver_id = -1
 	
 	# ========================================
-	# ドミニオ呪い判定（peace, toll_multiplier）
+	# ドミニオ刻印判定（peace, toll_multiplier）
 	# ========================================
 	var land_curse = spell_curse.get_creature_curse(tile_index)
 	var land_curse_type = land_curse.get("curse_type", "")
 	
 	# peace: 通行料0（最優先）
 	if land_curse_type == "peace":
-		print("[通行料呪い] peace により通行料 = 0")
+		print("[通行料刻印] peace により通行料 = 0")
 		return {
 			"main_toll": 0,
 			"bonus_toll": 0,
@@ -140,7 +140,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 	
 	# creature_toll_disable: クリーチャー単体の免罪（スキュラ等）
 	if land_curse_type == "creature_toll_disable":
-		print("[通行料呪い] creature_toll_disable により通行料 = 0")
+		print("[通行料刻印] creature_toll_disable により通行料 = 0")
 		return {
 			"main_toll": 0,
 			"bonus_toll": 0,
@@ -151,7 +151,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 	if land_curse_type == "toll_multiplier":
 		var multiplier = land_curse.get("params", {}).get("multiplier", 1.0)
 		final_toll = int(final_toll * multiplier)
-		print("[通行料呪い] ", land_curse.get("name"), " により通行料 = ", final_toll)
+		print("[通行料刻印] ", land_curse.get("name"), " により通行料 = ", final_toll)
 		return {
 			"main_toll": final_toll,
 			"bonus_toll": 0,
@@ -159,14 +159,14 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 		}
 	
 	# ========================================
-	# セプター呪い判定（支払い側）
+	# セプター刻印判定（支払い側）
 	# ========================================
 	var payer_curse = spell_curse.get_player_curse(payer_id)
 	var payer_curse_type = payer_curse.get("curse_type", "")
 	
 	# toll_disable: 支払わない（最優先）
 	if payer_curse_type == "toll_disable":
-		print("[通行料呪い] ", payer_curse.get("name"), " により支払い0")
+		print("[通行料刻印] ", payer_curse.get("name"), " により支払い0")
 		return {
 			"main_toll": 0,
 			"bonus_toll": 0,
@@ -174,7 +174,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 		}
 	
 	# ========================================
-	# セプター呪い判定（受取側）
+	# セプター刻印判定（受取側）
 	# ========================================
 	var receiver_curse = spell_curse.get_player_curse(receiver_id)
 	var receiver_curse_type = receiver_curse.get("curse_type", "")
@@ -183,7 +183,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 	if receiver_curse_type == "toll_fixed":
 		var fixed_value = receiver_curse.get("params", {}).get("value", final_toll)
 		final_toll = fixed_value
-		print("[通行料呪い] ", receiver_curse.get("name"), " により支払い = ", final_toll)
+		print("[通行料刻印] ", receiver_curse.get("name"), " により支払い = ", final_toll)
 		return {
 			"main_toll": final_toll,
 			"bonus_toll": 0,
@@ -192,12 +192,12 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 	
 	# toll_share: 副収入化（ドリームトレイン）
 	if receiver_curse_type == "toll_share":
-		# SpellCurse から呪いの付与者を取得（呪い情報に付与者IDが保存されている）
+		# SpellCurse から刻印の付与者を取得（刻印情報に付与者IDが保存されている）
 		var curse_caster = receiver_curse.get("caster_id", receiver_id)
 		var ratio = receiver_curse.get("params", {}).get("ratio", 0.5)
 		bonus_toll = int(final_toll * ratio)
-		bonus_receiver_id = curse_caster  # 呪いの付与者（ドリームトレインを使ったプレイヤー）が副収入を得る
-		print("[通行料呪い] ", receiver_curse.get("name"), " により副収入 ", bonus_toll, "EP (受取: プレイヤー", bonus_receiver_id + 1, ")")
+		bonus_receiver_id = curse_caster  # 刻印の付与者（ドリームトレインを使ったプレイヤー）が副収入を得る
+		print("[通行料刻印] ", receiver_curse.get("name"), " により副収入 ", bonus_toll, "EP (受取: プレイヤー", bonus_receiver_id + 1, ")")
 		return {
 			"main_toll": final_toll,
 			"bonus_toll": bonus_toll,
@@ -229,7 +229,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 		"bonus_receiver_id": -1
 	}
 
-## タイル呪いによる通行料補正を適用（表示用・player_id不要）
+## タイル刻印による通行料補正を適用（表示用・player_id不要）
 ## peace, creature_toll_disable → 0、toll_multiplier → 倍率適用
 func apply_tile_curse_to_toll(tile_index: int, base_toll: int) -> int:
 	if not spell_curse:
@@ -243,19 +243,19 @@ func apply_tile_curse_to_toll(tile_index: int, base_toll: int) -> int:
 		return int(base_toll * multiplier)
 	return base_toll
 
-## peace 呪いの有無を確認（移動除外判定用）
+## peace 刻印の有無を確認（移動除外判定用）
 func has_peace_curse(tile_index: int) -> bool:
 	var curse = spell_curse.get_creature_curse(tile_index)
 	return curse.get("curse_type") == "peace"
 
-## peace 呪いの有無を確認（戦闘UI表示判定用）
+## peace 刻印の有無を確認（戦闘UI表示判定用）
 func is_invasion_disabled(tile_index: int) -> bool:
 	var curse = spell_curse.get_creature_curse(tile_index)
 	if curse.get("curse_type") == "peace":
 		return curse.get("params", {}).get("invasion_disable", false)
 	return false
 
-## プレイヤーが休戦呪いを持っているか（トゥルース用）
+## プレイヤーが休戦刻印を持っているか（トゥルース用）
 func is_player_invasion_disabled(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
 	return curse.get("curse_type") == "invasion_disable"
@@ -268,17 +268,17 @@ func is_creature_invasion_immune(creature_data: Dictionary) -> bool:
 	var keywords = ability_parsed.get("keywords", [])
 	return "鉄壁" in keywords
 
-## peace 呪いがドミニオのクリーチャーにあるか確認（通行料判定用）
+## peace 刻印がドミニオのクリーチャーにあるか確認（通行料判定用）
 func has_peace_curse_on_land(tile_index: int) -> bool:
 	var curse = spell_curse.get_creature_curse(tile_index)
 	if curse.get("curse_type") == "peace":
 		return curse.get("params", {}).get("toll_zero", false)
 	return false
 
-## 敵プレイヤーが peace 呪いドミニオへの移動可能かチェック
+## 敵プレイヤーが peace 刻印ドミニオへの移動可能かチェック
 ## 枷な場合は false を返す
 func can_move_to_land(tile_index: int, moving_player_id: int, land_owner_id: int) -> bool:
-	# peace 呪いがある場合、敵プレイヤーは枷
+	# peace 刻印がある場合、敵プレイヤーは枷
 	if has_peace_curse(tile_index):
 		# ドミニオ所有者は移動可能、他のプレイヤーは不可
 		if moving_player_id != land_owner_id:

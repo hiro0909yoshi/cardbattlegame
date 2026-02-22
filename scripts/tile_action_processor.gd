@@ -25,7 +25,7 @@ var _card_selection_service = null
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
-var spell_world_curse = null  # SpellWorldCurse: 世界呪い
+var spell_world_curse = null  # SpellWorldCurse: 世界刻印
 var _item_phase_handler = null  # ItemPhaseHandler: GSMから注入、setup時にbattle_executorへ伝播
 
 # サブシステム
@@ -236,7 +236,7 @@ func show_battle_ui(_mode: String = "battle"):
 
 func show_battle_ui_disabled():
 	if _message_service:
-		_message_service.show_action_prompt("peace呪い: 休戦（×でパス）")
+		_message_service.show_action_prompt("peace刻印: 休戦（×でパス）")
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = "disabled"
 		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
@@ -369,7 +369,7 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	else:
 		cost = cost_data
 	
-	# エンジェルギフト呪いチェック
+	# エンジェルギフト刻印チェック
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	

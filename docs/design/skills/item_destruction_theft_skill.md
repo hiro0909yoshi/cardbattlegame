@@ -271,18 +271,18 @@ static func _has_nullify_item_manipulation(participant) -> bool:
 1. バトル準備（prepare_participants）
    ├─ BattleParticipant作成
    ├─ アイテムをitemsに追加（効果はまだ適用しない）
-   └─ 呪いはapply_pre_battle_skillsで適用
+   └─ 刻印はapply_pre_battle_skillsで適用
    │
 2. バトル画面セットアップ（start_battle）
    │
 3. バトル前スキル処理（apply_pre_battle_skills）開始
    │
-4. 【Phase 0-C】呪い適用
-   └─ ステータス変更系呪いをエフェクト表示付きで適用
+4. 【Phase 0-C】刻印適用
+   └─ ステータス変更系刻印をエフェクト表示付きで適用
    │
 5. 【Phase 0-N】沈黙チェック
    ├─ ウォーロックディスク → 「アイテム名 を使用」表示
-   ├─ skill_nullify呪い/クリーチャー能力 → 「戦闘中能力無効」表示
+   ├─ skill_nullify刻印/クリーチャー能力 → 「戦闘中能力無効」表示
    ├─ 無効化あり → アイテムステータスのみ適用してreturn
    └─ 無効化なし → 続行
    │
@@ -346,7 +346,7 @@ func apply_pre_battle_skills(participants, tile_info, attacker_index) -> Diction
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	
-	# 【Phase 0-C】呪い適用
+	# 【Phase 0-C】刻印適用
 	await _apply_curse_effects(attacker, defender, battle_tile_index)
 	
 	# 【Phase 0-N】沈黙チェック
@@ -497,7 +497,7 @@ actor.equip_item(target_item)
 |------|-----------|---------|
 | 2025/10/25 | 1.0 | 初版作成 - skills_design.mdから分離 |
 | 2025/12/23 | 1.1 | 処理フロー更新 - アイテム効果適用をアイテム破壊後に変更 |
-| 2025/12/25 | 2.0 | 処理フロー大幅更新 - 呪い適用→沈黙→アイテム破壊・盗み→変身→アイテム効果適用の順序に変更 |
+| 2025/12/25 | 2.0 | 処理フロー大幅更新 - 刻印適用→沈黙→アイテム破壊・盗み→変身→アイテム効果適用の順序に変更 |
 |            |     | エンジェルケープ追加 - アイテムからの直接判定を実装 |
 |            |     | ウォーロックディスクの表示を「アイテム名 を使用」に変更 |
 

@@ -1,11 +1,11 @@
 extends Node
 class_name SpellPurify
 
-# 呪い除去システム
-# 2073: ピュアリファイ - 全呪いを消し、種類×5EP0を得る
-# アルカナアーツ9024: 対象ドミニオの呪いを消す（ギアリオン）
-# アルカナアーツ9025: 世界呪いを消す（ウリエル）
-# アルカナアーツ9026: 全セプターの呪いを消す（シャラザード）
+# 刻印除去システム
+# 2073: ピュアリファイ - 全刻印を消し、種類×5EP0を得る
+# アルカナアーツ9024: 対象ドミニオの刻印を消す（ギアリオン）
+# アルカナアーツ9025: 世界刻印を消す（ウリエル）
+# アルカナアーツ9026: 全セプターの刻印を消す（シャラザード）
 
 # 参照
 var board_system: BoardSystem3D
@@ -31,25 +31,25 @@ func set_game_stats(p_game_stats) -> void:
 # 2073: ピュアリファイ
 # ========================================
 
-## 全呪いを消し、消した呪いの種類×50EPを得る
+## 全刻印を消し、消した刻印の種類×50EPを得る
 ## @param caster_id: 術者のプレイヤーID
 ## @return Dictionary: {removed_types: Array, ep_gained: int}
 func purify_all(caster_id: int) -> Dictionary:
 	var removed_curse_types: Array = []
 
-	# 1. クリーチャー呪いを収集・除去
+	# 1. クリーチャー刻印を収集・除去
 	var creature_types = _remove_all_creature_curses()
 	for curse_type in creature_types:
 		if curse_type not in removed_curse_types:
 			removed_curse_types.append(curse_type)
 
-	# 2. プレイヤー呪いを収集・除去
+	# 2. プレイヤー刻印を収集・除去
 	var player_types = _remove_all_player_curses()
 	for curse_type in player_types:
 		if curse_type not in removed_curse_types:
 			removed_curse_types.append(curse_type)
 
-	# 3. 世界呪いを収集・除去
+	# 3. 世界刻印を収集・除去
 	var world_type = _remove_world_curse_internal()
 	if world_type != "" and world_type not in removed_curse_types:
 		removed_curse_types.append(world_type)
@@ -58,14 +58,14 @@ func purify_all(caster_id: int) -> Dictionary:
 	var ep_gained = removed_curse_types.size() * 50
 	if ep_gained > 0 and caster_id >= 0 and caster_id < player_system.players.size():
 		player_system.players[caster_id].magic_power += ep_gained
-		print("[ピュアリファイ] プレイヤー%d: %d種類の呪いを消し、%dEPを得た" % [caster_id, removed_curse_types.size(), ep_gained])
+		print("[ピュアリファイ] プレイヤー%d: %d種類の刻印を消し、%dEPを得た" % [caster_id, removed_curse_types.size(), ep_gained])
 
 	return {
 		"removed_types": removed_curse_types,
 		"ep_gained": ep_gained
 	}
 
-## 全クリーチャーの呪いを除去し、呪いタイプのリストを返す
+## 全クリーチャーの刻印を除去し、刻印タイプのリストを返す
 func _remove_all_creature_curses() -> Array:
 	var curse_types: Array = []
 	
@@ -80,11 +80,11 @@ func _remove_all_creature_curses() -> Array:
 				curse_types.append(curse_type)
 			
 			creature.erase("curse")
-			print("[呪い除去] クリーチャー「%s」の呪い「%s」を消した" % [creature.get("name", "?"), curse_name])
+			print("[刻印除去] クリーチャー「%s」の刻印「%s」を消した" % [creature.get("name", "?"), curse_name])
 	
 	return curse_types
 
-## 全プレイヤーの呪いを除去し、呪いタイプのリストを返す
+## 全プレイヤーの刻印を除去し、刻印タイプのリストを返す
 func _remove_all_player_curses() -> Array:
 	var curse_types: Array = []
 	
@@ -98,11 +98,11 @@ func _remove_all_player_curses() -> Array:
 				curse_types.append(curse_type)
 			
 			player.curse = {}
-			print("[呪い除去] プレイヤー%dの呪い「%s」を消した" % [i, curse_name])
+			print("[刻印除去] プレイヤー%dの刻印「%s」を消した" % [i, curse_name])
 	
 	return curse_types
 
-## 世界呪いを除去し、呪いタイプを返す（空文字列なら呪いなし）
+## 世界刻印を除去し、刻印タイプを返す（空文字列なら刻印なし）
 func _remove_world_curse_internal() -> String:
 	if not game_stats.has("world_curse"):
 		return ""
@@ -112,17 +112,17 @@ func _remove_world_curse_internal() -> String:
 	var curse_name = curse.get("name", "不明")
 	
 	game_stats.erase("world_curse")
-	print("[呪い除去] 世界呪い「%s」を消した" % curse_name)
+	print("[刻印除去] 世界刻印「%s」を消した" % curse_name)
 	
 	return curse_type
 
 # ========================================
-# アルカナアーツ9024: 対象ドミニオの呪いを消す（ギアリオン）
+# アルカナアーツ9024: 対象ドミニオの刻印を消す（ギアリオン）
 # ========================================
 
-## 対象ドミニオのクリーチャー呪いを除去
+## 対象ドミニオのクリーチャー刻印を除去
 ## @param tile_index: 対象タイルインデックス
-## @return bool: 呪いを除去できたかどうか
+## @return bool: 刻印を除去できたかどうか
 func remove_creature_curse(tile_index: int) -> bool:
 	var creature = creature_manager.get_data_ref(tile_index)
 	if not creature:
@@ -130,36 +130,36 @@ func remove_creature_curse(tile_index: int) -> bool:
 		return false
 	
 	if not creature.has("curse"):
-		print("[SpellPurify] タイル%dのクリーチャーには呪いがありません" % tile_index)
+		print("[SpellPurify] タイル%dのクリーチャーには刻印がありません" % tile_index)
 		return false
 	
 	var curse_name = creature["curse"].get("name", "不明")
 	creature.erase("curse")
-	print("[アルカナアーツ:呪い除去] クリーチャー「%s」の呪い「%s」を消した" % [creature.get("name", "?"), curse_name])
+	print("[アルカナアーツ:刻印除去] クリーチャー「%s」の刻印「%s」を消した" % [creature.get("name", "?"), curse_name])
 	return true
 
 # ========================================
-# アルカナアーツ9025: 世界呪いを消す（ウリエル）
+# アルカナアーツ9025: 世界刻印を消す（ウリエル）
 # ========================================
 
-## 世界呪いを除去
-## @return bool: 呪いを除去できたかどうか
+## 世界刻印を除去
+## @return bool: 刻印を除去できたかどうか
 func remove_world_curse() -> bool:
 	if not game_stats.has("world_curse"):
-		print("[SpellPurify] 世界呪いがありません")
+		print("[SpellPurify] 世界刻印がありません")
 		return false
 	
 	var curse_name = game_stats["world_curse"].get("name", "不明")
 	game_stats.erase("world_curse")
-	print("[アルカナアーツ:世界呪い除去] 世界呪い「%s」を消した" % curse_name)
+	print("[アルカナアーツ:世界刻印除去] 世界刻印「%s」を消した" % curse_name)
 	return true
 
 # ========================================
-# アルカナアーツ9026: 全セプターの呪いを消す（シャラザード）
+# アルカナアーツ9026: 全セプターの刻印を消す（シャラザード）
 # ========================================
 
-## 全プレイヤーの呪いを除去
-## @return int: 除去した呪いの数
+## 全プレイヤーの刻印を除去
+## @return int: 除去した刻印の数
 func remove_all_player_curses() -> int:
 	var removed_count = 0
 	
@@ -169,7 +169,7 @@ func remove_all_player_curses() -> int:
 			var curse_name = player.curse.get("name", "不明")
 			player.curse = {}
 			removed_count += 1
-			print("[アルカナアーツ:プレイヤー呪い除去] プレイヤー%dの呪い「%s」を消した" % [i, curse_name])
+			print("[アルカナアーツ:プレイヤー刻印除去] プレイヤー%dの刻印「%s」を消した" % [i, curse_name])
 	
-	print("[アルカナアーツ:プレイヤー呪い除去] 合計%d人の呪いを消した" % removed_count)
+	print("[アルカナアーツ:プレイヤー刻印除去] 合計%d人の刻印を消した" % removed_count)
 	return removed_count

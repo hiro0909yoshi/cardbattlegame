@@ -85,7 +85,7 @@ static func _has_indomitable(creature_data: Dictionary) -> bool:
 	if "奮闘" in keywords:
 		return true
 	
-	# 呪いチェック（奮闘呪い）
+	# 刻印チェック（奮闘刻印）
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type") == "indomitable":
 		return true

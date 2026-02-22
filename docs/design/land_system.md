@@ -606,7 +606,7 @@ func execute_for_cpu(command: Dictionary) -> bool
 - 変更不可: チェックポイント（0, 10）、ワープ（5, 15）
 - 無属性への変更: 不可（4属性のみ選択可能）
 - 実行後: ダウン状態＋ターン終了（奮闘で回避可）
-- **インペリアルガード発動中**: 属性変更不可（世界呪いによるブロック）
+- **インペリアルガード発動中**: 属性変更不可（世界刻印によるブロック）
 
 ### 引き継ぎデータ
 | データ | 継承 |
@@ -639,7 +639,7 @@ func execute_for_cpu(command: Dictionary) -> bool
 - `LandInputHelper.handle_terrain_selection_input()` - キー入力処理
 - `DominioOrderHandler` - 状態管理（`SELECTING_TERRAIN`）
 
-### インペリアルガード（世界呪い）対応 ⚠️
+### インペリアルガード（世界刻印）対応 ⚠️
 
 **インペリアルガード（ID: 2047）**発動中は、全ドミニオの属性変化（属性変更・レベルダウン）が無効になる。
 
@@ -663,7 +663,7 @@ func execute_for_cpu(command: Dictionary) -> bool
 
 直接`tile.tile_type`や`tile.level`を変更するとインペリアルガードがバイパスされるため禁止。
 
-**関連ドキュメント**: [世界呪い.md](spells/世界呪い.md) - インペリアルガード詳細
+**関連ドキュメント**: [世界刻印.md](spells/世界刻印.md) - インペリアルガード詳細
 
 ### スペル/スキル連携
 スペルコストのみで地形変化可能（ドミニオオーダーの追加コスト不要）：

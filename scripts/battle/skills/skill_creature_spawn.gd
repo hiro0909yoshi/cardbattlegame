@@ -69,7 +69,7 @@ static func check_mycolon_spawn(defender_data: Dictionary, _defender_tile_index:
 		return result
 	
 	# コピーを生成
-	var copy_data = create_creature_copy(defender_data, true)  # 呪い除去
+	var copy_data = create_creature_copy(defender_data, true)  # 刻印除去
 	
 	result["spawned"] = true
 	result["spawn_tile_index"] = empty_tile
@@ -114,23 +114,23 @@ static func check_boulder_eater_split(creature_data: Dictionary) -> bool:
 
 
 ## バウダーイーターの分裂処理
-## 元のドミニオに残すクリーチャーデータを生成（呪い維持）
-## 移動先用のコピーデータを生成（呪い除去）
+## 元のドミニオに残すクリーチャーデータを生成（刻印維持）
+## 移動先用のコピーデータを生成（刻印除去）
 static func process_boulder_eater_split(creature_data: Dictionary) -> Dictionary:
 	var result = {
-		"original": {},  # 元のドミニオに残る（呪い維持）
-		"copy": {}       # 移動先に配置（呪い除去）
+		"original": {},  # 元のドミニオに残る（刻印維持）
+		"copy": {}       # 移動先に配置（刻印除去）
 	}
 	
-	# 元のドミニオ用（呪い維持）
+	# 元のドミニオ用（刻印維持）
 	result["original"] = create_creature_copy(creature_data, false)
 	
-	# 移動先用（呪い除去）
+	# 移動先用（刻印除去）
 	result["copy"] = create_creature_copy(creature_data, true)
 	
 	print("【バウダーイーター】分裂処理")
-	print("  元のドミニオ: 呪い維持")
-	print("  移動先: 呪い除去")
+	print("  元のドミニオ: 刻印維持")
+	print("  移動先: 刻印除去")
 	
 	return result
 
@@ -141,12 +141,12 @@ static func process_boulder_eater_split(creature_data: Dictionary) -> Dictionary
 
 ## クリーチャーデータのコピーを生成
 ## @param creature_data 元のクリーチャーデータ
-## @param remove_curse 呪いを除去するか
+## @param remove_curse 刻印を除去するか
 ## @return コピーされたクリーチャーデータ
 static func create_creature_copy(creature_data: Dictionary, remove_curse: bool) -> Dictionary:
 	var copy = creature_data.duplicate(true)
 	
-	# 呪いを除去する場合
+	# 刻印を除去する場合
 	if remove_curse:
 		if copy.has("curse"):
 			copy.erase("curse")
@@ -154,9 +154,9 @@ static func create_creature_copy(creature_data: Dictionary, remove_curse: bool) 
 			copy.erase("curses")
 		if copy.has("curse_effects"):
 			copy.erase("curse_effects")
-		print("  [コピー生成] 呪い除去")
+		print("  [コピー生成] 刻印除去")
 	else:
-		print("  [コピー生成] 呪い維持")
+		print("  [コピー生成] 刻印維持")
 	
 	# ステータス引き継ぎ（base_up_ap/hp, current_hp）はduplicate(true)で自動的にコピーされる
 	print("  [コピー生成] base_up_ap:", copy.get("base_up_ap", 0), 

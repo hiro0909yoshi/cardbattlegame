@@ -56,9 +56,9 @@ func get_nearest_unvisited_checkpoint(tile_index: int, visited_checkpoints: Arra
 
 **考慮要素**:
 - 分岐タイルの開閉状態
-- 足止め（呪い・スキル）
+- 足止め（刻印・スキル）
 - ワープタイル
-- 反転呪い
+- 反転刻印
 
 ```gdscript
 func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int = -1) -> Dictionary

@@ -190,15 +190,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		if not attacker_p.is_alive():
 			continue
 		
-		# 消沈呪いチェック
+		# 消沈刻印チェック
 		if SpellCurseBattle.has_battle_disable(attacker_p.creature_data):
 			var curse = attacker_p.creature_data.get("curse", {})
 			var curse_name = curse.get("name", "消沈")
 			print("【消沈】", attacker_p.creature_data.get("name", "?"), " は攻撃できない")
-			# 🎬 呪い発動表示
+			# 🎬 刻印発動表示
 			if battle_screen_manager:
 				var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
-				await battle_screen_manager.show_skill_activation(attacker_side, "呪い[%s]" % curse_name, {})
+				await battle_screen_manager.show_skill_activation(attacker_side, "刻印[%s]" % curse_name, {})
 			continue
 		
 		# 攻撃回数分ループ
@@ -240,14 +240,14 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					# 完全無効化
 					print("  【無効化】", defender_p.creature_data.get("name", "?"), " が攻撃を完全無効化")
 					
-					# 🎬 呪いによる無効化の場合、呪い名を表示
+					# 🎬 刻印による無効化の場合、刻印名を表示
 					if not attacker_p.is_using_scroll:  # 通常攻撃の無効化
 						var curse_nullify_info = _get_curse_nullify_info(defender_p)
 						if curse_nullify_info and battle_screen_manager:
 							var defender_side = "attacker" if defender_p.is_attacker else "defender"
-							await battle_screen_manager.show_skill_activation(defender_side, "呪い[%s]" % curse_nullify_info["name"], {})
+							await battle_screen_manager.show_skill_activation(defender_side, "刻印[%s]" % curse_nullify_info["name"], {})
 					
-					# magic_barrier呪いによる100EP移動チェック
+					# magic_barrier刻印による100EP移動チェック
 					await _apply_ep_transfer_on_nullify(attacker_p, defender_p)
 					
 					continue  # ダメージ処理と即死判定をスキップ
@@ -734,7 +734,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		if actor and skill_type and battle_screen_manager:
 			var side = "attacker" if actor.is_attacker else "defender"
 			var skill_name = SkillDisplayConfig.get_skill_name(skill_type)
-			# 刻印付与の場合は呪い名も表示
+			# 刻印付与の場合は刻印名も表示
 			if skill_type == "apply_curse":
 				var curse_name = skill_info.get("curse_name", "")
 				if curse_name:
@@ -770,7 +770,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			battle_result["creature_spawned"] = true
 			battle_result["spawn_tile_index"] = spawn_tile
 	
-	# 💀 崩壊呪いチェック（生き残った側に呪いがあれば破壊）
+	# 💀 崩壊刻印チェック（生き残った側に刻印があれば破壊）
 	await _check_destroy_after_battle(attacker_p, defender_p)
 	
 	# 🔮 崩壊付与スキル（オトヒメ等：両者生存時に敵へ刻印付与）
@@ -802,7 +802,7 @@ func _check_and_apply_on_attack_success_curse(attacker: BattleParticipant, defen
 	return SpellCurseBattle.check_and_apply_on_attack_success(attacker.creature_data, defender.creature_data)
 
 
-## 🔮 呪いによる通常攻撃無効化の情報を取得
+## 🔮 刻印による通常攻撃無効化の情報を取得
 ## @return Dictionary { "name": String, "curse_type": String } または null
 func _get_curse_nullify_info(defender: BattleParticipant) -> Variant:
 	for effect in defender.temporary_effects:
@@ -814,7 +814,7 @@ func _get_curse_nullify_info(defender: BattleParticipant) -> Variant:
 	return null
 
 
-## 💰 攻撃無効化時のEP移動（magic_barrier呪い用）
+## 💰 攻撃無効化時のEP移動（magic_barrier刻印用）
 func _apply_ep_transfer_on_nullify(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	# defender（無効化した側）のtemporary_effectsをチェック
 	for effect in defender.temporary_effects:
@@ -836,28 +836,28 @@ func _apply_ep_transfer_on_nullify(attacker: BattleParticipant, defender: Battle
 			return
 
 
-## 💀 崩壊呪いチェック（生き残っていて呪いがあれば破壊フラグを立てる）
+## 💀 崩壊刻印チェック（生き残っていて刻印があれば破壊フラグを立てる）
 func _check_destroy_after_battle(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	# 攻撃側チェック
 	if attacker.is_alive() and SpellCurseBattle.has_destroy_after_battle(attacker.creature_data):
-		print("【崩壊】", attacker.creature_data.get("name", "?"), " は呪いにより破壊される")
+		print("【崩壊】", attacker.creature_data.get("name", "?"), " は刻印により破壊される")
 		# スキル表示
 		if battle_screen_manager:
 			var skill_name = SkillDisplayConfig.get_skill_name("self_destruct")
 			await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
 		attacker.current_hp = 0
-		# 呪いを消費
+		# 刻印を消費
 		attacker.creature_data.erase("curse")
 	
 	# 防御側チェック
 	if defender.is_alive() and SpellCurseBattle.has_destroy_after_battle(defender.creature_data):
-		print("【崩壊】", defender.creature_data.get("name", "?"), " は呪いにより破壊される")
+		print("【崩壊】", defender.creature_data.get("name", "?"), " は刻印により破壊される")
 		# スキル表示
 		if battle_screen_manager:
 			var skill_name = SkillDisplayConfig.get_skill_name("self_destruct")
 			await battle_screen_manager.show_skill_activation("defender", skill_name, {})
 		defender.current_hp = 0
-		# 呪いを消費
+		# 刻印を消費
 		defender.creature_data.erase("curse")
 
 
@@ -871,19 +871,19 @@ func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defend
 	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
 	if "崩壊" in attacker_keywords:
 		SpellCurseBattle.apply_destroy_after_battle(defender.creature_data)
-		print("【崩壊付与】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に呪いを付与")
+		print("【崩壊付与】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に刻印を付与")
 	if "慈悲" in attacker_keywords:
 		SpellCurseBattle.apply_creature_toll_disable(defender.creature_data)
-		print("【慈悲】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に呪いを付与")
+		print("【慈悲】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に刻印を付与")
 	
 	# 防御側がスキルを持っているかチェック
 	var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
 	if "崩壊" in defender_keywords:
 		SpellCurseBattle.apply_destroy_after_battle(attacker.creature_data)
-		print("【崩壊付与】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に呪いを付与")
+		print("【崩壊付与】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に刻印を付与")
 	if "慈悲" in defender_keywords:
 		SpellCurseBattle.apply_creature_toll_disable(attacker.creature_data)
-		print("【慈悲】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に呪いを付与")
+		print("【慈悲】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に刻印を付与")
 
 
 ## 🔄 戦闘終了時効果用のコンテキストを構築

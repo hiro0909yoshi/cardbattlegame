@@ -45,7 +45,7 @@
 | cpu_spell_ai.gd | 5 | ドレインマジック、ホーリーワード、ドミニオ評価 |
 | cpu_spell_target_selector.gd | 1 | 敵プレイヤー候補リスト |
 | cpu_spell_utils.gd | 3 | 敵EP取得、周回差計算、敵プレイヤー取得 |
-| cpu_target_resolver.gd | 12 | 敵対象選定10メソッド + 呪い判定2箇所 |
+| cpu_target_resolver.gd | 12 | 敵対象選定10メソッド + 刻印判定2箇所 |
 | cpu_movement_evaluator.gd | 3 | 足止め判定、通行料計算 |
 | cpu_holy_word_evaluator.gd | 4 | ダイス修正評価（攻撃的・防御的） |
 | cpu_curse_evaluator.gd | 5関数 | 善良/悪性判定 → _is_ally()ヘルパー + player_system渡し |
@@ -79,7 +79,7 @@
 - チーム合算TEP表示の視覚的強調
 
 ### 追加プレイテスト項目
-- [ ] 全スペル種別の同盟除外テスト（特に呪い系）
+- [ ] 全スペル種別の同盟除外テスト（特に刻印系）
 - [ ] CPU同士が同盟の場合の挙動
 - [ ] 3チーム以上の構成テスト
 - [ ] teams未指定ステージの退行テスト

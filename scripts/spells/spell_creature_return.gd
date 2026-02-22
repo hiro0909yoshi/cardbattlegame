@@ -168,7 +168,7 @@ func _get_player_creatures(player_id: int) -> Array:
 
 # ============ ターゲット条件判定 ============
 
-## エグザイル用: 呪い付き＆召喚条件なしか判定
+## エグザイル用: 刻印付き＆召喚条件なしか判定
 func is_valid_exile_target(tile_index: int) -> bool:
 	var tile = board_system_ref.tile_nodes.get(tile_index)
 	if not tile or tile.creature_data.is_empty():
@@ -176,7 +176,7 @@ func is_valid_exile_target(tile_index: int) -> bool:
 	
 	var creature = tile.creature_data
 	
-	# 呪い付きチェック
+	# 刻印付きチェック
 	var has_curse = creature.has("curse") and not creature.curse.is_empty()
 	if not has_curse:
 		return false

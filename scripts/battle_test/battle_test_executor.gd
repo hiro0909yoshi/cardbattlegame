@@ -168,7 +168,7 @@ static func _execute_single_battle(
 	if def_item_id > 0:
 		defender_granted_skills = _apply_item_effects_and_record(battle_system, defender, def_item_id, attacker)
 
-	# ========== 新規追加: 呪いスペル適用 ==========
+	# ========== 新規追加: 刻印スペル適用 ==========
 	if config.attacker_curse_spell_id > 0:
 		_apply_curse_spell(attacker, config.attacker_curse_spell_id)
 
@@ -396,16 +396,16 @@ static func _get_effect_info(participant: BattleParticipant) -> Dictionary:
 
 ## ========== 新規追加: Phase 5用メソッド ==========
 
-## 呪いスペルをBattleParticipantに適用
+## 刻印スペルをBattleParticipantに適用
 static func _apply_curse_spell(participant: BattleParticipant, spell_id: int):
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if not spell_data:
-		push_error("[BattleTestExecutor] 呪いスペルID ", spell_id, " が見つかりません")
+		push_error("[BattleTestExecutor] 刻印スペルID ", spell_id, " が見つかりません")
 		return
 
-	print("[BattleTestExecutor] 呪いスペル適用: ", spell_data.get("name", "?"), " (ID:", spell_id, ")")
+	print("[BattleTestExecutor] 刻印スペル適用: ", spell_data.get("name", "?"), " (ID:", spell_id, ")")
 
-	# creature_dataのcurse配列に呪いを追加
+	# creature_dataのcurse配列に刻印を追加
 	if not participant.creature_data.has("curse"):
 		participant.creature_data["curse"] = []
 

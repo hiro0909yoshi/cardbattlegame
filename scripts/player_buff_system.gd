@@ -161,7 +161,7 @@ func clear_all_effects():
 	initialize_player_buffs()
 	print("SkillSystem: 全効果をクリア")
 
-## 奮闘スキルまたは奮闘呪いを持っているかチェック
+## 奮闘スキルまたは奮闘刻印を持っているかチェック
 static func has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -171,7 +171,7 @@ static func has_unyielding(creature_data: Dictionary) -> bool:
 	if "奮闘" in ability_detail:
 		return true
 	
-	# 2. 奮闘呪い判定
+	# 2. 奮闘刻印判定
 	if SpellMovement.has_indomitable_curse(creature_data):
 		return true
 	

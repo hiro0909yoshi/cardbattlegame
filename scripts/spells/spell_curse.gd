@@ -1,9 +1,9 @@
 extends Node
 class_name SpellCurse
 
-# 呪い効果システム
-# 複数ターンにわたって効果が持続する呪いを管理
-# ドキュメント: docs/design/spells/呪い効果.md
+# 刻印効果システム
+# 複数ターンにわたって効果が持続する刻印を管理
+# ドキュメント: docs/design/spells/刻印効果.md
 
 # ========================================
 # インスタンス変数
@@ -37,7 +37,7 @@ func set_game_stats(p_game_stats) -> void:
 # 統合エントリポイント
 # ========================================
 
-## 全クリーチャーに呪いを適用（ディラニー、プレイグ、イモビライズ等）
+## 全クリーチャーに刻印を適用（ディラニー、プレイグ、イモビライズ等）
 func apply_to_all_creatures(effect: Dictionary, target_info: Dictionary) -> int:
 	var condition = target_info.get("condition", {})
 	var targets = TargetSelectionHelper.get_all_creatures(board_system, condition)
@@ -49,10 +49,10 @@ func apply_to_all_creatures(effect: Dictionary, target_info: Dictionary) -> int:
 		affected_count += 1
 	
 	var effect_type = effect.get("effect_type", "")
-	print("[SpellCurse] 全クリーチャー対象 (%s): %d体に呪いを付与" % [effect_type, affected_count])
+	print("[SpellCurse] 全クリーチャー対象 (%s): %d体に刻印を付与" % [effect_type, affected_count])
 	return affected_count
 
-## effect辞書から適切な呪いを適用
+## effect辞書から適切な刻印を適用
 func apply_effect(effect: Dictionary, tile_index: int) -> void:
 	var effect_type = effect.get("effect_type", "")
 	var duration = effect.get("duration", -1)
@@ -71,7 +71,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "ap_nullify", duration, params)
 		
 		"grant_mystic_arts":
-			# アルカナアーツ付与呪い（ウィザー、ドレインシジル等）
+			# アルカナアーツ付与刻印（ウィザー、ドレインシジル等）
 			# spell_id参照方式と旧mystic_arts配列方式の両方に対応
 			var curse_name = effect.get("name", effect.get("curse_name", "アルカナアーツ付与"))
 			var spell_id = effect.get("spell_id", 0)
@@ -93,7 +93,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "mystic_grant", duration, params)
 		
 		"stat_reduce":
-			# ステータス減少呪い（零落等）- バトル時にHP/APを減らす
+			# ステータス減少刻印（零落等）- バトル時にHP/APを減らす
 			var stat = effect.get("stat", "both")  # "hp", "ap", "both"
 			var value = effect.get("value", -10)
 			var params = {
@@ -104,7 +104,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "stat_reduce", duration, params)
 		
 		"random_stat_curse":
-			# 狂星呪い（リキッドフォーム）- バトル時にAP&HPをランダム化
+			# 狂星刻印（リキッドフォーム）- バトル時にAP&HPをランダム化
 			var params = {
 				"name": effect.get("name", "狂星"),
 				"stat": effect.get("stat", "both"),
@@ -114,7 +114,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "random_stat", duration, params)
 		
 		"command_growth_curse":
-			# 昇華呪い（ドミナントグロース）- レベルアップ/地形変化でMHP+20
+			# 昇華刻印（ドミナントグロース）- レベルアップ/地形変化でMHP+20
 			var params = {
 				"name": effect.get("name", "昇華"),
 				"hp_bonus": effect.get("hp_bonus", 20)
@@ -122,14 +122,14 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "command_growth", duration, params)
 		
 		"plague_curse":
-			# 衰弱呪い（プレイグ）- 戦闘終了時にHP -= MHP/2（切り上げ）
+			# 衰弱刻印（プレイグ）- 戦闘終了時にHP -= MHP/2（切り上げ）
 			var params = {
 				"name": effect.get("name", "衰弱")
 			}
 			curse_creature(tile_index, "plague", duration, params)
 		
 		"bounty_curse":
-			# 賞金呪い（バウンティハント）- 武器で破壊時に術者が300蓄魔
+			# 賞金刻印（バウンティハント）- 武器で破壊時に術者が300蓄魔
 			var caster_id = player_system.current_player_index
 			var params = {
 				"name": effect.get("name", "賞金"),
@@ -142,10 +142,10 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "bounty", duration, params)
 		
 		"land_curse":
-			# 土地呪い（ブラストトラップ等）- 敵停止時に発動
+			# 土地刻印（ブラストトラップ等）- 敵停止時に発動
 			var caster_id = player_system.current_player_index
 			var params = {
-				"name": effect.get("curse_name", effect.get("name", "土地呪い")),
+				"name": effect.get("curse_name", effect.get("name", "土地刻印")),
 				"curse_type": effect.get("curse_type", ""),
 				"trigger": effect.get("trigger", "on_enemy_stop"),
 				"one_shot": effect.get("one_shot", false),
@@ -155,10 +155,10 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, effect.get("curse_type", "land_trap"), duration, params)
 		
 		"creature_curse":
-			# クリーチャー呪い（汎用）- マジックシェルター、ジャングラバーの枷等
+			# クリーチャー刻印（汎用）- マジックシェルター、ジャングラバーの枷等
 			var curse_type_inner = effect.get("curse_type", "unknown")
 			var params = {
-				"name": effect.get("name", effect.get("description", "呪い"))
+				"name": effect.get("name", effect.get("description", "刻印"))
 			}
 			# 追加パラメータをコピー（spell_protection, defensive_form等）
 			for key in ["spell_protection", "defensive_form", "description"]:
@@ -167,7 +167,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, curse_type_inner, duration, params)
 		
 		"forced_stop":
-			# 停滞呪い（クイックサンド）- 移動中のプレイヤーを1度だけ拘束
+			# 停滞刻印（クイックサンド）- 移動中のプレイヤーを1度だけ拘束
 			var params = {
 				"name": effect.get("name", "停滞"),
 				"uses_remaining": effect.get("uses", 1)
@@ -175,39 +175,39 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "forced_stop", duration, params)
 		
 		"indomitable":
-			# 奮闘呪い（ライズアップ）- ダウン状態にならない
+			# 奮闘刻印（ライズアップ）- ダウン状態にならない
 			var params = {
 				"name": effect.get("name", "奮闘")
 			}
 			curse_creature(tile_index, "indomitable", duration, params)
 		
 		"land_effect_disable":
-			# 暗転呪い
+			# 暗転刻印
 			var creature = creature_manager.get_data_ref(tile_index)
 			if creature:
 				SpellCurseBattle.apply_land_effect_disable(creature, effect.get("name", "暗転"))
 		
 		"land_effect_grant":
-			# 恩寵呪い
+			# 恩寵刻印
 			var creature = creature_manager.get_data_ref(tile_index)
 			if creature:
 				var grant_elements = effect.get("grant_elements", [])
 				SpellCurseBattle.apply_land_effect_grant(creature, grant_elements, effect.get("name", "地形効果"))
 		
 		"metal_form":
-			# メタルフォーム呪い
+			# メタルフォーム刻印
 			var creature = creature_manager.get_data_ref(tile_index)
 			if creature:
 				SpellCurseBattle.apply_metal_form(creature, effect.get("name", "メタルフォーム"))
 		
 		"magic_barrier":
-			# マジックバリア呪い
+			# マジックバリア刻印
 			var creature = creature_manager.get_data_ref(tile_index)
 			if creature:
 				SpellCurseBattle.apply_magic_barrier(creature, effect.get("name", "マジックバリア"))
 		
 		"destroy_after_battle":
-			# 崩壊呪い
+			# 崩壊刻印
 			var creature = creature_manager.get_data_ref(tile_index)
 			if creature:
 				SpellCurseBattle.apply_destroy_after_battle(creature, effect.get("name", "崩壊"))
@@ -216,7 +216,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			# 汎用刻印付与（グラナイト等）
 			var curse_type_inner = effect.get("curse_type", "unknown")
 			var params = {
-				"name": effect.get("name", "呪い")
+				"name": effect.get("name", "刻印")
 			}
 			curse_creature(tile_index, curse_type_inner, duration, params)
 		
@@ -226,10 +226,10 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 
 
 # ========================================
-# クリーチャー呪い
+# クリーチャー刻印
 # ========================================
 
-# クリーチャーに呪いを付与
+# クリーチャーに刻印を付与
 # is_spread: 拡散処理中かどうか（再帰防止用）
 func curse_creature(tile_index: int, curse_type: String, duration: int = -1, params: Dictionary = {}, is_spread: bool = false):
 	var creature = creature_manager.get_data_ref(tile_index)
@@ -237,12 +237,12 @@ func curse_creature(tile_index: int, curse_type: String, duration: int = -1, par
 		print("[SpellCurse] エラー: タイル ", tile_index, " にクリーチャーが存在しません")
 		return
 	
-	# 既存の呪いがあれば上書き通知
+	# 既存の刻印があれば上書き通知
 	if creature.has("curse"):
 		var old_curse = creature["curse"]
-		print("[呪い上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
+		print("[刻印上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
 	
-	# 新しい呪いを付与（上書き）
+	# 新しい刻印を付与（上書き）
 	var curse_name = str(params.get("name", ""))  # StringName対応: 文字列に変換
 	creature["curse"] = {
 		"curse_type": curse_type,
@@ -258,22 +258,22 @@ func curse_creature(tile_index: int, curse_type: String, duration: int = -1, par
 	if not is_spread:
 		SpellProtection.apply_curse_spread(self, creature, tile_index, curse_type, duration, params)
 
-# クリーチャーの呪いを取得
+# クリーチャーの刻印を取得
 func get_creature_curse(tile_index: int) -> Dictionary:
 	var creature = creature_manager.get_data_ref(tile_index)
 	if creature:
 		return creature.get("curse", {})
 	return {}
 
-# クリーチャーから呪いを削除
+# クリーチャーから刻印を削除
 func remove_curse_from_creature(tile_index: int):
 	var creature = creature_manager.get_data_ref(tile_index)
 	if creature and creature.has("curse"):
 		var curse_name = creature["curse"].get("name", "不明")
 		creature.erase("curse")
-		print("[呪い消滅] ", curse_name, " (移動)")
+		print("[刻印消滅] ", curse_name, " (移動)")
 
-## 昇華呪いをトリガー（レベルアップ/地形変化時に呼び出す）
+## 昇華刻印をトリガー（レベルアップ/地形変化時に呼び出す）
 ## @param tile_index: コマンド実行対象のタイルインデックス
 ## @return Dictionary: {triggered: bool, creature_name: String, hp_bonus: int, old_mhp: int, new_mhp: int, old_hp: int, new_hp: int}
 func trigger_command_growth(tile_index: int) -> Dictionary:
@@ -305,7 +305,7 @@ func trigger_command_growth(tile_index: int) -> Dictionary:
 	var new_mhp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
 	var new_hp = creature.get("current_hp", new_mhp)
 	
-	print("[昇華] ", creature.get("name", "?"), " MHP+", hp_bonus, " (呪い: ", curse_name, ")")
+	print("[昇華] ", creature.get("name", "?"), " MHP+", hp_bonus, " (刻印: ", curse_name, ")")
 	
 	result = {
 		"triggered": true,
@@ -320,10 +320,10 @@ func trigger_command_growth(tile_index: int) -> Dictionary:
 	return result
 
 # ========================================
-# プレイヤー呪い
+# プレイヤー刻印
 # ========================================
 
-# プレイヤーに呪いを付与
+# プレイヤーに刻印を付与
 func curse_player(player_id: int, curse_type: String, duration: int = -1, params: Dictionary = {}, caster_id: int = -1):
 	if player_id < 0 or player_id >= player_system.players.size():
 		print("[SpellCurse] エラー: 不正なプレイヤーID ", player_id)
@@ -331,18 +331,18 @@ func curse_player(player_id: int, curse_type: String, duration: int = -1, params
 	
 	var player = player_system.players[player_id]
 	
-	# 既存の呪いがあれば上書き通知
+	# 既存の刻印があれば上書き通知
 	if not player.curse.is_empty():
 		var old_curse = player.curse
-		print("[呪い上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
+		print("[刻印上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
 	
-	# 新しい呪いを付与（上書き）
+	# 新しい刻印を付与（上書き）
 	player.curse = {
 		"curse_type": curse_type,
 		"name": params.get("name", ""),
 		"duration": duration,
 		"params": params,
-		"caster_id": caster_id  # 呪いを付与したプレイヤーID（toll_shareの副収入判定用）
+		"caster_id": caster_id  # 刻印を付与したプレイヤーID（toll_shareの副収入判定用）
 	}
 	
 	# マジックタイル経由の場合、付与ターンでのduration減少をスキップするためのフラグを追加
@@ -355,14 +355,14 @@ func curse_player(player_id: int, curse_type: String, duration: int = -1, params
 		print("[刻印付与] ", params.get("name", curse_type), " → プレイヤー", player_id, 
 			  " (duration=", duration, ")")
 
-# プレイヤーの呪いを取得
+# プレイヤーの刻印を取得
 func get_player_curse(player_id: int) -> Dictionary:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return {}
 	
 	return player_system.players[player_id].curse
 
-# プレイヤーから呪いを削除
+# プレイヤーから刻印を削除
 func remove_curse_from_player(player_id: int):
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
@@ -371,7 +371,7 @@ func remove_curse_from_player(player_id: int):
 	if not player.curse.is_empty():
 		var curse_name = player.curse.get("name", "不明")
 		player.curse = {}
-		print("[呪い消滅] ", curse_name, " (削除)")
+		print("[刻印消滅] ", curse_name, " (削除)")
 
 # ========================================
 # 世界呪
@@ -382,7 +382,7 @@ func curse_world(curse_type: String, duration: int = 6, params: Dictionary = {})
 	# 既存の世界呪があれば上書き通知
 	if game_stats.has("world_curse"):
 		var old_curse = game_stats["world_curse"]
-		print("[呪い上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
+		print("[刻印上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
 	
 	# 新しい世界呪を付与（上書き）
 	game_stats["world_curse"] = {
@@ -404,13 +404,13 @@ func remove_world_curse():
 	if game_stats.has("world_curse"):
 		var curse_name = game_stats["world_curse"].get("name", "不明")
 		game_stats.erase("world_curse")
-		print("[呪い消滅] ", curse_name, " (削除)")
+		print("[刻印消滅] ", curse_name, " (削除)")
 
 # ========================================
 # ターン経過処理
 # ========================================
 
-# 特定のプレイヤーの呪いのみ更新（ターン終了時用）
+# 特定のプレイヤーの刻印のみ更新（ターン終了時用）
 func update_player_curse(player_id: int):
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
@@ -421,12 +421,12 @@ func update_player_curse(player_id: int):
 		var curse_type = curse.get("curse_type", "")
 		var duration = curse.get("duration", -1)
 		
-		# マジックタイル経由で付与された呪いは付与ターンではスキップ
+		# マジックタイル経由で付与された刻印は付与ターンではスキップ
 		if curse.get("from_magic_tile", false):
 			var granted_turn = curse.get("granted_turn", -1)
 			var current_turn = _get_current_turn()
 			if granted_turn >= 0 and granted_turn == current_turn:
-				print("[呪いカウントダウン] ", curse.get("name", ""), " - マジックタイル付与ターンのためスキップ")
+				print("[刻印カウントダウン] ", curse.get("name", ""), " - マジックタイル付与ターンのためスキップ")
 				# フラグをクリア（次ターン以降は通常通り減少）
 				curse.erase("from_magic_tile")
 				curse.erase("granted_turn")
@@ -435,15 +435,15 @@ func update_player_curse(player_id: int):
 		# duration > 0 の場合のみカウントダウン
 		if duration > 0:
 			curse["duration"] = duration - 1
-			print("[呪いカウントダウン] ", curse.get("name", ""), " duration: ", duration, " → ", duration - 1)
+			print("[刻印カウントダウン] ", curse.get("name", ""), " duration: ", duration, " → ", duration - 1)
 			
 			# duration が 0 になったら削除
 			if curse["duration"] == 0:
 				var curse_name = curse.get("name", "不明")
 				player.curse = {}
-				print("[呪い消滅] ", curse_name, " (duration=0)")
+				print("[刻印消滅] ", curse_name, " (duration=0)")
 				
-				# 反転呪いの場合、方向を元に戻す
+				# 反転刻印の場合、方向を元に戻す
 				if curse_type == "movement_reverse":
 					_on_movement_reverse_curse_removed(player_id)
 
@@ -459,18 +459,18 @@ func _is_magic_tile_mode() -> bool:
 		return spell_phase_handler.spell_state.is_in_magic_tile_mode()
 	return false
 
-# 全ての呪いのdurationを更新（デバッグ用）
+# 全ての刻印のdurationを更新（デバッグ用）
 func update_all_curses():
-	# クリーチャー呪い
+	# クリーチャー刻印
 	_update_creature_curses()
 	
-	# プレイヤー呪い
+	# プレイヤー刻印
 	_update_player_curses()
 	
 	# 世界呪
 	_update_world_curse()
 
-# クリーチャー呪いのduration更新
+# クリーチャー刻印のduration更新
 func _update_creature_curses():
 	for tile_index in board_system.tile_nodes.keys():  # 全タイル
 		var creature = creature_manager.get_data_ref(tile_index)
@@ -486,9 +486,9 @@ func _update_creature_curses():
 				if curse["duration"] == 0:
 					var curse_name = curse.get("name", "不明")
 					creature.erase("curse")
-					print("[呪い消滅] ", curse_name, " (duration=0)")
+					print("[刻印消滅] ", curse_name, " (duration=0)")
 
-# プレイヤー呪いのduration更新
+# プレイヤー刻印のduration更新
 func _update_player_curses():
 	for player in player_system.players:
 		if not player.curse.is_empty():
@@ -503,7 +503,7 @@ func _update_player_curses():
 				if curse["duration"] == 0:
 					var curse_name = curse.get("name", "不明")
 					player.curse = {}
-					print("[呪い消滅] ", curse_name, " (duration=0)")
+					print("[刻印消滅] ", curse_name, " (duration=0)")
 
 # 世界呪のduration更新
 func _update_world_curse():
@@ -519,9 +519,9 @@ func _update_world_curse():
 			if curse["duration"] == 0:
 				var curse_name = curse.get("name", "不明")
 				game_stats.erase("world_curse")
-				print("[呪い消滅] ", curse_name, " (duration=0)")
+				print("[刻印消滅] ", curse_name, " (duration=0)")
 
-# 反転呪い解除時の処理
+# 反転刻印解除時の処理
 func _on_movement_reverse_curse_removed(player_id: int):
 	if board_system:
 		board_system.on_movement_reverse_curse_removed(player_id)

@@ -42,7 +42,7 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 	else:
 		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
-	# エンジェルギフト呪いチェック（クリーチャー/アイテムコスト0化）
+	# エンジェルギフト刻印チェック（クリーチャー/アイテムコスト0化）
 	if spell_cost_modifier:
 		var modified_cost = spell_cost_modifier.get_modified_cost(player_id, card_data)
 		if modified_cost == 0:

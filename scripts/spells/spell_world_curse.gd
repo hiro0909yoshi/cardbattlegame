@@ -1,9 +1,9 @@
 extends Node
 class_name SpellWorldCurse
 
-# 世界呪いシステム
-# ゲーム全体に影響を与える呪い効果を管理
-# ドキュメント: docs/design/spells/世界呪い.md
+# 世界刻印システム
+# ゲーム全体に影響を与える刻印効果を管理
+# ドキュメント: docs/design/spells/世界刻印.md
 
 # ========================================
 # 参照
@@ -36,12 +36,12 @@ func set_game_stats(p_game_stats) -> void:
 # ポップアップ通知
 # ========================================
 
-## 世界呪いブロック時のポップアップ表示
+## 世界刻印ブロック時のポップアップ表示
 func show_blocked_notification(message: String) -> void:
 	if spell_cast_notification_ui and spell_cast_notification_ui.has_method("show_notification_and_wait"):
 		spell_cast_notification_ui.show_notification_and_wait(message)
 
-	print("[世界呪い] %s" % message)
+	print("[世界刻印] %s" % message)
 
 # ========================================
 # インスタンスメソッド（game_flow_manager参照を使用）
@@ -129,7 +129,7 @@ func get_cost_multiplier_for_card(card: Dictionary) -> float:
 # 刻印付与（エントリポイント）
 # ========================================
 
-## effect辞書から世界呪いを適用
+## effect辞書から世界刻印を適用
 func apply(effect: Dictionary) -> void:
 	var curse_type = effect.get("curse_type", "")
 	var curse_name = effect.get("name", "")
@@ -138,16 +138,16 @@ func apply(effect: Dictionary) -> void:
 	params["name"] = curse_name
 	
 	spell_curse.curse_world(curse_type, duration, params)
-	print("[世界呪い] %s を発動（%dR間）" % [curse_name, duration])
+	print("[世界刻印] %s を発動（%dR間）" % [curse_name, duration])
 	
-	# UIを更新（世界呪い表示）
+	# UIを更新（世界刻印表示）
 	_update_ui()
 
 # ========================================
 # 判定メソッド（static）
 # ========================================
 
-## ハイプリーステス: 呪い付きクリーチャーが結界を得るか
+## ハイプリーステス: 刻印付きクリーチャーが結界を得るか
 static func is_cursed_creature_protected(stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "cursed_protection"
@@ -242,7 +242,7 @@ static func is_same_creature_destroy_active(stats: Dictionary) -> bool:
 # ラウンド経過処理
 # ========================================
 
-## ラウンド開始時に世界呪いのdurationを更新
+## ラウンド開始時に世界刻印のdurationを更新
 ## GameFlowManagerから呼び出す（current_player_index == 0 のタイミング）
 func on_round_start():
 	if not game_flow_manager:
@@ -256,12 +256,12 @@ func on_round_start():
 	if duration > 0:
 		world_curse["duration"] = duration - 1
 		var curse_name = world_curse.get("name", "不明")
-		print("[世界呪い] %s 残り%dR" % [curse_name, duration - 1])
+		print("[世界刻印] %s 残り%dR" % [curse_name, duration - 1])
 		
 		if world_curse["duration"] == 0:
 			var expired_name = world_curse.get("name", "不明")
 			game_stats.erase("world_curse")
-			print("[世界呪い消滅] %s" % expired_name)
+			print("[世界刻印消滅] %s" % expired_name)
 		
 		# UIを更新
 		_update_ui()
@@ -270,7 +270,7 @@ func on_round_start():
 # UI更新
 # ========================================
 
-## プレイヤー情報パネルを更新（世界呪い表示用）
+## プレイヤー情報パネルを更新（世界刻印表示用）
 func _update_ui():
 	if not _player_info_service:
 		return

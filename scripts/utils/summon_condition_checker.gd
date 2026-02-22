@@ -115,7 +115,7 @@ static func check_cannot_summon(card_data: Dictionary, tile_element: String) -> 
 # 愚者チェック
 # ============================================================
 
-## 召喚条件が解除されているか（フールズフリーダム/リリース呪い）
+## 召喚条件が解除されているか（フールズフリーダム/リリース刻印）
 ## @param player_id プレイヤーID
 ## @param game_flow_manager GameFlowManager参照
 ## @param board_system BoardSystem3D参照（player_id未指定時のフォールバック）
@@ -126,12 +126,12 @@ static func is_summon_condition_ignored(player_id: int, game_flow_manager, board
 	if not game_flow_manager:
 		return false
 
-	# フールズフリーダム（世界呪い）チェック - 直接参照を優先
+	# フールズフリーダム（世界刻印）チェック - 直接参照を優先
 	var gs = stats if stats else game_flow_manager.game_stats
 	if SpellWorldCurse.is_summon_condition_ignored(gs):
 		return true
 
-	# リリース呪い（プレイヤー呪い）チェック
+	# リリース刻印（プレイヤー刻印）チェック
 	var check_player_id = player_id
 	if check_player_id < 0 and board_system:
 		check_player_id = board_system.current_player_index

@@ -17,9 +17,9 @@ var parent_node: Node     # 親ノード参照
 # システム参照（型指定なし - 3D対応）
 var player_system_ref = null
 var board_system_ref = null
-var game_flow_manager_ref = null  # 世界呪い取得用
+var game_flow_manager_ref = null  # 世界刻印取得用
 
-# 世界呪い表示用
+# 世界刻印表示用
 var world_curse_label: RichTextLabel = null
 
 # 設定
@@ -51,7 +51,7 @@ func initialize(parent: Node, player_system: PlayerSystem, board_system, count: 
 	if player_system_ref:
 		player_system_ref.magic_changed.connect(_on_magic_changed)
 
-# GameFlowManager参照を設定（世界呪い表示用、ターン開始シグナル接続用）
+# GameFlowManager参照を設定（世界刻印表示用、ターン開始シグナル接続用）
 func set_game_flow_manager(gfm, lap_system = null):
 	game_flow_manager_ref = gfm
 	
@@ -70,7 +70,7 @@ func create_panels():
 		parent_node.add_child(panel)
 		panels.append(panel)
 
-# 世界呪いラベルを作成
+# 世界刻印ラベルを作成
 func create_world_curse_label():
 	world_curse_label = RichTextLabel.new()
 	
@@ -152,10 +152,10 @@ func update_all_panels():
 	for i in range(info_labels.size()):
 		update_single_panel(i)
 	
-	# 世界呪いラベルを更新
+	# 世界刻印ラベルを更新
 	update_world_curse_label()
 
-# 世界呪いラベルを更新
+# 世界刻印ラベルを更新
 func update_world_curse_label():
 	if not world_curse_label:
 		return
@@ -167,7 +167,7 @@ func update_world_curse_label():
 	if world_curse.is_empty():
 		world_curse_label.visible = false
 	else:
-		var curse_name = world_curse.get("name", "世界呪い")
+		var curse_name = world_curse.get("name", "世界刻印")
 		var duration = world_curse.get("duration", 0)
 		world_curse_label.text = "[color=purple]世界: %s (%dR)[/color]" % [curse_name, duration]
 		world_curse_label.visible = true
@@ -206,9 +206,9 @@ func build_player_info_text(player, player_id: int) -> String:
 	# 取得済みシグナル表示
 	text += _build_signal_text(player_id)
 	
-	# プレイヤー呪いがあれば別行で表示
+	# プレイヤー刻印があれば別行で表示
 	if player.curse and not player.curse.is_empty():
-		var curse_name = player.curse.get("name", "呪い")
+		var curse_name = player.curse.get("name", "刻印")
 		text += "\n[color=red]呪: " + curse_name + "[/color]"
 	
 	return text

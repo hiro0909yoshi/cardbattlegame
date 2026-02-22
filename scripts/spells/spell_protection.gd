@@ -31,17 +31,17 @@ static func is_creature_protected(creature_data: Dictionary, context: Dictionary
 		print("[SpellProtection] %s は結界abilityを持つため対象外" % creature_name)
 		return true
 	
-	# 2. クリーチャー呪い「結界」チェック
+	# 2. クリーチャー刻印「結界」チェック
 	var curse = creature_data.get("curse", {})
 	var curse_type = curse.get("curse_type", "")
 	if curse_type in ["spell_protection", "protection_wall"]:
-		print("[SpellProtection] %s は結界呪いを持つため対象外" % creature_name)
+		print("[SpellProtection] %s は結界刻印を持つため対象外" % creature_name)
 		return true
 	
-	# 3. 世界呪い「女教皇」チェック（呪い付きクリーチャーのみ）
+	# 3. 世界刻印「女教皇」チェック（刻印付きクリーチャーのみ）
 	var world_curse = context.get("world_curse", {})
 	if world_curse.get("curse_type") == "cursed_protection":
-		# 何らかの呪いがかかっているクリーチャーは結界
+		# 何らかの刻印がかかっているクリーチャーは結界
 		if not curse.is_empty():
 			print("[SpellProtection] %s は女教皇により対象外" % creature_name)
 			return true
@@ -60,17 +60,17 @@ static func is_player_protected(player, context: Dictionary = {}) -> bool:
 	
 	var player_name = player.name if "name" in player else "?"
 	
-	# 1. プレイヤー呪い「結界」チェック
+	# 1. プレイヤー刻印「結界」チェック
 	var curse = player.curse if "curse" in player else {}
 	if curse is Dictionary and not curse.is_empty():
 		if curse.get("curse_type") == "spell_protection":
-			print("[SpellProtection] プレイヤー %s は結界呪いを持つため対象外" % player_name)
+			print("[SpellProtection] プレイヤー %s は結界刻印を持つため対象外" % player_name)
 			return true
 	
-	# 2. 世界呪い「結界」チェック（全セプター対象）
+	# 2. 世界刻印「結界」チェック（全セプター対象）
 	var world_curse = context.get("world_curse", {})
 	if world_curse.get("curse_type") == "world_spell_protection":
-		print("[SpellProtection] プレイヤー %s は世界呪い結界により対象外" % player_name)
+		print("[SpellProtection] プレイヤー %s は世界刻印結界により対象外" % player_name)
 		return true
 	
 	return false
@@ -84,7 +84,7 @@ static func is_player_protected(player, context: Dictionary = {}) -> bool:
 static func is_target_protected(target_data: Dictionary, handler) -> bool:
 	var target_type = target_data.get("type", "")
 	
-	# コンテキストを構築（世界呪いチェック用）
+	# コンテキストを構築（世界刻印チェック用）
 	var context = _build_context(handler)
 	
 	match target_type:
@@ -122,12 +122,12 @@ static func is_target_protected(target_data: Dictionary, handler) -> bool:
 	return false
 
 
-## コンテキストを構築（世界呪い等）
+## コンテキストを構築（世界刻印等）
 ## 直接参照を優先し、フォールバックで game_flow_manager を使用
 static func _build_context(handler) -> Dictionary:
 	var context = {}
 
-	# 世界呪いを取得
+	# 世界刻印を取得
 	# handlerはNode（SpellPhaseHandler等）なのでプロパティに直接アクセス
 	if handler == null:
 		return context
@@ -221,7 +221,7 @@ static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_inde
 		if tile.owner_id != caster_id:
 			continue
 		
-		# 自分自身のタイルはスキップ（既に呪いがついている）
+		# 自分自身のタイルはスキップ（既に刻印がついている）
 		if target_tile_index == tile_index:
 			continue
 		
@@ -234,7 +234,7 @@ static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_inde
 		if is_creature_protected(target_creature, context):
 			continue
 		
-		# 呪いを付与（is_spread = true で再帰防止）
+		# 刻印を付与（is_spread = true で再帰防止）
 		spell_curse.curse_creature(target_tile_index, curse_type, duration, params, true)
 	
 	# 伝染クリーチャーをダウン
@@ -257,13 +257,13 @@ static func is_player_spell_disabled(player, context: Dictionary = {}) -> bool:
 	if player == null:
 		return false
 	
-	# 1. プレイヤー呪い「spell_disable」チェック
+	# 1. プレイヤー刻印「spell_disable」チェック
 	var curse = player.curse if "curse" in player else {}
 	if curse is Dictionary and not curse.is_empty():
 		if curse.get("curse_type") == "spell_disable":
 			return true
 	
-	# 2. 世界呪い「spell_disable」チェック（全セプター対象）
+	# 2. 世界刻印「spell_disable」チェック（全セプター対象）
 	var world_curse = context.get("world_curse", {})
 	if world_curse.get("curse_type") == "world_spell_disable":
 		return true
@@ -271,17 +271,17 @@ static func is_player_spell_disabled(player, context: Dictionary = {}) -> bool:
 	return false
 
 
-## 全プレイヤーに禁呪呪いを付与
+## 全プレイヤーに禁呪刻印を付与
 ##
 ## player_system: PlayerSystemの参照
-## duration: 呪いの持続ターン数
-## curse_name: 呪いの表示名
+## duration: 刻印の持続ターン数
+## curse_name: 刻印の表示名
 static func apply_spell_disable_to_all_players(player_system, duration: int = 1, curse_name: String = "禁呪"):
 	if player_system == null:
 		return
 
 	for player in player_system.players:
-		# 既存の呪いがあっても上書き
+		# 既存の刻印があっても上書き
 		player.curse = {
 			"curse_type": "spell_disable",
 			"name": curse_name,
@@ -308,10 +308,10 @@ static func has_hp_effect_immune(creature_data: Dictionary) -> bool:
 		print("[SpellProtection] %s は堅牢キーワードを持つため対象外" % creature_name)
 		return true
 
-	# 2. 呪いチェック（グラナイト等で付与）
+	# 2. 刻印チェック（グラナイト等で付与）
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type") == "hp_effect_immune":
-		print("[SpellProtection] %s は堅牢呪いを持つため対象外" % creature_name)
+		print("[SpellProtection] %s は堅牢刻印を持つため対象外" % creature_name)
 		return true
 
 	return false

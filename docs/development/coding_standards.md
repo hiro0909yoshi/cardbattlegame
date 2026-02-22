@@ -334,7 +334,7 @@ ui_manager.phase_display.show_toast("メッセージ")  # ❌
 | アクション完了 | `board_system.complete_action()` |
 | 交換実行 | `board_system.execute_swap_action(tile, card_idx, old_creature)` |
 | レベルアップコスト計算 | `board_system.calculate_level_up_cost(current, target)` |
-| 呪い込み通行料計算 | `board_system.calculate_toll_with_curse(tile_index)` |
+| 刻印込み通行料計算 | `board_system.calculate_toll_with_curse(tile_index)` |
 | ワープペア取得 | `board_system.get_warp_pairs()` |
 | バトル画面マネージャ取得 | `board_system.get_battle_screen_manager()` |
 

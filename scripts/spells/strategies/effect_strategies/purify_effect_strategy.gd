@@ -1,4 +1,4 @@
-## PurifyEffectStrategy - 呪い除去効果の戦略実装
+## PurifyEffectStrategy - 刻印除去効果の戦略実装
 class_name PurifyEffectStrategy
 extends SpellStrategy
 
@@ -29,7 +29,7 @@ func validate(context: Dictionary) -> bool:
 		"purify_all", "remove_creature_curse", "remove_world_curse", "remove_all_player_curses"
 	]
 	if effect_type not in valid_types:
-		_log_error("無効な effect_type: %s（呪い除去系のみ対応）" % effect_type)
+		_log_error("無効な effect_type: %s（刻印除去系のみ対応）" % effect_type)
 		return false
 
 	_log("バリデーション成功 (effect_type: %s)" % effect_type)
@@ -62,24 +62,24 @@ func execute(context: Dictionary) -> Dictionary:
 				message_service = handler.spell_ui_manager.message_service
 			if message_service:
 				var type_count = result.removed_types.size()
-				var message = "%d種類の呪いを消去 %d蓄魔" % [type_count, result.ep_gained]
+				var message = "%d種類の刻印を消去 %d蓄魔" % [type_count, result.ep_gained]
 				await message_service.show_comment_and_wait(message)
 				effect_message = message
 			else:
-				effect_message = "全ての呪いを消去"
+				effect_message = "全ての刻印を消去"
 
 		"remove_creature_curse":
 			var tile_index = target_data.get("tile_index", -1)
 			spell_purify.remove_creature_curse(tile_index)
-			effect_message = "クリーチャー呪いを消去"
+			effect_message = "クリーチャー刻印を消去"
 
 		"remove_world_curse":
 			spell_purify.remove_world_curse()
-			effect_message = "ワールド呪いを消去"
+			effect_message = "ワールド刻印を消去"
 
 		"remove_all_player_curses":
 			spell_purify.remove_all_player_curses()
-			effect_message = "プレイヤー呪いを全て消去"
+			effect_message = "プレイヤー刻印を全て消去"
 
 	_log("効果実行完了")
 

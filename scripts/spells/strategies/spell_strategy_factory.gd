@@ -70,7 +70,7 @@ static func create_effect_strategy(effect_type: String) -> SpellStrategy:
 		"draw_by_type": preload("res://scripts/spells/strategies/effect_strategies/draw_effect_strategy.gd"),
 		"draw_from_deck_selection": preload("res://scripts/spells/strategies/effect_strategies/draw_effect_strategy.gd"),
 		"draw_and_place": preload("res://scripts/spells/strategies/effect_strategies/draw_effect_strategy.gd"),
-		# === クリーチャー呪い系（19個）===
+		# === クリーチャー刻印系（19個）===
 		"skill_nullify": preload("res://scripts/spells/strategies/effect_strategies/creature_curse_effect_strategy.gd"),
 		"battle_disable": preload("res://scripts/spells/strategies/effect_strategies/creature_curse_effect_strategy.gd"),
 		"ap_nullify": preload("res://scripts/spells/strategies/effect_strategies/creature_curse_effect_strategy.gd"),
@@ -90,18 +90,18 @@ static func create_effect_strategy(effect_type: String) -> SpellStrategy:
 		"grant_mystic_arts": preload("res://scripts/spells/strategies/effect_strategies/creature_curse_effect_strategy.gd"),
 		"land_curse": preload("res://scripts/spells/strategies/effect_strategies/creature_curse_effect_strategy.gd"),
 		"apply_curse": preload("res://scripts/spells/strategies/effect_strategies/creature_curse_effect_strategy.gd"),
-		# === プレイヤー呪い系（1個）===
+		# === プレイヤー刻印系（1個）===
 		"player_curse": preload("res://scripts/spells/strategies/effect_strategies/player_curse_effect_strategy.gd"),
-		# === 世界呪い系（1個）===
+		# === 世界刻印系（1個）===
 		"world_curse": preload("res://scripts/spells/strategies/effect_strategies/world_curse_effect_strategy.gd"),
-		# === 通行料呪い系（6個）===
+		# === 通行料刻印系（6個）===
 		"toll_share": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
 		"toll_disable": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
 		"toll_fixed": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
 		"toll_multiplier": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
 		"peace": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
 		"curse_toll_half": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
-		# === ステータス呪い系（1個）===
+		# === ステータス刻印系（1個）===
 		"stat_boost": preload("res://scripts/spells/strategies/effect_strategies/stat_boost_effect_strategy.gd"),
 		# === EP/Magic 操作系（13個）===
 		"drain_magic": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
@@ -146,7 +146,7 @@ static func create_effect_strategy(effect_type: String) -> SpellStrategy:
 		"permanent_ap_change": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
 		"conditional_ap_change": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
 		"secret_tiny_army": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
-		# === 呪い除去系（4個） ===
+		# === 刻印除去系（4個） ===
 		"purify_all": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
 		"remove_creature_curse": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
 		"remove_world_curse": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
@@ -210,7 +210,7 @@ static func get_registered_effect_types() -> Array:
 		"draw_by_type",
 		"draw_from_deck_selection",
 		"draw_and_place",
-		# === クリーチャー呪い系（19個）===
+		# === クリーチャー刻印系（19個）===
 		"skill_nullify",
 		"battle_disable",
 		"ap_nullify",
@@ -230,18 +230,18 @@ static func get_registered_effect_types() -> Array:
 		"grant_mystic_arts",
 		"land_curse",
 		"apply_curse",
-		# === プレイヤー呪い系（1個）===
+		# === プレイヤー刻印系（1個）===
 		"player_curse",
-		# === 世界呪い系（1個）===
+		# === 世界刻印系（1個）===
 		"world_curse",
-		# === 通行料呪い系（6個）===
+		# === 通行料刻印系（6個）===
 		"toll_share",
 		"toll_disable",
 		"toll_fixed",
 		"toll_multiplier",
 		"peace",
 		"curse_toll_half",
-		# === ステータス呪い系（1個）===
+		# === ステータス刻印系（1個）===
 		"stat_boost",
 		# === EP/Magic 操作系（13個）===
 		"drain_magic",
@@ -286,7 +286,7 @@ static func get_registered_effect_types() -> Array:
 		"permanent_ap_change",
 		"conditional_ap_change",
 		"secret_tiny_army",
-		# === 呪い除去系（4個） ===
+		# === 刻印除去系（4個） ===
 		"purify_all",
 		"remove_creature_curse",
 		"remove_world_curse",
@@ -343,7 +343,7 @@ static func has_effect_strategy(effect_type: String) -> bool:
 		"draw_by_type",
 		"draw_from_deck_selection",
 		"draw_and_place",
-		# === クリーチャー呪い系（19個）===
+		# === クリーチャー刻印系（19個）===
 		"skill_nullify",
 		"battle_disable",
 		"ap_nullify",
@@ -363,18 +363,18 @@ static func has_effect_strategy(effect_type: String) -> bool:
 		"grant_mystic_arts",
 		"land_curse",
 		"apply_curse",
-		# === プレイヤー呪い系（1個）===
+		# === プレイヤー刻印系（1個）===
 		"player_curse",
-		# === 世界呪い系（1個）===
+		# === 世界刻印系（1個）===
 		"world_curse",
-		# === 通行料呪い系（6個）===
+		# === 通行料刻印系（6個）===
 		"toll_share",
 		"toll_disable",
 		"toll_fixed",
 		"toll_multiplier",
 		"peace",
 		"curse_toll_half",
-		# === ステータス呪い系（1個）===
+		# === ステータス刻印系（1個）===
 		"stat_boost",
 		# === EP/Magic 操作系（13個）===
 		"drain_magic",
@@ -419,7 +419,7 @@ static func has_effect_strategy(effect_type: String) -> bool:
 		"permanent_ap_change",
 		"conditional_ap_change",
 		"secret_tiny_army",
-		# === 呪い除去系（4個） ===
+		# === 刻印除去系（4個） ===
 		"purify_all",
 		"remove_creature_curse",
 		"remove_world_curse",

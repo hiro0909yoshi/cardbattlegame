@@ -43,7 +43,7 @@ func check_and_pay_toll_on_enemy_land() -> void:
 	var toll = board_system_3d.calculate_toll(current_tile_index)
 	var toll_info = {"main_toll": toll, "bonus_toll": 0, "bonus_receiver_id": -1}
 
-	# 通行料呪いがある場合、呪いシステムに全ての計算を委譲
+	# 通行料刻印がある場合、刻印システムに全ての計算を委譲
 	if spell_curse_toll:
 		toll_info = spell_curse_toll.calculate_final_toll(current_tile_index, current_player_index, receiver_id, toll)
 

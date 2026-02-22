@@ -172,7 +172,7 @@ func is_alive() -> bool:
 func get_max_hp() -> int:
 	return base_hp + base_up_hp
 
-# 戦闘中の有効最大HP（呪い等の一時効果を反映）
+# 戦闘中の有効最大HP（刻印等の一時効果を反映）
 # 土地ボーナスは別枠なので含めない
 func get_effective_max_hp() -> int:
 	return base_hp + base_up_hp + item_bonus_hp + resonance_bonus_hp + \

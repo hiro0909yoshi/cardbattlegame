@@ -3,7 +3,7 @@ extends RefCounted
 ## カード破壊処理ハンドラー
 ##
 ## 担当effect_type:
-## - destroy_curse_cards: 全プレイヤーの呪いカード破壊（レイオブパージ）
+## - destroy_curse_cards: 全プレイヤーの刻印カード破壊（レイオブパージ）
 ## - destroy_expensive_cards: 全プレイヤーの高コストカード破壊（レイオブロウ）
 ## - destroy_duplicate_cards: 重複カード破壊（エロージョン）
 ## - destroy_selected_card: 選択破壊（シャッター、スクイーズ）
@@ -26,7 +26,7 @@ var card_selection_handler = null
 
 const CURSE_SPELL_TYPES = [
 	"複数特殊能力付与",
-	"世界呪い",
+	"世界刻印",
 	"単体特殊能力付与"
 ]
 
@@ -127,14 +127,14 @@ func can_handle(effect_type: String) -> bool:
 # 破壊処理
 # ============================================================
 
-## 呪いカードかどうか判定
+## 刻印カードかどうか判定
 func is_curse_card(card: Dictionary) -> bool:
 	if card.get("type") != "spell":
 		return false
 	return card.get("spell_type", "") in CURSE_SPELL_TYPES
 
 
-## 全プレイヤーの手札から呪いカードを破壊
+## 全プレイヤーの手札から刻印カードを破壊
 func destroy_curse_cards() -> Dictionary:
 	if not card_system_ref:
 		push_error("DestroyHandler: CardSystemが設定されていません")
@@ -151,13 +151,13 @@ func destroy_curse_cards() -> Dictionary:
 			var card = hand[i]
 			if is_curse_card(card):
 				card_system_ref.discard_card(player_id, i, "destroy")
-				print("[呪いカード破壊] プレイヤー%d: %s" % [player_id + 1, card.get("name", "?")])
+				print("[刻印カード破壊] プレイヤー%d: %s" % [player_id + 1, card.get("name", "?")])
 				destroyed_count += 1
 		
 		by_player.append(destroyed_count)
 		total_destroyed += destroyed_count
 	
-	print("[レイオブパージ] 合計 %d 枚の呪いカードを破壊" % total_destroyed)
+	print("[レイオブパージ] 合計 %d 枚の刻印カードを破壊" % total_destroyed)
 	
 	return {
 		"total_destroyed": total_destroyed,

@@ -228,13 +228,13 @@ func show_dice_result_triple(dice1: int, dice2: int, dice3: int, total: int):
 		current_dice_label.queue_free()
 		current_dice_label = null
 
-## ダイス範囲呪い用の結果表示（ジャーニーなど）
+## ダイス範囲刻印用の結果表示（ジャーニーなど）
 func show_dice_result_range(curse_name: String, total: int):
 	# 既存のダイスラベルがあれば削除
 	if current_dice_label and is_instance_valid(current_dice_label):
 		current_dice_label.queue_free()
 	
-	# 呪い名と結果のみ表示
+	# 刻印名と結果のみ表示
 	var display_text = "🎲 %s → %d" % [curse_name, total]
 	
 	# 新しいダイスラベルを作成
@@ -248,7 +248,7 @@ func show_dice_result_range(curse_name: String, total: int):
 	current_dice_label.offset_top = 80
 	current_dice_label.offset_bottom = 160
 	
-	# 紫色（呪い効果を示す）
+	# 紫色（刻印効果を示す）
 	current_dice_label.add_theme_color_override("font_color", Color(0.8, 0.5, 1.0))
 	current_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))
 	current_dice_label.mouse_filter = Control.MOUSE_FILTER_IGNORE

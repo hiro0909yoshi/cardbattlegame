@@ -36,7 +36,7 @@
 | ID | 名前 | effect_type | 効果 |
 |----|------|-------------|------|
 | 443 | ルナティックヘア | swap_ap_mhp | 敵のAP⇔MHP交換 |
-| 124 | スキュラ | apply_curse | 敵に呪い"免罪" |
+| 124 | スキュラ | apply_curse | 敵に刻印"免罪" |
 | 317 | サムハイン | reduce_enemy_mhp | 敵のMHP-自分の基本AP |
 | 245 | レーシィ | level_up_battle_land | 戦闘地レベル+1 |
 
@@ -62,7 +62,7 @@
 
 ### ハングドマンズシール (ID: 2064)
 
-世界呪い「吊人」により以下のトリガーを無効化：
+世界刻印「吊人」により以下のトリガーを無効化：
 - `on_battle_end` (戦闘終了時効果)
 - `on_death` (自破壊時効果)
 - `mystic_arts` (アルカナアーツ)
@@ -94,7 +94,7 @@ if spell_world_curse.is_trigger_nullified("on_battle_end"):
 battle_execution.gd
   ↓ 戦闘攻撃完了
   ↓ 生き残り効果チェック
-  ↓ 崩壊呪いチェック
+  ↓ 崩壊刻印チェック
   ↓
 SkillBattleEndEffects.process_all(attacker, defender, context)
   ├─ ハングドマンズシール無効化チェック

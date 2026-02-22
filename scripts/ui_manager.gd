@@ -697,7 +697,7 @@ func show_dice_result_triple(dice1: int, dice2: int, dice3: int, total: int):
 	if _message_service:
 		_message_service.show_dice_result_triple(dice1, dice2, dice3, total)
 
-## ダイス結果（範囲呪い）を表示
+## ダイス結果（範囲刻印）を表示
 func show_dice_result_range(curse_name: String, value: int):
 	if _message_service:
 		_message_service.show_dice_result_range(curse_name, value)

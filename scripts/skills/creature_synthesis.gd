@@ -8,7 +8,7 @@ extends RefCounted
 
 ## 合成条件タイプ
 const CONDITION_ELEMENT = "element"        # 特定属性のカード
-const CONDITION_CURSE_SPELL = "curse_spell"  # 呪いスペル
+const CONDITION_CURSE_SPELL = "curse_spell"  # 刻印スペル
 const CONDITION_ITEM = "item"              # アイテムカード
 const CONDITION_CREATURE = "creature"      # クリーチャーカード
 const CONDITION_SPELL = "spell"            # 任意のスペルカード
@@ -17,7 +17,7 @@ const CONDITION_SPELL = "spell"            # 任意のスペルカード
 const EFFECT_STAT_BOOST = "stat_boost"     # ステータス上昇
 const EFFECT_TRANSFORM = "transform"       # 変身
 
-## 呪いスペルに該当するspell_type
+## 刻印スペルに該当するspell_type
 const CURSE_SPELL_TYPES = ["単体特殊能力付与", "複数特殊能力付与"]
 
 ## 合成対象クリーチャーID一覧
@@ -74,7 +74,7 @@ func check_condition(creature_data: Dictionary, sacrifice_card: Dictionary) -> b
 			return sacrifice_card.get("element", "") == condition_value
 		
 		CONDITION_CURSE_SPELL:
-			# 呪いスペル（単体特殊能力付与 or 複数特殊能力付与）
+			# 刻印スペル（単体特殊能力付与 or 複数特殊能力付与）
 			if sacrifice_card.get("type", "") != "spell":
 				return false
 			var spell_type = sacrifice_card.get("spell_type", "")

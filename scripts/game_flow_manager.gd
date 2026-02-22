@@ -88,7 +88,7 @@ signal lap_completed(player_id: int)
 # ターン（ラウンド）カウンター
 var current_turn_number = 1
 
-# ゲーム全体の共有ステート（世界呪い等）
+# ゲーム全体の共有ステート（世界刻印等）
 var game_stats: Dictionary = {}
 
 # 注: _ready()は使用しない。初期化はGameSystemManagerが担当
@@ -483,7 +483,7 @@ func end_turn():
 	change_phase(GamePhase.END_TURN)
 	player_buff_system.end_turn_cleanup()
 	
-	# 現在のプレイヤーの呪いのduration更新
+	# 現在のプレイヤーの刻印のduration更新
 	if spell_container and spell_container.spell_curse:
 		spell_container.spell_curse.update_player_curse(player_system.current_player_index)
 	else:
@@ -509,7 +509,7 @@ func end_turn():
 				if board_system_3d:
 					board_system_3d.toggle_all_branch_tiles()
 			
-			# 世界呪いのduration更新
+			# 世界刻印のduration更新
 			if spell_container and spell_container.spell_world_curse:
 				spell_container.spell_world_curse.on_round_start()
 			else:
@@ -584,9 +584,9 @@ func check_and_handle_bankruptcy():
 	# 破産処理実行
 	await bankruptcy_handler.process_bankruptcy(current_player_index, is_cpu)
 
-# === 土地呪い（移動完了時発動） ===
+# === 土地刻印（移動完了時発動） ===
 
-## 土地呪い発動（移動完了時に呼ばれる公開メソッド）
+## 土地刻印発動（移動完了時に呼ばれる公開メソッド）
 ## 実処理はSpellMagicに委譲
 func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
 	if spell_container.spell_magic:

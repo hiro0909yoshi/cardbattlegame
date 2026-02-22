@@ -5,7 +5,7 @@
 ##
 ## 【担当効果】
 ## - ルナティックヘア (ID: 443): 敵のAP⇔MHP交換
-## - スキュラ (ID: 124): 敵に呪い"免罪"
+## - スキュラ (ID: 124): 敵に刻印"免罪"
 ## - サムハイン (ID: 317): 敵のMHP-基本AP（未実装）
 ## - レーシィ (ID: 245): 戦闘地レベル+1（未実装）
 ## - マイコロン (ID: 140): 敵攻撃で生き残った後、ランダム空地にコピー配置
@@ -70,7 +70,7 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 		if spawn_result.get("spawned", false):
 			result["spawn_info"] = spawn_result
 	
-	# 衰弱（plague）呪いダメージ処理
+	# 衰弱（plague）刻印ダメージ処理
 	# 攻撃側の衰弱チェック（相手=防御側のハングドマンズシールで無効化）
 	if attacker and attacker.is_alive():
 		var plague_result = _process_plague_damage(attacker, defender)
@@ -275,7 +275,7 @@ static func _apply_swap_ap_mhp(self_participant, enemy_participant) -> Dictionar
 
 
 ## 刻印付与（スキュラ等）
-## @return 呪いを付与できた場合は呪い名、失敗時は空文字
+## @return 刻印を付与できた場合は刻印名、失敗時は空文字
 static func _apply_curse_effect(self_participant, enemy_participant, effect: Dictionary) -> String:
 	var self_name = self_participant.creature_data.get("name", "?")
 	var enemy_data = enemy_participant.creature_data
@@ -287,10 +287,10 @@ static func _apply_curse_effect(self_participant, enemy_participant, effect: Dic
 	if curse_type.is_empty():
 		return ""
 	
-	# 既存の呪いがあるかチェック
+	# 既存の刻印があるかチェック
 	var existing_curse = enemy_data.get("curse", {})
 	if not existing_curse.is_empty():
-		print("【戦闘終了時効果】%s は既に呪いを持っているため付与できない" % enemy_name)
+		print("【戦闘終了時効果】%s は既に刻印を持っているため付与できない" % enemy_name)
 		return ""
 	
 	# 刻印付与
@@ -300,7 +300,7 @@ static func _apply_curse_effect(self_participant, enemy_participant, effect: Dic
 		"params": {}
 	}
 	
-	print("【戦闘終了時効果】%s が %s に呪い\"%s\"を付与" % [self_name, enemy_name, curse_name])
+	print("【戦闘終了時効果】%s が %s に刻印\"%s\"を付与" % [self_name, enemy_name, curse_name])
 	return curse_name
 
 
@@ -457,10 +457,10 @@ static func _is_effect_nullified_by_enemy(effect: Dictionary, enemy_data: Dictio
 
 
 # =============================================================================
-# 衰弱（Plague）呪いダメージ処理
+# 衰弱（Plague）刻印ダメージ処理
 # =============================================================================
 
-## 衰弱呪いをチェックしてダメージを適用
+## 衰弱刻印をチェックしてダメージを適用
 ## @param self_participant 衰弱を持っている可能性のある参加者
 ## @param enemy_participant 相手（ハングドマンズシール無効化チェック用）
 ## @return Dictionary {triggered: bool, damage: int, destroyed: bool, old_hp: int, new_hp: int}
@@ -479,7 +479,7 @@ static func _process_plague_damage(self_participant, enemy_participant) -> Dicti
 	
 	var creature_data = self_participant.creature_data
 	
-	# 呪いチェック
+	# 刻印チェック
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type") != "plague":
 		return result

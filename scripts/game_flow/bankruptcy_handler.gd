@@ -26,7 +26,7 @@ signal bankruptcy_info_panel_hide_requested()
 var player_system: Node = null
 var board_system: Node = null
 var creature_manager: Node = null
-var spell_curse: Node = null  # プレイヤー呪いクリア用
+var spell_curse: Node = null  # プレイヤー刻印クリア用
 var target_selection_helper: Node = null  # 土地選択用
 
 # 状態
@@ -210,7 +210,7 @@ func force_sell_all_and_reset(player_id: int):
 		var diff = RESET_MAGIC - current_magic
 		player_system.add_magic(player_id, diff)
 	
-	# プレイヤー呪いをクリア
+	# プレイヤー刻印をクリア
 	if spell_curse:
 		spell_curse.remove_curse_from_player(player_id)
 	

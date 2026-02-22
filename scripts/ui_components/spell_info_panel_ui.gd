@@ -45,7 +45,7 @@ func set_ui_manager(manager) -> void:
 
 
 ## スペル情報パネルを表示（使用確認モード）
-## restriction_reason: ""=制限なし, "ep"=EP不足, "restriction"=呪い等
+## restriction_reason: ""=制限なし, "ep"=EP不足, "restriction"=刻印等
 ## current_selection_mode: 選択モード（spell, sacrifice, discard等）
 func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_reason: String = "", current_selection_mode: String = "spell", custom_confirmation: String = ""):
 	current_spell_data = spell_data
@@ -68,7 +68,7 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 			ui_manager_ref.clear_confirm_action()
 			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
 	elif restriction_reason == "restriction":
-		# 禁呪呪い等
+		# 禁呪刻印等
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt("%s：使用できません" % spell_name, "right")
 		# 戻るボタンのみ（前パネルの✓を確実にクリア）

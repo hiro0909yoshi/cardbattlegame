@@ -242,7 +242,7 @@ func use_spell(spell_card: Dictionary):
 		return
 	await spell_flow.use_spell(spell_card)
 
-## スペル関連のコンテキストを構築（世界呪い等）
+## スペル関連のコンテキストを構築（世界刻印等）
 func _build_spell_context() -> Dictionary:
 	var context = {}
 	

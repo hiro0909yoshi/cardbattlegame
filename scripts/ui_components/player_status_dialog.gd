@@ -87,9 +87,9 @@ func build_status_text(player_id: int) -> String:
 	text += "[cell][b][color=yellow]基本情報[/color][/b]\n"
 	text += player.name
 	
-	# プレイヤー呪いがあればアイコン表示
+	# プレイヤー刻印があればアイコン表示
 	if player.curse and not player.curse.is_empty():
-		var curse_name = player.curse.get("name", "呪い")
+		var curse_name = player.curse.get("name", "刻印")
 		text += " [" + curse_name + "]"
 	
 	text += "\n"
@@ -125,13 +125,13 @@ func build_status_text(player_id: int) -> String:
 	
 	text += "[/table]\n\n"
 	
-	# 世界呪い情報
+	# 世界刻印情報
 	if game_flow_manager_ref and "game_stats" in game_flow_manager_ref:
 		var world_curse = game_flow_manager_ref.game_stats.get("world_curse", {})
 		if not world_curse.is_empty():
 			var curse_name = world_curse.get("name", "不明")
 			var duration = world_curse.get("duration", 0)
-			text += "[b][color=purple]世界呪い[/color][/b]\n"
+			text += "[b][color=purple]世界刻印[/color][/b]\n"
 			text += curse_name + " (残り" + str(duration) + "R)\n\n"
 	
 	# 土地情報
@@ -169,10 +169,10 @@ func build_status_text(player_id: int) -> String:
 					var creature_name = creature.get("name", "不明")
 					var display_name = creature_name
 					
-					# クリーチャー呪いがあればアイコン表示
+					# クリーチャー刻印があればアイコン表示
 					if creature.has("curse") and not creature.get("curse", {}).is_empty():
 						var curse = creature.get("curse", {})
-						var curse_name = str(curse.get("name", "呪い"))
+						var curse_name = str(curse.get("name", "刻印"))
 						display_name += " [" + curse_name + "]"
 					
 					text += display_name + "  HP: " + str(current_hp) + " / " + str(max_hp) + "  AP: " + str(max_ap) + "\n"

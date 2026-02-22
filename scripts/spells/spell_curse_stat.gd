@@ -381,7 +381,7 @@ func _destroy_creature_on_tile(handler: Node, tile_index: int, creature_name: St
 # 刻印付与（SpellPhaseHandlerから呼ばれる）
 # ========================================
 
-# 能力値上昇呪いを付与
+# 能力値上昇刻印を付与
 func apply_stat_boost(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", 20)
 	var duration = effect.get("duration", -1)
@@ -392,7 +392,7 @@ func apply_stat_boost(tile_index: int, effect: Dictionary):
 		"value": value
 	})
 
-# 能力値減少呪いを付与
+# 能力値減少刻印を付与
 func apply_stat_reduce(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", -20)
 	var duration = effect.get("duration", -1)
@@ -409,7 +409,7 @@ func apply_stat_reduce(tile_index: int, effect: Dictionary):
 # 汎用効果適用（統合版）
 # ========================================
 
-## スペル効果から呪いを適用（統合メソッド）
+## スペル効果から刻印を適用（統合メソッド）
 func apply_curse_from_effect(effect: Dictionary, tile_index: int):
 	var effect_type = effect.get("effect_type", "")
 	
@@ -427,7 +427,7 @@ func apply_curse_from_effect(effect: Dictionary, tile_index: int):
 # バトル時（BattlePreparationから呼ばれる）
 # ========================================
 
-# 呪いをtemporary_effectsに変換
+# 刻印をtemporary_effectsに変換
 func apply_to_creature_data(tile_index: int):
 	var curse = spell_curse.get_creature_curse(tile_index)
 	if curse.is_empty():
@@ -457,7 +457,7 @@ func apply_to_creature_data(tile_index: int):
 				"source": "curse",
 				"source_name": curse.get("name", "")
 			})
-			print("[呪い変換] stat_boost: HP+", value, ", AP+", value)
+			print("[刻印変換] stat_boost: HP+", value, ", AP+", value)
 		
 		"stat_reduce":
 			var value = params.get("value", -20)
@@ -475,4 +475,4 @@ func apply_to_creature_data(tile_index: int):
 				"source": "curse",
 				"source_name": curse.get("name", "")
 			})
-			print("[呪い変換] stat_reduce: HP", value, ", AP", value)
+			print("[刻印変換] stat_reduce: HP", value, ", AP", value)

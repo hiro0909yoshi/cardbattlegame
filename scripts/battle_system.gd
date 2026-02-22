@@ -470,7 +470,7 @@ func _cleanup_battle_temporary_data(participant: BattleParticipant) -> void:
 			if original_kc.has("無効化"):
 				keyword_conditions["無効化"] = original_kc["無効化"].duplicate(true)
 			else:
-				# 元のカードに無効化がない場合（呪いで一時付与されただけ）→ 削除
+				# 元のカードに無効化がない場合（刻印で一時付与されただけ）→ 削除
 				keyword_conditions.erase("無効化")
 				var keywords = ability_parsed.get("keywords", [])
 				if "無効化" in keywords:
@@ -583,7 +583,7 @@ func _apply_post_battle_effects(
 				lap_system.on_creature_destroyed()
 
 			# バウンティハント（賞金）報酬チェック - 攻撃側が敗者
-			# 注: 攻撃側には通常呪いはないが、移動侵略の場合はあり得る
+			# 注: 攻撃側には通常刻印はないが、移動侵略の場合はあり得る
 			await _check_and_apply_bounty_reward(attacker, defender)
 			
 			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
@@ -816,7 +816,7 @@ func _show_land_effect_notification(creature_data: Dictionary, land_effect_resul
 		await _message_service.show_comment_and_wait(text, -1, true)
 
 
-# バウンティハント（賞金）呪いの報酬処理 - SpellMagicに委譲
+# バウンティハント（賞金）刻印の報酬処理 - SpellMagicに委譲
 func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattleParticipant) -> void:
 	if not loser or not loser.creature_data:
 		return

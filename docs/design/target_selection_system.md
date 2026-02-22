@@ -224,7 +224,7 @@ scripts/game_flow/
 - `get_valid_targets_core()` - メイン検索ロジック
 - `get_all_creatures()` - 全クリーチャー取得
 - 各ターゲットタイプ別フィルタリング
-  - creature: 属性、呪い、MHP、ダウン状態など
+  - creature: 属性、刻印、MHP、ダウン状態など
   - player: own/enemy/any
   - land: レベル、属性、距離
   - gate: 未訪問ゲート
@@ -248,8 +248,8 @@ scripts/game_flow/
 |---------|------|-----|
 | `owner_filter` | own/enemy/any | 自/敵/全クリーチャー |
 | `creature_elements` | 属性制限 | ["fire", "water"] |
-| `has_curse` | 呪い付き | エグザイル |
-| `has_no_curse` | 呪いなし | - |
+| `has_curse` | 刻印付き | エグザイル |
+| `has_no_curse` | 刻印なし | - |
 | `has_summon_condition` | 召喚条件あり | サンダークラップ |
 | `no_summon_condition` | 召喚条件なし | エグザイル |
 | `hp_reduced` | HP減少中 | スウォーム |
@@ -299,15 +299,15 @@ if not target_info.get("ignore_protection", false):
 
 ### 結界チェック対象（SpellProtection）
 - パッシブスキル「結界」
-- クリーチャー呪い（spell_protection, protection_wall）
-- プレイヤー呪い（spell_protection）
-- 世界呪い「女教皇」
-- 世界呪い「結界」
+- クリーチャー刻印（spell_protection, protection_wall）
+- プレイヤー刻印（spell_protection）
+- 世界刻印「女教皇」
+- 世界刻印「結界」
 
 ### 堅牢チェック（SpellHpImmune）
 - `target_info.affects_hp = true` のスペルのみ適用
 - パッシブスキル「堅牢」
-- 呪い（hp_effect_immune）
+- 刻印（hp_effect_immune）
 
 ---
 

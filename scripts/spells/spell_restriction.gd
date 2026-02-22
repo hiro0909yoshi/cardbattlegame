@@ -8,9 +8,9 @@ class_name SpellRestriction
 # 解放判定（静的メソッド）
 # ========================================
 
-## 解放呪いを持っているかチェック
+## 解放刻印を持っているかチェック
 ## @param player: プレイヤーデータ（player_system.players[id]）
-## @return bool: 解放呪いを持っているか
+## @return bool: 解放刻印を持っているか
 static func has_restriction_release(player: Dictionary) -> bool:
 	var curse = player.get("curse", {})
 	if curse.is_empty():

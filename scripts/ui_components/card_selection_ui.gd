@@ -317,7 +317,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					else:
 						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 				elif filter_mode == "spell_disabled":
-					# 禁呪呪い中: スペルカードをグレーアウト（アルカナアーツは使用可能）
+					# 禁呪刻印中: スペルカードをグレーアウト（アルカナアーツは使用可能）
 					if card_type == "spell":
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					else:
@@ -479,7 +479,7 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 
 
 # 制限理由を判定（選択可能でも制限がある場合はアイコン表示）
-# 戻り値: "ep"（EP不足/土地条件）, "restriction"（配置制限/呪い等）, ""（制限なし）
+# 戻り値: "ep"（EP不足/土地条件）, "restriction"（配置制限/刻印等）, ""（制限なし）
 func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mode: String, player_id: int, available_magic: int) -> String:
 	# フェーズで使えないカード（タイプ不一致）は制限アイコンなし（グレーアウトのみ）
 	match filter_mode:
@@ -534,7 +534,7 @@ func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mo
 			if creature_type == "defensive":
 				return "restriction"
 	
-	# 禁呪呪い
+	# 禁呪刻印
 	if filter_mode == "spell_disabled" and card_type == "spell":
 		return "restriction"
 	
@@ -1143,7 +1143,7 @@ func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 		if SpellWorldCurse.is_summon_condition_ignored(stats):
 			return true
 	
-	# リリース呪い（解放）が発動中ならOK
+	# リリース刻印（解放）が発動中ならOK
 	if game_flow_manager_ref and game_flow_manager_ref.player_system:
 		var p_system = game_flow_manager_ref.player_system
 		if player_id >= 0 and player_id < p_system.players.size():
@@ -1214,7 +1214,7 @@ func _check_cannot_summon(card_data: Dictionary, player_id: int) -> bool:
 		if SpellWorldCurse.is_summon_condition_ignored(stats):
 			return true
 	
-	# リリース呪い（解放）が発動中ならOK
+	# リリース刻印（解放）が発動中ならOK
 	if game_flow_manager_ref and game_flow_manager_ref.player_system:
 		var p_system = game_flow_manager_ref.player_system
 		if player_id >= 0 and player_id < p_system.players.size():

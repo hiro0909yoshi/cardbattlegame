@@ -59,7 +59,7 @@ battle_execution.gd / battle_skill_processor.gdで処理されるもの。
 | MHP減少 | reduce_enemy_mhp | [x] |
 | 土地レベルアップ | level_up_battle_land | [x] |
 | 帰還 | item_return | [ ] |
-| 崩壊（呪い発動） | self_destruct | [x] |
+| 崩壊（刻印発動） | self_destruct | [x] |
 
 ## Phase 4: 死亡時スキル
 
@@ -85,4 +85,4 @@ battle_execution.gd / battle_skill_processor.gdで処理されるもの。
 
 - 「ステータス変化」に統一するものは、SkillDisplayConfigを使わず直接 `stat_change_name` を使う（変数を使い回す）
 - 固有名を維持するものは個別にSkillDisplayConfigから取得
-- 呪い関連は後回し（別タスク）
+- 刻印関連は後回し（別タスク）

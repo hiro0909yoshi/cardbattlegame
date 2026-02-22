@@ -46,7 +46,7 @@
 	  {
 		"id": "amon_mystic_001",
 		"name": "バイタリティ",
-		"description": "対象ドミニオに呪い\"暁光\"；カードを1枚引く",
+		"description": "対象ドミニオに刻印\"暁光\"；カードを1枚引く",
 		"spell_id": 2066,
 		"cost": 50
 	  }
@@ -210,7 +210,7 @@ scripts/spells/card_selection_handler.gd # 敵手札選択UI（destroy_and_draw�
 scripts/game_flow/spell_phase_handler.gd # アルカナアーツ発動フロー、非同期判定
 scripts/ui_components/spell_and_mystic_ui.gd  # アルカナアーツ選択UI
 scripts/ui_components/card_selection_ui.gd    # カード選択フィルター
-scripts/spells/spell_curse_toll.gd       # 通行料呪いシステム（アルカナアーツから使用）
+scripts/spells/spell_curse_toll.gd       # 通行料刻印システム（アルカナアーツから使用）
 scripts/card_loader.gd                   # スペルデータ読み込み
 data/fire_1.json                         # アモン（既存スペル参照例）
 data/fire_2.json                         # バーナックル（アルカナアーツ専用スペル参照例）
@@ -288,7 +288,7 @@ data/spell_mystic.json                   # アルカナアーツ専用スペル�
 | `damage` | ダメージ適用 | ✅ 実装済み |
 | `curse_toll_half` | 通行料半減 | ✅ バーナックルで確認 |
 | `toll_multiplier` | 通行料倍率 | ✅ 統合処理で対応 |
-| `toll_share`, `toll_disable`, `toll_fixed`, `peace` | その他通行料呪い | ✅ 統合処理で対応 |
+| `toll_share`, `toll_disable`, `toll_fixed`, `peace` | その他通行料刻印 | ✅ 統合処理で対応 |
 
 ---
 

@@ -119,7 +119,7 @@ func _create_restriction_label():
 
 
 # 制限理由を設定
-# reason: "ep"（EP不足/土地条件）, "restriction"（配置制限/呪い等）, ""（制限なし）
+# reason: "ep"（EP不足/土地条件）, "restriction"（配置制限/刻印等）, ""（制限なし）
 func set_restriction_reason(reason: String):
 	restriction_reason = reason
 	_update_restriction_display()
@@ -137,7 +137,7 @@ func _update_restriction_display():
 			restriction_label.text = "🚫"
 			restriction_label.visible = true
 		"restriction":
-			# 配置制限 / 禁呪呪い等 - 「🚫」のみ
+			# 配置制限 / 禁呪刻印等 - 「🚫」のみ
 			restriction_e_label.visible = false
 			restriction_label.text = "🚫"
 			restriction_label.visible = true

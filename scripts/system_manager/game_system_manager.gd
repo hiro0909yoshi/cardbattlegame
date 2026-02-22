@@ -470,7 +470,7 @@ func phase_4_setup_system_interconnections() -> void:
 				# player_systemをmetaに設定（同盟判定用、LandSelectionHelper/MovementHelper で使用）
 				if player_system:
 					board_system_3d.set_meta("player_system", player_system)
-				# tile_data_managerにも参照を渡す（表示用通行料のタイル呪い補正で使用）
+				# tile_data_managerにも参照を渡す（表示用通行料のタイル刻印補正で使用）
 				if board_system_3d.tile_data_manager:
 					board_system_3d.tile_data_manager.spell_curse_toll = spell_curse_toll
 					# === game_stats直接参照も設定（チェーンアクセス解消） ===

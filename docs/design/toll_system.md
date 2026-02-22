@@ -37,10 +37,10 @@ end_turn()内の処理順:
 4. ★敵地判定・支払い実行 ← ここで統一
    - check_and_pay_toll_on_enemy_land()
    - 敵地なら支払い、自ドミニオ・スタートなら支払いなし
-   ★通行料呪いを判定・計算
-	 - SpellCurseToll.calculate_final_toll()で呪い判定
-	 - セプター呪い（toll_disable, toll_fixed, toll_share）
-	 - ドミニオ呪い（toll_multiplier, peace）を適用
+   ★通行料刻印を判定・計算
+	 - SpellCurseToll.calculate_final_toll()で刻印判定
+	 - セプター刻印（toll_disable, toll_fixed, toll_share）
+	 - ドミニオ刻印（toll_multiplier, peace）を適用
 	 - 主通行料 + 副収入を支払い
 5. ターン終了処理・次ターン
 ```
@@ -58,29 +58,29 @@ end_turn()内の処理順:
 - board_system_ref.tile_data_manager.calculate_level_up_cost()で動的計算
 - show_level_selection()・_calculate_level_up_cost()実装
 
-### 7. spell_curse_toll.gd - 通行料呪いシステム
-**通行料計算に呪いを適用**
+### 7. spell_curse_toll.gd - 通行料刻印システム
+**通行料計算に刻印を適用**
 - `apply_toll_share()`: 敵の通行料50%獲得（ドリームトレイン）
 - `apply_toll_disable()`: 支払わない（パードン）
 - `apply_toll_fixed()`: 支払い固定値（ユニフォーミティ）
 - `apply_toll_multiplier()`: クリーチャーの通行料倍率（グリード）
 - `apply_peace()`: 敵移動除外＋戦闘不可＋通行料0（ピース）
-- `apply_invasion_disable()`: 侵略無効化（セプター呪い）
-- `apply_toll_half_curse()`: 通行料半減（ドミニオ呪い）
+- `apply_invasion_disable()`: 侵略無効化（セプター刻印）
+- `apply_toll_half_curse()`: 通行料半減（ドミニオ刻印）
 - `apply_creature_toll_disable()`: クリーチャーの免罪化
-- `apply_curse_from_effect()`: 効果辞書からの呪い適用（汎用）
+- `apply_curse_from_effect()`: 効果辞書からの刻印適用（汎用）
 
 **統合的な計算メソッド**
 ```
 calculate_final_toll(tile_index, payer_id, receiver_id, base_toll)
   ↓
-1. ドミニオ呪いチェック（peace, toll_multiplier）
+1. ドミニオ刻印チェック（peace, toll_multiplier）
    ├─ peace → 通行料=0
    └─ toll_multiplier → 倍率適用
-2. セプター呪いチェック（支払い側）
+2. セプター刻印チェック（支払い側）
    ├─ toll_disable → 支払い=0
    └─ その他
-3. セプター呪いチェック（受取側）
+3. セプター刻印チェック（受取側）
    ├─ toll_fixed → 固定値
    ├─ toll_share → 副収入計算
    └─ その他
@@ -118,17 +118,17 @@ calculate_final_toll(tile_index, payer_id, receiver_id, base_toll)
 
 ---
 
-## 補足：通行料呪いとの統合
+## 補足：通行料刻印との統合
 
-通行料呪い（`docs/design/spells/通行料呪い.md`）は本システムの **上位レイヤー** として機能：
+通行料刻印（`docs/design/spells/通行料刻印.md`）は本システムの **上位レイヤー** として機能：
 
 | 処理段階 | 役割 |
 |---------|------|
 | **基本計算** | tile_data_manager.calculate_toll() → base_toll |
-| **呪い適用** ← **新規** | spell_curse_toll.calculate_final_toll() → 最終通行料 + 副収入 |
+| **刻印適用** ← **新規** | spell_curse_toll.calculate_final_toll() → 最終通行料 + 副収入 |
 | **支払い実行** | player_system.pay_toll() |
 
-**詳細は `docs/design/spells/通行料呪い.md` を参照**
+**詳細は `docs/design/spells/通行料刻印.md` を参照**
 
 ---
 
@@ -138,7 +138,7 @@ SpellCurseTollは本来「通行料」システムだが、以下の理由で**�
 
 ### 統合の理由
 
-1. **既存のpeace呪い**: 「敵の移動侵略を防ぐ」効果が既にSpellCurseTollで実装済み
+1. **既存のpeace刻印**: 「敵の移動侵略を防ぐ」効果が既にSpellCurseTollで実装済み
 2. **チェック箇所の一元化**: 侵略可否の判定は複数箇所（通常移動、スペル移動、移動先候補算出）で必要
 3. **参照の容易さ**: SpellCurseTollは board_system のメタデータとして各所から参照可能
 
@@ -147,7 +147,7 @@ SpellCurseTollは本来「通行料」システムだが、以下の理由で**�
 | メソッド | 対象 | 効果 |
 |---------|------|------|
 | `has_peace_curse()` | 土地 | その土地への侵略を防ぐ |
-| `has_peace_curse_on_land()` | 土地 | 土地のピース呪いをチェック |
+| `has_peace_curse_on_land()` | 土地 | 土地のピース刻印をチェック |
 | `is_invasion_disabled()` | 土地 | その土地への侵略が無効か |
 | `is_player_invasion_disabled()` | プレイヤー | そのプレイヤーが休戦 |
 | `is_creature_invasion_immune()` | クリーチャー | そのクリーチャーが鉄壁 |
@@ -165,7 +165,7 @@ SpellCurseTollは本来「通行料」システムだが、以下の理由で**�
 
 - 通行料と直接関係のない侵略判定がSpellCurseTollに含まれる
 - 将来的にリファクタリングする場合は「InvasionChecker」等への分離を検討
-- 現状は既存のpeace呪い実装との一貫性を優先
+- 現状は既存のpeace刻印実装との一貫性を優先
 
 ---
 

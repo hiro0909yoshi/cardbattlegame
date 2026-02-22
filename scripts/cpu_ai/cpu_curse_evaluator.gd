@@ -1,14 +1,14 @@
 class_name CpuCurseEvaluator
 extends RefCounted
 
-## 呪い効果の有利/不利を判定するクラス
-## CPU AIが呪いの上書き判断を行うために使用
+## 刻印効果の有利/不利を判定するクラス
+## CPU AIが刻印の上書き判断を行うために使用
 
 # =============================================================================
 # 定数定義
 # =============================================================================
 
-## クリーチャーにとって有利な呪い（所有者視点）
+## クリーチャーにとって有利な刻印（所有者視点）
 const BENEFICIAL_CREATURE_CURSES: Array[String] = [
 	"stat_boost",           # 暁光
 	"mystic_grant",         # アルカナアーツ付与
@@ -27,7 +27,7 @@ const BENEFICIAL_CREATURE_CURSES: Array[String] = [
 	"peace",                # 安寧（休戦＝防御）
 ]
 
-## クリーチャーにとって不利な呪い（所有者視点）
+## クリーチャーにとって不利な刻印（所有者視点）
 const HARMFUL_CREATURE_CURSES: Array[String] = [
 	"curse_toll_half",      # 通行料半減
 	"stat_reduce",          # 衰月
@@ -43,7 +43,7 @@ const HARMFUL_CREATURE_CURSES: Array[String] = [
 	"creature_toll_disable", # クリーチャー免罪
 ]
 
-## プレイヤーにとって有利な呪い
+## プレイヤーにとって有利な刻印
 const BENEFICIAL_PLAYER_CURSES: Array[String] = [
 	"dice_fixed",           # ダイス固定
 	"dice_range",           # ダイス範囲
@@ -52,7 +52,7 @@ const BENEFICIAL_PLAYER_CURSES: Array[String] = [
 	"toll_share",           # 通行料共有
 ]
 
-## プレイヤーにとって不利な呪い
+## プレイヤーにとって不利な刻印
 const HARMFUL_PLAYER_CURSES: Array[String] = [
 	"dice_range_magic",     # 範囲+EP（制限付き）
 	"toll_disable",         # 免罪
@@ -62,11 +62,11 @@ const HARMFUL_PLAYER_CURSES: Array[String] = [
 ]
 
 # =============================================================================
-# クリーチャー呪い判定
+# クリーチャー刻印判定
 # =============================================================================
 
-## クリーチャーの呪いが所有者にとって有利かどうか判定
-## 戻り値: 1=有利, -1=不利, 0=呪いなし/不明
+## クリーチャーの刻印が所有者にとって有利かどうか判定
+## 戻り値: 1=有利, -1=不利, 0=刻印なし/不明
 static func get_creature_curse_benefit(creature: Dictionary) -> int:
 	var curse = creature.get("curse", {})
 	if curse.is_empty():
@@ -79,10 +79,10 @@ static func get_creature_curse_benefit(creature: Dictionary) -> int:
 	elif curse_type in HARMFUL_CREATURE_CURSES:
 		return -1
 	
-	return 0  # 不明な呪いタイプ
+	return 0  # 不明な刻印タイプ
 
 
-## CPUから見てクリーチャーの呪い状態が望ましいかどうか判定
+## CPUから見てクリーチャーの刻印状態が望ましいかどうか判定
 ## 戻り値: true=望ましい状態（上書きすべきでない）, false=上書きしてよい
 static func is_curse_state_desirable_for_cpu(cpu_id: int, creature_owner_id: int, creature: Dictionary, player_system = null) -> bool:
 	var benefit = get_creature_curse_benefit(creature)
@@ -96,7 +96,7 @@ static func is_curse_state_desirable_for_cpu(cpu_id: int, creature_owner_id: int
 		return benefit < 0
 
 
-## 不利な呪いのターゲットとして適切か判定
+## 不利な刻印のターゲットとして適切か判定
 ## 戻り値: true=ターゲットとして適切
 static func is_valid_harmful_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary, player_system = null) -> bool:
 	if _is_ally(cpu_id, creature_owner_id, player_system):
@@ -107,7 +107,7 @@ static func is_valid_harmful_curse_target(cpu_id: int, creature_owner_id: int, c
 	return true
 
 
-## 有利な呪いのターゲットとして適切か判定
+## 有利な刻印のターゲットとして適切か判定
 ## 戻り値: true=ターゲットとして適切
 static func is_valid_beneficial_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary, player_system = null) -> bool:
 	if not _is_ally(cpu_id, creature_owner_id, player_system):
@@ -118,11 +118,11 @@ static func is_valid_beneficial_curse_target(cpu_id: int, creature_owner_id: int
 	return true
 
 # =============================================================================
-# プレイヤー呪い判定
+# プレイヤー刻印判定
 # =============================================================================
 
-## プレイヤーの呪いが有利かどうか判定
-## 戻り値: 1=有利, -1=不利, 0=呪いなし/不明
+## プレイヤーの刻印が有利かどうか判定
+## 戻り値: 1=有利, -1=不利, 0=刻印なし/不明
 static func get_player_curse_benefit(player_curse: Dictionary) -> int:
 	if player_curse.is_empty():
 		return 0
@@ -137,10 +137,10 @@ static func get_player_curse_benefit(player_curse: Dictionary) -> int:
 	return 0
 
 
-## CPUから見てプレイヤーの呪い状態が望ましいかどうか判定
+## CPUから見てプレイヤーの刻印状態が望ましいかどうか判定
 ## cpu_id: CPUのプレイヤーID
 ## target_player_id: ターゲットプレイヤーID
-## player_curse: プレイヤー呪いデータ
+## player_curse: プレイヤー刻印データ
 ## player_system: PlayerSystemオブジェクト（チーム判定用、デフォルト: null）
 static func is_player_curse_desirable_for_cpu(cpu_id: int, target_player_id: int, player_curse: Dictionary, player_system = null) -> bool:
 	var benefit = get_player_curse_benefit(player_curse)
@@ -151,15 +151,15 @@ static func is_player_curse_desirable_for_cpu(cpu_id: int, target_player_id: int
 	var is_self = _is_ally(cpu_id, target_player_id, player_system)
 
 	if is_self:
-		return benefit > 0  # 自分/同盟に有利な呪い → 望ましい
+		return benefit > 0  # 自分/同盟に有利な刻印 → 望ましい
 	else:
-		return benefit < 0  # 敵に不利な呪い → 望ましい
+		return benefit < 0  # 敵に不利な刻印 → 望ましい
 
 # =============================================================================
-# 呪い解除スペル用判定
+# 刻印解除スペル用判定
 # =============================================================================
 
-## 自クリーチャーに不利な呪いがあるかチェック
+## 自クリーチャーに不利な刻印があるかチェック
 ## cpu_id: CPUのプレイヤーID
 ## creatures: クリーチャー情報の配列
 ## player_system: PlayerSystemオブジェクト（チーム判定用、デフォルト: null）
@@ -184,7 +184,7 @@ static func has_harmful_curse_on_own_creatures(cpu_id: int, creatures: Array[Dic
 	return false
 
 
-## CPUプレイヤー自身に不利な呪いがあるかチェック
+## CPUプレイヤー自身に不利な刻印があるかチェック
 static func has_harmful_curse_on_self(player_curse: Dictionary) -> bool:
 	return get_player_curse_benefit(player_curse) < 0
 

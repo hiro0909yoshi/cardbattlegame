@@ -28,9 +28,9 @@ var spell_phase_handler = null  # Node ツリーの参照（GC対象外）
 # Phase C-8: GFM逆参照解消
 var _lock_input_cb: Callable = Callable()
 var _unlock_input_cb: Callable = Callable()
-var _spell_curse_stat = null  # SpellCurseStat: ステータス呪い
+var _spell_curse_stat = null  # SpellCurseStat: ステータス刻印
 var _game_stats = null  # game_stats 辞書
-var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果（互換性用）
+var spell_curse_stat = null  # SpellCurseStat: 刻印ステータス効果（互換性用）
 
 # === TapTargetManager直接注入（Phase 11-B: UIManager経由アクセス除去） ===
 var _tap_target_manager: TapTargetManager = null
@@ -836,7 +836,7 @@ func get_available_creatures(player_id: int) -> Array:
 		if tile.is_down():
 			continue
 		
-		# アルカナアーツを取得（元々のアルカナアーツ + 呪いからのアルカナアーツ）
+		# アルカナアーツを取得（元々のアルカナアーツ + 刻印からのアルカナアーツ）
 		var mystic_arts = get_all_mystic_arts(tile.creature_data)
 		
 		# 使用可能なアルカナアーツのみフィルタリング
@@ -869,7 +869,7 @@ func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, play
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
 		
-		# 移動系アルカナアーツで枷呪いを持っている場合は使用不可
+		# 移動系アルカナアーツで枷刻印を持っている場合は使用不可
 		if effect_type in ["move_self", "move_steps", "move_to_adjacent_enemy"]:
 			var curse = creature_data.get("curse", {})
 			if curse.get("curse_type", "") == "move_disable":
@@ -884,7 +884,7 @@ func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, play
 	return true
 
 
-## クリーチャーのアルカナアーツ一覧を取得（元々のアルカナアーツ + 呪いからのアルカナアーツ）
+## クリーチャーのアルカナアーツ一覧を取得（元々のアルカナアーツ + 刻印からのアルカナアーツ）
 func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 	if creature_data.is_empty():
 		return []
@@ -892,7 +892,7 @@ func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 	return get_all_mystic_arts(creature_data)
 
 
-## 全アルカナアーツを取得（ability_parsed + 呪いの両方）
+## 全アルカナアーツを取得（ability_parsed + 刻印の両方）
 func get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	var all_mystic_arts: Array = []
 	
@@ -917,7 +917,7 @@ func get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	if not single_art.is_empty():
 		all_mystic_arts.append(single_art)
 	
-	# 2. 呪いから付与されたアルカナアーツ
+	# 2. 刻印から付与されたアルカナアーツ
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type", "") == "mystic_grant":
 		var params = curse.get("params", {})
@@ -934,7 +934,7 @@ func get_all_mystic_arts(creature_data: Dictionary) -> Array:
 					"spell_id": spell_id
 				}
 				all_mystic_arts.append(mystic_art)
-				print("[アルカナアーツ取得] 呪いからアルカナアーツ付与: ", mystic_art.get("name"), " (spell_id: ", spell_id, ")")
+				print("[アルカナアーツ取得] 刻印からアルカナアーツ付与: ", mystic_art.get("name"), " (spell_id: ", spell_id, ")")
 			else:
 				print("[アルカナアーツ取得] spell_id ", spell_id, " のカードが見つかりません")
 		else:
@@ -1171,7 +1171,7 @@ func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Obje
 		caster_tile.set_down(true)
 
 
-## 奮闘スキルまたは奮闘呪いを持つか確認
+## 奮闘スキルまたは奮闘刻印を持つか確認
 func _has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -1181,7 +1181,7 @@ func _has_unyielding(creature_data: Dictionary) -> bool:
 	if "奮闘" in ability_detail:
 		return true
 	
-	# 2. 奮闘呪い判定
+	# 2. 奮闘刻印判定
 	if SpellMovement.has_indomitable_curse(creature_data):
 		return true
 	

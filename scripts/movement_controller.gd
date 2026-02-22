@@ -558,7 +558,7 @@ func _set_player_came_from(player_id: int, tile: int) -> void:
 	player_system.players[player_id].came_from = tile
 
 
-## 反転呪いが解除された時に呼ばれる
+## 反転刻印が解除された時に呼ばれる
 func on_movement_reverse_curse_removed(player_id: int) -> void:
 	swap_came_from_for_reverse(player_id)
 

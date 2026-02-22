@@ -214,9 +214,9 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 			var enemy_abilities = context.get("enemy_abilities", [])
 			return "堅守" in enemy_abilities
 		
-		# マーク判定（呪いシステムで実装）
+		# マーク判定（刻印システムで実装）
 		"has_mark":
-			# 敵クリーチャーが呪いを持っているかチェック
+			# 敵クリーチャーが刻印を持っているかチェック
 			var enemy_creature_data = context.get("enemy_creature_data", {})
 			if enemy_creature_data.is_empty():
 				return false
@@ -435,7 +435,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"enemy_name": game_state.get("enemy_name", defender_data.get("name", "")),
 		"enemy_ap": defender_data.get("ap", 0),
 		"enemy_mhp": game_state.get("enemy_mhp_override", defender_data.get("mhp", 0)),
-		"enemy_creature_data": defender_data,  # 敵クリーチャーの完全なデータ（呪い判定用）
+		"enemy_creature_data": defender_data,  # 敵クリーチャーの完全なデータ（刻印判定用）
 		
 		# アイテム情報
 		"equipped_item": attacker_data.get("equipped_item", {}),

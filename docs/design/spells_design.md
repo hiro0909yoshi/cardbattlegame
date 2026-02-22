@@ -36,11 +36,11 @@ GameFlowManager
       ├─ spell_magic: SpellMagic        # EP増減 ✅
       ├─ spell_land: SpellLand          # 土地操作 ✅
       ├─ spell_dice: SpellDice          # ダイス操作 ✅
-      ├─ spell_curse: SpellCurse        # 呪い管理 ✅
-      ├─ spell_curse_stat: SpellCurseStat (Node)  # ステータス呪い ✅
-      ├─ spell_world_curse: SpellWorldCurse (Node) # 世界呪い ✅
+      ├─ spell_curse: SpellCurse        # 刻印管理 ✅
+      ├─ spell_curse_stat: SpellCurseStat (Node)  # ステータス刻印 ✅
+      ├─ spell_world_curse: SpellWorldCurse (Node) # 世界刻印 ✅
       ├─ spell_player_move: SpellPlayerMove  # プレイヤー移動 ✅
-      ├─ spell_curse_toll: SpellCurseToll    # 通行料呪い ✅
+      ├─ spell_curse_toll: SpellCurseToll    # 通行料刻印 ✅
       └─ spell_cost_modifier: SpellCostModifier  # コスト修正 ✅
 
 SpellPhaseHandler
@@ -80,11 +80,11 @@ scripts/spells/              # スペル効果モジュール
   ├── spell_magic.gd        # EP増減 ✅
   ├── spell_land_new.gd     # 土地操作 ✅
   ├── spell_dice.gd         # ダイス操作 ✅
-  ├── spell_curse.gd        # 呪い管理 ✅
-  ├── spell_curse_stat.gd        # ステータス呪い ✅
-  ├── spell_world_curse.gd       # 世界呪い ✅
+  ├── spell_curse.gd        # 刻印管理 ✅
+  ├── spell_curse_stat.gd        # ステータス刻印 ✅
+  ├── spell_world_curse.gd       # 世界刻印 ✅
   ├── spell_player_move.gd       # プレイヤー移動 ✅
-  ├── spell_curse_toll.gd        # 通行料呪い ✅
+  ├── spell_curse_toll.gd        # 通行料刻印 ✅
   └── spell_cost_modifier.gd     # コスト修正 ✅
 
 docs/design/spells/          # 個別スペル効果のドキュメント
@@ -93,7 +93,7 @@ docs/design/spells/          # 個別スペル効果のドキュメント
   ├── ドミニオ変更.md          # 土地操作の詳細 ✅
   ├── ダイス操作.md        # ダイス操作の詳細 ✅
   ├── ステータス増減.md    # ステータス増減の詳細 ✅
-  └── 呪い効果.md          # 呪いシステム全体の詳細 ✅
+  └── 刻印効果.md          # 刻印システム全体の詳細 ✅
 ```
 
 ---
@@ -115,10 +115,10 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 | 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
 |-------|-----------------|------------|----------------|
 | **ステータス増減** | [spell_curse_stat.gd](../../scripts/spells/spell_curse_stat.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |
-| **世界呪い** | [spell_world_curse.gd](../../scripts/spells/spell_world_curse.gd) | 5個 | [呪い効果.md](./spells/呪い効果.md) |
-| **プレイヤー移動** | [spell_player_move.gd](../../scripts/spells/spell_player_move.gd) | 3個 | [呪い効果.md](./spells/呪い効果.md) |
-| **通行料呪い** | [spell_curse_toll.gd](../../scripts/spells/spell_curse_toll.gd) | 4個 | [呪い効果.md](./spells/呪い効果.md) |
-| **コスト修正** | [spell_cost_modifier.gd](../../scripts/spells/spell_cost_modifier.gd) | 3個 | [呪い効果.md](./spells/呪い効果.md) |
+| **世界刻印** | [spell_world_curse.gd](../../scripts/spells/spell_world_curse.gd) | 5個 | [刻印効果.md](./spells/刻印効果.md) |
+| **プレイヤー移動** | [spell_player_move.gd](../../scripts/spells/spell_player_move.gd) | 3個 | [刻印効果.md](./spells/刻印効果.md) |
+| **通行料刻印** | [spell_curse_toll.gd](../../scripts/spells/spell_curse_toll.gd) | 4個 | [刻印効果.md](./spells/刻印効果.md) |
+| **コスト修正** | [spell_cost_modifier.gd](../../scripts/spells/spell_cost_modifier.gd) | 3個 | [刻印効果.md](./spells/刻印効果.md) |
 
 ---
 
@@ -192,11 +192,11 @@ Card.gd (scripts/)
 
 ---
 
-### 呪い（継続効果）システム ⏳
+### 刻印（継続効果）システム ⏳
 
 **概要**: 複数ターンにわたってプレイヤー/クリーチャー/土地/世界全体にかかる効果。
 
-**呪いの種類**:
+**刻印の種類**:
 
 | 対象 | 消滅条件 | 例 |
 |------|---------|-----|
@@ -204,7 +204,7 @@ Card.gd (scripts/)
 | プレイヤー | ターン経過・上書き | 結界(5R)、免罪 |
 | 世界呪 | 上書き・消滅スペル | 太陽(6R) |
 
-**重要**: クリーチャーの呪いは**移動でも消える**
+**重要**: クリーチャーの刻印は**移動でも消える**
 
 **上書きルール**: 同じ効果が再度かかった場合、新しい効果で上書き（前の効果は消滅）
 
@@ -367,8 +367,8 @@ var targets = TargetSelectionHelper.get_all_creatures(board_system, {
 
 ### Phase 4: SpellEffectSystem実装 ⏳
 - [x] `scripts/spell_curse.gd`作成
-- [x] 呪い管理システム（tile/player/world）
-- [x] ターン経過による呪い削除処理
+- [x] 刻印管理システム（tile/player/world）
+- [x] ターン経過による刻印削除処理
 - [ ] 30個の特殊能力付与スペル実装
 
 ### Phase 5: SpellDice実装 ⏳
@@ -456,7 +456,7 @@ var targets = TargetSelectionHelper.get_all_creatures(board_system, {
 	 ```
 
 3. **`docs/design/spells_design.md`** ← このドキュメント
-   - 該当する特殊システム（密命、呪い等）のセクションに条件を追記
+   - 該当する特殊システム（密命、刻印等）のセクションに条件を追記
    - 利用可能な条件タイプ表を更新
 
 4. **`scripts/skills/skill_effect_base.gd`**

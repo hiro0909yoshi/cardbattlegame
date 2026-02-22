@@ -420,7 +420,7 @@ DominioOrderHandler
   └─ LandActionHelper.confirm_move()
 	   ├─ 空き地の場合 → クリーチャー移動、土地獲得
 	   └─ 敵ドミニオの場合
-			├─ peace呪いチェック等
+			├─ peace刻印チェック等
 			├─ pending_move_battle_* に情報保存
 			├─ ItemPhaseHandler.start_item_phase()（攻撃側アイテム）
 			├─ ItemPhaseHandler.start_item_phase()（防御側アイテム）

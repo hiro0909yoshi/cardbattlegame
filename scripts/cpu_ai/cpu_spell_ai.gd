@@ -149,11 +149,11 @@ func _get_usable_spells(player_id: int) -> Array:
 	var magic = player_system.get_magic(player_id)
 	var spells = []
 
-	# プレイヤー呪いをチェック - 禁呪状態
+	# プレイヤー刻印をチェック - 禁呪状態
 	var player = player_system.players[player_id] if player_id < player_system.players.size() else null
 	if player and SpellProtection.is_player_spell_disabled(player, {}):
 		# 禁呪状態 → 使用可能なスペルなし
-		print("[CPUSpellAI] プレイヤー%dは禁呪の呪いがかかっています" % player_id)
+		print("[CPUSpellAI] プレイヤー%dは禁呪の刻印がかかっています" % player_id)
 		return []
 
 	for card in hand:
@@ -319,7 +319,7 @@ func _evaluate_condition(spell: Dictionary, context: Dictionary, base_score: flo
 	if target.is_empty():
 		return {"should_use": false, "score": 0.0, "target": null}
 	
-	# ターゲットスコアが負の場合は使用しない（有利な呪いを上書きしたくない等）
+	# ターゲットスコアが負の場合は使用しない（有利な刻印を上書きしたくない等）
 	if target_score < 0:
 		return {"should_use": false, "score": target_score, "target": null}
 	

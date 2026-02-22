@@ -98,7 +98,7 @@ UIManager は5つのサービスを公開プロパティとして提供:
 | `is_movement_selection_active()` | movement_controller | 移動選択中か |
 | `restore_movement_selector_navigation()` | movement_controller | 移動選択ナビ復元 |
 | `swap_came_from_for_reverse()` | movement_controller | 逆走用came_from交換 |
-| `on_movement_reverse_curse_removed()` | movement_controller | 逆走呪い解除時 |
+| `on_movement_reverse_curse_removed()` | movement_controller | 逆走刻印解除時 |
 
 ### タイル表示（tile_info_display 委譲）
 | メソッド | 委譲先 | 用途 |
@@ -113,7 +113,7 @@ UIManager は5つのサービスを公開プロパティとして提供:
 |---------|--------|------|
 | `set_tile_level(tile_index, level)` | tile_data_manager | レベル設定 |
 | `calculate_level_up_cost(current, target)` | tile_data_manager | レベルアップコスト計算 |
-| `calculate_toll_with_curse(tile_index)` | tile_data_manager | 呪い込み通行料計算 |
+| `calculate_toll_with_curse(tile_index)` | tile_data_manager | 刻印込み通行料計算 |
 
 ### 特殊タイル（special_tile_system 委譲）
 | メソッド | 委譲先 | 用途 |

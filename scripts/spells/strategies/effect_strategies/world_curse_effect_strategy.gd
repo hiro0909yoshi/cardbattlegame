@@ -1,4 +1,4 @@
-## WorldCurseEffectStrategy - 世界呪い効果の戦略実装
+## WorldCurseEffectStrategy - 世界刻印効果の戦略実装
 ## world_curse (1個)
 class_name WorldCurseEffectStrategy
 extends SpellStrategy
@@ -58,7 +58,7 @@ func execute(context: Dictionary) -> Dictionary:
 	spell_world_curse.apply(effect)
 
 	# ★ NEW: effect_message を構築
-	var effect_message = "ワールド呪い発動"
+	var effect_message = "ワールド刻印発動"
 
 	_log("効果実行完了")
 

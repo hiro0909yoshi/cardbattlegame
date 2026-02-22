@@ -62,7 +62,7 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	# 結界・堅牢フィルタは get_valid_targets_core 内で適用される
 	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
 	
-	# 呪いスペルの場合、追加のフィルタリングを適用
+	# 刻印スペルの場合、追加のフィルタリングを適用
 	if target_type == "creature" and target_resolver:
 		var curse_info = target_resolver.analyze_curse_spell(spell)
 		if curse_info.is_curse:
@@ -78,7 +78,7 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 func _filter_spell_immune_targets(targets: Array, spell: Dictionary) -> Array:
 	var effect_parsed = spell.get("effect_parsed", {})
 	
-	# 世界呪いコンテキスト構築
+	# 世界刻印コンテキスト構築
 	var context = _build_world_curse_context()
 	
 	var filtered = []
@@ -100,7 +100,7 @@ func _filter_spell_immune_targets(targets: Array, spell: Dictionary) -> Array:
 	
 	return filtered
 
-## 世界呪いコンテキストを構築
+## 世界刻印コンテキストを構築
 func _build_world_curse_context() -> Dictionary:
 	var context = {}
 	# 直接参照を優先
@@ -117,7 +117,7 @@ func select_best_target_with_score(targets: Array, spell: Dictionary, context: D
 	var damage_value = context.get("damage_value", 0)
 	var is_damage_spell = damage_value > 0
 	
-	# 呪いスペルかどうか判定
+	# 刻印スペルかどうか判定
 	var curse_info = _analyze_curse_spell(spell)
 	print("[SpellAI] curse_info: %s (spell: %s)" % [str(curse_info), spell.get("name", "?")])
 	
@@ -171,7 +171,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			var damage_ratio = float(damage_value) / float(current_hp)
 			score += min(damage_ratio, 1.0)  # 最大+1.0
 	
-	# 呪いスペルの場合、既存の呪い状態でスコア調整
+	# 刻印スペルの場合、既存の刻印状態でスコア調整
 	if curse_info.get("is_curse", false):
 		score += _calculate_curse_overwrite_score(creature, player_id, owner_id, curse_info.get("is_beneficial", false))
 	
@@ -265,9 +265,9 @@ func _get_creature_element_by_id(creature_id: int) -> String:
 	return ""
 
 
-## 呪い上書きスコアを計算
-## 敵の有利な呪いを消す / 自分の不利な呪いを消す → +150
-## 敵の不利な呪いを消す / 自分の有利な呪いを消す → -300
+## 刻印上書きスコアを計算
+## 敵の有利な刻印を消す / 自分の不利な刻印を消す → +150
+## 敵の不利な刻印を消す / 自分の有利な刻印を消す → -300
 func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, _spell_is_beneficial: bool) -> float:
 	var curse_benefit = CpuCurseEvaluator.get_creature_curse_benefit(creature)
 	var is_own = player_system.is_same_team(player_id, owner_id)
@@ -276,30 +276,30 @@ func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owne
 	if curse_benefit != 0:
 		if is_own:
 			if curse_benefit > 0:
-				score = -300.0  # 自分の有利な呪いを消したくない
+				score = -300.0  # 自分の有利な刻印を消したくない
 			else:
-				score = 150.0   # 不利な呪いを消したい
+				score = 150.0   # 不利な刻印を消したい
 		else:
 			if curse_benefit > 0:
-				score = 150.0   # 敵の有利な呪いを消したい
+				score = 150.0   # 敵の有利な刻印を消したい
 			else:
-				score = -300.0  # 敵の不利な呪いを残したい
+				score = -300.0  # 敵の不利な刻印を残したい
 	
 	# デバッグログ
 	var creature_name = creature.get("name", "?")
-	print("[SpellAI] 呪いスコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
+	print("[SpellAI] 刻印スコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
 	
 	return score
 
 
-## スペルが呪いスペルかどうか判定し、有利/不利を返す
+## スペルが刻印スペルかどうか判定し、有利/不利を返す
 func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 	var result = {"is_curse": false, "is_beneficial": false}
 	
 	var effect_parsed = spell_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
 	
-	# 呪い系のeffect_type（有利 - 自クリーチャー向け）
+	# 刻印系のeffect_type（有利 - 自クリーチャー向け）
 	const BENEFICIAL_CURSE_EFFECTS = [
 		"command_growth_curse",  # 昇華
 		"remote_move",           # 天駆
@@ -314,7 +314,7 @@ func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 		"metal_form",            # 硬化
 	]
 	
-	# 呪い系のeffect_type（不利 - 敵クリーチャー向け）
+	# 刻印系のeffect_type（不利 - 敵クリーチャー向け）
 	const HARMFUL_CURSE_EFFECTS = [
 		"skill_nullify",         # スキル無効
 		"battle_disable",        # 戦闘不能
@@ -1102,7 +1102,7 @@ func _is_defensive_creature(creature_data: Dictionary) -> bool:
 		var keywords = ability_parsed.get("keywords", [])
 		if "堅守" in keywords:
 			return true
-	# 呪いによる堅守付与（マジックシェルター等）
+	# 刻印による堅守付与（マジックシェルター等）
 	var curse = creature_data.get("curse", {})
 	var curse_params = curse.get("params", {})
 	if curse_params.get("defensive_form", false):

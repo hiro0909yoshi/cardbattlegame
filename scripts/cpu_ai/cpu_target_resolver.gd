@@ -3,7 +3,7 @@
 class_name CPUTargetResolver
 extends RefCounted
 
-## 呪い判別クラス
+## 刻印判別クラス
 const CurseEvaluator = preload("res://scripts/cpu_ai/cpu_curse_evaluator.gd")
 
 ## 参照
@@ -289,7 +289,7 @@ func _get_element_mismatch_enemy_creatures(context: Dictionary) -> Array:
 
 	return results
 
-## 呪い付きクリーチャーを取得
+## 刻印付きクリーチャーを取得
 func _get_cursed_creatures(_context: Dictionary) -> Array:
 	var results = []
 	
@@ -304,7 +304,7 @@ func _get_cursed_creatures(_context: Dictionary) -> Array:
 	
 	return results
 
-## 呪い付き敵クリーチャーを取得
+## 刻印付き敵クリーチャーを取得
 func _get_cursed_enemy_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
@@ -620,7 +620,7 @@ func _get_creatures_with_summon_condition(context: Dictionary) -> Array:
 
 	return results
 
-## 呪いもアルカナアーツも持たないクリーチャーを取得
+## 刻印もアルカナアーツも持たないクリーチャーを取得
 func _get_creatures_without_curse_or_mystic(_context: Dictionary) -> Array:
 	var results = []
 	
@@ -968,11 +968,11 @@ func _get_own_without_land_bonus(context: Dictionary) -> Array:
 	return board_analyzer.get_own_without_land_bonus(player_id)
 
 # =============================================================================
-# 呪いスペル用フィルタリング
+# 刻印スペル用フィルタリング
 # =============================================================================
 
-## 呪いスペルのターゲット候補をフィルタリング
-## curse_is_beneficial: 付与する呪いが有利(true)か不利(false)か
+## 刻印スペルのターゲット候補をフィルタリング
+## curse_is_beneficial: 付与する刻印が有利(true)か不利(false)か
 ## targets: ターゲット候補のリスト
 ## context: コンテキスト（player_idを含む）
 ## 戻り値: フィルタリング後のターゲットリスト
@@ -990,11 +990,11 @@ func filter_curse_spell_targets(curse_is_beneficial: bool, targets: Array, conte
 		var owner_id = _get_tile_owner(tile_index)
 		
 		if curse_is_beneficial:
-			# 有利な呪いを付ける場合
+			# 有利な刻印を付ける場合
 			if CpuCurseEvaluator.is_valid_beneficial_curse_target(player_id, owner_id, creature, player_system):
 				filtered.append(target)
 		else:
-			# 不利な呪いを付ける場合
+			# 不利な刻印を付ける場合
 			if CpuCurseEvaluator.is_valid_harmful_curse_target(player_id, owner_id, creature, player_system):
 				filtered.append(target)
 	
@@ -1012,7 +1012,7 @@ func _get_tile_owner(tile_index: int) -> int:
 	return -1
 
 
-## スペルが呪いスペルかどうか判定し、有利/不利を返す
+## スペルが刻印スペルかどうか判定し、有利/不利を返す
 ## 戻り値: {"is_curse": bool, "is_beneficial": bool}
 func analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 	var result = {"is_curse": false, "is_beneficial": false}
@@ -1024,7 +1024,7 @@ func analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 		var effect_type = effect.get("effect_type", "")
 		var curse_type = effect.get("curse_type", "")
 		
-		# 呪い関連のeffect_typeをチェック
+		# 刻印関連のeffect_typeをチェック
 		if effect_type in ["creature_curse", "player_curse", "apply_curse", 
 						   "skill_nullify", "battle_disable", "plague_curse",
 						   "toll_multiplier", "peace", "forced_stop",

@@ -1,4 +1,4 @@
-# CPU呪い判別システム
+# CPU刻印判別システム
 
 **作成日**: 2025年1月12日  
 **実装ファイル**: `scripts/cpu_ai/cpu_curse_evaluator.gd`
@@ -7,18 +7,18 @@
 
 ## 概要
 
-CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの有利/不利を判別して適切なターゲット選択や上書き判断を行うためのシステム。
+CPU AIが刻印スペル/アルカナアーツを使用する際に、刻印の有利/不利を判別して適切なターゲット選択や上書き判断を行うためのシステム。
 
 ---
 
 ## 背景
 
-呪いは1つの対象に1つしか存在できない（上書き方式）。そのため、CPUが呪いスペルを使う際に：
+刻印は1つの対象に1つしか存在できない（上書き方式）。そのため、CPUが刻印スペルを使う際に：
 
-- 自クリーチャーの有利な呪いを上書きしてしまう
-- 敵クリーチャーの不利な呪いを上書きしてしまう
+- 自クリーチャーの有利な刻印を上書きしてしまう
+- 敵クリーチャーの不利な刻印を上書きしてしまう
 
-という問題が発生しうる。これを防ぐために呪いの有利/不利判別が必要。
+という問題が発生しうる。これを防ぐために刻印の有利/不利判別が必要。
 
 ---
 
@@ -28,16 +28,16 @@ CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの�
 
 | 状況 | 判定 |
 |-----|------|
-| 自クリーチャーに有利な呪い | 望ましい → 上書きしない |
-| 自クリーチャーに不利な呪い | 望ましくない → 上書きOK |
-| 敵クリーチャーに有利な呪い | 望ましくない → 上書きOK |
-| 敵クリーチャーに不利な呪い | 望ましい → 上書きしない |
+| 自クリーチャーに有利な刻印 | 望ましい → 上書きしない |
+| 自クリーチャーに不利な刻印 | 望ましくない → 上書きOK |
+| 敵クリーチャーに有利な刻印 | 望ましくない → 上書きOK |
+| 敵クリーチャーに不利な刻印 | 望ましい → 上書きしない |
 
 ---
 
-## 呪い分類一覧
+## 刻印分類一覧
 
-### クリーチャー呪い
+### クリーチャー刻印
 
 #### 有利 (所有者視点)
 | curse_type | 名前 | 効果 |
@@ -73,7 +73,7 @@ CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの�
 | `move_disable` | 枷 | 移動できない |
 | `creature_toll_disable` | クリーチャー免罪 | そのクリーチャーの通行料が0 |
 
-### プレイヤー呪い
+### プレイヤー刻印
 
 #### 有利
 | curse_type | 名前 | 効果 |
@@ -81,7 +81,7 @@ CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの�
 | `dice_fixed` | ダイス固定 | ダイスを固定値にする |
 | `dice_range` | ダイス範囲 | ダイスを範囲内にする |
 | `protection` | 結界 | スペルの対象にならない |
-| `life_force` | 天使 | クリーチャーとアイテム0EP、スペル無効化で呪い消滅 |
+| `life_force` | 天使 | クリーチャーとアイテム0EP、スペル無効化で刻印消滅 |
 | `toll_share` | 通行料共有 | 他セプターの通行料の50%を得る |
 
 #### 不利
@@ -104,23 +104,23 @@ CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの�
 ### 主要関数
 
 ```gdscript
-# クリーチャーの呪いが所有者にとって有利かどうか
-# 戻り値: 1=有利, -1=不利, 0=呪いなし/不明
+# クリーチャーの刻印が所有者にとって有利かどうか
+# 戻り値: 1=有利, -1=不利, 0=刻印なし/不明
 CpuCurseEvaluator.get_creature_curse_benefit(creature: Dictionary) -> int
 
 # CPUにとって望ましい状態か（上書きすべきでないか）
 CpuCurseEvaluator.is_curse_state_desirable_for_cpu(cpu_id: int, creature_owner_id: int, creature: Dictionary) -> bool
 
-# 不利な呪いスペルのターゲットとして適切か
+# 不利な刻印スペルのターゲットとして適切か
 CpuCurseEvaluator.is_valid_harmful_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary) -> bool
 
-# 有利な呪いスペルのターゲットとして適切か
+# 有利な刻印スペルのターゲットとして適切か
 CpuCurseEvaluator.is_valid_beneficial_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary) -> bool
 
-# プレイヤー呪いの有利/不利判定
+# プレイヤー刻印の有利/不利判定
 CpuCurseEvaluator.get_player_curse_benefit(player_curse: Dictionary) -> int
 
-# 呪い解除スペル使用判断用
+# 刻印解除スペル使用判断用
 CpuCurseEvaluator.has_harmful_curse_on_own_creatures(cpu_id: int, creatures: Array) -> bool
 CpuCurseEvaluator.has_harmful_curse_on_self(player_curse: Dictionary) -> bool
 ```
@@ -131,13 +131,13 @@ CpuCurseEvaluator.has_harmful_curse_on_self(player_curse: Dictionary) -> bool
 
 | ファイル | 用途 |
 |---------|------|
-| `cpu_target_resolver.gd` | 呪いスペルのターゲット選択時にフィルタ |
-| `cpu_spell_condition_checker.gd` | 呪い解除スペルの使用判断 |
+| `cpu_target_resolver.gd` | 刻印スペルのターゲット選択時にフィルタ |
+| `cpu_spell_condition_checker.gd` | 刻印解除スペルの使用判断 |
 | `cpu_mystic_arts_ai.gd` | 刻印付与アルカナアーツの使用判断 |
 
 ---
 
 ## 関連ドキュメント
 
-- [呪い効果](../spells/呪い効果.md) - 呪いシステム全体の仕様
-- [呪い効果の有利/不利分類](../spells/curse_benefit_classification.md) - 分類の詳細
+- [刻印効果](../spells/刻印効果.md) - 刻印システム全体の仕様
+- [刻印効果の有利/不利分類](../spells/curse_benefit_classification.md) - 分類の詳細

@@ -143,7 +143,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	else:
 		cost = cost_data
 	
-	# エンジェルギフト呪いチェック（クリーチャーコスト0化）
+	# エンジェルギフト刻印チェック（クリーチャーコスト0化）
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
