@@ -1,706 +1,706 @@
 {
   "cards": [
-    {
-      "id": 427,
-      "name": "トロイ",
-      "dev_name": "トロージャンホース",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 30
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具",
-          "武器",
+	{
+	  "id": 427,
+	  "name": "トロイ",
+	  "dev_name": "トロージャンホース",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 30
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "防具",
+		  "武器",
           "巻物"
-        ]
-      },
-      "ap": 0,
-      "hp": 30,
-      "ability": "刺突・加勢",
-      "ability_detail": "刺突；加勢",
-      "ability_parsed": {
-        "keywords": [
-          "刺突",
+		]
+	  },
+	  "ap": 0,
+	  "hp": 30,
+	  "ability": "刺突・加勢",
+	  "ability_detail": "刺突；加勢",
+	  "ability_parsed": {
+		"keywords": [
+		  "刺突",
           "加勢"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
+		],
+		"keyword_conditions": {
+		  "加勢": {
+			"target_elements": [
               "all"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 428,
-      "name": "セラフィム",
-      "dev_name": "ニルーバーナ",
-      "rarity": "R",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 70,
-        "cards_sacrifice": 1
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "加勢・先制・アルカナアーツ",
-      "ability_detail": "加勢[無]；先制；アルカナアーツ[EP100・呪いのついた全クリーチャーのHP-20]",
-      "ability_parsed": {
-        "keywords": [
-          "加勢",
-          "先制",
+			]
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 428,
+	  "name": "セラフィム",
+	  "dev_name": "ニルーバーナ",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 70,
+		"cards_sacrifice": 1
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "加勢・先制・アルカナアーツ",
+	  "ability_detail": "加勢[無]；先制；アルカナアーツ[EP100・呪いのついた全クリーチャーのHP-20]",
+	  "ability_parsed": {
+		"keywords": [
+		  "加勢",
+		  "先制",
           "アルカナアーツ"
-        ],
-        "keyword_conditions": {
-          "加勢": {
-            "target_elements": [
+		],
+		"keyword_conditions": {
+		  "加勢": {
+			"target_elements": [
               "neutral"
-            ]
-          }
-        },
-        "mystic_arts": [
-          {
-            "name": "カースブラスト",
-            "description": "呪い付き全クリーチャーのHP-20",
-            "spell_id": 9008,
-            "cost": 100
-          }
-        ]
-      }
-    },
-    {
-      "id": 429,
-      "name": "ニンジャ",
-      "dev_name": "ニンジャ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "先制・術強化",
-      "ability_detail": "先制；術強化",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
+			]
+		  }
+		},
+		"mystic_arts": [
+		  {
+			"name": "カースブラスト",
+			"description": "呪い付き全クリーチャーのHP-20",
+			"spell_id": 9008,
+			"cost": 100
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 429,
+	  "name": "ニンジャ",
+	  "dev_name": "ニンジャ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 70
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "先制・術強化",
+	  "ability_detail": "先制；術強化",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
           "術強化"
-        ],
-        "keyword_conditions": {
-          "術強化": {
-            "scroll_type": "base_ap"
-          }
-        }
-      }
-    },
-    {
-      "id": 430,
-      "name": "ハーフリング",
-      "dev_name": "ハーフリング",
-      "rarity": "R",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 50
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "全属性地形効果・結界",
-      "ability_detail": "どの属性の土地からも地形効果を得る；結界",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"keyword_conditions": {
+		  "術強化": {
+			"scroll_type": "base_ap"
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 430,
+	  "name": "ハーフリング",
+	  "dev_name": "ハーフリング",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 50
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "全属性地形効果・結界",
+	  "ability_detail": "どの属性の土地からも地形効果を得る；結界",
+	  "ability_parsed": {
+		"keywords": [
           "結界"
-        ],
-        "effects": [],
-        "extra_land_elements": [
-          "fire",
-          "water",
-          "earth",
+		],
+		"effects": [],
+		"extra_land_elements": [
+		  "fire",
+		  "water",
+		  "earth",
           "wind"
-        ]
-      }
-    },
-    {
-      "id": 431,
-      "name": "ブギーマン",
-      "dev_name": "ハイドビハインド",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 40
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP40・対象自クリーチャーに呪い\"地形効果\"]",
-      "mystic_arts": {
-        "cost": 40,
-        "spell_id": 9019
-      }
-    },
-    {
-      "id": 432,
-      "name": "カメレオン",
-      "dev_name": "バルダンダース",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 20
-      },
-      "ap": 0,
-      "hp": 30,
-      "ability": "変身",
-      "ability_detail": "変身[ランダム]",
-      "ability_parsed": {
-        "keywords": [
+		]
+	  }
+	},
+	{
+	  "id": 431,
+	  "name": "ブギーマン",
+	  "dev_name": "ハイドビハインド",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 40
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP40・対象自クリーチャーに呪い\"地形効果\"]",
+	  "mystic_arts": {
+		"cost": 40,
+		"spell_id": 9019
+	  }
+	},
+	{
+	  "id": 432,
+	  "name": "カメレオン",
+	  "dev_name": "バルダンダース",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 20
+	  },
+	  "ap": 0,
+	  "hp": 30,
+	  "ability": "変身",
+	  "ability_detail": "変身[ランダム]",
+	  "ability_parsed": {
+		"keywords": [
           "変身"
-        ],
-        "effects": [
-          {
-            "effect_type": "transform",
-            "trigger": "on_battle_start",
-            "target": "self",
-            "transform_type": "random",
-            "revert_after_battle": true
-          }
-        ]
-      }
-    },
-    {
-      "id": 433,
-      "name": "マローダー",
-      "dev_name": "バンディット",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 20
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "加勢・吸魔",
-      "ability_detail": "加勢；吸魔[敵に与えたダメージ×2EP]",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_battle_start",
+			"target": "self",
+			"transform_type": "random",
+			"revert_after_battle": true
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 433,
+	  "name": "マローダー",
+	  "dev_name": "バンディット",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 20
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "加勢・吸魔",
+	  "ability_detail": "加勢；吸魔[敵に与えたダメージ×2EP]",
+	  "ability_parsed": {
+		"keywords": [
           "加勢"
-        ],
-        "effects": [
-          {
-            "effect_type": "magic_steal_on_damage",
-            "multiplier": 2
-          }
-        ]
-      }
-    },
-    {
-      "id": 434,
-      "name": "ウロボロス",
-      "dev_name": "ビーストギア",
-      "rarity": "R",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 40
-      },
-      "restrictions": {
-        "cannot_use": [
+		],
+		"effects": [
+		  {
+			"effect_type": "magic_steal_on_damage",
+			"multiplier": 2
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 434,
+	  "name": "ウロボロス",
+	  "dev_name": "ビーストギア",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 40
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "無効化・結界",
-      "ability_detail": "無効化[巻物]；結界",
-      "ability_parsed": {
-        "keywords": [
-          "無効化",
+		]
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "無効化・結界",
+	  "ability_detail": "無効化[巻物]；結界",
+	  "ability_parsed": {
+		"keywords": [
+		  "無効化",
           "結界"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "scroll_attack"
-          }
-        }
-      }
-    },
-    {
-      "id": 435,
-      "name": "ファイター",
-      "dev_name": "ファイター",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 30
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 436,
-      "name": "バード",
-      "dev_name": "ボージェス",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 40
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "鼓舞",
-      "ability_detail": "鼓舞[無・HP+20]",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 435,
+	  "name": "ファイター",
+	  "dev_name": "ファイター",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 30
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "",
+	  "ability_detail": ""
+	},
+	{
+	  "id": 436,
+	  "name": "バード",
+	  "dev_name": "ボージェス",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 40
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "鼓舞",
+	  "ability_detail": "鼓舞[無・HP+20]",
+	  "ability_parsed": {
+		"keywords": [
           "鼓舞"
-        ],
-        "effects": [
-          {
-            "effect_type": "support",
-            "target": {
-              "scope": "all_creatures",
-              "conditions": [
-                {
-                  "condition_type": "element",
-                  "elements": [
+		],
+		"effects": [
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "element",
+				  "elements": [
                     "neutral"
-                  ]
-                }
-              ]
-            },
-            "bonus": {
-              "hp": 20
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 437,
-      "name": "ジャガーノート",
-      "dev_name": "ミゴール",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 40,
-        "cards_sacrifice": 1
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "強化・無効化",
-      "ability_detail": "強化[水地]；無効化[火風]",
-      "ability_parsed": {
-        "keywords": [
-          "強化",
+				  ]
+				}
+			  ]
+			},
+			"bonus": {
+			  "hp": 20
+			}
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 437,
+	  "name": "ジャガーノート",
+	  "dev_name": "ミゴール",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 40,
+		"cards_sacrifice": 1
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "強化・無効化",
+	  "ability_detail": "強化[水地]；無効化[火風]",
+	  "ability_parsed": {
+		"keywords": [
+		  "強化",
           "無効化"
-        ],
-        "keyword_conditions": {
-          "強化": {
-            "condition_type": "enemy_is_element",
-            "elements": [
-              "water",
+		],
+		"keyword_conditions": {
+		  "強化": {
+			"condition_type": "enemy_is_element",
+			"elements": [
+			  "water",
               "earth"
-            ]
-          },
-          "無効化": {
-            "nullify_type": "element",
-            "elements": [
-              "fire",
+			]
+		  },
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": [
+			  "fire",
               "wind"
-            ]
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "power_strike",
-            "multiplier": 1.5,
-            "conditions": [
-              {
-                "condition_type": "enemy_is_element",
-                "elements": [
-                  "water",
+			]
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": [
+				  "water",
                   "earth"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 438,
-      "name": "レリックメイル",
-      "dev_name": "リビングアーマー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 0,
-      "hp": 40,
-      "ability": "レリック・戦闘中AP上昇",
-      "ability_detail": "レリック；クリーチャーとして戦闘中、AP+50",
-      "ability_parsed": {
-        "keywords": [
+				]
+			  }
+			]
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 438,
+	  "name": "レリックメイル",
+	  "dev_name": "リビングアーマー",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 70
+	  },
+	  "ap": 0,
+	  "hp": 40,
+	  "ability": "レリック・戦闘中AP上昇",
+	  "ability_detail": "レリック；クリーチャーとして戦闘中、AP+50",
+	  "ability_parsed": {
+		"keywords": [
           "レリック"
-        ],
-        "effects": [
-          {
-            "effect_type": "as_creature_bonus",
-            "stat_changes": {
-              "ap": 50
-            },
-            "description": "クリーチャーとして戦闘時AP+50"
-          }
-        ]
-      }
-    },
-    {
-      "id": 439,
-      "name": "レリックアムル",
-      "dev_name": "リビングアムル",
-      "rarity": "R",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 20,
-      "hp": 10,
-      "ability": "レリック・蘇生",
-      "ability_detail": "レリック；敵武器不使用時、蘇生[リビングアムル]",
-      "ability_parsed": {
-        "keywords": [
-          "レリック",
+		],
+		"effects": [
+		  {
+			"effect_type": "as_creature_bonus",
+			"stat_changes": {
+			  "ap": 50
+			},
+			"description": "クリーチャーとして戦闘時AP+50"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 439,
+	  "name": "レリックアムル",
+	  "dev_name": "リビングアムル",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 60
+	  },
+	  "ap": 20,
+	  "hp": 10,
+	  "ability": "レリック・蘇生",
+	  "ability_detail": "レリック；敵武器不使用時、蘇生[リビングアムル]",
+	  "ability_parsed": {
+		"keywords": [
+		  "レリック",
           "蘇生"
-        ],
-        "effects": [
-          {
-            "effect_type": "item_creature",
-            "trigger": "on_use_as_item",
-            "stat_bonus": {
-              "ap": 20,
-              "hp": 10
-            }
-          },
-          {
-            "effect_type": "revive",
-            "trigger": "on_death",
-            "revive_type": "conditional",
-            "creature_id": 439,
-            "condition": {
-              "type": "enemy_item_not_used",
-              "item_category": "武器"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 440,
-      "name": "レリックグローブ",
-      "dev_name": "リビングクローブ",
-      "rarity": "R",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 70
-      },
-      "ap": 0,
-      "hp": 30,
-      "ability": "レリック・AP&HP計算",
-      "ability_detail": "レリック；AP&HP=他属性の配置数×5",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"effects": [
+		  {
+			"effect_type": "item_creature",
+			"trigger": "on_use_as_item",
+			"stat_bonus": {
+			  "ap": 20,
+			  "hp": 10
+			}
+		  },
+		  {
+			"effect_type": "revive",
+			"trigger": "on_death",
+			"revive_type": "conditional",
+			"creature_id": 439,
+			"condition": {
+			  "type": "enemy_item_not_used",
+			  "item_category": "武器"
+			}
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 440,
+	  "name": "レリックグローブ",
+	  "dev_name": "リビングクローブ",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 70
+	  },
+	  "ap": 0,
+	  "hp": 30,
+	  "ability": "レリック・AP&HP計算",
+	  "ability_detail": "レリック；AP&HP=他属性の配置数×5",
+	  "ability_parsed": {
+		"keywords": [
           "レリック"
-        ],
-        "effects": [
-          {
-            "effect_type": "other_element_count",
-            "multiplier": 5,
-            "exclude_neutral": true,
-            "stat_changes": {
-              "ap": true,
-              "hp": true
-            },
-            "description": "AP&HP=他属性の配置数×5"
-          }
-        ]
-      }
-    },
-    {
-      "id": 441,
-      "name": "レリックヘルム",
-      "dev_name": "リビングヘルム",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 50
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "レリック",
-      "ability_detail": "レリック",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"effects": [
+		  {
+			"effect_type": "other_element_count",
+			"multiplier": 5,
+			"exclude_neutral": true,
+			"stat_changes": {
+			  "ap": true,
+			  "hp": true
+			},
+			"description": "AP&HP=他属性の配置数×5"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 441,
+	  "name": "レリックヘルム",
+	  "dev_name": "リビングヘルム",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 50
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "レリック",
+	  "ability_detail": "レリック",
+	  "ability_parsed": {
+		"keywords": [
           "レリック"
-        ],
-        "effects": []
-      }
-    },
-    {
-      "id": 442,
-      "name": "ボム",
-      "dev_name": "リビングボム",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 60
-      },
-      "ap": 10,
-      "hp": 30,
-      "ability": "レリック・相討",
-      "ability_detail": "レリック；相討[HP20以下]",
-      "ability_parsed": {
-        "keywords": [
-          "レリック",
+		],
+		"effects": []
+	  }
+	},
+	{
+	  "id": 442,
+	  "name": "ボム",
+	  "dev_name": "リビングボム",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 60
+	  },
+	  "ap": 10,
+	  "hp": 30,
+	  "ability": "レリック・相討",
+	  "ability_detail": "レリック；相討[HP20以下]",
+	  "ability_parsed": {
+		"keywords": [
+		  "レリック",
           "相討"
-        ],
-        "effects": [
-          {
-            "effect_type": "self_destruct_with_revenge",
-            "trigger": "on_hp_threshold",
-            "hp_threshold": 20,
-            "description": "自分のHP20以下で即死＋相討"
-          }
-        ]
-      }
-    },
-    {
-      "id": 443,
-      "name": "ジョーカー",
-      "dev_name": "ルナティックヘア",
-      "rarity": "R",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 30
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "戦闘後能力交換",
-      "ability_detail": "戦闘後、敵のAPとMHPを交換",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "swap_ap_mhp",
-            "trigger": "on_battle_end",
-            "target": "enemy"
-          }
-        ]
-      }
-    },
-    {
-      "id": 444,
-      "name": "センチネル",
-      "dev_name": "レジェンドファロス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 50,
-        "cards_sacrifice": 1
-      },
-      "restrictions": {
-        "cannot_use": [
+		],
+		"effects": [
+		  {
+			"effect_type": "self_destruct_with_revenge",
+			"trigger": "on_hp_threshold",
+			"hp_threshold": 20,
+			"description": "自分のHP20以下で即死＋相討"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 443,
+	  "name": "ジョーカー",
+	  "dev_name": "ルナティックヘア",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 30
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "戦闘後能力交換",
+	  "ability_detail": "戦闘後、敵のAPとMHPを交換",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "swap_ap_mhp",
+			"trigger": "on_battle_end",
+			"target": "enemy"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 444,
+	  "name": "センチネル",
+	  "dev_name": "レジェンドファロス",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 50,
+		"cards_sacrifice": 1
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "防具"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 40,
-      "hp": 50,
-      "ability": "堅守・周回回復不可・アルカナアーツ",
-      "ability_detail": "堅守；周回回復不可；アルカナアーツ[EP80・隣接空地にスタチューを配置]",
-      "ability_parsed": {
-        "keywords": [
-          "堅守",
-          "周回回復不可",
+		]
+	  },
+	  "creature_type": "defensive",
+	  "ap": 40,
+	  "hp": 50,
+	  "ability": "堅守・周回回復不可・アルカナアーツ",
+	  "ability_detail": "堅守；周回回復不可；アルカナアーツ[EP80・隣接空地にスタチューを配置]",
+	  "ability_parsed": {
+		"keywords": [
+		  "堅守",
+		  "周回回復不可",
           "アルカナアーツ"
-        ],
-        "mystic_arts": [
-          {
-            "name": "スタチュー配置",
-            "cost": 80,
-            "spell_id": 9056
-          }
-        ]
-      }
-    },
-    {
-      "id": 445,
-      "name": "ゴブリンシャーマン",
-      "dev_name": "レッドキャップ",
-      "race": "ゴブリン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 30,
-        "cards_sacrifice": 1
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "AP&HP計算・鼓舞",
-      "ability_detail": "AP&HP=ゴブリン配置数×20；鼓舞[ゴブリン・AP+20]",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"mystic_arts": [
+		  {
+			"name": "スタチュー配置",
+			"cost": 80,
+			"spell_id": 9056
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 445,
+	  "name": "ゴブリンシャーマン",
+	  "dev_name": "レッドキャップ",
+	  "race": "ゴブリン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 30,
+		"cards_sacrifice": 1
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "AP&HP計算・鼓舞",
+	  "ability_detail": "AP&HP=ゴブリン配置数×20；鼓舞[ゴブリン・AP+20]",
+	  "ability_parsed": {
+		"keywords": [
           "鼓舞"
-        ],
-        "effects": [
-          {
-            "effect_type": "race_creature_stat_replace",
-            "target_race": "ゴブリン",
-            "multiplier": 20,
-            "include_self": true
-          },
-          {
-            "effect_type": "support",
-            "target": {
-              "scope": "all_creatures",
-              "conditions": [
-                {
-                  "condition_type": "race",
-                  "race": "ゴブリン"
-                }
-              ]
-            },
-            "bonus": {
-              "ap": 20
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 446,
-      "name": "ストーンジャイアント",
-      "dev_name": "ロックタイタン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 90
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具",
-          "巻物",
-          "アクセサリ",
+		],
+		"effects": [
+		  {
+			"effect_type": "race_creature_stat_replace",
+			"target_race": "ゴブリン",
+			"multiplier": 20,
+			"include_self": true
+		  },
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "race",
+				  "race": "ゴブリン"
+				}
+			  ]
+			},
+			"bonus": {
+			  "ap": 20
+			}
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 446,
+	  "name": "ストーンジャイアント",
+	  "dev_name": "ロックタイタン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 90
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "防具",
+		  "巻物",
+		  "アクセサリ",
           "武器"
-        ]
-      },
-      "ap": 70,
-      "hp": 70,
-      "ability": "戦闘後能力値減少",
-      "ability_detail": "戦闘後、AP&MHP-10",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "after_battle_permanent_change",
-            "trigger": "on_battle_end",
-            "target": "self",
-            "stat_changes": {
-              "ap": -10,
-              "max_hp": -10
-            },
-            "description": "戦闘後、AP&MHP-10（永続）"
-          }
-        ]
-      }
-    },
-    {
-      "id": 447,
-      "name": "パリメント",
-      "dev_name": "ワンダーウォール",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 10,
-        "cards_sacrifice": 1
-      },
-      "restrictions": {
-        "cannot_use": [
-          "防具",
+		]
+	  },
+	  "ap": 70,
+	  "hp": 70,
+	  "ability": "戦闘後能力値減少",
+	  "ability_detail": "戦闘後、AP&MHP-10",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "after_battle_permanent_change",
+			"trigger": "on_battle_end",
+			"target": "self",
+			"stat_changes": {
+			  "ap": -10,
+			  "max_hp": -10
+			},
+			"description": "戦闘後、AP&MHP-10（永続）"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 447,
+	  "name": "パリメント",
+	  "dev_name": "ワンダーウォール",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 10,
+		"cards_sacrifice": 1
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "防具",
           "武器"
-        ]
-      },
-      "creature_type": "defensive",
-      "ap": 0,
-      "hp": 30,
-      "ability": "堅守・無効化",
-      "ability_detail": "堅守；無効化[火水風地]",
-      "ability_parsed": {
-        "keywords": [
+		]
+	  },
+	  "creature_type": "defensive",
+	  "ap": 0,
+	  "hp": 30,
+	  "ability": "堅守・無効化",
+	  "ability_detail": "堅守；無効化[火水風地]",
+	  "ability_parsed": {
+		"keywords": [
           "無効化"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "element",
-            "elements": [
-              "fire",
-              "water",
-              "wind",
+		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": [
+			  "fire",
+			  "water",
+			  "wind",
               "earth"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 450,
-      "name": "コボルト",
-      "dev_name": "コボルト",
-      "race": "コボルト",
-      "rarity": "C",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 20
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 448,
-      "name": "ホムンクルス",
-      "dev_name": "ブリードカード",
-      "rarity": "S",
-      "type": "creature",
-      "element": "neutral",
-      "cost": {
-        "ep": 0
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "",
-      "ability_detail": ""
-    }
+			]
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 450,
+	  "name": "コボルト",
+	  "dev_name": "コボルト",
+	  "race": "コボルト",
+	  "rarity": "C",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 20
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "",
+	  "ability_detail": ""
+	},
+	{
+	  "id": 448,
+	  "name": "ホムンクルス",
+	  "dev_name": "ブリードカード",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "neutral",
+	  "cost": {
+		"ep": 0
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "",
+	  "ability_detail": ""
+	}
   ]
 }

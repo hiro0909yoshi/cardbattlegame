@@ -1,1974 +1,1974 @@
 {
   "cards": [
-	{
-	  "id": 2065,
-	  "name": "バーニングベイル",
-	  "dev_name": "バーニングベイル",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "全水風のHP-20",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "any",
-		  "creature_elements": [
-			"water",
+    {
+      "id": 2065,
+      "name": "フレア",
+      "dev_name": "バーニングベイル",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "全水風のHP-20",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any",
+          "creature_elements": [
+            "water",
             "wind"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 20
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "water_wind_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2066,
-	  "name": "バイタリティ",
-	  "dev_name": "バイタリティ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "対象ドミニオに呪い\"暁光\"(戦闘中、AP&HP+20)；カードを1枚引く",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "stat_boost",
-			"name": "暁光",
-			"value": 20,
-			"duration": -1
-		  },
-		  {
-			"effect_type": "draw",
-			"count": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2067,
-	  "name": "ライズアップ",
-	  "dev_name": "ライズアップ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象ドミニオに呪い\"奮闘\"(5R間、奮闘を得る)",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "indomitable",
-			"name": "奮闘",
-			"duration": 5
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2068,
-	  "name": "ディスペア",
-	  "dev_name": "ディスペア",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象ドミニオに呪い\"消沈\"",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "battle_disable",
-			"name": "消沈",
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2069,
-	  "name": "バウンティハント",
-	  "dev_name": "バウンティハント",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "対象ドミニオに呪い\"賞金\"(移動・交換不可、武器で破壊した場合30EP0)",
-	  "effect_parsed": {
-		"target_type": "land",
-		"target_info": {
-		  "owner_filter": "enemy",
-		  "has_creature": true
-		},
-		"effects": [
-		  {
-			"effect_type": "bounty_curse",
-			"name": "賞金",
-			"reward": 300,
-			"requires_weapon": true,
-			"prevent_move": true,
-			"prevent_swap": true,
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2070,
-	  "name": "トゥルース",
-	  "dev_name": "トゥルース",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数特殊能力付与",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "全セプターに呪い\"休戦\"(2R間、侵略できない)",
-	  "effect_parsed": {
-		"target_type": "all_players",
-		"effects": [
-		  {
-			"effect_type": "player_curse",
-			"curse_type": "invasion_disable",
-			"name": "休戦",
-			"duration": 2
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "self_has_creatures",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2071,
-	  "name": "ブレス",
-	  "dev_name": "ブレス",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "対象セプターに呪い\"祝福\"(5R間、スペルの対象に選べない)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "target_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "player_curse",
-			"curse_type": "spell_protection",
-			"name": "祝福",
-			"description": "スペルの対象にならない",
-			"duration": 5
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "self_player",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2072,
-	  "name": "ピース",
-	  "dev_name": "ピース",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "対象ドミニオに呪い\"安寧\"(侵略を受けず、通行料は0EP)",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"effects": [
-		  {
-			"effect_type": "peace",
-			"name": "安寧",
-			"invasion_disable": true,
-			"toll_zero": true,
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2073,
-	  "name": "ピュアリファイ",
-	  "dev_name": "ピュアリファイ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "全呪いを消し、消した呪いの種類×50EPを得る",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "purify_all"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "has_any_curse",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2074,
-	  "name": "ファイアーシフト",
-	  "dev_name": "ファイアーシフト",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "対象自ドミニオを火に変える",
-	  "effect_parsed": {
-		"target_type": "own_land",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "change_element",
-			"element": "fire"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "element_mismatch",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2075,
-	  "name": "ファットボディ",
-	  "dev_name": "ファットボディ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象クリーチャーのMHP+20、AP-20",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"effects": [
-		  {
-			"effect_type": "permanent_hp_change",
-			"value": 20
-		  },
-		  {
-			"effect_type": "permanent_ap_change",
-			"value": -20
-		  }
-		],
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2076,
-	  "name": "フィアー",
-	  "dev_name": "フィアー",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "対象セプターの最もMHPの低いクリーチャーを手札に戻す",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "return_to_hand",
-			"select_by": "lowest_mhp"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_player_with_creatures",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2077,
-	  "name": "フィロソフィー",
-	  "dev_name": "フィロソフィー",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "合成を持つカードが手札にある場合、カードを3枚引く；無い場合、カードを2枚引く",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "check_hand_synthesis",
-			"success_effect": {
-			  "effect_type": "draw_cards",
-			  "count": 3
-			},
-			"fail_effect": {
-			  "effect_type": "draw_cards",
-			  "count": 2
-			}
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2078,
-	  "name": "フォーサイト",
-	  "dev_name": "フォーサイト",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "自ブックの上6枚を見て、好きな1枚を引く",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "draw_from_deck_selection",
-			"look_count": 6
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2079,
-	  "name": "フォームポータル",
-	  "dev_name": "フォームポータル",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 140
-	  },
-	  "effect": "最も近いゲートに飛ぶ",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "warp_to_nearest_gate"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "nearest_checkpoint_unvisited",
-		"priority": "high"
-	  }
-	},
-	{
-	  "id": 2080,
-	  "name": "フライ",
-	  "dev_name": "フライ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "使用者の次のダイスを3つにする",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "dice_multi",
-			"count": 3,
-			"duration": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2081,
-	  "name": "フールズフリーダム",
-	  "dev_name": "フールズフリーダム",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "世界呪",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "世界呪い\"愚者\"(6R間、クリーチャー配置時、EP以外のコストは無視される)",
-	  "effect_parsed": {
-		"target_type": "world",
-		"effects": [
-		  {
-			"effect_type": "world_curse",
-			"curse_type": "summon_cost_free",
-			"name": "愚者",
-			"duration": 6
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2082,
-	  "name": "フラクション",
-	  "dev_name": "フラクション",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "密命；使用者よりEPの多い対象敵セプターから30%を奪う",
-	  "is_secret": true,
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "enemy",
-		"effects": [
-		  {
-			"effect_type": "drain_magic_conditional",
-			"condition": "target_has_more_magic",
-			"percentage": 30
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "profit_calc",
-		"profit_condition": "enemy_magic_gte_300",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2083,
-	  "name": "ブラストトラップ",
-	  "dev_name": "ブラストトラップ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "対象ドミニオに呪い\"焦土\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
-	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "has_creature",
-		"effects": [
-		  {
-			"effect_type": "land_curse",
-			"curse_type": "blast_trap",
-			"curse_name": "焦土",
-			"trigger": "on_enemy_stop",
-			"one_shot": true,
-			"curse_effects": [
-			  {
-				"effect_type": "reduce_magic_percentage",
-				"target": "stopped_player",
-				"percentage": 40
-			  },
-			  {
-				"effect_type": "damage_creature",
-				"target": "land_creature",
-				"amount": 20
-			  }
-			]
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2084,
-	  "name": "パードン",
-	  "dev_name": "パードン",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象敵セプターに呪い\"免罪\"(2R間、通行料を取れない)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "enemy",
-		"effects": [
-		  {
-			"effect_type": "toll_disable",
-			"name": "免罪",
-			"duration": 2
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "near_enemy_high_toll",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2085,
-	  "name": "フラットランド",
-	  "dev_name": "フラットランド",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "レベル2ドミニオを5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]",
-	  "keywords": [
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 20
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "water_wind_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2066,
+      "name": "エンハンス",
+      "dev_name": "バイタリティ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "対象ドミニオに呪い\"暁光\"(戦闘中、AP&HP+20)；カードを1枚引く",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "stat_boost",
+            "name": "暁光",
+            "value": 20,
+            "duration": -1
+          },
+          {
+            "effect_type": "draw",
+            "count": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2067,
+      "name": "ライズアップ",
+      "dev_name": "ハイパーアクティブ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象ドミニオに呪い\"奮闘\"(5R間、奮闘を得る)",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "indomitable",
+            "name": "奮闘",
+            "duration": 5
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2068,
+      "name": "ディスペア",
+      "dev_name": "バインドミスト",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象ドミニオに呪い\"消沈\"",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "battle_disable",
+            "name": "消沈",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2069,
+      "name": "マーク",
+      "dev_name": "バウンティハント",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "対象ドミニオに呪い\"賞金\"(移動・交換不可、武器で破壊した場合30EP0)",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "enemy",
+          "has_creature": true
+        },
+        "effects": [
+          {
+            "effect_type": "bounty_curse",
+            "name": "賞金",
+            "reward": 300,
+            "requires_weapon": true,
+            "prevent_move": true,
+            "prevent_swap": true,
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2070,
+      "name": "トゥルース",
+      "dev_name": "バンフィズム",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数特殊能力付与",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "全セプターに呪い\"休戦\"(2R間、侵略できない)",
+      "effect_parsed": {
+        "target_type": "all_players",
+        "effects": [
+          {
+            "effect_type": "player_curse",
+            "curse_type": "invasion_disable",
+            "name": "休戦",
+            "duration": 2
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "self_has_creatures",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2071,
+      "name": "ブレス",
+      "dev_name": "バリアー",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "対象セプターに呪い\"祝福\"(5R間、スペルの対象に選べない)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "target_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "player_curse",
+            "curse_type": "spell_protection",
+            "name": "祝福",
+            "description": "スペルの対象にならない",
+            "duration": 5
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "self_player",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2072,
+      "name": "アコード",
+      "dev_name": "ピース",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "対象ドミニオに呪い\"安寧\"(侵略を受けず、通行料は0EP)",
+      "effect_parsed": {
+        "target_type": "creature",
+        "effects": [
+          {
+            "effect_type": "peace",
+            "name": "安寧",
+            "invasion_disable": true,
+            "toll_zero": true,
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2073,
+      "name": "キュア",
+      "dev_name": "ピュアリファイ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "全呪いを消し、消した呪いの種類×50EPを得る",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "purify_all"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "has_any_curse",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2074,
+      "name": "ファイアーフォージ",
+      "dev_name": "ファイアーシフト",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "対象自ドミニオを火に変える",
+      "effect_parsed": {
+        "target_type": "own_land",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "change_element",
+            "element": "fire"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "element_mismatch",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2075,
+      "name": "タンク",
+      "dev_name": "ファットボディ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象クリーチャーのMHP+20、AP-20",
+      "effect_parsed": {
+        "target_type": "creature",
+        "effects": [
+          {
+            "effect_type": "permanent_hp_change",
+            "value": 20
+          },
+          {
+            "effect_type": "permanent_ap_change",
+            "value": -20
+          }
+        ],
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2076,
+      "name": "エクストラクト",
+      "dev_name": "フィアー",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "対象セプターの最もMHPの低いクリーチャーを手札に戻す",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "return_to_hand",
+            "select_by": "lowest_mhp"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_player_with_creatures",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2077,
+      "name": "ウィズダム",
+      "dev_name": "フィロソフィー",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "合成を持つカードが手札にある場合、カードを3枚引く；無い場合、カードを2枚引く",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "check_hand_synthesis",
+            "success_effect": {
+              "effect_type": "draw_cards",
+              "count": 3
+            },
+            "fail_effect": {
+              "effect_type": "draw_cards",
+              "count": 2
+            }
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2078,
+      "name": "オラクル",
+      "dev_name": "フォーサイト",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "自ブックの上6枚を見て、好きな1枚を引く",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "draw_from_deck_selection",
+            "look_count": 6
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2079,
+      "name": "ポータル",
+      "dev_name": "フォームポータル",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 140
+      },
+      "effect": "最も近いゲートに飛ぶ",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "warp_to_nearest_gate"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "nearest_checkpoint_unvisited",
+        "priority": "high"
+      }
+    },
+    {
+      "id": 2080,
+      "name": "マルチ",
+      "dev_name": "フライ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "使用者の次のダイスを3つにする",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "dice_multi",
+            "count": 3,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2081,
+      "name": "フールズフリーダム",
+      "dev_name": "ブライトワールド",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "世界呪",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "世界呪い\"愚者\"(6R間、クリーチャー配置時、EP以外のコストは無視される)",
+      "effect_parsed": {
+        "target_type": "world",
+        "effects": [
+          {
+            "effect_type": "world_curse",
+            "curse_type": "summon_cost_free",
+            "name": "愚者",
+            "duration": 6
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2082,
+      "name": "ドレイン",
+      "dev_name": "フラクション",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "密命；使用者よりEPの多い対象敵セプターから30%を奪う",
+      "is_secret": true,
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "enemy",
+        "effects": [
+          {
+            "effect_type": "drain_magic_conditional",
+            "condition": "target_has_more_magic",
+            "percentage": 30
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_condition": "enemy_magic_gte_300",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2083,
+      "name": "トラップ",
+      "dev_name": "ブラストトラップ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "対象ドミニオに呪い\"焦土\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_filter": "has_creature",
+        "effects": [
+          {
+            "effect_type": "land_curse",
+            "curse_type": "blast_trap",
+            "curse_name": "焦土",
+            "trigger": "on_enemy_stop",
+            "one_shot": true,
+            "curse_effects": [
+              {
+                "effect_type": "reduce_magic_percentage",
+                "target": "stopped_player",
+                "percentage": 40
+              },
+              {
+                "effect_type": "damage_creature",
+                "target": "land_creature",
+                "amount": 20
+              }
+            ]
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2084,
+      "name": "パードン",
+      "dev_name": "ブラックアウト",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象敵セプターに呪い\"免罪\"(2R間、通行料を取れない)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "enemy",
+        "effects": [
+          {
+            "effect_type": "toll_disable",
+            "name": "免罪",
+            "duration": 2
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "near_enemy_high_toll",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2085,
+      "name": "グラウンド",
+      "dev_name": "フラットランド",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "レベル2ドミニオを5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]",
+      "keywords": [
         "密命"
-	  ],
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "conditional_level_change",
-			"required_level": 2,
-			"required_count": 5,
-			"value": 1,
-			"return_to_deck_on_fail": true
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2086,
-	  "name": "フリーズサイクロン",
-	  "dev_name": "フリーズサイクロン",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "全火地のHP-20",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "any",
-		  "creature_elements": [
-			"fire",
+      ],
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "conditional_level_change",
+            "required_level": 2,
+            "required_count": 5,
+            "value": 1,
+            "return_to_deck_on_fail": true
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2086,
+      "name": "フロスト",
+      "dev_name": "フリーズサイクロン",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "全火地のHP-20",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any",
+          "creature_elements": [
+            "fire",
             "earth"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 20
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "fire_earth_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2087,
-	  "name": "プレイグ",
-	  "dev_name": "プレイグ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数特殊能力付与",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "全ドミニオに呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "plague_curse",
-			"name": "衰弱",
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2088,
-	  "name": "ブレイズスプラッシュ",
-	  "dev_name": "ブレイズスプラッシュ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "対象火水のHP-30",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy",
-		  "creature_elements": [
-			"fire",
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 20
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "fire_earth_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2087,
+      "name": "ウイルス",
+      "dev_name": "プレイグ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数特殊能力付与",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "全ドミニオに呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "plague_curse",
+            "name": "衰弱",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2088,
+      "name": "フュージョン",
+      "dev_name": "ブレイズスプラッシュ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "対象火水のHP-30",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy",
+          "creature_elements": [
+            "fire",
             "water"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 30
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "fire_water_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2089,
-	  "name": "スプリント",
-	  "dev_name": "スプリント",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象自ドミニオに呪い\"快足\"(アルカナアーツ[EP50・対象セプターに呪い\"ダイス5\"])",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "own",
-		  "has_no_mystic_arts": true
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_mystic_arts",
-			"curse_name": "快足",
-			"mystic_arts": [
-			  {
-				"name": "ダイス5",
-				"cost": 50,
-				"spell_id": 9017
-			  }
-			]
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2090,
-	  "name": "プロフェシー",
-	  "dev_name": "プロフェシー",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "選んだタイプのカードを1枚引く",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "draw_by_type"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2091,
-	  "name": "ヘイスト",
-	  "dev_name": "ヘイスト",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "対象セプターに呪い\"ダイス6～8\"(2R間、ダイスを6～8にする)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "dice_range",
-			"min": 6,
-			"max": 8,
-			"duration": 2
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2092,
-	  "name": "ペナライズ",
-	  "dev_name": "ペナライズ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "複数特殊能力付与",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "全ブリードクリーチャーをダウンさせ、呪い\"消沈\"をつける",
-	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2093,
-	  "name": "ポイズンマインド",
-	  "dev_name": "ポイズンマインド",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 20
-	  },
-	  "effect": "対象敵ブックの上6枚を見て1枚を選び、破壊する；カードを1枚引く",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "enemy",
-		"effects": [
-		  {
-			"effect_type": "destroy_from_deck_selection",
-			"look_count": 6,
-			"draw_after": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2094,
-	  "name": "ボーテックス",
-	  "dev_name": "ボーテックス",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象ドミニオに呪い\"錯乱\"；カードを1枚引く",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "skill_nullify",
-			"name": "錯乱",
-			"duration": -1
-		  },
-		  {
-			"effect_type": "draw",
-			"count": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2095,
-	  "name": "ホープ",
-	  "dev_name": "ホープ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "カードを2枚引く",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "draw_cards",
-			"count": 2
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2096,
-	  "name": "ホームグラウンド",
-	  "dev_name": "ホームグラウンド",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "属性違いのドミニオを4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]",
-	  "keywords": [
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 30
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "fire_water_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2089,
+      "name": "スプリント",
+      "dev_name": "フロートシジル",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象自ドミニオに呪い\"快足\"(アルカナアーツ[EP50・対象セプターに呪い\"ダイス5\"])",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "own",
+          "has_no_mystic_arts": true
+        },
+        "effects": [
+          {
+            "effect_type": "grant_mystic_arts",
+            "curse_name": "快足",
+            "mystic_arts": [
+              {
+                "name": "ダイス5",
+                "cost": 50,
+                "spell_id": 9017
+              }
+            ]
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2090,
+      "name": "チョイス",
+      "dev_name": "プロフェシー",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "選んだタイプのカードを1枚引く",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "draw_by_type"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2091,
+      "name": "ダッシュ",
+      "dev_name": "ヘイスト",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "対象セプターに呪い\"ダイス6～8\"(2R間、ダイスを6～8にする)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "dice_range",
+            "min": 6,
+            "max": 8,
+            "duration": 2
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2092,
+      "name": "ジャッジ",
+      "dev_name": "ペナライズ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "複数特殊能力付与",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "全ブリードクリーチャーをダウンさせ、呪い\"消沈\"をつける",
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2093,
+      "name": "コンタミ",
+      "dev_name": "ポイズンマインド",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 20
+      },
+      "effect": "対象敵ブックの上6枚を見て1枚を選び、破壊する；カードを1枚引く",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "enemy",
+        "effects": [
+          {
+            "effect_type": "destroy_from_deck_selection",
+            "look_count": 6,
+            "draw_after": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2094,
+      "name": "ヌル",
+      "dev_name": "ボーテックス",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象ドミニオに呪い\"錯乱\"；カードを1枚引く",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "skill_nullify",
+            "name": "錯乱",
+            "duration": -1
+          },
+          {
+            "effect_type": "draw",
+            "count": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2095,
+      "name": "ラック",
+      "dev_name": "ホープ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "カードを2枚引く",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "draw_cards",
+            "count": 2
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2096,
+      "name": "マッチ",
+      "dev_name": "ホームグラウンド",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "属性違いのドミニオを4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]",
+      "keywords": [
         "密命"
-	  ],
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "align_mismatched_lands",
-			"required_count": 4,
-			"return_to_deck_on_fail": true
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "element_mismatch",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2097,
-	  "name": "ホーリーバニッシュ",
-	  "dev_name": "ホーリーバニッシュ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 90
-	  },
-	  "effect": "対象の、属性違いのクリーチャーを手札に戻す",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any",
-		  "element_mismatch": true
-		},
-		"effects": [
-		  {
-			"effect_type": "return_to_hand"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "element_mismatch_enemy",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2098,
-	  "name": "ホーリーワード1",
-	  "dev_name": "ホーリーワード1",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "対象セプターに呪い\"ダイス1\"(次のダイスを1にする)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "dice_fixed",
-			"value": 1,
-			"duration": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "dice_manipulation",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2099,
-	  "name": "ホーリーワード3",
-	  "dev_name": "ホーリーワード3",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 10
-	  },
-	  "effect": "対象セプターに呪い\"ダイス3\"(次のダイスを3にする)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "dice_fixed",
-			"value": 3,
-			"duration": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "dice_manipulation",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2100,
-	  "name": "ホーリーワード6",
-	  "dev_name": "ホーリーワード6",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "対象セプターに呪い\"ダイス6\"(次のダイスを6にする)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "dice_fixed",
-			"value": 6,
-			"duration": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "dice_manipulation",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2101,
-	  "name": "ホーリーワード8",
-	  "dev_name": "ホーリーワード8",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "対象セプターに呪い\"ダイス8\"(次のダイスを8にする)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "dice_fixed",
-			"value": 8,
-			"duration": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "dice_manipulation",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2102,
-	  "name": "テンパランスロウ",
-	  "dev_name": "テンパランスロウ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "世界呪",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "世界呪い\"節制\"(6R間、順位が下のセプターのドミニオに侵略できない)",
-	  "effect_parsed": {
-		"target_type": "world",
-		"effects": [
-		  {
-			"effect_type": "world_curse",
-			"curse_type": "invasion_restrict",
-			"name": "節制",
-			"duration": 6
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2103,
-	  "name": "マグマシフト",
-	  "dev_name": "マグマシフト",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 120
-	  },
-	  "effect": "レベル3以下の対象火ドミニオを地に、または地ドミニオを火に変える",
-	  "effect_parsed": {
-		"target_type": "land",
-		"target_info": {
-		  "owner_filter": "any",
-		  "max_level": 3,
-		  "required_elements": [
-			"fire",
+      ],
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "align_mismatched_lands",
+            "required_count": 4,
+            "return_to_deck_on_fail": true
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "element_mismatch",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2097,
+      "name": "ネゲート",
+      "dev_name": "ホーリーバニッシュ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 90
+      },
+      "effect": "対象の、属性違いのクリーチャーを手札に戻す",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any",
+          "element_mismatch": true
+        },
+        "effects": [
+          {
+            "effect_type": "return_to_hand"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "element_mismatch_enemy",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2098,
+      "name": "フェイト1",
+      "dev_name": "ホーリーワード1",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "対象セプターに呪い\"ダイス1\"(次のダイスを1にする)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "dice_fixed",
+            "value": 1,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "dice_manipulation",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2099,
+      "name": "フェイト3",
+      "dev_name": "ホーリーワード3",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 10
+      },
+      "effect": "対象セプターに呪い\"ダイス3\"(次のダイスを3にする)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "dice_fixed",
+            "value": 3,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "dice_manipulation",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2100,
+      "name": "フェイト6",
+      "dev_name": "ホーリーワード6",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "対象セプターに呪い\"ダイス6\"(次のダイスを6にする)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "dice_fixed",
+            "value": 6,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "dice_manipulation",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2101,
+      "name": "フェイト8",
+      "dev_name": "ホーリーワード8",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "対象セプターに呪い\"ダイス8\"(次のダイスを8にする)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "dice_fixed",
+            "value": 8,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "dice_manipulation",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2102,
+      "name": "テンパランスロウ",
+      "dev_name": "マーシフルワールド",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "世界呪",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "世界呪い\"節制\"(6R間、順位が下のセプターのドミニオに侵略できない)",
+      "effect_parsed": {
+        "target_type": "world",
+        "effects": [
+          {
+            "effect_type": "world_curse",
+            "curse_type": "invasion_restrict",
+            "name": "節制",
+            "duration": 6
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2103,
+      "name": "ガイアフォージ",
+      "dev_name": "マグマシフト",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 120
+      },
+      "effect": "レベル3以下の対象火ドミニオを地に、または地ドミニオを火に変える",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "any",
+          "max_level": 3,
+          "required_elements": [
+            "fire",
             "earth"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "change_element_bidirectional",
-			"element_a": "fire",
-			"element_b": "earth"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "element_mismatch",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2104,
-	  "name": "マジカルリープ",
-	  "dev_name": "マジカルリープ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "距離1～4マスの対象の土地に飛ぶ",
-	  "effect_parsed": {
-		"target_type": "land",
-		"target_info": {
-		  "distance_min": 1,
-		  "distance_max": 4
-		},
-		"effects": [
-		  {
-			"effect_type": "warp_to_target"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "after_lap_complete",
-		"priority": "high"
-	  }
-	},
-	{
-	  "id": 2105,
-	  "name": "マジックシェルター",
-	  "dev_name": "マジックシェルター",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "対象ドミニオに呪い\"重結界\"(結界と堅守を持つ)",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "creature_curse",
-			"curse_type": "protection_wall",
-			"name": "重結界",
-			"description": "結界と堅守を持つ",
-			"spell_protection": true,
-			"defensive_form": true,
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2106,
-	  "name": "マジックボルト",
-	  "dev_name": "マジックボルト",
-	  "rarity": "C",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "対象敵クリーチャーのHP-20",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 20
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "can_kill_target",
-		"priority": "medium_high"
-	  }
-	},
-	{
-	  "id": 2107,
-	  "name": "マスグロース",
-	  "dev_name": "マスグロース",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 30,
-		"cards_sacrifice": 1
-	  },
-	  "effect": "全クリーチャーのMHP+5；合成[アイテム・全自クリーチャーとなる]",
-	  "synthesis": {
-		"type": "item",
-		"target_override": {
-		  "target_info": {
-			"owner_filter": "own"
-		  }
-		}
-	  },
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "permanent_hp_change",
-			"value": 5
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2108,
-	  "name": "グラナイト",
-	  "dev_name": "グラナイト",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "複数特殊能力付与",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "全ドミニオに呪い\"堅牢\"",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "apply_curse",
-			"curse_type": "hp_effect_immune",
-			"name": "堅牢",
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2109,
-	  "name": "マナ",
-	  "dev_name": "マナ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 0
-	  },
-	  "effect": "周回数×50EPを得る",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "gain_magic_by_lap",
-			"multiplier": 50
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2110,
-	  "name": "エンプレスドメイン",
-	  "dev_name": "エンプレスドメイン",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "世界呪",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "世界呪い\"女帝\"(6R間、全セプターはスペルの対象に選べない)",
-	  "effect_parsed": {
-		"target_type": "world",
-		"effects": [
-		  {
-			"effect_type": "world_curse",
-			"curse_type": "world_spell_protection",
-			"name": "女帝",
-			"duration": 6
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2111,
-	  "name": "ハーミットズパラドックス",
-	  "dev_name": "ハーミットズパラドックス",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "世界呪",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "世界呪い\"隠者\"(6R間、同クリーチャー2体配置なら戦闘時破壊)",
-	  "effect_parsed": {
-		"target_type": "world",
-		"effects": [
-		  {
-			"effect_type": "world_curse",
-			"curse_type": "same_creature_destroy",
-			"name": "隠者",
-			"duration": 6
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "duplicate_creatures_exist",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2112,
-	  "name": "ミラクルコール",
-	  "dev_name": "ミラクルコール",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "ブリードカードがブックにある場合、それを1枚引く；無い場合、カードを2枚引く",
-	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2113,
-	  "name": "メタモルフォシス",
-	  "dev_name": "メタモルフォシス",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 80,
-		"cards_sacrifice": 1
-	  },
-	  "effect": "対象敵手札からアイテムかスペルを選び、同カードを全てホーリーワード6に変える",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "enemy",
-		"effects": [
-		  {
-			"effect_type": "transform_to_card",
-			"filter_mode": "item_or_spell",
-			"transform_to_id": 2100
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "enemy_hand",
-		"target_condition": "has_item_or_spell",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2114,
-	  "name": "メタルフォーム",
-	  "dev_name": "メタルフォーム",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "対象ドミニオに呪い\"硬化\"(無効化[通常攻撃]を得て、防具使用不可)",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "metal_form",
-			"name": "硬化",
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2115,
-	  "name": "ユニフォーミティ",
-	  "dev_name": "ユニフォーミティ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は200EPになる)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "toll_fixed",
-			"name": "通行料200",
-			"value": 200,
-			"duration": 3
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "strategic",
-		"strategy": "near_enemy_high_toll",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2116,
-	  "name": "ライフストリーム",
-	  "dev_name": "ライフストリーム",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "全自クリーチャーのHPを全回復",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "full_heal"
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "self_creature_damaged",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2117,
-	  "name": "エンジェルギフト",
-	  "dev_name": "エンジェルギフト",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "対象セプターに呪い\"天使\"(クリーチャーとアイテム0EP、スペルは無効化され呪いは消える)",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "include_self": true
-		},
-		"effects": [
-		  {
-			"effect_type": "life_force_curse",
-			"curse_type": "life_force",
-			"duration": -1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2118,
-	  "name": "ランドトランス",
-	  "dev_name": "ランドトランス",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "対象自ドミニオを手放し、その価値の70%を得る",
-	  "effect_parsed": {
-		"target_type": "own_land",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "abandon_land",
-			"return_rate": 0.7
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "profit_calc",
-		"profit_condition": "land_value_high",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2119,
-	  "name": "ランドドレイン",
-	  "dev_name": "ランドドレイン",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "対象敵セプターから、敵ドミニオ数×30EPを奪う",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "enemy",
-		"effects": [
-		  {
-			"effect_type": "drain_magic_by_land_count",
-			"multiplier": 30
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "profit_calc",
-		"profit_condition": "enemy_lands_gte_3",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2120,
-	  "name": "リキッドフォーム",
-	  "dev_name": "リキッドフォーム",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "対象ドミニオに呪い\"狂星\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "random_stat_curse",
-			"name": "狂星",
-			"stat": "both",
-			"min": 10,
-			"max": 70,
-			"duration": -1
-		  },
-		  {
-			"effect_type": "draw",
-			"count": 1
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2121,
-	  "name": "リストア",
-	  "dev_name": "リストア",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 40
-	  },
-	  "effect": "対象クリーチャーのダウン解除；対象クリーチャーのHPを全回復",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "clear_down"
-		  },
-		  {
-			"effect_type": "full_heal"
-		  }
-		],
-		"affects_hp": true
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "self_creature_damaged",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2122,
-	  "name": "リバイバル",
-	  "dev_name": "リバイバル",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "対象ブックを初期化する",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "reset_deck"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2123,
-	  "name": "リミッション",
-	  "dev_name": "リミッション",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "対象ゲートを通過したことになる",
-	  "effect_parsed": {
-		"target_type": "unvisited_gate",
-		"effects": [
-		  {
-			"effect_type": "gate_pass"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "has_unvisited_gate",
-		"priority": "highest"
-	  }
-	},
-	{
-	  "id": 2124,
-	  "name": "リモートスイッチ",
-	  "dev_name": "リモートスイッチ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "全分岐スイッチを切り替える；復帰[ブック]；スイッチが無い場合、カードを1枚引く",
-	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2125,
-	  "name": "リリース",
-	  "dev_name": "リリース",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "使用者に呪い\"解放\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "player_curse",
-			"curse_type": "restriction_release",
-			"name": "解放",
-			"description": "アイテム制限と配置制限を無視",
-			"ignore_item_restriction": true,
-			"ignore_summon_condition": true,
-			"duration": 4
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2126,
-	  "name": "リリーフ",
-	  "dev_name": "リリーフ",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 30
-	  },
-	  "effect": "2体の対象自クリーチャーを交換；復帰[ブック]",
-	  "return_to_deck": true,
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "swap_board_creatures",
-			"description": "盤面上の2体を交換"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "swap_improves_element_match",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2127,
-	  "name": "リンカネーション",
-	  "dev_name": "リンカネーション",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "手札を全て捨て、その枚数+1枚のカードを引く",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "discard_and_draw_plus"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2128,
-	  "name": "レイオブパージ",
-	  "dev_name": "レイオブパージ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 50
-	  },
-	  "effect": "全セプターの手札の呪いカードを破壊",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "destroy_curse_cards"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2129,
-	  "name": "レイオブロウ",
-	  "dev_name": "レイオブロウ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 60
-	  },
-	  "effect": "全手札の使用EP100以上のカードを全て破壊する",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "destroy_expensive_cards",
-			"cost_threshold": 100
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "enemy_hand",
-		"target_condition": "has_expensive_cards",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2130,
-	  "name": "レディビジョン",
-	  "dev_name": "レディビジョン",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "複数対象",
-	  "cost": {
-		"ep": 100
-	  },
-	  "effect": "全セプターのEPを平均化する",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "balance_all_magic"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "profit_calc",
-		"profit_condition": "enemy_magic_higher",
-		"priority": "medium"
-	  }
-	},
-	{
-	  "id": 2131,
-	  "name": "ロングライン",
-	  "dev_name": "ロングライン",
-	  "rarity": "R",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 70
-	  },
-	  "effect": "密命；自ドミニオが4つ連続している場合、500EP；未達成の場合、カードを2枚引く",
-	  "is_secret": true,
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "gain_magic_from_land_chain",
-			"required_chain": 4,
-			"amount": 500,
-			"fallback_effect": {
-			  "effect_type": "draw",
-			  "count": 2
-			}
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
-	  }
-	},
-	{
-	  "id": 2132,
-	  "name": "ワイルドセンス",
-	  "dev_name": "ワイルドセンス",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体対象",
-	  "cost": {
-		"ep": 80
-	  },
-	  "effect": "カードを1枚引く；クリーチャーだった場合、ランダムな空地に配置",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "draw_and_place",
-			"draw_count": 1,
-			"placement_mode": "random",
-			"card_type_filter": "creature"
-		  }
-		]
-	  },
-	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
-	  }
-	}
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "change_element_bidirectional",
+            "element_a": "fire",
+            "element_b": "earth"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "element_mismatch",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2104,
+      "name": "ジャンプ",
+      "dev_name": "マジカルリープ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "距離1～4マスの対象の土地に飛ぶ",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "distance_min": 1,
+          "distance_max": 4
+        },
+        "effects": [
+          {
+            "effect_type": "warp_to_target"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "after_lap_complete",
+        "priority": "high"
+      }
+    },
+    {
+      "id": 2105,
+      "name": "フォートレス",
+      "dev_name": "マジックシェルター",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "対象ドミニオに呪い\"重結界\"(結界と堅守を持つ)",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "creature_curse",
+            "curse_type": "protection_wall",
+            "name": "重結界",
+            "description": "結界と堅守を持つ",
+            "spell_protection": true,
+            "defensive_form": true,
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2106,
+      "name": "スパーク",
+      "dev_name": "マジックボルト",
+      "rarity": "C",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "対象敵クリーチャーのHP-20",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 20
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "can_kill_target",
+        "priority": "medium_high"
+      }
+    },
+    {
+      "id": 2107,
+      "name": "ブルーム",
+      "dev_name": "マスグロース",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 30,
+        "cards_sacrifice": 1
+      },
+      "effect": "全クリーチャーのMHP+5；合成[アイテム・全自クリーチャーとなる]",
+      "synthesis": {
+        "type": "item",
+        "target_override": {
+          "target_info": {
+            "owner_filter": "own"
+          }
+        }
+      },
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "permanent_hp_change",
+            "value": 5
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2108,
+      "name": "グラナイト",
+      "dev_name": "マスファンタズム",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "複数特殊能力付与",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "全ドミニオに呪い\"堅牢\"",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "apply_curse",
+            "curse_type": "hp_effect_immune",
+            "name": "堅牢",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2109,
+      "name": "サイクル",
+      "dev_name": "マナ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 0
+      },
+      "effect": "周回数×50EPを得る",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "gain_magic_by_lap",
+            "multiplier": 50
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2110,
+      "name": "エンプレスドメイン",
+      "dev_name": "ミスティワールド",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "世界呪",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "世界呪い\"女帝\"(6R間、全セプターはスペルの対象に選べない)",
+      "effect_parsed": {
+        "target_type": "world",
+        "effects": [
+          {
+            "effect_type": "world_curse",
+            "curse_type": "world_spell_protection",
+            "name": "女帝",
+            "duration": 6
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2111,
+      "name": "ハーミットズパラドックス",
+      "dev_name": "ミラーワールド",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "世界呪",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "世界呪い\"隠者\"(6R間、同クリーチャー2体配置なら戦闘時破壊)",
+      "effect_parsed": {
+        "target_type": "world",
+        "effects": [
+          {
+            "effect_type": "world_curse",
+            "curse_type": "same_creature_destroy",
+            "name": "隠者",
+            "duration": 6
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "duplicate_creatures_exist",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2112,
+      "name": "コール",
+      "dev_name": "ミラクルコール",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "ブリードカードがブックにある場合、それを1枚引く；無い場合、カードを2枚引く",
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2113,
+      "name": "トランス",
+      "dev_name": "メタモルフォシス",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 80,
+        "cards_sacrifice": 1
+      },
+      "effect": "対象敵手札からアイテムかスペルを選び、同カードを全てホーリーワード6に変える",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "enemy",
+        "effects": [
+          {
+            "effect_type": "transform_to_card",
+            "filter_mode": "item_or_spell",
+            "transform_to_id": 2100
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "enemy_hand",
+        "target_condition": "has_item_or_spell",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2114,
+      "name": "スチール",
+      "dev_name": "メタルフォーム",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "対象ドミニオに呪い\"硬化\"(無効化[通常攻撃]を得て、防具使用不可)",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "metal_form",
+            "name": "硬化",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2115,
+      "name": "フラット",
+      "dev_name": "ユニフォーミティ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は200EPになる)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "toll_fixed",
+            "name": "通行料200",
+            "value": 200,
+            "duration": 3
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "strategy": "near_enemy_high_toll",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2116,
+      "name": "スプリング",
+      "dev_name": "ライフストリーム",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "全自クリーチャーのHPを全回復",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "full_heal"
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "self_creature_damaged",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2117,
+      "name": "エンジェルギフト",
+      "dev_name": "ライフフォース",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "対象セプターに呪い\"天使\"(クリーチャーとアイテム0EP、スペルは無効化され呪いは消える)",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "include_self": true
+        },
+        "effects": [
+          {
+            "effect_type": "life_force_curse",
+            "curse_type": "life_force",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2118,
+      "name": "セール",
+      "dev_name": "ランドトランス",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "対象自ドミニオを手放し、その価値の70%を得る",
+      "effect_parsed": {
+        "target_type": "own_land",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "abandon_land",
+            "return_rate": 0.7
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_condition": "land_value_high",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2119,
+      "name": "ハーベスト",
+      "dev_name": "ランドドレイン",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "対象敵セプターから、敵ドミニオ数×30EPを奪う",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "enemy",
+        "effects": [
+          {
+            "effect_type": "drain_magic_by_land_count",
+            "multiplier": 30
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_condition": "enemy_lands_gte_3",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2120,
+      "name": "フラックス",
+      "dev_name": "リキッドフォーム",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "対象ドミニオに呪い\"狂星\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "random_stat_curse",
+            "name": "狂星",
+            "stat": "both",
+            "min": 10,
+            "max": 70,
+            "duration": -1
+          },
+          {
+            "effect_type": "draw",
+            "count": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2121,
+      "name": "リジェネ",
+      "dev_name": "リストア",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 40
+      },
+      "effect": "対象クリーチャーのダウン解除；対象クリーチャーのHPを全回復",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "clear_down"
+          },
+          {
+            "effect_type": "full_heal"
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "self_creature_damaged",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2122,
+      "name": "シャッフル",
+      "dev_name": "リバイバル",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "対象ブックを初期化する",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "reset_deck"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2123,
+      "name": "ルート",
+      "dev_name": "リミッション",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "対象ゲートを通過したことになる",
+      "effect_parsed": {
+        "target_type": "unvisited_gate",
+        "effects": [
+          {
+            "effect_type": "gate_pass"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "has_unvisited_gate",
+        "priority": "highest"
+      }
+    },
+    {
+      "id": 2124,
+      "name": "コントロール",
+      "dev_name": "リモートスイッチ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "全分岐スイッチを切り替える；復帰[ブック]；スイッチが無い場合、カードを1枚引く",
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2125,
+      "name": "フリー",
+      "dev_name": "リリース",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体特殊能力付与",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "使用者に呪い\"解放\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "player_curse",
+            "curse_type": "restriction_release",
+            "name": "解放",
+            "description": "アイテム制限と配置制限を無視",
+            "ignore_item_restriction": true,
+            "ignore_summon_condition": true,
+            "duration": 4
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2126,
+      "name": "ローテート",
+      "dev_name": "リリーフ",
+      "rarity": "N",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 30
+      },
+      "effect": "2体の対象自クリーチャーを交換；復帰[ブック]",
+      "return_to_deck": true,
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "swap_board_creatures",
+            "description": "盤面上の2体を交換"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "swap_improves_element_match",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2127,
+      "name": "リボーン",
+      "dev_name": "リンカネーション",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "手札を全て捨て、その枚数+1枚のカードを引く",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "discard_and_draw_plus"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2128,
+      "name": "クリーンズ",
+      "dev_name": "レイオブパージ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 50
+      },
+      "effect": "全セプターの手札の呪いカードを破壊",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "destroy_curse_cards"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2129,
+      "name": "ラス",
+      "dev_name": "レイオブロウ",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 60
+      },
+      "effect": "全手札の使用EP100以上のカードを全て破壊する",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "destroy_expensive_cards",
+            "cost_threshold": 100
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "enemy_hand",
+        "target_condition": "has_expensive_cards",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2130,
+      "name": "バランス",
+      "dev_name": "レディビジョン",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "複数対象",
+      "cost": {
+        "ep": 100
+      },
+      "effect": "全セプターのEPを平均化する",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "balance_all_magic"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_condition": "enemy_magic_higher",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 2131,
+      "name": "コネクト",
+      "dev_name": "ロングライン",
+      "rarity": "R",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 70
+      },
+      "effect": "密命；自ドミニオが4つ連続している場合、500EP；未達成の場合、カードを2枚引く",
+      "is_secret": true,
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "gain_magic_from_land_chain",
+            "required_chain": 4,
+            "amount": 500,
+            "fallback_effect": {
+              "effect_type": "draw",
+              "count": 2
+            }
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 2132,
+      "name": "ディスカバー",
+      "dev_name": "ワイルドセンス",
+      "rarity": "S",
+      "type": "spell",
+      "spell_type": "単体対象",
+      "cost": {
+        "ep": 80
+      },
+      "effect": "カードを1枚引く；クリーチャーだった場合、ランダムな空地に配置",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "draw_and_place",
+            "draw_count": 1,
+            "placement_mode": "random",
+            "card_type_filter": "creature"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "medium"
+      }
+    }
   ]
 }
