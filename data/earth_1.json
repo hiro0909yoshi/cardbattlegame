@@ -17,7 +17,7 @@
 		},
 		{
 			"id": 201,
-			"name": "デスブルーム",
+			"name": "マンドラゴラ",
 			"dev_name": "アネイマブル",
 			"rarity": "R",
 			"type": "creature",
@@ -55,7 +55,7 @@
 		},
 		{
 			"id": 202,
-			"name": "グリーンメンター",
+			"name": "トレント",
 			"dev_name": "ウッドフォーク",
 			"rarity": "N",
 			"type": "creature",
@@ -185,7 +185,7 @@
 		},
 		{
 			"id": 206,
-			"name": "ワイルドモノリス",
+			"name": "ワーム",
 			"dev_name": "ギガンテリウム",
 			"rarity": "N",
 			"type": "creature",
@@ -352,7 +352,7 @@
 		},
 		{
 			"id": 212,
-			"name": "アンチストライカー",
+			"name": "ベヒーモス",
 			"dev_name": "グレートタスカー",
 			"rarity": "S",
 			"type": "creature",
@@ -386,7 +386,7 @@
 		},
 		{
 			"id": 213,
-			"name": "フレイムシンビオス",
+			"name": "オルトロス",
 			"dev_name": "グロウホーン",
 			"rarity": "N",
 			"type": "creature",
@@ -450,7 +450,7 @@
 		},
 		{
 			"id": 215,
-			"name": "ゴルゴンゲイズ",
+			"name": "バジリスク",
 			"dev_name": "コカトリス",
 			"rarity": "S",
 			"type": "creature",
@@ -555,7 +555,7 @@
 		},
 		{
 			"id": 218,
-			"name": "ジャングルウォーデン",
+			"name": "エント",
 			"dev_name": "ジャングラバー",
 			"rarity": "R",
 			"type": "creature",
@@ -666,7 +666,7 @@
 		},
 		{
 			"id": 221,
-			"name": "マイクロメンター",
+			"name": "アルラウネ",
 			"dev_name": "スクリリン",
 			"rarity": "N",
 			"type": "creature",
@@ -720,7 +720,7 @@
 		},
 		{
 			"id": 223,
-			"name": "ブライトコブラ",
+			"name": "モルボル",
 			"dev_name": "スピットコブラ",
 			"rarity": "N",
 			"type": "creature",

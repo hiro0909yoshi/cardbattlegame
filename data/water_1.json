@@ -2,7 +2,7 @@
 	"cards": [
 		{
 			"id": 100.0,
-			"name": "サンダースケイル",
+			"name": "ウンディーネ",
 			"dev_name": "G・イール",
 			"rarity": "S",
 			"type": "creature",
@@ -597,7 +597,7 @@
 		},
 		{
 			"id": 117.0,
-			"name": "ミスティックロータス",
+			"name": "マーメイド",
 			"dev_name": "カワヒメ",
 			"rarity": "S",
 			"type": "creature",

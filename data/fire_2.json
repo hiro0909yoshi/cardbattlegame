@@ -44,7 +44,7 @@
 		},
 		{
 			"id": 27,
-			"name": "インフェルノロード",
+			"name": "ケルベロス",
 			"dev_name": "バーアル",
 			"rarity": "N",
 			"type": "creature",
@@ -748,7 +748,7 @@
 		},
 		{
 			"id": 46,
-			"name": "メソポタミアサーペント",
+			"name": "サラマンダー",
 			"dev_name": "ムシュフシュ",
 			"rarity": "R",
 			"type": "creature",

@@ -146,7 +146,7 @@
 		},
 		{
 			"id": 129,
-			"name": "ハーヴェストアーム",
+			"name": "クラーケン",
 			"dev_name": "テンタクルズ",
 			"rarity": "N",
 			"type": "creature",
@@ -213,7 +213,7 @@
 		},
 		{
 			"id": 131,
-			"name": "ディープレジェンド",
+			"name": "シーサーペント",
 			"dev_name": "ネッシー",
 			"rarity": "S",
 			"type": "creature",
@@ -285,7 +285,7 @@
 		},
 		{
 			"id": 133,
-			"name": "エターナルリヴァイア",
+			"name": "リヴァイアサン",
 			"dev_name": "バハムート",
 			"rarity": "R",
 			"type": "creature",
@@ -317,7 +317,7 @@
 		},
 		{
 			"id": 134,
-			"name": "バーストディフェンダー",
+			"name": "サハギン",
 			"dev_name": "ビジランテ",
 			"rarity": "N",
 			"type": "creature",
@@ -723,7 +723,7 @@
 		},
 		{
 			"id": 146,
-			"name": "デッキイーター",
+			"name": "ヒドラ",
 			"dev_name": "リリス",
 			"rate": 65,
 			"rarity": "S",

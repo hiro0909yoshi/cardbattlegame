@@ -1,1412 +1,1412 @@
 {
-  "cards": [
-    {
-      "id": 9001,
-      "name": "減税刻印付与",
-      "dev_name": "通行料半減の呪い",
-      "rarity": "N",
-      "type": "spell",
-      "cost": {
-        "ep": 0
-      },
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "curse_toll_half",
-            "duration": 3
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "enemy_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9002,
-      "name": "カード獲得",
-      "dev_name": "カード獲得",
-      "rarity": "N",
-      "type": "skill",
-      "cost": {
-        "ep": 0
-      },
-      "effect_parsed": {
-        "trigger": "on_survive",
-        "effects": [
-          {
-            "effect_type": "draw_until",
-            "target_hand_size": 5
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "skip",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9003,
-      "name": "アイテムリプレニッシュ",
-      "dev_name": "カード獲得（アイテム使用時・アイテムのみ）",
-      "rarity": "N",
-      "type": "skill",
-      "cost": {
-        "ep": 0
-      },
-      "effect_parsed": {
-        "trigger": "on_survive",
-        "trigger_condition": {
-          "self_used_item": true
-        },
-        "effects": [
-          {
-            "effect_type": "draw_by_type",
-            "card_type": "item"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "skip",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9004,
-      "name": "マジックボルト",
-      "dev_name": "ダメージ10（敵単体）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 10
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "can_kill_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9005,
-      "name": "ロックブレス",
-      "dev_name": "ダメージ20（敵火風）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy",
-          "creature_elements": [
-            "fire",
-            "wind"
-          ]
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 20
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "fire_wind_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9006,
-      "name": "ストームコール",
-      "dev_name": "ダメージ20（敵水地）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy",
-          "creature_elements": [
-            "water",
-            "earth"
-          ]
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 20
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "water_earth_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9007,
-      "name": "クロムレイ",
-      "dev_name": "ダメージ30（敵無属性）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy",
-          "creature_elements": [
-            "neutral"
-          ]
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 30
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "neutral_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9008,
-      "name": "熾天断罪",
-      "dev_name": "ダメージ20（呪い付き全体）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {
-          "owner_filter": "any",
-          "has_curse": true
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 20
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "cursed_creatures",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9009,
-      "name": "ヒール",
-      "dev_name": "回復30（自クリーチャー）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "heal",
-            "value": 30
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "self_creature_damaged",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9010,
-      "name": "ライフフォージ",
-      "dev_name": "MHP増加（自クリーチャー）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "permanent_hp_change",
-            "value": 10
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9011,
-      "name": "ライフドレイン",
-      "dev_name": "MHP減少（敵クリーチャー）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "permanent_hp_change",
-            "value": -10
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9012,
-      "name": "吸魔",
-      "dev_name": "EP奪取",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "drain_magic",
-            "value": 10,
-            "value_type": "percentage"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "profit_calc",
-        "profit_formula": "enemy_magic * 0.1",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9013,
-      "name": "枷刻印付与",
-      "dev_name": "移動不可呪い",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "creature_curse",
-            "curse_type": "move_disable",
-            "name": "枷",
-            "description": "移動できない"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "enemy_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9014,
-      "name": "天駆刻印付与",
-      "dev_name": "遠隔移動呪い",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "creature_curse",
-            "curse_type": "remote_move",
-            "name": "天駆",
-            "description": "全ての空き地に移動可能"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "element_mismatch",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9015,
-      "name": "黄金献身",
-      "dev_name": "黄金献身",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "gain_magic",
-            "amount": 200
-          },
-          {
-            "effect_type": "self_destroy",
-            "clear_land": true
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "profit_calc",
-        "profit_formula": "200 - caster_value",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9016,
-      "name": "翼神刻印付与",
-      "dev_name": "ダイス6固定（自分）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "dice_fixed",
-            "value": 6,
-            "duration": 1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "strategic",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9017,
-      "name": "快足刻印付与",
-      "dev_name": "ダイス5固定（対象セプター）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "any",
-        "effects": [
-          {
-            "effect_type": "dice_fixed",
-            "value": 5,
-            "duration": 1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "strategic",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9018,
-      "name": "暗転刻印付与",
-      "dev_name": "地形効果無効（スクリーマーアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "land_effect_disable",
-            "name": "暗転",
-            "duration": -1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "enemy_has_land_bonus",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9019,
-      "name": "恩寵刻印付与",
-      "dev_name": "地形効果付与（ハイドビハインドアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "land_effect_grant",
-            "name": "地形効果",
-            "duration": -1,
-            "grant_elements": []
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "own_no_land_bonus",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9020,
-      "name": "バーニングウォーデン変身",
-      "dev_name": "オールドウィロウに変身（スプラウトリングアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 5
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9021,
-      "name": "ナビゲート",
-      "dev_name": "方向選択権付与（クロックアウルアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "target_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "grant_direction_choice",
-            "duration": 1,
-            "name": "方向選択"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "strategic",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9022,
-      "name": "結界刻印付与",
-      "dev_name": "防魔付与（ドモビーアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "creature_curse",
-            "curse_type": "spell_protection",
-            "name": "結界",
-            "description": "スペル・アルカナアーツの対象にならない",
-            "duration": -1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "own_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9023,
-      "name": "祝福刻印付与",
-      "dev_name": "防魔付与（パトロナスアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "target_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "player_curse",
-            "curse_type": "spell_protection",
-            "name": "結界",
-            "description": "スペル・アルカナアーツの対象にならない",
-            "duration": -1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9024,
-      "name": "ディスペル",
-      "dev_name": "ドミニオ呪い除去",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any",
-          "has_curse": true
-        },
-        "effects": [
-          {
-            "effect_type": "remove_creature_curse"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "has_cursed_creature",
-        "priority": "medium_high"
-      }
-    },
-    {
-      "id": 9025,
-      "name": "ワールドディスペル",
-      "dev_name": "世界呪い除去",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "remove_world_curse"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "has_world_curse",
-        "priority": "medium_high"
-      }
-    },
-    {
-      "id": 9026,
-      "name": "浄化の炎",
-      "dev_name": "全プレイヤー呪い除去",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "remove_all_player_curses"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "has_player_curse",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9027,
-      "name": "安寧刻印付与",
-      "dev_name": "平和",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "peace",
-            "name": "安寧",
-            "invasion_disable": true,
-            "toll_zero": true,
-            "duration": -1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9028,
-      "name": "衰弱刻印付与",
-      "dev_name": "衰弱呪い（スピットコブラアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "creature_curse",
-            "curse_type": "plague",
-            "name": "衰弱",
-            "description": "戦闘終了時、HP-MHPの1/2"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "enemy_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9029,
-      "name": "泥沼刻印付与",
-      "dev_name": "ダイス1～3呪い（スワンプスボーンアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "target_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "dice_range",
-            "name": "ダイス1～3",
-            "min": 1,
-            "max": 3,
-            "duration": 1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "strategic",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9030,
-      "name": "暁光刻印付与",
-      "dev_name": "能力値+20呪い（カラドリウスアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "stat_boost",
-            "name": "暁光",
-            "value": 20,
-            "duration": -1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9031,
-      "name": "オーバーレイジ",
-      "dev_name": "AP+20（フェイアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "permanent_ap_change",
-            "value": 20
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9032,
-      "name": "レイジ",
-      "dev_name": "AP+10（カワヒメアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "permanent_ap_change",
-            "value": 10
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9033,
-      "name": "イコライズ",
-      "dev_name": "AP調整（ロードオブペインアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "effects": [
-          {
-            "effect_type": "conditional_ap_change",
-            "conditions": [
-              {
-                "check": "ap_lte",
-                "threshold": 30,
-                "value": 20
-              },
-              {
-                "check": "ap_gte",
-                "threshold": 50,
-                "value": -20
-              }
-            ]
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9034,
-      "name": "生命変換",
-      "dev_name": "MHP変換（ドゥームデボラーアルカナアーツ）",
-      "rarity": "S",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "self"
-        },
-        "effects": [
-          {
-            "effect_type": "mhp_to_magic",
-            "multiplier": 2,
-            "stat_penalty": {
-              "ap": -10,
-              "max_hp": -10
-            }
-          }
-        ],
-        "affects_hp": true
-      },
-      "cpu_rule": {
-        "pattern": "profit_calc",
-        "profit_formula": "caster_mhp * 2",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9035,
-      "name": "デスリワード",
-      "dev_name": "破壊報酬（ヘルバイロンアルカナアーツ）",
-      "rarity": "R",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "gain_magic_from_destroyed_count",
-            "multiplier": 30,
-            "reset_count": true
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "profit_calc",
-        "profit_formula": "destroyed_count * 30",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9036,
-      "name": "魔女の奪取",
-      "dev_name": "スペル強奪（ウィッチアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "drain_magic_by_spell_count",
-            "multiplier": 40
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "profit_calc",
-        "profit_formula": "enemy_spell_count * 40",
-        "priority": "medium_high"
-      }
-    },
-    {
-      "id": 9037,
-      "name": "スリープ",
-      "dev_name": "ダウン付与（アルプアルカナアーツ）",
-      "rarity": "S",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "set_down"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "enemy_creature",
-        "priority": "medium_high"
-      }
-    },
-    {
-      "id": 9038,
-      "name": "ブックバーン",
-      "dev_name": "ブック破壊（コアトリクエアルカナアーツ）",
-      "rarity": "S",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "destroy_deck_top",
-            "count": 1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9039,
-      "name": "アクアシフト",
-      "dev_name": "水への変成（マカラアルカナアーツ）",
-      "rarity": "R",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "change_caster_tile_element",
-            "element": "water"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "element_mismatch",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9040,
-      "name": "アースシフト",
-      "dev_name": "地への変成（サクヤアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "own_land",
-        "effects": [
-          {
-            "effect_type": "change_element",
-            "element": "earth"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "condition",
-        "condition": "element_mismatch",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9041,
-      "name": "ニュートラルシフト",
-      "dev_name": "無への変成（ストーンジゾウアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "change_element",
-            "element": "neutral"
-          },
-          {
-            "effect_type": "self_destruct"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9042,
-      "name": "カードドロー",
-      "dev_name": "カードドロー（フェイトアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "draw_cards",
-            "count": 1
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9043,
-      "name": "アイテムドロー",
-      "dev_name": "アイテムドロー（アイアンモンガーアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "draw_by_type",
-            "card_type": "item"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9044,
-      "name": "リバイブ",
-      "dev_name": "ダウン解除（キャプテンコックアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "own",
-          "target_filter": "creature",
-          "is_down": true
-        },
-        "effects": [
-          {
-            "effect_type": "clear_down"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "own_downed_creature",
-        "priority": "medium"
-      }
-    },
-    {
-      "id": 9045,
-      "name": "トリックスティール",
-      "dev_name": "手札破壊ドロー（クラウドギズモアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "destroy_and_draw"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9046,
-      "name": "ファラオズギフト変身",
-      "dev_name": "マミーに変身（デスサイズアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 239
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9047,
-      "name": "タイダルウォーデン変身",
-      "dev_name": "ケルピーに変身（ヒッポカンパスアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 121
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9048,
-      "name": "ミストシフター変身",
-      "dev_name": "アクアホーンに変身（ミストウィングアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 104
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9049,
-      "name": "トランスフェザー変身",
-      "dev_name": "ミストウィングに変身（アクアホーンアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 142
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9050,
-      "name": "ガルーダ変身",
-      "dev_name": "ガルーダに変身（シルフアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 307
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9051,
-      "name": "ヴァルキリー変身",
-      "dev_name": "アームドプリンセスに変身（ソードプリンセスアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 300
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9052,
-      "name": "リビングソイル変身",
-      "dev_name": "マッドマンに変身（ブランチアーミーアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "transform",
-            "transform_type": "specific",
-            "transform_to": 238
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9053,
-      "name": "ハイヴソルジャー召喚",
-      "dev_name": "ハイプワーカー生成（ハイプクイーンアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "add_specific_card",
-            "card_id": 32
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "immediate",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9054,
-      "name": "インフェルノロード召喚",
-      "dev_name": "バーアル召喚（コンジャラーアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any",
-          "target_filter": "empty"
-        },
-        "effects": [
-          {
-            "effect_type": "place_creature",
-            "creature_id": 27,
-            "placement_mode": "select",
-            "set_down": true
-          },
-          {
-            "effect_type": "self_destroy",
-            "clear_land": true
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "has_empty_land",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9055,
-      "name": "ダートリング召喚",
-      "dev_name": "グーバ配置（グーバクイーンアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any",
-          "target_filter": "empty"
-        },
-        "effects": [
-          {
-            "effect_type": "place_creature",
-            "creature_id": 208,
-            "placement_mode": "select",
-            "set_down": true
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "has_empty_land",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9056,
-      "name": "ストーンゴーレム召喚",
-      "dev_name": "スタチュー配置（レジェンドファロスアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "place_creature",
-            "creature_id": 421,
-            "placement_mode": "adjacent"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "has_adjacent_empty_land",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9057,
-      "name": "変身",
-      "dev_name": "対象と同じクリーチャーに変身（シェイプシフターアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any",
-          "exclude_self": true
-        },
-        "effects": [
-          {
-            "effect_type": "transform",
-            "target": "self",
-            "transform_type": "copy_target"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "skip",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9058,
-      "name": "スペルスティール",
-      "dev_name": "スペル借用（ルーンアデプトアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "use_hand_spell"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "skip",
-        "priority": "low"
-      }
-    },
-    {
-      "id": 9059,
-      "name": "チェンジリング",
-      "dev_name": "クリーチャー交換（レムレースアルカナアーツ）",
-      "rarity": "N",
-      "type": "mystic",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "swap_creature"
-          }
-        ]
-      },
-      "cpu_rule": {
-        "pattern": "skip",
-        "priority": "low"
-      }
-    }
-  ]
+	"cards": [
+		{
+			"id": 9001,
+			"name": "減税刻印付与",
+			"dev_name": "通行料半減の呪い",
+			"rarity": "N",
+			"type": "spell",
+			"cost": {
+				"ep": 0
+			},
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "curse_toll_half",
+						"duration": 3
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "enemy_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9002,
+			"name": "カード獲得",
+			"dev_name": "カード獲得",
+			"rarity": "N",
+			"type": "skill",
+			"cost": {
+				"ep": 0
+			},
+			"effect_parsed": {
+				"trigger": "on_survive",
+				"effects": [
+					{
+						"effect_type": "draw_until",
+						"target_hand_size": 5
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "skip",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9003,
+			"name": "アイテムリプレニッシュ",
+			"dev_name": "カード獲得（アイテム使用時・アイテムのみ）",
+			"rarity": "N",
+			"type": "skill",
+			"cost": {
+				"ep": 0
+			},
+			"effect_parsed": {
+				"trigger": "on_survive",
+				"trigger_condition": {
+					"self_used_item": true
+				},
+				"effects": [
+					{
+						"effect_type": "draw_by_type",
+						"card_type": "item"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "skip",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9004,
+			"name": "マジックボルト",
+			"dev_name": "ダメージ10（敵単体）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "damage",
+						"value": 10
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "can_kill_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9005,
+			"name": "ロックブレス",
+			"dev_name": "ダメージ20（敵火風）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy",
+					"creature_elements": [
+						"fire",
+						"wind"
+					]
+				},
+				"effects": [
+					{
+						"effect_type": "damage",
+						"value": 20
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "fire_wind_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9006,
+			"name": "ストームコール",
+			"dev_name": "ダメージ20（敵水地）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy",
+					"creature_elements": [
+						"water",
+						"earth"
+					]
+				},
+				"effects": [
+					{
+						"effect_type": "damage",
+						"value": 20
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "water_earth_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9007,
+			"name": "クロムレイ",
+			"dev_name": "ダメージ30（敵無属性）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy",
+					"creature_elements": [
+						"neutral"
+					]
+				},
+				"effects": [
+					{
+						"effect_type": "damage",
+						"value": 30
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "neutral_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9008,
+			"name": "熾天断罪",
+			"dev_name": "ダメージ20（呪い付き全体）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "all_creatures",
+				"target_info": {
+					"owner_filter": "any",
+					"has_curse": true
+				},
+				"effects": [
+					{
+						"effect_type": "damage",
+						"value": 20
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "cursed_creatures",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9009,
+			"name": "ヒール",
+			"dev_name": "回復30（自クリーチャー）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "heal",
+						"value": 30
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "self_creature_damaged",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9010,
+			"name": "ライフフォージ",
+			"dev_name": "MHP増加（自クリーチャー）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "permanent_hp_change",
+						"value": 10
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9011,
+			"name": "ライフドレイン",
+			"dev_name": "MHP減少（敵クリーチャー）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "permanent_hp_change",
+						"value": -10
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9012,
+			"name": "吸魔",
+			"dev_name": "EP奪取",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_filter": "enemy",
+				"effects": [
+					{
+						"effect_type": "drain_magic",
+						"value": 10,
+						"value_type": "percentage"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "profit_calc",
+				"profit_formula": "enemy_magic * 0.1",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9013,
+			"name": "枷刻印付与",
+			"dev_name": "移動不可呪い",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "creature_curse",
+						"curse_type": "move_disable",
+						"name": "枷",
+						"description": "移動できない"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "enemy_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9014,
+			"name": "天駆刻印付与",
+			"dev_name": "遠隔移動呪い",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "creature_curse",
+						"curse_type": "remote_move",
+						"name": "天駆",
+						"description": "全ての空き地に移動可能"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "element_mismatch",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9015,
+			"name": "黄金献身",
+			"dev_name": "黄金献身",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "none",
+				"effects": [
+					{
+						"effect_type": "gain_magic",
+						"amount": 200
+					},
+					{
+						"effect_type": "self_destroy",
+						"clear_land": true
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "profit_calc",
+				"profit_formula": "200 - caster_value",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9016,
+			"name": "翼神刻印付与",
+			"dev_name": "ダイス6固定（自分）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "dice_fixed",
+						"value": 6,
+						"duration": 1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "strategic",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9017,
+			"name": "快足刻印付与",
+			"dev_name": "ダイス5固定（対象セプター）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_filter": "any",
+				"effects": [
+					{
+						"effect_type": "dice_fixed",
+						"value": 5,
+						"duration": 1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "strategic",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9018,
+			"name": "暗転刻印付与",
+			"dev_name": "地形効果無効（スクリーマーアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "land_effect_disable",
+						"name": "暗転",
+						"duration": -1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "enemy_has_land_bonus",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9019,
+			"name": "恩寵刻印付与",
+			"dev_name": "地形効果付与（ハイドビハインドアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "land_effect_grant",
+						"name": "地形効果",
+						"duration": -1,
+						"grant_elements": []
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "own_no_land_bonus",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9020,
+			"name": "バーニングウォーデン変身",
+			"dev_name": "オールドウィロウに変身（スプラウトリングアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 5
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9021,
+			"name": "ナビゲート",
+			"dev_name": "方向選択権付与（クロックアウルアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"target_filter": "any"
+				},
+				"effects": [
+					{
+						"effect_type": "grant_direction_choice",
+						"duration": 1,
+						"name": "方向選択"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "strategic",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9022,
+			"name": "結界刻印付与",
+			"dev_name": "防魔付与（ドモビーアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "creature_curse",
+						"curse_type": "spell_protection",
+						"name": "結界",
+						"description": "スペル・アルカナアーツの対象にならない",
+						"duration": -1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "own_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9023,
+			"name": "祝福刻印付与",
+			"dev_name": "防魔付与（パトロナスアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"target_filter": "any"
+				},
+				"effects": [
+					{
+						"effect_type": "player_curse",
+						"curse_type": "spell_protection",
+						"name": "結界",
+						"description": "スペル・アルカナアーツの対象にならない",
+						"duration": -1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9024,
+			"name": "ディスペル",
+			"dev_name": "ドミニオ呪い除去",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "any",
+					"has_curse": true
+				},
+				"effects": [
+					{
+						"effect_type": "remove_creature_curse"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "has_cursed_creature",
+				"priority": "medium_high"
+			}
+		},
+		{
+			"id": 9025,
+			"name": "ワールドディスペル",
+			"dev_name": "世界呪い除去",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "none",
+				"effects": [
+					{
+						"effect_type": "remove_world_curse"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "has_world_curse",
+				"priority": "medium_high"
+			}
+		},
+		{
+			"id": 9026,
+			"name": "浄化の炎",
+			"dev_name": "全プレイヤー呪い除去",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "none",
+				"effects": [
+					{
+						"effect_type": "remove_all_player_curses"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "has_player_curse",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9027,
+			"name": "安寧刻印付与",
+			"dev_name": "平和",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "peace",
+						"name": "安寧",
+						"invasion_disable": true,
+						"toll_zero": true,
+						"duration": -1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9028,
+			"name": "衰弱刻印付与",
+			"dev_name": "衰弱呪い（スピットコブラアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "creature_curse",
+						"curse_type": "plague",
+						"name": "衰弱",
+						"description": "戦闘終了時、HP-MHPの1/2"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "enemy_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9029,
+			"name": "泥沼刻印付与",
+			"dev_name": "ダイス1～3呪い（スワンプスボーンアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"target_filter": "any"
+				},
+				"effects": [
+					{
+						"effect_type": "dice_range",
+						"name": "ダイス1～3",
+						"min": 1,
+						"max": 3,
+						"duration": 1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "strategic",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9030,
+			"name": "暁光刻印付与",
+			"dev_name": "能力値+20呪い（カラドリウスアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "stat_boost",
+						"name": "暁光",
+						"value": 20,
+						"duration": -1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9031,
+			"name": "オーバーレイジ",
+			"dev_name": "AP+20（フェイアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "permanent_ap_change",
+						"value": 20
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9032,
+			"name": "レイジ",
+			"dev_name": "AP+10（カワヒメアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "own"
+				},
+				"effects": [
+					{
+						"effect_type": "permanent_ap_change",
+						"value": 10
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9033,
+			"name": "イコライズ",
+			"dev_name": "AP調整（ロードオブペインアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "all_creatures",
+				"effects": [
+					{
+						"effect_type": "conditional_ap_change",
+						"conditions": [
+							{
+								"check": "ap_lte",
+								"threshold": 30,
+								"value": 20
+							},
+							{
+								"check": "ap_gte",
+								"threshold": 50,
+								"value": -20
+							}
+						]
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9034,
+			"name": "生命変換",
+			"dev_name": "MHP変換（ドゥームデボラーアルカナアーツ）",
+			"rarity": "S",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "self"
+				},
+				"effects": [
+					{
+						"effect_type": "mhp_to_magic",
+						"multiplier": 2,
+						"stat_penalty": {
+							"ap": -10,
+							"max_hp": -10
+						}
+					}
+				],
+				"affects_hp": true
+			},
+			"cpu_rule": {
+				"pattern": "profit_calc",
+				"profit_formula": "caster_mhp * 2",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9035,
+			"name": "デスリワード",
+			"dev_name": "破壊報酬（ヘルバイロンアルカナアーツ）",
+			"rarity": "R",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "none",
+				"effects": [
+					{
+						"effect_type": "gain_magic_from_destroyed_count",
+						"multiplier": 30,
+						"reset_count": true
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "profit_calc",
+				"profit_formula": "destroyed_count * 30",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9036,
+			"name": "魔女の奪取",
+			"dev_name": "スペル強奪（ウィッチアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "drain_magic_by_spell_count",
+						"multiplier": 40
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "profit_calc",
+				"profit_formula": "enemy_spell_count * 40",
+				"priority": "medium_high"
+			}
+		},
+		{
+			"id": 9037,
+			"name": "スリープ",
+			"dev_name": "ダウン付与（アルプアルカナアーツ）",
+			"rarity": "S",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "set_down"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "enemy_creature",
+				"priority": "medium_high"
+			}
+		},
+		{
+			"id": 9038,
+			"name": "ブックバーン",
+			"dev_name": "ブック破壊（コアトリクエアルカナアーツ）",
+			"rarity": "S",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "destroy_deck_top",
+						"count": 1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9039,
+			"name": "アクアシフト",
+			"dev_name": "水への変成（マカラアルカナアーツ）",
+			"rarity": "R",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "none",
+				"effects": [
+					{
+						"effect_type": "change_caster_tile_element",
+						"element": "water"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "element_mismatch",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9040,
+			"name": "アースシフト",
+			"dev_name": "地への変成（サクヤアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "own_land",
+				"effects": [
+					{
+						"effect_type": "change_element",
+						"element": "earth"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "condition",
+				"condition": "element_mismatch",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9041,
+			"name": "ニュートラルシフト",
+			"dev_name": "無への変成（ストーンジゾウアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "land",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "change_element",
+						"element": "neutral"
+					},
+					{
+						"effect_type": "self_destruct"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9042,
+			"name": "カードドロー",
+			"dev_name": "カードドロー（フェイトアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "draw_cards",
+						"count": 1
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9043,
+			"name": "アイテムドロー",
+			"dev_name": "アイテムドロー（アイアンモンガーアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "draw_by_type",
+						"card_type": "item"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9044,
+			"name": "リバイブ",
+			"dev_name": "ダウン解除（キャプテンコックアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "land",
+				"target_info": {
+					"owner_filter": "own",
+					"target_filter": "creature",
+					"is_down": true
+				},
+				"effects": [
+					{
+						"effect_type": "clear_down"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "own_downed_creature",
+				"priority": "medium"
+			}
+		},
+		{
+			"id": 9045,
+			"name": "トリックスティール",
+			"dev_name": "手札破壊ドロー（クラウドギズモアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "destroy_and_draw"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9046,
+			"name": "ファラオズギフト変身",
+			"dev_name": "マミーに変身（デスサイズアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 239
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9047,
+			"name": "タイダルウォーデン変身",
+			"dev_name": "ケルピーに変身（ヒッポカンパスアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 121
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9048,
+			"name": "ミストシフター変身",
+			"dev_name": "アクアホーンに変身（ミストウィングアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 104
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9049,
+			"name": "トランスフェザー変身",
+			"dev_name": "ミストウィングに変身（アクアホーンアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 142
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9050,
+			"name": "ガルーダ変身",
+			"dev_name": "ガルーダに変身（シルフアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 307
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9051,
+			"name": "ヴァルキリー変身",
+			"dev_name": "アームドプリンセスに変身（ソードプリンセスアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 300
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9052,
+			"name": "リビングソイル変身",
+			"dev_name": "マッドマンに変身（ブランチアーミーアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "transform",
+						"transform_type": "specific",
+						"transform_to": 238
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9053,
+			"name": "ハイヴソルジャー召喚",
+			"dev_name": "ハイプワーカー生成（ハイプクイーンアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "add_specific_card",
+						"card_id": 32
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "immediate",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9054,
+			"name": "ケルベロス召喚",
+			"dev_name": "バーアル召喚（コンジャラーアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "land",
+				"target_info": {
+					"owner_filter": "any",
+					"target_filter": "empty"
+				},
+				"effects": [
+					{
+						"effect_type": "place_creature",
+						"creature_id": 27,
+						"placement_mode": "select",
+						"set_down": true
+					},
+					{
+						"effect_type": "self_destroy",
+						"clear_land": true
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "has_empty_land",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9055,
+			"name": "ダートリング召喚",
+			"dev_name": "グーバ配置（グーバクイーンアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "land",
+				"target_info": {
+					"owner_filter": "any",
+					"target_filter": "empty"
+				},
+				"effects": [
+					{
+						"effect_type": "place_creature",
+						"creature_id": 208,
+						"placement_mode": "select",
+						"set_down": true
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "has_empty_land",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9056,
+			"name": "ストーンゴーレム召喚",
+			"dev_name": "スタチュー配置（レジェンドファロスアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "place_creature",
+						"creature_id": 421,
+						"placement_mode": "adjacent"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "has_target",
+				"target_condition": "has_adjacent_empty_land",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9057,
+			"name": "変身",
+			"dev_name": "対象と同じクリーチャーに変身（シェイプシフターアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "creature",
+				"target_info": {
+					"owner_filter": "any",
+					"exclude_self": true
+				},
+				"effects": [
+					{
+						"effect_type": "transform",
+						"target": "self",
+						"transform_type": "copy_target"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "skip",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9058,
+			"name": "スペルスティール",
+			"dev_name": "スペル借用（ルーンアデプトアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "self",
+				"effects": [
+					{
+						"effect_type": "use_hand_spell"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "skip",
+				"priority": "low"
+			}
+		},
+		{
+			"id": 9059,
+			"name": "チェンジリング",
+			"dev_name": "クリーチャー交換（レムレースアルカナアーツ）",
+			"rarity": "N",
+			"type": "mystic",
+			"effect_parsed": {
+				"target_type": "player",
+				"target_info": {
+					"owner_filter": "enemy"
+				},
+				"effects": [
+					{
+						"effect_type": "swap_creature"
+					}
+				]
+			},
+			"cpu_rule": {
+				"pattern": "skip",
+				"priority": "low"
+			}
+		}
+	]
 }

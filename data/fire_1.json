@@ -43,7 +43,7 @@
 		},
 		{
 			"id": 2,
-			"name": "イフリナス",
+			"name": "イフリート",
 			"dev_name": "アモン",
 			"rarity": "R",
 			"type": "creature",
@@ -250,7 +250,7 @@
 		},
 		{
 			"id": 8,
-			"name": "タイラントドレイク",
+			"name": "ヘルハウンド",
 			"dev_name": "キングバラン",
 			"rarity": "N",
 			"type": "creature",
@@ -270,7 +270,7 @@
 		},
 		{
 			"id": 9,
-			"name": "ヴァルカングラディウス",
+			"name": "バルログ",
 			"dev_name": "グラディエーター",
 			"rarity": "N",
 			"type": "creature",
