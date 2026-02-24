@@ -16,6 +16,7 @@ signal start_passed(player_id: int)  # スタート地点通過時に発火
 # 移動設定
 const MOVE_DURATION = 0.1  # 1マスの移動時間
 const MOVE_HEIGHT = 1.0    # 駒の高さオフセット
+const TILE_OFFSET = Vector3(0.8, 0, 0.8)  # タイル上の位置オフセット
 
 # 参照
 var tile_nodes = {}        # tile_index -> BaseTile
@@ -155,6 +156,15 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 		await _move_steps_with_branch(player_id, steps, -1)
 
 	var final_tile = player_tiles[player_id]
+
+	# 歩行アニメーション停止
+	if player_id < player_nodes.size():
+		print("[Movement] 歩行停止 player_id=", player_id)
+		_play_walk_animation(player_nodes[player_id], false)
+		# 停止時に正面を向く（カメラ方向）
+		player_nodes[player_id].rotation = Vector3(0, deg_to_rad(45), 0)
+	else:
+		print("[Movement] player_nodes範囲外 player_id=", player_id, " size=", player_nodes.size())
 
 	is_moving = false
 	current_moving_player = -1
@@ -457,6 +467,13 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	var player_node = player_nodes[player_id]
 	var target_pos = tile_nodes[tile_index].global_position
 	target_pos.y += MOVE_HEIGHT
+	target_pos += TILE_OFFSET
+
+	# 移動方向を向く
+	_face_direction(player_node, target_pos)
+
+	# 歩行アニメーション開始
+	_play_walk_animation(player_node, true)
 
 	var tween = get_tree().create_tween()
 	tween.set_parallel(true)
@@ -642,3 +659,38 @@ func is_player_moving() -> bool:
 
 func get_moving_player() -> int:
 	return current_moving_player
+
+# アニメーション制御ヘルパー
+func _play_walk_animation(player_node: Node, play: bool) -> void:
+	var walk_model = player_node.find_child("WalkModel", false, false)
+	var idle_model = player_node.find_child("IdleModel", false, false)
+
+	if play:
+		# 歩行モデル表示、Idleモデル非表示
+		if walk_model:
+			walk_model.visible = true
+			var anim = walk_model.find_child("AnimationPlayer", true, false)
+			if anim and anim.has_animation("mixamo_com"):
+				anim.play("mixamo_com")
+		if idle_model:
+			idle_model.visible = false
+	else:
+		# Idleモデル表示、歩行モデル非表示
+		if idle_model:
+			idle_model.visible = true
+			var anim = idle_model.find_child("AnimationPlayer", true, false)
+			if anim and anim.has_animation("mixamo_com"):
+				anim.play("mixamo_com")
+		if walk_model:
+			walk_model.visible = false
+		# 停止時に正面を向く
+		player_node.rotation = Vector3(0, deg_to_rad(45), 0)
+
+# 移動方向にキャラクターを向かせる
+func _face_direction(player_node: Node, target_pos: Vector3) -> void:
+	var current_pos = player_node.global_position
+	var direction = target_pos - current_pos
+	direction.y = 0  # 水平方向のみ
+	if direction.length() < 0.01:
+		return
+	player_node.look_at(player_node.global_position - direction, Vector3.UP)

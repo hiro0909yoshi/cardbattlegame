@@ -2,7 +2,7 @@
   "characters": {
 	"bowser": {
 	  "name": "クッパ",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "最初の敵",
 	  "battle_policy": {
@@ -27,7 +27,7 @@
 	},
 	"tutorial_enemy": {
 	  "name": "チュートリアル敵",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "チュートリアル用の敵（常に戦闘・常に召喚）",
 	  "battle_policy": {
@@ -46,7 +46,7 @@
 	},
 	"zako_1": {
 	  "name": "雑魚1",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "雑魚敵1",
 	  "battle_policy": {
@@ -75,7 +75,7 @@
 	},
 	"zako_2": {
 	  "name": "雑魚2",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "雑魚敵2",
 	  "battle_policy": {
@@ -104,7 +104,7 @@
 	},
 	"fighter_1": {
 	  "name": "ファイター1",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-1の敵",
 	  "battle_policy": {
@@ -133,7 +133,7 @@
 	},
 	"cleric": {
 	  "name": "クレリック",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-3の敵",
 	  "battle_policy": {
@@ -162,7 +162,7 @@
 	},
 	"thief": {
 	  "name": "シーフ",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-5から登場する敵",
 	  "battle_policy": {
@@ -191,7 +191,7 @@
 	},
 	"goblin": {
 	  "name": "ゴブリン",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド1-8のボス",
 	  "battle_policy": {
@@ -220,7 +220,7 @@
 	},
 	"orc": {
 	  "name": "オーク",
-	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-8から登場する好戦的な敵",
 	  "battle_policy": {

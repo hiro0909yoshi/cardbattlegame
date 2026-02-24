@@ -161,7 +161,7 @@ func _setup_3d_scene_before_init():
 ## プレイヤーキャラクター作成
 func _create_player_characters(container: Node3D):
 	# プレイヤー1（Mario）
-	var mario_scene = load("res://scenes/Characters/Mario.tscn")
+	var mario_scene = load("res://scenes/Characters/Necromancer.tscn")
 	if mario_scene:
 		var mario = mario_scene.instantiate()
 		mario.name = "Player"
@@ -174,7 +174,7 @@ func _create_player_characters(container: Node3D):
 	var enemies = stage_loader.get_enemies()
 	for i in range(enemies.size()):
 		var char_data = stage_loader.get_enemy_character(i)
-		var model_path = char_data.get("model_path", "res://scenes/Characters/Bowser.tscn")
+		var model_path = char_data.get("model_path", "res://scenes/Characters/Necromancer.tscn")
 		var enemy_scene = load(model_path)
 		if enemy_scene:
 			var enemy = enemy_scene.instantiate()

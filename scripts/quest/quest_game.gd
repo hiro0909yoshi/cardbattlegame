@@ -109,7 +109,7 @@ func _setup_3d_scene_before_init():
 ## プレイヤーキャラクター作成
 func _create_player_characters(container: Node3D):
 	# プレイヤー1（Mario）
-	var mario_scene = load("res://scenes/Characters/Mario.tscn")
+	var mario_scene = load("res://scenes/Characters/Necromancer.tscn")
 	if mario_scene:
 		var mario = mario_scene.instantiate()
 		mario.name = "Player"
@@ -117,17 +117,34 @@ func _create_player_characters(container: Node3D):
 		if movement_script:
 			mario.set_script(movement_script)
 		container.add_child(mario)
+		# 初期状態でIdleアニメーション再生
+		_setup_initial_animation(mario)
 	
 	# CPU敵（新旧形式両対応）
 	var enemies = stage_loader.get_enemies()
 	for i in range(enemies.size()):
 		var char_data = stage_loader.get_enemy_character(i)
-		var model_path = char_data.get("model_path", "res://scenes/Characters/Bowser.tscn")
+		var model_path = char_data.get("model_path", "res://scenes/Characters/Necromancer.tscn")
 		var enemy_scene = load(model_path)
 		if enemy_scene:
 			var enemy = enemy_scene.instantiate()
 			enemy.name = "Player%d" % (i + 2)
 			container.add_child(enemy)
+			_setup_initial_animation(enemy)
+
+## 初期アニメーション設定
+func _setup_initial_animation(player_node: Node) -> void:
+	var walk_model = player_node.find_child("WalkModel", false, false)
+	var idle_model = player_node.find_child("IdleModel", false, false)
+	if walk_model:
+		walk_model.visible = false
+	if idle_model:
+		idle_model.visible = true
+		var anim = idle_model.find_child("AnimationPlayer", true, false)
+		if anim and anim.has_animation("mixamo_com"):
+			anim.play("mixamo_com")
+	# 正面（45度）を向く
+	player_node.rotation = Vector3(0, deg_to_rad(45), 0)
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():
