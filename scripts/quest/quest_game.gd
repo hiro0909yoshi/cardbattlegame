@@ -136,6 +136,10 @@ func _create_player_characters(container: Node3D):
 func _setup_initial_animation(player_node: Node) -> void:
 	var walk_model = player_node.find_child("WalkModel", false, false)
 	var idle_model = player_node.find_child("IdleModel", false, false)
+	# FBX内のCamera/Lightを非表示にする
+	for model in [walk_model, idle_model]:
+		if model:
+			_hide_fbx_extras(model)
 	if walk_model:
 		walk_model.visible = false
 	if idle_model:
@@ -143,8 +147,76 @@ func _setup_initial_animation(player_node: Node) -> void:
 		var anim = idle_model.find_child("AnimationPlayer", true, false)
 		if anim and anim.has_animation("mixamo_com"):
 			anim.play("mixamo_com")
+	# 外部PNGテクスチャを両モデルに適用
+	_share_material(idle_model, walk_model)
 	# 正面（45度）を向く
 	player_node.rotation = Vector3(0, deg_to_rad(45), 0)
+
+## 外部PNGテクスチャを両モデルに適用する
+## FBX内のCamera/Lightノードを非表示にする
+func _hide_fbx_extras(model: Node) -> void:
+	for child in model.get_children():
+		if child is Camera3D or child is Light3D:
+			child.visible = false
+		# 再帰的に子も確認
+		_hide_fbx_extras(child)
+
+func _share_material(idle_model: Node, walk_model: Node) -> void:
+	# キャラクターのテクスチャPNGパスを取得（Idle FBXと同じフォルダ）
+	var texture_path := _find_texture_path(idle_model)
+	if texture_path.is_empty():
+		print("[QuestGame] テクスチャPNGが見つかりません")
+		return
+	var texture := load(texture_path) as Texture2D
+	if not texture:
+		print("[QuestGame] テクスチャ読み込み失敗: ", texture_path)
+		return
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = texture
+	# 両モデルに適用
+	for model in [idle_model, walk_model]:
+		if not model:
+			continue
+		var meshes := _find_all_mesh_instances(model)
+		for mesh in meshes:
+			for i in range(mesh.get_surface_override_material_count()):
+				mesh.set_surface_override_material(i, mat)
+	print("[QuestGame] テクスチャ適用完了: ", texture_path)
+
+## モデルのFBXパスからテクスチャPNGを探す
+func _find_texture_path(model: Node) -> String:
+	if not model:
+		return ""
+	# モデルのシーンファイルパスからフォルダを特定
+	var scene_path: String = model.scene_file_path
+	if scene_path.is_empty():
+		# インスタンスの場合、元のPackedSceneパスを取得
+		var packed = model.get_meta("_editor_scene_path_", "") if model.has_meta("_editor_scene_path_") else ""
+		if packed is String and not packed.is_empty():
+			scene_path = packed
+	# FBXのフォルダ内でPNGを探す
+	var folder := "res://assets/models/necromancer/"  # デフォルト
+	if not scene_path.is_empty():
+		folder = scene_path.get_base_dir() + "/"
+	# フォルダ内の_0.pngを探す（Meshy出力のテクスチャ命名規則）
+	var dir := DirAccess.open(folder)
+	if dir:
+		dir.list_dir_begin()
+		var file_name := dir.get_next()
+		while file_name != "":
+			if file_name.ends_with(".png"):
+				return folder + file_name
+			file_name = dir.get_next()
+	return ""
+
+## モデル内の全MeshInstance3Dを再帰的に探す
+func _find_all_mesh_instances(node: Node) -> Array[MeshInstance3D]:
+	var result: Array[MeshInstance3D] = []
+	if node is MeshInstance3D:
+		result.append(node)
+	for child in node.get_children():
+		result.append_array(_find_all_mesh_instances(child))
+	return result
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():

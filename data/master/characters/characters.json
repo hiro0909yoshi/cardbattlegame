@@ -1,251 +1,251 @@
 {
   "characters": {
-	"bowser": {
-	  "name": "クッパ",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "最初の敵",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.0,
-		  "both_no_item": 1.0,
-		  "vs_enemy_item": 0.0,
-		  "never_battle": 0.0
-		},
-		"defense": {
-		  "no_item": 1.0,
-		  "always_protect": 0.0,
-		  "protect_mystic_arts": false,
-		  "protect_element_match": false,
-		  "protect_by_value": {
-			"enabled": false,
-			"threshold": 200,
-			"min_defense_items": 2
-		  }
-		}
-	  }
-	},
-	"tutorial_enemy": {
-	  "name": "チュートリアル敵",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "チュートリアル用の敵（常に戦闘・常に召喚）",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 1.0,
-		  "both_no_item": 0.0,
-		  "vs_enemy_item": 0.0,
-		  "never_battle": 0.0
-		},
-		"defense": {
-		  "no_item": 1.0,
-		  "always_protect": 0.0
-		},
-		"summon_rate": 1.0
-	  }
-	},
-	"zako_1": {
-	  "name": "雑魚1",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "雑魚敵1",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.0,
-		  "both_no_item": 1.0,
-		  "vs_enemy_item": 0.0,
-		  "never_battle": 0.0
-		},
-		"defense": {
-		  "no_item": 1.0,
-		  "always_protect": 0.0,
-		  "protect_mystic_arts": false,
-		  "protect_element_match": false,
-		  "protect_by_value": {
-			"enabled": false,
-			"threshold": 200,
-			"min_defense_items": 2
-		  }
-		},
-		"summon_rate_match": 0.4,
-		"summon_rate_mismatch": 0.2,
-		"spell_use_rate": 0.5,
-		"dominio_use_rate": 0.0
-	  }
-	},
-	"zako_2": {
-	  "name": "雑魚2",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "雑魚敵2",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.4,
-		  "both_no_item": 0.2,
-		  "vs_enemy_item": 0.3,
-		  "never_battle": 0.1
-		},
-		"defense": {
-		  "no_item": 0.5,
-		  "always_protect": 0.5,
-		  "protect_mystic_arts": false,
-		  "protect_element_match": false,
-		  "protect_by_value": {
-			"enabled": false,
-			"threshold": 200,
-			"min_defense_items": 2
-		  }
-		},
-		"summon_rate_match": 0.7,
-		"summon_rate_mismatch": 0.4,
-		"spell_use_rate": 0.6,
-		"dominio_use_rate": 0.5
-	  }
-	},
-	"fighter_1": {
-	  "name": "ファイター1",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "ワールド2-1の敵",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.1,
-		  "both_no_item": 0.3,
-		  "vs_enemy_item": 0.6,
-		  "never_battle": 0.0
-		},
-		"defense": {
-		  "no_item": 0.2,
-		  "always_protect": 0.8,
-		  "protect_mystic_arts": false,
-		  "protect_element_match": true,
-		  "protect_by_value": {
-			"enabled": true,
-			"threshold": 200,
-			"min_defense_items": 2
-		  }
-		},
-		"summon_rate_match": 0.9,
-		"summon_rate_mismatch": 0.4,
-		"spell_use_rate": 0.6,
-		"dominio_use_rate": 0.7
-	  }
-	},
-	"cleric": {
-	  "name": "クレリック",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "ワールド2-3の敵",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.0,
-		  "both_no_item": 0.3,
-		  "vs_enemy_item": 0.6,
-		  "never_battle": 0.1
-		},
-		"defense": {
-		  "no_item": 0.2,
-		  "always_protect": 0.8,
-		  "protect_mystic_arts": true,
-		  "protect_element_match": true,
-		  "protect_by_value": {
-			"enabled": true,
-			"threshold": 500,
-			"min_defense_items": 2
-		  }
-		},
-		"summon_rate_match": 0.8,
-		"summon_rate_mismatch": 0.3,
-		"spell_use_rate": 1.0,
-		"dominio_use_rate": 0.7
-	  }
-	},
-	"thief": {
-	  "name": "シーフ",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "ワールド2-5から登場する敵",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.0,
-		  "both_no_item": 0.2,
-		  "vs_enemy_item": 0.7,
-		  "never_battle": 0.1
-		},
-		"defense": {
-		  "no_item": 0.2,
-		  "always_protect": 0.8,
-		  "protect_mystic_arts": true,
-		  "protect_element_match": true,
-		  "protect_by_value": {
-			"enabled": true,
-			"threshold": 500,
-			"min_defense_items": 1
-		  }
-		},
-		"summon_rate_match": 0.8,
-		"summon_rate_mismatch": 0.5,
-		"spell_use_rate": 0.7,
-		"dominio_use_rate": 0.8
-	  }
-	},
-	"goblin": {
-	  "name": "ゴブリン",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "ワールド1-8のボス",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.3,
-		  "both_no_item": 0.2,
-		  "vs_enemy_item": 0.5,
-		  "never_battle": 0.0
-		},
-		"defense": {
-		  "no_item": 0.2,
-		  "always_protect": 0.8,
-		  "protect_mystic_arts": false,
-		  "protect_element_match": true,
-		  "protect_by_value": {
-			"enabled": true,
-			"threshold": 500,
-			"min_defense_items": 2
-		  }
-		},
-		"summon_rate_match": 0.9,
-		"summon_rate_mismatch": 0.4,
-		"spell_use_rate": 0.9,
-		"dominio_use_rate": 0.8
-	  }
-	},
-	"orc": {
-	  "name": "オーク",
-	  "model_path": "res://scenes/Characters/Necromancer.tscn",
-	  "portrait_path": "",
-	  "description": "ワールド2-8から登場する好戦的な敵",
-	  "battle_policy": {
-		"attack": {
-		  "always_battle": 0.0,
-		  "both_no_item": 0.2,
-		  "vs_enemy_item": 0.8,
-		  "never_battle": 0.0
-		},
-		"defense": {
-		  "no_item": 0.1,
-		  "always_protect": 0.9,
-		  "protect_mystic_arts": false,
-		  "protect_element_match": true,
-		  "protect_by_value": {
-			"enabled": true,
-			"threshold": 300,
-			"min_defense_items": 1
-		  }
-		},
-		"summon_rate_match": 1.0,
-		"summon_rate_mismatch": 0.6,
-		"spell_use_rate": 0.9,
-		"dominio_use_rate": 0.9
-	  }
-	}
+    "bowser": {
+      "name": "クッパ",
+      "model_path": "res://scenes/Characters/Necromancer.tscn",
+      "portrait_path": "",
+      "description": "最初の敵",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.0,
+          "both_no_item": 1.0,
+          "vs_enemy_item": 0.0,
+          "never_battle": 0.0
+        },
+        "defense": {
+          "no_item": 1.0,
+          "always_protect": 0.0,
+          "protect_mystic_arts": false,
+          "protect_element_match": false,
+          "protect_by_value": {
+            "enabled": false,
+            "threshold": 200,
+            "min_defense_items": 2
+          }
+        }
+      }
+    },
+    "tutorial_enemy": {
+      "name": "チュートリアル敵",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "チュートリアル用の敵（常に戦闘・常に召喚）",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 1.0,
+          "both_no_item": 0.0,
+          "vs_enemy_item": 0.0,
+          "never_battle": 0.0
+        },
+        "defense": {
+          "no_item": 1.0,
+          "always_protect": 0.0
+        },
+        "summon_rate": 1.0
+      }
+    },
+    "zako_1": {
+      "name": "雑魚1",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "雑魚敵1",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.0,
+          "both_no_item": 1.0,
+          "vs_enemy_item": 0.0,
+          "never_battle": 0.0
+        },
+        "defense": {
+          "no_item": 1.0,
+          "always_protect": 0.0,
+          "protect_mystic_arts": false,
+          "protect_element_match": false,
+          "protect_by_value": {
+            "enabled": false,
+            "threshold": 200,
+            "min_defense_items": 2
+          }
+        },
+        "summon_rate_match": 0.4,
+        "summon_rate_mismatch": 0.2,
+        "spell_use_rate": 0.5,
+        "dominio_use_rate": 0.0
+      }
+    },
+    "zako_2": {
+      "name": "雑魚2",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "雑魚敵2",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.4,
+          "both_no_item": 0.2,
+          "vs_enemy_item": 0.3,
+          "never_battle": 0.1
+        },
+        "defense": {
+          "no_item": 0.5,
+          "always_protect": 0.5,
+          "protect_mystic_arts": false,
+          "protect_element_match": false,
+          "protect_by_value": {
+            "enabled": false,
+            "threshold": 200,
+            "min_defense_items": 2
+          }
+        },
+        "summon_rate_match": 0.7,
+        "summon_rate_mismatch": 0.4,
+        "spell_use_rate": 0.6,
+        "dominio_use_rate": 0.5
+      }
+    },
+    "fighter_1": {
+      "name": "ファイター1",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "ワールド2-1の敵",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.1,
+          "both_no_item": 0.3,
+          "vs_enemy_item": 0.6,
+          "never_battle": 0.0
+        },
+        "defense": {
+          "no_item": 0.2,
+          "always_protect": 0.8,
+          "protect_mystic_arts": false,
+          "protect_element_match": true,
+          "protect_by_value": {
+            "enabled": true,
+            "threshold": 200,
+            "min_defense_items": 2
+          }
+        },
+        "summon_rate_match": 0.9,
+        "summon_rate_mismatch": 0.4,
+        "spell_use_rate": 0.6,
+        "dominio_use_rate": 0.7
+      }
+    },
+    "cleric": {
+      "name": "クレリック",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "ワールド2-3の敵",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.0,
+          "both_no_item": 0.3,
+          "vs_enemy_item": 0.6,
+          "never_battle": 0.1
+        },
+        "defense": {
+          "no_item": 0.2,
+          "always_protect": 0.8,
+          "protect_mystic_arts": true,
+          "protect_element_match": true,
+          "protect_by_value": {
+            "enabled": true,
+            "threshold": 500,
+            "min_defense_items": 2
+          }
+        },
+        "summon_rate_match": 0.8,
+        "summon_rate_mismatch": 0.3,
+        "spell_use_rate": 1.0,
+        "dominio_use_rate": 0.7
+      }
+    },
+    "thief": {
+      "name": "シーフ",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "ワールド2-5から登場する敵",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.0,
+          "both_no_item": 0.2,
+          "vs_enemy_item": 0.7,
+          "never_battle": 0.1
+        },
+        "defense": {
+          "no_item": 0.2,
+          "always_protect": 0.8,
+          "protect_mystic_arts": true,
+          "protect_element_match": true,
+          "protect_by_value": {
+            "enabled": true,
+            "threshold": 500,
+            "min_defense_items": 1
+          }
+        },
+        "summon_rate_match": 0.8,
+        "summon_rate_mismatch": 0.5,
+        "spell_use_rate": 0.7,
+        "dominio_use_rate": 0.8
+      }
+    },
+    "goblin": {
+      "name": "ゴブリン",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "ワールド1-8のボス",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.3,
+          "both_no_item": 0.2,
+          "vs_enemy_item": 0.5,
+          "never_battle": 0.0
+        },
+        "defense": {
+          "no_item": 0.2,
+          "always_protect": 0.8,
+          "protect_mystic_arts": false,
+          "protect_element_match": true,
+          "protect_by_value": {
+            "enabled": true,
+            "threshold": 500,
+            "min_defense_items": 2
+          }
+        },
+        "summon_rate_match": 0.9,
+        "summon_rate_mismatch": 0.4,
+        "spell_use_rate": 0.9,
+        "dominio_use_rate": 0.8
+      }
+    },
+    "orc": {
+      "name": "オーク",
+      "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+      "portrait_path": "",
+      "description": "ワールド2-8から登場する好戦的な敵",
+      "battle_policy": {
+        "attack": {
+          "always_battle": 0.0,
+          "both_no_item": 0.2,
+          "vs_enemy_item": 0.8,
+          "never_battle": 0.0
+        },
+        "defense": {
+          "no_item": 0.1,
+          "always_protect": 0.9,
+          "protect_mystic_arts": false,
+          "protect_element_match": true,
+          "protect_by_value": {
+            "enabled": true,
+            "threshold": 300,
+            "min_defense_items": 1
+          }
+        },
+        "summon_rate_match": 1.0,
+        "summon_rate_mismatch": 0.6,
+        "spell_use_rate": 0.9,
+        "dominio_use_rate": 0.9
+      }
+    }
   }
 }

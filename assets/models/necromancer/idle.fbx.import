@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://drlinb47h6o1i"
-path="res://.godot/imported/idle.fbx-52d0576e5b7be4ca921efee3c8191e98.scn"
+uid="uid://b5fk0woiui55e"
+path="res://.godot/imported/Idle.fbx-d2182815eb95e4913417cb114a5b5804.scn"
 
 [deps]
 
-source_file="res://assets/models/necromancer/idle.fbx"
-dest_files=["res://.godot/imported/idle.fbx-52d0576e5b7be4ca921efee3c8191e98.scn"]
+source_file="res://assets/models/necromancer/Idle.fbx"
+dest_files=["res://.godot/imported/Idle.fbx-d2182815eb95e4913417cb114a5b5804.scn"]
 
 [params]
 

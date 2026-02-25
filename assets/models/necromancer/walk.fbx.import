@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bqhbryr15cjk3"
-path="res://.godot/imported/walk.fbx-f1661d19f4e82e3c55f9aaed6b185750.scn"
+uid="uid://btawqhgpxmyoc"
+path="res://.godot/imported/Walk.fbx-32dfd13de279db5b61f73e42eb1f365f.scn"
 
 [deps]
 
-source_file="res://assets/models/necromancer/walk.fbx"
-dest_files=["res://.godot/imported/walk.fbx-f1661d19f4e82e3c55f9aaed6b185750.scn"]
+source_file="res://assets/models/necromancer/Walk.fbx"
+dest_files=["res://.godot/imported/Walk.fbx-32dfd13de279db5b61f73e42eb1f365f.scn"]
 
 [params]
 
