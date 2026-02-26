@@ -410,7 +410,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "アイテム破壊",
-			"ability_detail": "アイテム破壊[道具]",
+			"ability_detail": "アイテム破壊[武器か防具かアクセサリか巻物]",
 			"ability_parsed": {
 				"keywords": [
 					"アイテム破壊"
@@ -419,7 +419,10 @@
 					{
 						"effect_type": "destroy_item",
 						"target_types": [
-							"道具"
+							"武器",
+							"防具",
+							"アクセサリ",
+							"巻物"
 						],
 						"triggers": [
 							"before_battle"

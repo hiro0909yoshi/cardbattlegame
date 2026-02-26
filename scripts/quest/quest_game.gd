@@ -132,7 +132,7 @@ func _create_player_characters(container: Node3D):
 			container.add_child(enemy)
 			_setup_initial_animation(enemy)
 
-## 初期アニメーション設定
+## 初期アニメーション設定（WalkModelのアニメーションをIdleModelに統合）
 func _setup_initial_animation(player_node: Node) -> void:
 	var walk_model = player_node.find_child("WalkModel", false, false)
 	var idle_model = player_node.find_child("IdleModel", false, false)
@@ -140,6 +140,9 @@ func _setup_initial_animation(player_node: Node) -> void:
 	for model in [walk_model, idle_model]:
 		if model:
 			_hide_fbx_extras(model)
+	# WalkModelのアニメーションをIdleModelに統合
+	_integrate_walk_animation(walk_model, idle_model)
+	# WalkModelは常に非表示（アニメーションソースとしてのみ使用）
 	if walk_model:
 		walk_model.visible = false
 	if idle_model:
@@ -151,6 +154,23 @@ func _setup_initial_animation(player_node: Node) -> void:
 	_share_material(idle_model, walk_model)
 	# 正面（45度）を向く
 	player_node.rotation = Vector3(0, deg_to_rad(45), 0)
+
+
+## WalkModelのアニメーションをIdleModelのAnimationPlayerに統合する
+func _integrate_walk_animation(walk_model: Node, idle_model: Node) -> void:
+	if not walk_model or not idle_model:
+		return
+	var walk_anim_player = walk_model.find_child("AnimationPlayer", true, false)
+	var idle_anim_player = idle_model.find_child("AnimationPlayer", true, false)
+	if not walk_anim_player or not idle_anim_player:
+		return
+	if not walk_anim_player.has_animation("mixamo_com"):
+		return
+	var walk_anim = walk_anim_player.get_animation("mixamo_com")
+	var lib = idle_anim_player.get_animation_library("")
+	if lib and not lib.has_animation("walk"):
+		lib.add_animation("walk", walk_anim)
+		print("[QuestGame] walkアニメーション統合完了: ", idle_model.name)
 
 ## 外部PNGテクスチャを両モデルに適用する
 ## FBX内のCamera/Lightノードを非表示にする
@@ -184,21 +204,36 @@ func _share_material(idle_model: Node, walk_model: Node) -> void:
 	print("[QuestGame] テクスチャ適用完了: ", texture_path)
 
 ## モデルのFBXパスからテクスチャPNGを探す
+## ※エクスポート版ではDirAccessでres://をスキャンできないため、
+##   ResourceLoader.exists()で既知の命名パターンを直接チェックする
 func _find_texture_path(model: Node) -> String:
 	if not model:
 		return ""
 	# モデルのシーンファイルパスからフォルダを特定
 	var scene_path: String = model.scene_file_path
 	if scene_path.is_empty():
-		# インスタンスの場合、元のPackedSceneパスを取得
 		var packed = model.get_meta("_editor_scene_path_", "") if model.has_meta("_editor_scene_path_") else ""
 		if packed is String and not packed.is_empty():
 			scene_path = packed
-	# FBXのフォルダ内でPNGを探す
-	var folder := "res://assets/models/necromancer/"  # デフォルト
+	var folder := "res://assets/models/necromancer/"
 	if not scene_path.is_empty():
 		folder = scene_path.get_base_dir() + "/"
-	# フォルダ内の_0.pngを探す（Meshy出力のテクスチャ命名規則）
+	# Meshy出力の命名規則: {Name}_0.png（エクスポート版対応）
+	var candidates: Array[String] = [
+		folder + "Idle_0.png",
+		folder + "Walk_0.png",
+		folder + "idle_0.png",
+		folder + "walk_0.png",
+	]
+	# FBX名から推測: {FBXベース名}_0.png
+	if not scene_path.is_empty():
+		var base_name = scene_path.get_file().get_basename()
+		candidates.append(folder + base_name + "_0.png")
+		candidates.append(folder + base_name + ".png")
+	for path in candidates:
+		if ResourceLoader.exists(path):
+			return path
+	# フォールバック: エディタではDirAccessでスキャン（開発時のみ有効）
 	var dir := DirAccess.open(folder)
 	if dir:
 		dir.list_dir_begin()

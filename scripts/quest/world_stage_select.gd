@@ -21,6 +21,11 @@ const GC = preload("res://scripts/game_constants.gd")
 # ワールド定義（3ワールド × 8ステージ）
 var worlds = [
 	{
+		"id": "world_test",
+		"name": "テスト",
+		"stages": ["stage_test"]
+	},
+	{
 		"id": "world_1",
 		"name": "ワールド1",
 		"stages": ["stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5", "stage_1_6", "stage_1_7", "stage_1_8"]
@@ -111,10 +116,13 @@ func _create_world_buttons():
 ## ワールドがアンロック済みか判定
 func _is_world_unlocked(world_index: int) -> bool:
 	if world_index == 0:
-		return true  # ワールド1は常にアンロック
-	
-	# 前のワールドの最終ステージをクリアしていればアンロック
+		return true  # 先頭ワールドは常にアンロック
+	# テストワールドはアンロック判定に影響しない
 	var prev_world = worlds[world_index - 1]
+	if prev_world.id == "world_test":
+		if world_index <= 1:
+			return true
+		prev_world = worlds[world_index - 2]
 	var last_stage_id = prev_world.stages[prev_world.stages.size() - 1]
 	return StageRecordManager.is_cleared(last_stage_id)
 

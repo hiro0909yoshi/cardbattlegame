@@ -45,6 +45,7 @@ texture = ExtResource("1_bg")
 expand_mode = 1
 
 [node name="ContentMargin" type="MarginContainer" parent="MainContainer/RightPanel"]
+clip_contents = true
 layout_mode = 1
 anchors_preset = -1
 anchor_left = -0.401
@@ -134,4 +135,4 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
 theme_override_font_sizes/font_size = 60
 text = "スペルの効果テキスト"
-autowrap_mode = 2
+autowrap_mode = 3

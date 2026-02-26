@@ -575,7 +575,7 @@
 			"ap": 30.0,
 			"hp": 50.0,
 			"ability": "アイテム破壊",
-			"ability_detail": "アイテム破壊[道具か巻物か加勢クリーチャー]",
+			"ability_detail": "アイテム破壊[アクセサリか巻物か加勢クリーチャー]",
 			"ability_parsed": {
 				"keywords": [
 					"アイテム破壊"
@@ -584,7 +584,7 @@
 					{
 						"effect_type": "destroy_item",
 						"target_types": [
-							"道具",
+							"アクセサリ",
 							"巻物",
 							"加勢クリーチャー"
 						],

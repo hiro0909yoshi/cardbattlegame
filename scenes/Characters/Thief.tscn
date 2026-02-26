@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/shared/Walking.fbx" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/thief/Idle.fbx" id="2_idle"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_001"]
+
+[node name="Player" type="CharacterBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 1.2, 0)
+shape = SubResource("CapsuleShape3D_001")
+
+[node name="WalkModel" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, 0, 0, 0)
+
+[node name="IdleModel" parent="." instance=ExtResource("2_idle")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, 0, 0, 0)
+visible = false

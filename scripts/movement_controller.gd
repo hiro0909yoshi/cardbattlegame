@@ -660,29 +660,22 @@ func is_player_moving() -> bool:
 func get_moving_player() -> int:
 	return current_moving_player
 
-# アニメーション制御ヘルパー
+# アニメーション制御ヘルパー（IdleModel上でアニメーション切り替え）
 func _play_walk_animation(player_node: Node, play: bool) -> void:
-	var walk_model = player_node.find_child("WalkModel", false, false)
 	var idle_model = player_node.find_child("IdleModel", false, false)
-
+	if not idle_model:
+		return
+	var anim = idle_model.find_child("AnimationPlayer", true, false)
+	if not anim:
+		return
 	if play:
-		# 歩行モデル表示、Idleモデル非表示
-		if walk_model:
-			walk_model.visible = true
-			var anim = walk_model.find_child("AnimationPlayer", true, false)
-			if anim and anim.has_animation("mixamo_com"):
-				anim.play("mixamo_com")
-		if idle_model:
-			idle_model.visible = false
+		# 歩行アニメーション再生（統合済み "walk" を使用）
+		if anim.has_animation("walk"):
+			anim.play("walk")
 	else:
-		# Idleモデル表示、歩行モデル非表示
-		if idle_model:
-			idle_model.visible = true
-			var anim = idle_model.find_child("AnimationPlayer", true, false)
-			if anim and anim.has_animation("mixamo_com"):
-				anim.play("mixamo_com")
-		if walk_model:
-			walk_model.visible = false
+		# 待機アニメーション再生
+		if anim.has_animation("mixamo_com"):
+			anim.play("mixamo_com")
 		# 停止時に正面を向く
 		player_node.rotation = Vector3(0, deg_to_rad(45), 0)
 

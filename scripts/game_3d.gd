@@ -169,6 +169,7 @@ func _create_player_characters(container: Node3D):
 		if movement_script:
 			mario.set_script(movement_script)
 		container.add_child(mario)
+		_setup_initial_animation(mario)
 	
 	# CPU敵（新旧形式両対応）
 	var enemies = stage_loader.get_enemies()
@@ -180,6 +181,129 @@ func _create_player_characters(container: Node3D):
 			var enemy = enemy_scene.instantiate()
 			enemy.name = "Player%d" % (i + 2)
 			container.add_child(enemy)
+			_setup_initial_animation(enemy)
+
+
+## 初期アニメーション設定（WalkModelのアニメーションをIdleModelに統合）
+func _setup_initial_animation(player_node: Node) -> void:
+	var walk_model = player_node.find_child("WalkModel", false, false)
+	var idle_model = player_node.find_child("IdleModel", false, false)
+	# FBX内のCamera/Lightを非表示にする
+	for model in [walk_model, idle_model]:
+		if model:
+			_hide_fbx_extras(model)
+	# WalkModelのアニメーションをIdleModelに統合
+	_integrate_walk_animation(walk_model, idle_model)
+	# WalkModelは常に非表示（アニメーションソースとしてのみ使用）
+	if walk_model:
+		walk_model.visible = false
+	if idle_model:
+		idle_model.visible = true
+		var anim = idle_model.find_child("AnimationPlayer", true, false)
+		if anim and anim.has_animation("mixamo_com"):
+			anim.play("mixamo_com")
+	# 外部PNGテクスチャを両モデルに適用
+	_share_material(idle_model, walk_model)
+	# 正面（45度）を向く
+	player_node.rotation = Vector3(0, deg_to_rad(45), 0)
+
+
+## WalkModelのアニメーションをIdleModelのAnimationPlayerに統合する
+func _integrate_walk_animation(walk_model: Node, idle_model: Node) -> void:
+	if not walk_model or not idle_model:
+		return
+	var walk_anim_player = walk_model.find_child("AnimationPlayer", true, false)
+	var idle_anim_player = idle_model.find_child("AnimationPlayer", true, false)
+	if not walk_anim_player or not idle_anim_player:
+		return
+	if not walk_anim_player.has_animation("mixamo_com"):
+		return
+	var walk_anim = walk_anim_player.get_animation("mixamo_com")
+	var lib = idle_anim_player.get_animation_library("")
+	if lib and not lib.has_animation("walk"):
+		lib.add_animation("walk", walk_anim)
+		print("[Game3D] walkアニメーション統合完了: ", idle_model.name)
+
+
+## FBX内のCamera/Lightノードを非表示にする
+func _hide_fbx_extras(model: Node) -> void:
+	for child in model.get_children():
+		if child is Camera3D or child is Light3D:
+			child.visible = false
+		_hide_fbx_extras(child)
+
+
+## 外部PNGテクスチャを両モデルに適用する
+func _share_material(idle_model: Node, walk_model: Node) -> void:
+	var texture_path := _find_texture_path(idle_model)
+	if texture_path.is_empty():
+		print("[Game3D] テクスチャPNGが見つかりません")
+		return
+	var texture := load(texture_path) as Texture2D
+	if not texture:
+		print("[Game3D] テクスチャ読み込み失敗: ", texture_path)
+		return
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = texture
+	for model in [idle_model, walk_model]:
+		if not model:
+			continue
+		var meshes := _find_all_mesh_instances(model)
+		for mesh in meshes:
+			for i in range(mesh.get_surface_override_material_count()):
+				mesh.set_surface_override_material(i, mat)
+	print("[Game3D] テクスチャ適用完了: ", texture_path)
+
+
+## モデルのFBXパスからテクスチャPNGを探す
+## ※エクスポート版ではDirAccessでres://をスキャンできないため、
+##   ResourceLoader.exists()で既知の命名パターンを直接チェックする
+func _find_texture_path(model: Node) -> String:
+	if not model:
+		return ""
+	var scene_path: String = model.scene_file_path
+	if scene_path.is_empty():
+		var packed = model.get_meta("_editor_scene_path_", "") if model.has_meta("_editor_scene_path_") else ""
+		if packed is String and not packed.is_empty():
+			scene_path = packed
+	var folder := "res://assets/models/necromancer/"
+	if not scene_path.is_empty():
+		folder = scene_path.get_base_dir() + "/"
+	# Meshy出力の命名規則: {Name}_0.png（エクスポート版対応）
+	var candidates: Array[String] = [
+		folder + "Idle_0.png",
+		folder + "Walk_0.png",
+		folder + "idle_0.png",
+		folder + "walk_0.png",
+	]
+	if not scene_path.is_empty():
+		var base_name = scene_path.get_file().get_basename()
+		candidates.append(folder + base_name + "_0.png")
+		candidates.append(folder + base_name + ".png")
+	for path in candidates:
+		if ResourceLoader.exists(path):
+			return path
+	# フォールバック: エディタではDirAccessでスキャン（開発時のみ有効）
+	var dir := DirAccess.open(folder)
+	if dir:
+		dir.list_dir_begin()
+		var file_name := dir.get_next()
+		while file_name != "":
+			if file_name.ends_with(".png"):
+				return folder + file_name
+			file_name = dir.get_next()
+	return ""
+
+
+## モデル内の全MeshInstance3Dを再帰的に探す
+func _find_all_mesh_instances(node: Node) -> Array[MeshInstance3D]:
+	var result: Array[MeshInstance3D] = []
+	if node is MeshInstance3D:
+		result.append(node)
+	for child in node.get_children():
+		result.append_array(_find_all_mesh_instances(child))
+	return result
+
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():

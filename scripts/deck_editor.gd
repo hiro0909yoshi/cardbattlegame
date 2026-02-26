@@ -209,10 +209,14 @@ func create_card_button(card_data: Dictionary):
 	
 	# テキスト表示
 	var card_name = card_data.get("name", "???")
+	var dev_name = card_data.get("dev_name", "")
 	var element = card_data.get("element", "")
 	var card_type = card_data.get("type", "")
-	
-	button.text = card_name + "\n[" + rarity + "]"
+
+	button.text = card_name
+	if not dev_name.is_empty():
+		button.text += "\n" + dev_name
+	button.text += "\n[" + rarity + "]"
 	if not element.is_empty():
 		button.text += " " + element
 	button.text += "\n所持: " + str(owned_count) + "枚"
@@ -400,9 +404,13 @@ func update_single_card_button(card_id: int):
 	for button in grid_container.get_children():
 		if button.has_meta("card_id") and button.get_meta("card_id") == card_id:
 			var card_name = card.get("name", "???")
+			var dev_name = card.get("dev_name", "")
 			var element = card.get("element", "")
-			
-			button.text = card_name + "\n"
+
+			button.text = card_name
+			if not dev_name.is_empty():
+				button.text += "\n" + dev_name
+			button.text += "\n"
 			if not element.is_empty():
 				button.text += "[" + element + "] "
 			button.text += str(owned_count) + "枚"

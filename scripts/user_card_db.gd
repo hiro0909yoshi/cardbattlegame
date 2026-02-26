@@ -1,15 +1,27 @@
 ## ユーザーカードデータベース管理
-## カード所持数・レベル・図鑑フラグをSQLiteで管理
+## カード所持数・レベル・図鑑フラグを管理
+## ネイティブ版: SQLite / Web版: Dictionary + JSONファイル
 extends Node
 
 var db = null
 var db_path: String = "user://user_cards.db"
 
+## Web版用のインメモリデータ
+## key: "user_id:card_id" → value: { "user_id": str, "card_id": int, "count": int, "level": int, "obtained": int }
+var _web_data: Dictionary = {}
+var _web_json_path: String = "user://user_cards.json"
+var _is_web: bool = false
+
 func _ready():
+	_is_web = OS.get_name() == "Web"
 	_initialize_database()
 	
-	# 開発用：全カード所持状態にする場合はコメント解除
-	#_setup_dev_mode()
+	# Web版は初回起動時にカードデータがないため自動セットアップ
+	if _is_web:
+		_setup_dev_mode()
+	
+	# ネイティブ版で全カード所持状態にする場合はコメント解除
+	_setup_dev_mode()
 
 ## 開発用：全カード4枚ずつ登録
 func _setup_dev_mode():
@@ -20,7 +32,13 @@ func _setup_dev_mode():
 
 ## データベース初期化
 func _initialize_database() -> bool:
-	db = SQLite.new()
+	if _is_web:
+		return _initialize_web()
+	
+	if not ClassDB.class_exists("SQLite"):
+		push_error("[UserCardDB] SQLiteクラスが見つかりません（GDExtension未読み込み）")
+		return false
+	db = ClassDB.instantiate("SQLite")
 	db.path = db_path
 	
 	if not db.open_db():
@@ -44,17 +62,57 @@ func _initialize_database() -> bool:
 		push_error("[UserCardDB] テーブル作成に失敗しました")
 		return false
 	
-	print("[UserCardDB] データベース初期化完了: " + db_path)
+	print("[UserCardDB] データベース初期化完了（SQLite）: " + db_path)
 	return true
+
+## Web版初期化: JSONファイルからデータを読み込む
+func _initialize_web() -> bool:
+	_web_data = {}
+	if FileAccess.file_exists(_web_json_path):
+		var file = FileAccess.open(_web_json_path, FileAccess.READ)
+		if file:
+			var json = JSON.new()
+			var error = json.parse(file.get_as_text())
+			file.close()
+			if error == OK and json.data is Dictionary:
+				_web_data = json.data
+				print("[UserCardDB] Web版データ読み込み完了: %d件" % _web_data.size())
+			else:
+				push_warning("[UserCardDB] Web版JSONパースエラー、空データで開始")
+	else:
+		print("[UserCardDB] Web版データファイルなし、新規作成します")
+	
+	print("[UserCardDB] データベース初期化完了（Web/JSON）")
+	return true
+
+## Web版: データをJSONファイルに保存
+func _save_web_data():
+	var file = FileAccess.open(_web_json_path, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(_web_data))
+		file.close()
+
+## Web版: キーを生成
+func _web_key(user_id: String, card_id: int) -> String:
+	return "%s:%d" % [user_id, card_id]
 
 ## DBをフラッシュ（変更を確実に保存）
 func flush():
+	if _is_web:
+		_save_web_data()
+		return
 	if db:
 		db.close_db()
 		db.open_db()
 
 ## カード情報を取得
 func get_card(card_id: int, user_id: String = "player1") -> Dictionary:
+	if _is_web:
+		var key = _web_key(user_id, card_id)
+		if _web_data.has(key):
+			return _web_data[key]
+		return {}
+	
 	if not db:
 		return {}
 	
@@ -84,6 +142,9 @@ func is_card_obtained(card_id: int, user_id: String = "player1") -> bool:
 
 ## カードを追加（入手）
 func add_card(card_id: int, amount: int = 1, user_id: String = "player1") -> bool:
+	if _is_web:
+		return _web_add_card(card_id, amount, user_id)
+	
 	if not db:
 		print("[UserCardDB] add_card: dbがnull")
 		return false
@@ -110,8 +171,32 @@ func add_card(card_id: int, amount: int = 1, user_id: String = "player1") -> boo
 			print("[UserCardDB] UPDATE失敗: %s" % db.error_message)
 		return result
 
+## Web版: カード追加
+func _web_add_card(card_id: int, amount: int, user_id: String) -> bool:
+	var key = _web_key(user_id, card_id)
+	if _web_data.has(key):
+		_web_data[key]["count"] = _web_data[key].get("count", 0) + amount
+		_web_data[key]["obtained"] = 1
+	else:
+		_web_data[key] = {
+			"user_id": user_id,
+			"card_id": card_id,
+			"count": amount,
+			"level": 1,
+			"obtained": 1,
+		}
+	return true
+
 ## カードを減らす（売却等）
 func remove_card(card_id: int, amount: int = 1, user_id: String = "player1") -> bool:
+	if _is_web:
+		var key = _web_key(user_id, card_id)
+		if not _web_data.has(key):
+			return false
+		var current_count = _web_data[key].get("count", 0)
+		_web_data[key]["count"] = max(0, current_count - amount)
+		return true
+	
 	if not db:
 		return false
 	
@@ -134,6 +219,20 @@ func sell_card(card_id: int, amount: int = 1, user_id: String = "player1") -> bo
 
 ## カードレベルを設定
 func set_card_level(card_id: int, level: int, user_id: String = "player1") -> bool:
+	if _is_web:
+		var key = _web_key(user_id, card_id)
+		if _web_data.has(key):
+			_web_data[key]["level"] = level
+		else:
+			_web_data[key] = {
+				"user_id": user_id,
+				"card_id": card_id,
+				"count": 0,
+				"level": level,
+				"obtained": 0,
+			}
+		return true
+	
 	if not db:
 		return false
 	
@@ -152,6 +251,14 @@ func set_card_level(card_id: int, level: int, user_id: String = "player1") -> bo
 
 ## 全所持カードを取得
 func get_all_cards(user_id: String = "player1") -> Array:
+	if _is_web:
+		var result: Array = []
+		for key in _web_data:
+			var card = _web_data[key]
+			if card.get("user_id", "") == user_id and card.get("count", 0) > 0:
+				result.append(card)
+		return result
+	
 	if not db:
 		return []
 	
@@ -164,6 +271,14 @@ func get_all_cards(user_id: String = "player1") -> Array:
 
 ## 図鑑登録済みカードを全取得
 func get_all_obtained_cards(user_id: String = "player1") -> Array:
+	if _is_web:
+		var result: Array = []
+		for key in _web_data:
+			var card = _web_data[key]
+			if card.get("user_id", "") == user_id and card.get("obtained", 0) == 1:
+				result.append(card)
+		return result
+	
 	if not db:
 		return []
 	
@@ -176,7 +291,7 @@ func get_all_obtained_cards(user_id: String = "player1") -> Array:
 
 ## JSONのcollectionからDBにインポート
 func import_from_collection(collection: Dictionary, user_id: String = "player1") -> bool:
-	if not db:
+	if not _is_web and not db:
 		return false
 	
 	var success_count = 0
@@ -202,6 +317,9 @@ func export_to_collection(user_id: String = "player1") -> Dictionary:
 
 ## データベースを閉じる
 func close():
+	if _is_web:
+		_save_web_data()
+		return
 	if db:
 		db.close_db()
 		db = null
@@ -235,6 +353,9 @@ func import_all_cards_from_json():
 	for file_path in json_files:
 		var count = _import_from_json_file(file_path)
 		total_count += count
+	
+	if _is_web:
+		_save_web_data()
 	
 	print("[UserCardDB] === 全カードインポート完了: %d種類 ===" % total_count)
 	
@@ -271,6 +392,11 @@ func _import_from_json_file(file_path: String) -> int:
 
 ## DBをリセット（テスト用）
 func reset_database():
+	if _is_web:
+		_web_data = {}
+		_save_web_data()
+		print("[UserCardDB] データベースをリセットしました（Web）")
+		return
 	if not db:
 		return
 	db.query("DELETE FROM user_cards")

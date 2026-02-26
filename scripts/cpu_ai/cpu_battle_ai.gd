@@ -283,11 +283,10 @@ func evaluate_all_combinations_for_battle(
 		enemy_destroy_types, enemy_has_steal, should_avoid_items
 	])
 	
-	if should_avoid_items:
-		if not enemy_destroy_types.is_empty():
-			print("[CPU AI] 警告: 敵がアイテム破壊スキルを所持 → 全アイテム使用不可")
-		if enemy_has_steal:
-			print("[CPU AI] 警告: 敵がアイテム盗みスキルを所持 → 全アイテム使用不可")
+	if enemy_has_steal:
+		print("[CPU AI] 警告: 敵がアイテム盗みスキルを所持 → 全アイテム使用不可")
+	elif not enemy_destroy_types.is_empty():
+		print("[CPU AI] 敵がアイテム破壊スキル所持 → 対象タイプのみ回避: %s" % [enemy_destroy_types])
 	
 	# 勝てる組み合わせを収集（ワーストケース対応版）
 	var winning_combinations: Array = []
@@ -365,9 +364,10 @@ func evaluate_all_combinations_for_battle(
 			print("    [ワーストケース] 勝利可能: オーバーキル %d" % worst_case.overkill)
 		else:
 			# ワーストケースで負ける → 自分もアイテムを使って勝てるか探す
-			# ただし、敵がアイテム破壊・盗みを持っている場合はアイテムを使わない
-			if should_avoid_items:
-				print("    [ワーストケース] 敗北: 敵がアイテム破壊/盗みを持つためアイテム使用不可")
+			# 敵がアイテム盗みを持っている場合は全アイテム使用不可
+			# アイテム破壊の場合は対象外アイテムは使用可能
+			if enemy_has_steal:
+				print("    [ワーストケース] 敗北: 敵がアイテム盗みを持つため全アイテム使用不可")
 			else:
 				var counter_item = find_item_to_beat_worst_case(
 					creature, defender, tile_info, current_player.id, current_player, creature_cost,
@@ -693,10 +693,11 @@ func evaluate_single_creature_battle(
 		return result
 	
 	# 3. ワーストケースで負ける → アイテムを使って勝てるか探す
-	# ただし、敵がアイテム破壊・盗みを持っている場合はアイテムを使わない
-	if should_avoid_items:
+	# 敵がアイテム盗みを持っている場合は全アイテム使用不可
+	# アイテム破壊の場合は個別チェック（L710-713）に委ねる
+	if enemy_has_steal:
 		return result
-	
+
 	# 4. 勝てるアイテムを探す
 	var items = hand_utils.get_items_from_hand(my_player_id)
 	

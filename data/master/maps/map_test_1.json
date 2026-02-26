@@ -1,0 +1,23 @@
+{
+  "id": "map_test_1",
+  "name": "テストマップ1",
+  "description": "開発テスト用。9マス。削除可。",
+  "tile_count": 9,
+  "loop_size": 9,
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "standard",
+  "tiles": [
+	{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
+	{"index": 1, "type": "Fire", "x": 4, "z": 0},
+	{"index": 2, "type": "Checkpoint", "x": 8, "z": 0, "checkpoint_type": "E"},
+	{"index": 3, "type": "Water", "x": 8, "z": 4},
+	{"index": 4, "type": "Neutral", "x": 8, "z": 8},
+	{"index": 5, "type": "Wind", "x": 4, "z": 8},
+	{"index": 6, "type": "Checkpoint", "x": 0, "z": 8, "checkpoint_type": "W"},
+	{"index": 7, "type": "Earth", "x": 0, "z": 4}
+  ],
+  "connections": {
+	"0": [7, 1],
+	"7": [6, 0]
+  }
+}
