@@ -506,22 +506,44 @@ func defender_has_item_steal(defender_creature: Dictionary) -> bool:
 ## アイテムが敵のアイテム破壊対象かチェック
 ## @param item: アイテムデータ
 ## @param destroy_target_types: 破壊対象タイプの配列（defender_has_item_destroyの戻り値）
+## @param rarity_exclude: レア度除外配列（イビルアイ等: ["N"]）
 ## @return: 破壊対象ならtrue
-func is_item_destroy_target(item: Dictionary, destroy_target_types: Array) -> bool:
+func is_item_destroy_target(item: Dictionary, destroy_target_types: Array, rarity_exclude: Array = []) -> bool:
 	if destroy_target_types.is_empty():
 		return false
-	
+
 	var item_type = item.get("item_type", "")
-	
+
 	# 直接一致チェック
+	var type_matches = false
 	if item_type in destroy_target_types:
-		return true
-	
-	# 「道具」は武器・防具・アクセサリを含む
-	if "道具" in destroy_target_types and item_type in ["武器", "防具", "アクセサリ"]:
-		return true
-	
-	return false
+		type_matches = true
+	elif "道具" in destroy_target_types and item_type in ["武器", "防具", "アクセサリ"]:
+		type_matches = true
+
+	if not type_matches:
+		return false
+
+	# レア度除外チェック（イビルアイ等: rarity_exclude: ["N"]）
+	if not rarity_exclude.is_empty():
+		var item_rarity = item.get("rarity", "N")
+		if item_rarity in rarity_exclude:
+			return false
+
+	return true
+
+
+## アイテムが持つ destroy_item 効果を取得
+## @param item: アイテムデータ（effect_parsed を含む）
+## @return: destroy_item 効果の Dictionary（なければ空）
+func get_item_destroy_effect(item: Dictionary) -> Dictionary:
+	var effect_parsed = item.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "destroy_item":
+			if "before_battle" in effect.get("triggers", []):
+				return effect
+	return {}
 
 
 ## 攻撃側クリーチャーがアイテム破壊スキルを持っているかチェック（エイリアス）

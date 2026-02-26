@@ -78,8 +78,18 @@ func simulate_worst_case(
 			var check_result = ItemUseRestriction.check_can_use(defender, enemy_item)
 			if not check_result.can_use:
 				continue
-		
-		var result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, enemy_item, {})
+
+		# 敵アイテムが自分のアイテムを破壊するかチェック
+		var effective_attacker_item = attacker_item
+		if not attacker_item.is_empty():
+			var destroy_effect = _hand_utils.get_item_destroy_effect(enemy_item)
+			if not destroy_effect.is_empty():
+				var target_types = destroy_effect.get("target_types", [])
+				var rarity_exclude = destroy_effect.get("rarity_exclude", [])
+				if _hand_utils.is_item_destroy_target(attacker_item, target_types, rarity_exclude):
+					effective_attacker_item = {}
+
+		var result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, effective_attacker_item, enemy_item, {})
 		if is_worse_result(result, worst_result):
 			worst_result = result
 			worst_option_name = "アイテム: " + enemy_item.get("name", "?")

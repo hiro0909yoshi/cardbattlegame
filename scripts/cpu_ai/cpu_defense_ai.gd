@@ -549,9 +549,19 @@ func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info:
 			var check_result = ItemUseRestriction.check_can_use(attacker, item)
 			if not check_result.can_use:
 				continue
-		
+
+		# 攻撃側アイテムが防御側アイテムを破壊するかチェック
+		var effective_defender_item = defender_item
+		if not defender_item.is_empty():
+			var destroy_effect = cpu_hand_utils.get_item_destroy_effect(item)
+			if not destroy_effect.is_empty():
+				var target_types = destroy_effect.get("target_types", [])
+				var rarity_exclude = destroy_effect.get("rarity_exclude", [])
+				if cpu_hand_utils.is_item_destroy_target(defender_item, target_types, rarity_exclude):
+					effective_defender_item = {}
+
 		var result = battle_simulator.simulate_battle(
-			attacker, defender, sim_tile_info, attacker_player_id, item, defender_item
+			attacker, defender, sim_tile_info, attacker_player_id, item, effective_defender_item
 		)
 		if _is_worse_for_defender(result, worst_result):
 			worst_result = result
