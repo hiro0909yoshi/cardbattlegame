@@ -1064,14 +1064,27 @@ func apply_skills_for_simulation(participants: Dictionary, tile_info: Dictionary
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	var battle_tile_index = tile_info.get("index", -1)
-	
+
+	# 沈黙チェック（prepare_participants Phase 0-N 相当）
+	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) \
+		or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender) \
+		or _has_nullify_creature_ability(attacker) or _has_nullify_creature_ability(defender)
+
+	if has_nullify:
+		var SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
+		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
+		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
+		if not silent:
+			print("[シミュレーション] 沈黙発動 → スキル適用スキップ")
+		return
+
 	# プレイヤー土地情報取得
 	var attacker_lands = {}
 	var defender_lands = {}
 	if board_system_ref:
 		attacker_lands = board_system_ref.get_player_lands_by_element(attacker_index)
 		defender_lands = board_system_ref.get_player_lands_by_element(defender.player_id) if defender.player_id >= 0 else {}
-	
+
 	# 鼓舞スキル適用
 	SupportSkill.apply_to_all(participants, battle_tile_index, board_system_ref)
 	
