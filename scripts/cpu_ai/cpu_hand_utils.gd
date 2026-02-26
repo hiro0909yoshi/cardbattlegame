@@ -340,7 +340,9 @@ func get_items_from_hand(player_id: int, skip_destroy_types: Array = []) -> Arra
 		if card.get("type", "") != "item":
 			continue
 		if not skip_destroy_types.is_empty() and is_item_destroy_target(card, skip_destroy_types):
-			continue
+			# アイテム自身が nullify_item_manipulation を持っていればスキップしない
+			if not has_nullify_item_manipulation({}, card):
+				continue
 		items.append({"index": i, "data": card})
 
 	return items
@@ -544,6 +546,29 @@ func get_item_destroy_effect(item: Dictionary) -> Dictionary:
 			if "before_battle" in effect.get("triggers", []):
 				return effect
 	return {}
+
+
+## クリーチャーまたはアイテムが nullify_item_manipulation を持っているかチェック
+## @param creature: クリーチャーデータ（ability_parsed をチェック）
+## @param item: アイテムデータ（effect_parsed をチェック）
+## @return: nullify_item_manipulation を持っていれば true
+func has_nullify_item_manipulation(creature: Dictionary, item: Dictionary = {}) -> bool:
+	# クリーチャーの ability_parsed をチェック
+	var ability_parsed = creature.get("ability_parsed", {})
+	var creature_effects = ability_parsed.get("effects", [])
+	for effect in creature_effects:
+		if effect.get("effect_type") == "nullify_item_manipulation":
+			return true
+
+	# アイテムの effect_parsed をチェック
+	if not item.is_empty():
+		var effect_parsed = item.get("effect_parsed", {})
+		var item_effects = effect_parsed.get("effects", [])
+		for effect in item_effects:
+			if effect.get("effect_type") == "nullify_item_manipulation":
+				return true
+
+	return false
 
 
 ## 攻撃側クリーチャーがアイテム破壊スキルを持っているかチェック（エイリアス）

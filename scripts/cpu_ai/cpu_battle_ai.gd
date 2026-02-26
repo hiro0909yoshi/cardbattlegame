@@ -315,9 +315,16 @@ func evaluate_all_combinations_for_battle(
 			continue
 		
 		creature_eval["can_afford"] = true
-		
+
 		print("  [評価中] %s (コスト: %d)" % [creature.get("name", "?"), creature_cost])
-		
+
+		# nullify_item_manipulation チェック（セージ等）
+		var creature_has_nullify = hand_utils.has_nullify_item_manipulation(creature)
+		var effective_enemy_destroy_types = [] if creature_has_nullify else enemy_destroy_types
+		var effective_enemy_has_steal = false if creature_has_nullify else enemy_has_steal
+		if creature_has_nullify:
+			print("    [nullify] %s はアイテム破壊/盗み無効スキル持ち → 敵の破壊/盗みを無視" % creature.get("name", "?"))
+
 		# 1. 両方アイテムなしシミュレーション
 		var both_no_item_result = _simulate_both_no_item(creature, defender, tile_info, current_player.id)
 		if both_no_item_result.is_win:
@@ -364,12 +371,12 @@ func evaluate_all_combinations_for_battle(
 			# ワーストケースで負ける → 自分もアイテムを使って勝てるか探す
 			# 敵がアイテム盗みを持っている場合は全アイテム使用不可
 			# アイテム破壊の場合は対象外アイテムは使用可能
-			if enemy_has_steal:
+			if effective_enemy_has_steal:
 				print("    [ワーストケース] 敗北: 敵がアイテム盗みを持つため全アイテム使用不可")
 			else:
 				var counter_item = find_item_to_beat_worst_case(
 					creature, defender, tile_info, current_player.id, current_player, creature_cost,
-					enemy_destroy_types
+					effective_enemy_destroy_types
 				)
 				
 				if counter_item.can_win:
@@ -676,6 +683,11 @@ func evaluate_single_creature_battle(
 	else:
 		enemy_destroy_types = hand_utils.attacker_has_item_destroy(attacker)
 		enemy_has_steal = hand_utils.attacker_has_item_steal(attacker)
+
+	# nullify_item_manipulation チェック
+	if hand_utils.has_nullify_item_manipulation(my_creature):
+		enemy_destroy_types = []
+		enemy_has_steal = false
 
 	# 2. ワーストケースシミュレーション（敵がアイテム/加勢を使った場合）
 	var worst_case = simulate_worst_case_common(

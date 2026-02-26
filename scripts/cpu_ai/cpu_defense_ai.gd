@@ -111,7 +111,14 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	var enemy_destroy_types = _get_attacker_item_destroy_types(attacker)
 	var enemy_has_steal = _attacker_has_item_steal(attacker)
 	var should_avoid_items = enemy_has_steal
-	
+
+	# nullify_item_manipulation チェック - 防御側がnullify持ちなら敵の破壊/盗みは無効
+	if cpu_hand_utils and cpu_hand_utils.has_nullify_item_manipulation(defender):
+		enemy_destroy_types = []
+		enemy_has_steal = false
+		should_avoid_items = false
+		print("[CPUDefenseAI] 防御側がアイテム破壊/盗み無効スキル持ち → 敵の破壊/盗みを無視")
+
 	if enemy_has_steal:
 		print("[CPUDefenseAI] 敵がアイテム盗み持ち → 全アイテム使用不可")
 	elif not enemy_destroy_types.is_empty():
@@ -488,9 +495,10 @@ func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}, e
 		if cost > current_player.magic_power:
 			continue
 
-		# 敵のアイテム破壊対象なら破壊対象以外で探す
+		# 敵のアイテム破壊対象なら破壊対象以外で探す（nullify_item_manipulation持ちアイテムは除外しない）
 		if not enemy_destroy_types.is_empty() and cpu_hand_utils and cpu_hand_utils.is_item_destroy_target(card, enemy_destroy_types):
-			continue
+			if not cpu_hand_utils.has_nullify_item_manipulation({}, card):
+				continue
 
 		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not defender.is_empty() and not _is_item_restriction_released(player_id):
@@ -541,7 +549,10 @@ func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info:
 	
 	# cannot_useチェックのためのフラグ確認
 	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-	
+
+	# nullify_item_manipulation チェック - 防御側がnullify持ちなら敵のアイテム破壊は無効
+	var defender_has_nullify = cpu_hand_utils.has_nullify_item_manipulation(defender, defender_item) if cpu_hand_utils else false
+
 	# 各アイテムでシミュレーションしてワーストを探す
 	for item in attacker_items:
 		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース刻印で解除可能）
@@ -550,9 +561,9 @@ func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info:
 			if not check_result.can_use:
 				continue
 
-		# 攻撃側アイテムが防御側アイテムを破壊するかチェック
+		# 攻撃側アイテムが防御側アイテムを破壊するかチェック（nullify持ちなら無視）
 		var effective_defender_item = defender_item
-		if not defender_item.is_empty():
+		if not defender_has_nullify and not defender_item.is_empty():
 			var destroy_effect = cpu_hand_utils.get_item_destroy_effect(item)
 			if not destroy_effect.is_empty():
 				var target_types = destroy_effect.get("target_types", [])
@@ -609,10 +620,11 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 		if card.get("item_type", "") == "巻物":
 			continue
 
-		# 敵のアイテム破壊対象ならスキップ
+		# 敵のアイテム破壊対象ならスキップ（nullify_item_manipulation持ちアイテムは除外しない）
 		if not enemy_destroy_types.is_empty() and cpu_hand_utils and cpu_hand_utils.is_item_destroy_target(card, enemy_destroy_types):
-			print("[CPUDefenseAI] %s は破壊対象のためスキップ" % card.get("name", "?"))
-			continue
+			if not cpu_hand_utils.has_nullify_item_manipulation({}, card):
+				print("[CPUDefenseAI] %s は破壊対象のためスキップ" % card.get("name", "?"))
+				continue
 
 		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(player_id):

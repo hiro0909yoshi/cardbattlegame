@@ -70,7 +70,12 @@ func simulate_worst_case(
 	
 	# cannot_useチェックのためのフラグ確認
 	var disable_cannot_use = _tile_action_processor and _tile_action_processor.debug_disable_cannot_use
-	
+
+	# nullify_item_manipulation チェック
+	var attacker_has_nullify = _hand_utils.has_nullify_item_manipulation(attacker, attacker_item)
+	if attacker_has_nullify:
+		print("[CPU攻撃] 攻撃側がアイテム破壊/盗み無効 → 敵アイテムの破壊効果を無視")
+
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
 		# 防御側クリーチャーのcannot_use制限をチェック（リリース刻印で解除可能）
@@ -79,9 +84,9 @@ func simulate_worst_case(
 			if not check_result.can_use:
 				continue
 
-		# 敵アイテムが自分のアイテムを破壊するかチェック
+		# 敵アイテムが自分のアイテムを破壊するかチェック（nullify持ちなら無視）
 		var effective_attacker_item = attacker_item
-		if not attacker_item.is_empty():
+		if not attacker_has_nullify and not attacker_item.is_empty():
 			var destroy_effect = _hand_utils.get_item_destroy_effect(enemy_item)
 			if not destroy_effect.is_empty():
 				var target_types = destroy_effect.get("target_types", [])
@@ -186,11 +191,15 @@ func find_item_to_beat_worst_case(
 	enemy_destroy_types: Array = []
 ) -> Dictionary:
 	var result = {"can_win": false, "item": {}, "item_index": -1}
-	
+
 	if not _hand_utils:
 		return result
-	
-	var items = _hand_utils.get_items_from_hand(attacker_player_id, enemy_destroy_types)
+
+	# nullify_item_manipulation チェック - 攻撃側がnullify持ちなら破壊フィルタ不要
+	var effective_destroy_types = enemy_destroy_types
+	if _hand_utils.has_nullify_item_manipulation(attacker):
+		effective_destroy_types = []
+	var items = _hand_utils.get_items_from_hand(attacker_player_id, effective_destroy_types)
 	print("    [アイテム検索] ワーストケース対策アイテムを検索: %d個のアイテム" % items.size())
 	
 	# cannot_useチェックのためのフラグ確認
