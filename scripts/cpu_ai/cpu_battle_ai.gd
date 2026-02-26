@@ -277,10 +277,8 @@ func evaluate_all_combinations_for_battle(
 	# 1. 敵のアイテム破壊・盗みスキルをチェック
 	var enemy_destroy_types = hand_utils.defender_has_item_destroy(defender)
 	var enemy_has_steal = hand_utils.defender_has_item_steal(defender)
-	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
-	
-	print("[CPU AI] アイテム回避判定: destroy_types=%s, has_steal=%s, should_avoid=%s" % [
-		enemy_destroy_types, enemy_has_steal, should_avoid_items
+	print("[CPU AI] アイテム回避判定: destroy_types=%s, has_steal=%s" % [
+		enemy_destroy_types, enemy_has_steal
 	])
 	
 	if enemy_has_steal:
@@ -678,9 +676,7 @@ func evaluate_single_creature_battle(
 	else:
 		enemy_destroy_types = hand_utils.attacker_has_item_destroy(attacker)
 		enemy_has_steal = hand_utils.attacker_has_item_steal(attacker)
-	
-	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
-	
+
 	# 2. ワーストケースシミュレーション（敵がアイテム/加勢を使った場合）
 	var worst_case = simulate_worst_case_common(
 		my_creature, enemy_creature, tile_info, my_player_id, {}, is_attacker
@@ -699,7 +695,7 @@ func evaluate_single_creature_battle(
 		return result
 
 	# 4. 勝てるアイテムを探す
-	var items = hand_utils.get_items_from_hand(my_player_id)
+	var items = hand_utils.get_items_from_hand(my_player_id, enemy_destroy_types)
 	
 	# cannot_useチェックのためのフラグ確認
 	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
@@ -707,12 +703,7 @@ func evaluate_single_creature_battle(
 	for item_entry in items:
 		var item_index = item_entry.get("index", -1)
 		var item_data = item_entry.get("data", {})
-		
-		# アイテム破壊対象チェック
-		if not enemy_destroy_types.is_empty():
-			if hand_utils.is_item_destroy_target(item_data, enemy_destroy_types):
-				continue  # このアイテムは破壊される
-		
+
 		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(my_player_id):
 			var check_result = ItemUseRestriction.check_can_use(my_creature, item_data)

@@ -180,7 +180,7 @@ func find_item_to_beat_worst_case(
 	if not _hand_utils:
 		return result
 	
-	var items = _hand_utils.get_items_from_hand(attacker_player_id)
+	var items = _hand_utils.get_items_from_hand(attacker_player_id, enemy_destroy_types)
 	print("    [アイテム検索] ワーストケース対策アイテムを検索: %d個のアイテム" % items.size())
 	
 	# cannot_useチェックのためのフラグ確認
@@ -194,13 +194,7 @@ func find_item_to_beat_worst_case(
 		# コストチェック
 		if creature_cost + item_cost > current_player.magic_power:
 			continue
-		
-		# アイテム破壊対象チェック（敵がアイテム破壊スキルを持っている場合）
-		if not enemy_destroy_types.is_empty():
-			if _hand_utils.is_item_destroy_target(item, enemy_destroy_types):
-				print("    [スキップ] %s: 敵のアイテム破壊対象" % item.get("name", "?"))
-				continue
-		
+
 		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, item)

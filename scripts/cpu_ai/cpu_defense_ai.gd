@@ -134,14 +134,10 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 		if should_use_nullify:
 			var nullify_item = _find_nullify_item_for_defense(player_id, defender, enemy_destroy_types)
 			if not nullify_item.is_empty():
-				# 破壊対象かつ見つからなかった場合の再確認
-				if not enemy_destroy_types.is_empty() and cpu_hand_utils and cpu_hand_utils.is_item_destroy_target(nullify_item, enemy_destroy_types):
-					print("[CPUDefenseAI] 無効化アイテム %s は破壊対象のためスキップ" % nullify_item.get("name", "?"))
-				else:
-					print("[CPUDefenseAI] 無効化アイテム使用: %s（即死%d%% Lv%d）" % [nullify_item.get("name", "?"), probability, tile_level])
-					result.action = "item"
-					result.item = nullify_item
-					return result
+				print("[CPUDefenseAI] 無効化アイテム使用: %s（即死%d%% Lv%d）" % [nullify_item.get("name", "?"), probability, tile_level])
+				result.action = "item"
+				result.item = nullify_item
+				return result
 			else:
 				print("[CPUDefenseAI] 無効化アイテムなし（即死%d%%）" % probability)
 			
@@ -363,28 +359,10 @@ func _evaluate_merge_option(player_id: int, defender: Dictionary, attacker: Dict
 #region アイテム破壊/盗み判定
 
 func _get_attacker_item_destroy_types(attacker: Dictionary) -> Array:
-	var ability_parsed = attacker.get("ability_parsed", {})
-	var effects = ability_parsed.get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "destroy_item":
-			var triggers = effect.get("triggers", [])
-			if "before_battle" in triggers:
-				return effect.get("target_types", [])
-	
-	return []
+	return cpu_hand_utils.attacker_has_item_destroy(attacker)
 
 func _attacker_has_item_steal(attacker: Dictionary) -> bool:
-	var ability_parsed = attacker.get("ability_parsed", {})
-	var effects = ability_parsed.get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "steal_item":
-			var triggers = effect.get("triggers", [])
-			if "before_battle" in triggers:
-				return true
-	
-	return false
+	return cpu_hand_utils.attacker_has_item_steal(attacker)
 
 #endregion
 

@@ -331,15 +331,18 @@ func select_cheapest_from_list(current_player, card_indices: Array) -> int:
 	return best_index
 
 ## 手札からアイテムカードを抽出
-func get_items_from_hand(player_id: int) -> Array:
+func get_items_from_hand(player_id: int, skip_destroy_types: Array = []) -> Array:
 	var items = []
 	var hand = card_system.get_all_cards_for_player(player_id)
-	
+
 	for i in range(hand.size()):
 		var card = hand[i]
-		if card.get("type", "") == "item":
-			items.append({"index": i, "data": card})
-	
+		if card.get("type", "") != "item":
+			continue
+		if not skip_destroy_types.is_empty() and is_item_destroy_target(card, skip_destroy_types):
+			continue
+		items.append({"index": i, "data": card})
+
 	return items
 
 ## 手札からクリーチャーカードを抽出
