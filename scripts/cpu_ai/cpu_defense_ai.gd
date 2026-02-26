@@ -110,14 +110,16 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	# 3. 敵がアイテム破壊・盗みを持っているか
 	var enemy_destroy_types = _get_attacker_item_destroy_types(attacker)
 	var enemy_has_steal = _attacker_has_item_steal(attacker)
-	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
+	var should_avoid_items = enemy_has_steal
 	
-	if should_avoid_items:
-		print("[CPUDefenseAI] 敵がアイテム破壊/盗み持ち → アイテム使用不可")
+	if enemy_has_steal:
+		print("[CPUDefenseAI] 敵がアイテム盗み持ち → 全アイテム使用不可")
+	elif not enemy_destroy_types.is_empty():
+		print("[CPUDefenseAI] 敵がアイテム破壊持ち → 対象タイプのみ回避: %s" % str(enemy_destroy_types))
 	
 	# 4. 即死脅威判定（ポリシーでアイテム使用が許可されている場合のみ）
 	var instant_death_check = _check_instant_death_threat(attacker, defender)
-	if use_items and not should_avoid_items and instant_death_check.is_applicable:
+	if use_items and not enemy_has_steal and instant_death_check.is_applicable:
 		var probability = instant_death_check.probability
 		print("[CPUDefenseAI] 敵が即死スキル持ち（%d%%）" % probability)
 		
@@ -130,12 +132,16 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 		)
 		
 		if should_use_nullify:
-			var nullify_item = _find_nullify_item_for_defense(player_id, defender)
+			var nullify_item = _find_nullify_item_for_defense(player_id, defender, enemy_destroy_types)
 			if not nullify_item.is_empty():
-				print("[CPUDefenseAI] 無効化アイテム使用: %s（即死%d%% Lv%d）" % [nullify_item.get("name", "?"), probability, tile_level])
-				result.action = "item"
-				result.item = nullify_item
-				return result
+				# 破壊対象かつ見つからなかった場合の再確認
+				if not enemy_destroy_types.is_empty() and cpu_hand_utils and cpu_hand_utils.is_item_destroy_target(nullify_item, enemy_destroy_types):
+					print("[CPUDefenseAI] 無効化アイテム %s は破壊対象のためスキップ" % nullify_item.get("name", "?"))
+				else:
+					print("[CPUDefenseAI] 無効化アイテム使用: %s（即死%d%% Lv%d）" % [nullify_item.get("name", "?"), probability, tile_level])
+					result.action = "item"
+					result.item = nullify_item
+					return result
 			else:
 				print("[CPUDefenseAI] 無効化アイテムなし（即死%d%%）" % probability)
 			
@@ -164,8 +170,8 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	
 	var item_results = {"normal": [], "reserve": []}
 	# ポリシーでアイテム使用が許可されており、敵のアイテム破壊/盗みがない場合のみ検索
-	if use_items and not should_avoid_items:
-		item_results = _find_winning_items(player_id, defender, attacker, tile_info, attacker_player_id, worst_outcome)
+	if use_items and not enemy_has_steal:
+		item_results = _find_winning_items(player_id, defender, attacker, tile_info, attacker_player_id, worst_outcome, enemy_destroy_types)
 	
 	var assist_results = _find_winning_assists(player_id, defender, attacker, tile_info, attacker_player_id, worst_outcome)
 	
@@ -484,7 +490,7 @@ func _check_instant_death_conditions(conditions: Dictionary, defender: Dictionar
 	
 	return true
 
-func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}) -> Dictionary:
+func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}, enemy_destroy_types: Array = []) -> Dictionary:
 	if not card_system:
 		return {}
 	
@@ -499,20 +505,24 @@ func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}) -
 	for card in hand:
 		if card.get("type", "") != "item":
 			continue
-		
+
 		var cost = _get_item_cost(card)
 		if cost > current_player.magic_power:
 			continue
-		
+
+		# 敵のアイテム破壊対象なら破壊対象以外で探す
+		if not enemy_destroy_types.is_empty() and cpu_hand_utils and cpu_hand_utils.is_item_destroy_target(card, enemy_destroy_types):
+			continue
+
 		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not defender.is_empty() and not _is_item_restriction_released(player_id):
 			var check_result = ItemUseRestriction.check_can_use(defender, card)
 			if not check_result.can_use:
 				continue
-		
+
 		var effect_parsed = card.get("effect_parsed", {})
 		var effects = effect_parsed.get("effects", [])
-		
+
 		for effect in effects:
 			if effect.get("effect_type") == "nullify":
 				var nullify_type = effect.get("nullify_type", "")
@@ -588,7 +598,7 @@ func _is_worse_for_defender(result_a: Dictionary, result_b: Dictionary) -> bool:
 
 #region アイテム/加勢検索
 
-func _find_winning_items(player_id: int, defender: Dictionary, attacker: Dictionary, tile_info: Dictionary, attacker_player_id: int, current_outcome: int) -> Dictionary:
+func _find_winning_items(player_id: int, defender: Dictionary, attacker: Dictionary, tile_info: Dictionary, attacker_player_id: int, current_outcome: int, enemy_destroy_types: Array = []) -> Dictionary:
 	var result = { "normal": [], "reserve": [] }
 	
 	if not card_system:
@@ -606,17 +616,22 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 		var card = hand[i]
 		if card.get("type", "") != "item":
 			continue
-		
+
 		# 巻物は防御時使用しない
 		if card.get("item_type", "") == "巻物":
 			continue
-		
+
+		# 敵のアイテム破壊対象ならスキップ
+		if not enemy_destroy_types.is_empty() and cpu_hand_utils and cpu_hand_utils.is_item_destroy_target(card, enemy_destroy_types):
+			print("[CPUDefenseAI] %s は破壊対象のためスキップ" % card.get("name", "?"))
+			continue
+
 		# cannot_use制限チェック（リリース刻印で解除可能）
 		if not disable_cannot_use and not _is_item_restriction_released(player_id):
 			var check_result = ItemUseRestriction.check_can_use(defender, card)
 			if not check_result.can_use:
 				continue
-		
+
 		var cost = _get_item_cost(card)
 		if cost > current_player.magic_power:
 			continue
