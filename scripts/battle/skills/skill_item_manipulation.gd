@@ -78,36 +78,64 @@ static func _has_nullify_item_manipulation(participant) -> bool:
 	
 	return false
 
-## アイテム破壊スキルを取得
+## アイテム破壊スキルを取得（クリーチャー能力 + アイテム効果）
 static func _get_destroy_item_effect(participant):
+	# クリーチャー能力をチェック
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
-	
+
 	for effect in effects:
 		if effect.get("effect_type") == "destroy_item":
 			var triggers = effect.get("triggers", [])
 			if "before_battle" in triggers:
 				return effect
-	
+
+	# アイテム効果をチェック（イビルアイ等）
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var item_effect_parsed = item.get("effect_parsed", {})
+		var item_effects = item_effect_parsed.get("effects", [])
+		for item_effect in item_effects:
+			if item_effect.get("effect_type") == "destroy_item":
+				var triggers = item_effect.get("triggers", [])
+				if "before_battle" in triggers:
+					return item_effect
+
 	return null
 
-## アイテム盗みスキルを取得
+## アイテム盗みスキルを取得（クリーチャー能力 + アイテム効果）
 static func _get_steal_item_effect(participant):
+	# クリーチャー能力をチェック
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
-	
+
 	for effect in effects:
 		if effect.get("effect_type") == "steal_item":
 			var triggers = effect.get("triggers", [])
 			if "before_battle" in triggers:
-				# 条件チェック: 自分がアイテム未使用
 				var conditions = effect.get("conditions", [])
 				for condition in conditions:
 					if condition.get("condition_type") == "self_no_item":
 						if _has_any_item(participant):
-							return null  # 自分がアイテムを持っている場合は盗めない
+							return null
 				return effect
-	
+
+	# アイテム効果をチェック
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var item_effect_parsed = item.get("effect_parsed", {})
+		var item_effects = item_effect_parsed.get("effects", [])
+		for item_effect in item_effects:
+			if item_effect.get("effect_type") == "steal_item":
+				var triggers = item_effect.get("triggers", [])
+				if "before_battle" in triggers:
+					var conditions = item_effect.get("conditions", [])
+					for condition in conditions:
+						if condition.get("condition_type") == "self_no_item":
+							if _has_any_item(participant):
+								return null
+					return item_effect
+
 	return null
 
 ## アイテムを持っているかチェック
