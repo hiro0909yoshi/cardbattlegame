@@ -69,7 +69,12 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 		attacker.get("name", "?"),
 		tile_level
 	])
-	
+
+	# 0. 崩壊刻印チェック: 戦闘後に破壊確定 → アイテム/加勢を使わない
+	if SpellCurseBattle.has_destroy_after_battle(defender):
+		print("[CPUDefenseAI] 崩壊刻印持ち → 戦闘後破壊確定のためパス")
+		return result
+
 	# ポリシー判定：アイテムを使用するかどうか
 	var use_items = true  # デフォルトはアイテム使用
 	print("[CPUDefenseAI] battle_policy: %s" % (battle_policy != null))
