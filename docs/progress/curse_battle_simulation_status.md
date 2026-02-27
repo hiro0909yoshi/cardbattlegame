@@ -1,6 +1,7 @@
 # 刻印バトルシミュレーション対応状況
 
 **作成日**: 2026-02-27
+**最終更新**: 2026-02-27（P1 3件対応完了）
 **目的**: CPU AIバトルシミュレータでの刻印（curse）考慮状況を整理し、未対応項目を明確にする
 
 ---
@@ -9,14 +10,14 @@
 
 | # | 刻印名 | 表示名 | curse_type | シミュレーション | 実戦 | CPU AI | 状態 |
 |---|--------|--------|------------|-----------------|------|--------|------|
-| 4 | 戦闘後破壊 | 崩壊 | `destroy_after_battle` | **未対応** | OK | **未対応** | P1 |
+| 4 | 戦闘後破壊 | 崩壊 | `destroy_after_battle` | OK | OK | OK | **完了** |
 | 6 | 地形効果無効 | 暗転 | `land_effect_disable` | OK | OK | OK | **完了** |
 | 7 | 地形効果付与 | 恩寵 | `land_effect_grant` | OK | OK | OK | **完了** |
-| 8 | 戦闘行動不可 | 消沈 | `battle_disable` | **未対応** | OK | **未対応** | P1 |
+| 8 | 戦闘行動不可 | 消沈 | `battle_disable` | OK | OK | OK | **完了** |
 | 10 | 能力値-20 | 衰月 | `stat_reduce` | OK | OK | OK | **完了** |
 | 11 | 能力値+20 | 暁光 | `stat_boost` | OK | OK | OK | **完了** |
 | 15 | 金属化 | 硬化 | `metal_form` | 間接対応 | OK | OK | P2 |
-| 17 | 衰弱 | 衰弱 | `plague` | **未対応** | OK | **未対応** | P1 |
+| 17 | 衰弱 | 衰弱 | `plague` | OK | OK | OK | **完了** |
 | 18 | 能力値不定 | 狂星 | `random_stat` | OK(不安定) | OK | 不安定 | P2 |
 | 19 | 戦闘能力不可 | 錯乱 | `skill_nullify` | OK | OK | OK | **完了** |
 
@@ -39,9 +40,12 @@ battle_simulator.gd::simulate_battle()
   │   ├─ apply_skills(attacker)            # 攻撃側スキル
   │   ├─ apply_skills(defender)            # 防御側スキル
   │   └─ PenetrationSkill.apply()          # 刺突
+  ├─ 消沈チェック → AP=0化               # ★ 2026-02-27追加
   ├─ check_nullify()                       # 無効化スキル判定
   ├─ _get_reflect_info()                   # 反射情報
-  └─ _calculate_battle_result()            # 勝敗判定
+  ├─ _calculate_battle_result()            # 勝敗判定
+  ├─ _apply_attacker_death_effects()       # 死亡時効果
+  └─ _apply_post_battle_curse_effects()    # ★ 崩壊・衰弱の戦闘後効果
 ```
 
 ### 刻印がシミュレーションに反映される経路
@@ -52,11 +56,38 @@ battle_simulator.gd::simulate_battle()
 | `_calculate_land_bonus()` → `SpellCurseBattle.can_get_land_bonus()` | land_effect_disable, land_effect_grant | 土地ボーナス計算時に刻印チェック |
 | `apply_skills_for_simulation()` 沈黙チェック | skill_nullify | `_has_skill_nullify_curse()` でチェック → 全スキルスキップ |
 | `apply_effect_arrays()` → ability_parsed 更新 | metal_form | battle_curse_applier.gd で「無効化」をability_parsedに追加 |
-| **未対応** | destroy_after_battle, battle_disable, plague | 実戦ではbattle_execution.gdで処理、シミュレーションでは未考慮 |
+| ステップ5.5: AP=0化 | battle_disable | `SpellCurseBattle.has_battle_disable()` → 消沈側のAPを0に |
+| ステップ11: `_apply_post_battle_curse_effects()` | destroy_after_battle, plague | 生存者の崩壊→破壊、衰弱→MHP/2ダメージで結果再判定 |
 
 ---
 
 ## 対応済み詳細
+
+### battle_disable（消沈）— 2026-02-27 対応
+
+- `simulate_battle()` ステップ5.5 で `SpellCurseBattle.has_battle_disable()` チェック
+- 消沈側の最終APを0に設定 → `_calculate_battle_result()` に0で渡される
+- 攻撃側が消沈 → 攻撃ダメージ0、防御側が消沈 → 反撃ダメージ0
+- CPU攻撃AI: 消沈状態の敵を正しく「攻撃力なし」と評価 → 侵略しやすくなる
+- CPU防御AI: 自分が消沈状態のシミュレーション結果が正確になる
+
+### destroy_after_battle（崩壊）— 2026-02-27 対応
+
+- `_apply_post_battle_curse_effects()` で戦闘結果判定後にチェック
+- 生存者が崩壊刻印持ち → 破壊扱いで結果を再判定
+- 結果変換:
+  - DEFENDER_WIN + 防御側崩壊 → BOTH_DEFEATED
+  - ATTACKER_SURVIVED + 防御側崩壊 → ATTACKER_WIN
+  - ATTACKER_WIN + 攻撃側崩壊 → BOTH_DEFEATED（移動侵略時）
+- CPU攻撃AI: 崩壊持ちの敵に対して「生き残ればよい」と正しく判断 → 防具優先
+- CPU防御AI: シミュレーション結果が常に敗北 → アイテムを自然に温存
+
+### plague（衰弱）— 2026-02-27 対応
+
+- `_apply_post_battle_curse_effects()` で崩壊チェックの後に処理
+- 生存者が衰弱刻印持ち → MHP/2ダメージを計算し、残HP≤0なら破壊扱い
+- MHP計算: 攻撃側=`base_hp + base_up_hp`、防御側=`base_hp + base_up_hp + land_bonus_hp`
+- CPU AI: 衰弱持ちクリーチャーが戦闘後に死ぬケースを正確にシミュレーション
 
 ### land_effect_disable（暗転）/ land_effect_grant（恩寵）
 
@@ -93,46 +124,6 @@ battle_simulator.gd::simulate_battle()
 
 ---
 
-## 未対応詳細（P1）
-
-### destroy_after_battle（崩壊）
-
-**現状**: `battle_execution.gd` の `_check_destroy_after_battle()` で戦闘終了後に処理。シミュレータでは未考慮。
-
-**問題シナリオ**:
-- 防御側が崩壊刻印持ちで生き残った場合、シミュレータは「防御成功」と判定するが、実際は戦闘後に破壊される
-- CPU防御AI: 崩壊刻印を持つクリーチャーの防御でアイテムを使っても結局破壊される → アイテム温存すべき
-
-**必要な修正**:
-- `battle_simulator.gd`: 結果判定後に崩壊チェック追加
-- CPU防御AI: 崩壊刻印持ちクリーチャーの防御をスキップ（または低優先度化）
-
-### battle_disable（消沈）
-
-**現状**: `battle_execution.gd` で消沈チェック → 攻撃スキップ。シミュレータでは未考慮。
-
-**問題シナリオ**:
-- 敵が消沈状態でAP=50の場合、シミュレータは「敵AP50で攻撃」と計算するが、実際は攻撃できない
-- CPU攻撃AI: 消沈状態の敵を「強い」と誤判定して攻撃を避ける
-- CPU防御AI: 自分が消沈状態でも防御可能と判定してアイテムを無駄に使う
-
-**必要な修正**:
-- `battle_simulator.gd`: 消沈チェック → 消沈側のAPを0として計算
-- CPU攻撃AI: 敵の消沈状態を考慮して侵略判断
-
-### plague（衰弱）
-
-**現状**: `battle_execution.gd` で戦闘終了後にMHP/2ダメージ。シミュレータでは未考慮。
-
-**問題シナリオ**:
-- 衰弱クリーチャー（MHP=100）が戦闘後HP=30で生き残り → 衰弱ダメージ50 → 実際はHP-20で破壊
-- シミュレータは「生き残り=防御成功」と判定
-
-**必要な修正**:
-- `battle_simulator.gd`: `_calculate_battle_result()` 後に衰弱ダメージを適用して最終結果を再判定
-
----
-
 ## 未対応詳細（P2）
 
 ### metal_form（硬化）— 間接対応
@@ -149,19 +140,6 @@ battle_simulator.gd::simulate_battle()
 
 ---
 
-## 実装優先度
-
-### P1（即座に対応）
-1. **battle_disable（消沈）**: 戦闘結果への影響大、誤判定が頻発しうる
-2. **plague（衰弱）**: 戦闘後破壊の見落としでアイテム浪費
-3. **destroy_after_battle（崩壊）**: 防御判断の誤り
-
-### P2（安定性向上）
-4. **random_stat（狂星）**: ランダム性による判断不安定
-5. **metal_form（硬化）**: 間接対応で機能するが明示性不足
-
----
-
 ## 関連ファイル
 
 | ファイル | 役割 |
@@ -170,7 +148,7 @@ battle_simulator.gd::simulate_battle()
 | `scripts/battle/battle_skill_processor.gd` | スキル適用（`apply_skills_for_simulation`含む） |
 | `scripts/battle/battle_preparation.gd` | バトル準備（`apply_effect_arrays`含む） |
 | `scripts/battle/battle_curse_applier.gd` | 刻印→BattleParticipant変換 |
-| `scripts/battle/battle_execution.gd` | 実戦バトル処理（未対応刻印はここで処理） |
+| `scripts/battle/battle_execution.gd` | 実戦バトル処理 |
 | `scripts/spells/spell_curse_battle.gd` | 刻印チェック・付与メソッド群 |
 | `scripts/cpu_ai/cpu_battle_ai.gd` | CPU攻撃AI |
 | `scripts/cpu_ai/cpu_defense_ai.gd` | CPU防御AI |

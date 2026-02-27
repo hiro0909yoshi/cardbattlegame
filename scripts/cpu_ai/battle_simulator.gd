@@ -188,6 +188,14 @@ func simulate_battle(
 	var attacker_final_hp = _calculate_total_hp(attacker)
 	var defender_final_ap = defender.current_ap
 	var defender_final_hp = _calculate_total_hp(defender)
+
+	# 5.5. 消沈チェック: 攻撃不可 → AP=0として計算
+	if SpellCurseBattle.has_battle_disable(attacker.creature_data):
+		_log("【消沈】攻撃側は攻撃不可 → AP=0")
+		attacker_final_ap = 0
+	if SpellCurseBattle.has_battle_disable(defender.creature_data):
+		_log("【消沈】防御側は攻撃不可 → AP=0")
+		defender_final_ap = 0
 	
 	# 攻撃回数取得
 	var attacker_attack_count = attacker.attack_count
@@ -234,7 +242,10 @@ func simulate_battle(
 	)
 	result = death_effect_result["result"]
 	var _adjusted_defender_hp = death_effect_result["defender_hp"]  # 現在未使用
-	
+
+	# 11. 戦闘後刻印効果（崩壊・衰弱）
+	result = _apply_post_battle_curse_effects(result, attacker, defender)
+
 	_log("")
 	_log(_get_result_header(result))
 	_log("  → %s" % _result_to_string(result))
@@ -670,6 +681,55 @@ func _get_effects_summary(participant) -> String:
 	if parts.is_empty():
 		return "なし"
 	return ", ".join(parts)
+
+## 戦闘後刻印効果（崩壊・衰弱）を適用して結果を再判定
+func _apply_post_battle_curse_effects(current_result: int, attacker, defender) -> int:
+	var result = current_result
+	var attacker_survives = (result == BattleResult.ATTACKER_WIN or result == BattleResult.ATTACKER_SURVIVED)
+	var defender_survives = (result == BattleResult.DEFENDER_WIN or result == BattleResult.ATTACKER_SURVIVED)
+
+	# 崩壊: 生存していても戦闘後に破壊
+	if attacker_survives and SpellCurseBattle.has_destroy_after_battle(attacker.creature_data):
+		_log("【崩壊】攻撃側は戦闘後に破壊")
+		attacker_survives = false
+	if defender_survives and SpellCurseBattle.has_destroy_after_battle(defender.creature_data):
+		_log("【崩壊】防御側は戦闘後に破壊")
+		defender_survives = false
+
+	# 衰弱: 生存者にMHP/2ダメージ
+	if attacker_survives and _has_plague_curse(attacker.creature_data):
+		var max_hp = attacker.base_hp + attacker.base_up_hp
+		var plague_damage = int(max_hp / 2)
+		var remaining_hp = _calculate_total_hp(attacker) - plague_damage
+		_log("【衰弱】攻撃側にMHP/2=%dダメージ → 残HP=%d" % [plague_damage, remaining_hp])
+		if remaining_hp <= 0:
+			attacker_survives = false
+	if defender_survives and _has_plague_curse(defender.creature_data):
+		var max_hp = defender.base_hp + defender.base_up_hp + defender.land_bonus_hp
+		var plague_damage = int(max_hp / 2)
+		var remaining_hp = _calculate_total_hp(defender) - plague_damage
+		_log("【衰弱】防御側にMHP/2=%dダメージ → 残HP=%d" % [plague_damage, remaining_hp])
+		if remaining_hp <= 0:
+			defender_survives = false
+
+	# 結果を再判定
+	if attacker_survives and defender_survives:
+		return result  # 変化なし
+	elif attacker_survives and not defender_survives:
+		return BattleResult.ATTACKER_WIN
+	elif not attacker_survives and defender_survives:
+		return BattleResult.DEFENDER_WIN
+	elif not attacker_survives and not defender_survives:
+		return BattleResult.BOTH_DEFEATED
+
+	return result
+
+
+## 衰弱刻印を持っているかチェック
+func _has_plague_curse(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type") == "plague"
+
 
 ## ログ出力（レベル2以上で詳細ログを出力）
 func _log(message: String) -> void:
