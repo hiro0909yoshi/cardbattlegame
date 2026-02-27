@@ -10,13 +10,14 @@
 
 | # | 刻印名 | 表示名 | curse_type | シミュレーション | 実戦 | CPU AI | 状態 |
 |---|--------|--------|------------|-----------------|------|--------|------|
+| 2 | EP結界 | 祭壇 | `magic_barrier` | 間接対応 | OK | OK | **完了** (EP移動は未考慮) |
 | 4 | 戦闘後破壊 | 崩壊 | `destroy_after_battle` | OK | OK | OK | **完了** |
 | 6 | 地形効果無効 | 暗転 | `land_effect_disable` | OK | OK | OK | **完了** |
 | 7 | 地形効果付与 | 恩寵 | `land_effect_grant` | OK | OK | OK | **完了** |
 | 8 | 戦闘行動不可 | 消沈 | `battle_disable` | OK | OK | OK | **完了** |
 | 10 | 能力値-20 | 衰月 | `stat_reduce` | OK | OK | OK | **完了** |
 | 11 | 能力値+20 | 暁光 | `stat_boost` | OK | OK | OK | **完了** |
-| 15 | 金属化 | 硬化 | `metal_form` | 間接対応 | OK | OK | P2 |
+| 15 | 金属化 | 硬化 | `metal_form` | 間接対応 | OK | OK | **完了** |
 | 17 | 衰弱 | 衰弱 | `plague` | OK | OK | OK | **完了** |
 | 18 | 能力値不定 | 狂星 | `random_stat` | OK(不安定) | OK | 不安定 | P2 |
 | 19 | 戦闘能力不可 | 錯乱 | `skill_nullify` | OK | OK | OK | **完了** |
@@ -125,12 +126,6 @@ battle_simulator.gd::simulate_battle()
 ---
 
 ## 未対応詳細（P2）
-
-### metal_form（硬化）— 間接対応
-
-- ability_parsed経由で無効化スキルとして機能するため、戦闘結果自体は正しい
-- ただしCPU AIが「硬化刻印持ち → 無効化スキル持ち」を明示的に認識していない
-- 改善: CPU AIで刻印チェック時に明示的にmetal_formを考慮
 
 ### random_stat（狂星）— 不安定
 
