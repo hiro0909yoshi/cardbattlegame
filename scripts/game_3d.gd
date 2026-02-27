@@ -225,12 +225,12 @@ func _integrate_walk_animation(walk_model: Node, idle_model: Node) -> void:
 		print("[Game3D] walkアニメーション統合完了: ", idle_model.name)
 
 
-## FBX内のCamera/Lightノードを非表示にする
+## FBX内の不要なCamera/Lightノードを削除する
 func _hide_fbx_extras(model: Node) -> void:
 	for child in model.get_children():
-		if child is Camera3D or child is Light3D:
-			child.visible = false
 		_hide_fbx_extras(child)
+		if child is Camera3D or child is Light3D:
+			child.queue_free()
 
 
 ## 外部PNGテクスチャを両モデルに適用する

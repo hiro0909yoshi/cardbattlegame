@@ -10,3 +10,7 @@
 # Test files
 data/*test*.json
 *_test.json
+
+# Build artifacts
+web_build/
+web_build.zip
