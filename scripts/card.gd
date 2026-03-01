@@ -403,10 +403,10 @@ func load_creature_image(card_id: int):
 	var card_art = get_node_or_null("CardArtContainer/CardArt")
 	if not card_art:
 		return
-	
-	# 画像パスを構築（IDベース）
-	var image_path = "res://assets/images/creatures/" + str(card_id) + ".png"
-	
+
+	# カードタイプと属性からパスを構築
+	var image_path = _get_card_image_path(card_id)
+
 	# 画像ファイルが存在するか確認
 	if FileAccess.file_exists(image_path):
 		var texture = load(image_path)
@@ -415,11 +415,11 @@ func load_creature_image(card_id: int):
 	else:
 		# 画像がない場合はデフォルト表示（属性に応じた色）
 		var placeholder = Image.create(199, 185, false, Image.FORMAT_RGBA8)
-		
+
 		# 属性に応じた色で塗りつぶし
 		var element = card_data.get("element", "")
 		var fill_color = Color(0.5, 0.5, 0.5)  # デフォルトはグレー
-		
+
 		match element:
 			"fire":
 				fill_color = Color(0.9, 0.4, 0.3)
@@ -429,9 +429,26 @@ func load_creature_image(card_id: int):
 				fill_color = Color(0.4, 0.8, 0.5)
 			"earth":
 				fill_color = Color(0.8, 0.6, 0.4)
-		
+
 		placeholder.fill(fill_color)
 		card_art.texture = ImageTexture.create_from_image(placeholder)
+
+
+## カードIDからフォルダ分けされた画像パスを返す
+func _get_card_image_path(card_id: int) -> String:
+	var card_type = card_data.get("type", "creature")
+
+	match card_type:
+		"spell":
+			return "res://assets/images/spells/" + str(card_id) + ".png"
+		"item":
+			return "res://assets/images/items/" + str(card_id) + ".png"
+		_:
+			# クリーチャー: 属性別フォルダ
+			var element = card_data.get("element", "neutral")
+			if element.is_empty():
+				element = "neutral"
+			return "res://assets/images/creatures/" + element + "/" + str(card_id) + ".png"
 
 # カードを選択可能にする
 func set_selectable(selectable: bool, index: int = -1):
