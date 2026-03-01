@@ -24,15 +24,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **5-5**: GameSystemManager 最適化（35行削減）✅
 - ✅ **Phase 6**: 完全UI層分離 - Signal駆動化（2026-02-17）✅ **完全完了**
   - **6-A**: SpellPhaseHandler UI Signal 分離（16 Signals）
-    - SpellFlowHandler: 11 UI Signals、`_ui_manager` 削除
-    - MysticArtsHandler: 5 UI Signals、`_ui_manager` 削除
-    - MysticArts委譲メソッド8個削除
+	- SpellFlowHandler: 11 UI Signals、`_ui_manager` 削除
+	- MysticArtsHandler: 5 UI Signals、`_ui_manager` 削除
+	- MysticArts委譲メソッド8個削除
   - **6-B**: DicePhaseHandler UI分離（8 Signals）
-    - ダイス結果表示・フェーズテキスト・コメント等のSignal駆動化
+	- ダイス結果表示・フェーズテキスト・コメント等のSignal駆動化
   - **6-C**: Toll + Discard + Bankruptcy UI分離（9 Signals）
-    - TollPaymentHandler: 2 Signals
-    - DiscardHandler: 2 Signals
-    - BankruptcyHandler: 5 Signals（パネル生成は部分的に直接参照を保持）
+	- TollPaymentHandler: 2 Signals
+	- DiscardHandler: 2 Signals
+	- BankruptcyHandler: 5 Signals（パネル生成は部分的に直接参照を保持）
   - **合計**: 33個のSignal追加、5/6ハンドラーで`_ui_manager`完全削除
   - GameSystemManager: 6つのSignal接続メソッド追加
 - **成果物**: コード削減約700行（全フェーズ累計）、38個のUI Signal定義、7/8ハンドラーのUI層完全分離、4 UIサービス新規作成、UIManagerランタイム双方向参照ゼロ
@@ -97,21 +97,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - ✅ Phase 3-A: SpellPhaseHandler Strategy パターン化（完了、22 Strategies 実装）
    - ✅ Phase 4: SpellPhaseHandler 責務分離（完了、~280行削減）
    - ✅ Phase 5: 段階的最適化（完了、2026-02-16）
-     - ✅ 5-1: SpellUIManager 実装（274行、14メソッド）
-     - ✅ 5-2: CPUSpellAIContainer 実装（79行、4メソッド）
-     - ✅ 5-3: グループ3重複参照削除（25行削減）
-     - ✅ 5-5: GameSystemManager 最適化（35行削減）
+	 - ✅ 5-1: SpellUIManager 実装（274行、14メソッド）
+	 - ✅ 5-2: CPUSpellAIContainer 実装（79行、4メソッド）
+	 - ✅ 5-3: グループ3重複参照削除（25行削減）
+	 - ✅ 5-5: GameSystemManager 最適化（35行削減）
    - ✅ Phase 6: 完全UI層分離（完了、2026-02-17）
-     - ✅ 6-A: SpellPhaseHandler UI Signal分離（16 Signals、委譲メソッド8個削除）
-     - ✅ 6-B: DicePhaseHandler UI分離（8 Signals）
-     - ✅ 6-C: Toll + Discard + Bankruptcy UI分離（9 Signals）
-     - **合計**: 33 Signals、5/6ハンドラーUI層完全分離
+	 - ✅ 6-A: SpellPhaseHandler UI Signal分離（16 Signals、委譲メソッド8個削除）
+	 - ✅ 6-B: DicePhaseHandler UI分離（8 Signals）
+	 - ✅ 6-C: Toll + Discard + Bankruptcy UI分離（9 Signals）
+	 - **合計**: 33 Signals、5/6ハンドラーUI層完全分離
    - ✅ Phase 7-A: CPU AI パススルー除去（完了、2026-02-17）
    - ✅ Phase 7-B: SPH UI依存逆転（完了、2026-02-17）
    - ✅ Phase 8: UIManager依存方向の正規化（完了、2026-02-18）
-     - ✅ 8-F: UIManager内部4サービス分割
-     - ✅ 8-G: ヘルパーファイル部分移行
-     - ✅ 8-A: ItemPhaseHandler Signal化（4 Signals）
+	 - ✅ 8-F: UIManager内部4サービス分割
+	 - ✅ 8-G: ヘルパーファイル部分移行
+	 - ✅ 8-A: ItemPhaseHandler Signal化（4 Signals）
    - ✅ Phase 9: 状態ルーター解体（完了、2026-02-19）
    - ✅ Phase 10-A: PlayerInfoService サービス化（完了、2026-02-19）
    - ✅ Phase 10-C: UIManager双方向参照の削減（完了、2026-02-19）
@@ -452,7 +452,7 @@ Task(
 if spell_container and spell_container.spell_draw:
     var drawn = spell_container.spell_draw.draw_one(player_id)
 else:
-    push_error("[GFM] spell_draw が初期化されていません")
+	push_error("[GFM] spell_draw が初期化されていません")
     return
 \`\`\`
 """
