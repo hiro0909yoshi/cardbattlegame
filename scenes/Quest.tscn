@@ -1,6 +1,22 @@
-[gd_scene load_steps=2 format=3 uid="uid://cv5o43qtpcra3"]
+[gd_scene load_steps=4 format=3 uid="uid://cv5o43qtpcra3"]
 
 [ext_resource type="Script" uid="uid://cmqc8cb50jqn8" path="res://scripts/quest/quest_game.gd" id="1_quest"]
+[ext_resource type="PackedScene" uid="uid://bcgp1fusopvyw" path="res://assets/images/map/map-high.glb" id="2_sp3l6"]
+
+[sub_resource type="Environment" id="Environment_sp3l6"]
+ambient_light_source = 2
+ambient_light_color = Color(0.96474224, 0.96474224, 0.9647421, 1)
+ambient_light_energy = 0.5
 
 [node name="Quest" type="Node3D"]
 script = ExtResource("1_quest")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 22, 0)
+light_energy = 2.316
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_sp3l6")
+
+[node name="map-high" parent="." instance=ExtResource("2_sp3l6")]
+transform = Transform3D(46, 0, 0, 0, 46, 0, 0, 0, 46, 6, -31.445225, -10)
