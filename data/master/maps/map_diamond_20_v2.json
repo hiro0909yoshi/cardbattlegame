@@ -6,7 +6,7 @@
   "lap_bonus_preset": "standard",
   "checkpoint_preset": "standard",
   "tiles": [
-	{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
+	{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "1"},
 	{"index": 1, "type": "Neutral", "x": 4, "z": 0},
 	{"index": 2, "type": "Neutral", "x": 8, "z": 0},
 	{"index": 3, "type": "Neutral", "x": 12, "z": 0},
@@ -16,7 +16,7 @@
 	{"index": 7, "type": "Fire", "x": 20, "z": 8},
 	{"index": 8, "type": "Fire", "x": 20, "z": 12},
 	{"index": 9, "type": "Water", "x": 20, "z": 16},
-	{"index": 10, "type": "Checkpoint", "x": 20, "z": 20, "checkpoint_type": "S"},
+	{"index": 10, "type": "Checkpoint", "x": 20, "z": 20, "checkpoint_type": "2"},
 	{"index": 11, "type": "Water", "x": 16, "z": 20},
 	{"index": 12, "type": "Water", "x": 12, "z": 20},
 	{"index": 13, "type": "Wind", "x": 8, "z": 20},

@@ -303,13 +303,8 @@ func _get_checkpoint_id(tile, _tile_index: int) -> String:
 		elif "checkpoint_number" in tile and tile.checkpoint_number != null:
 			number = int(tile.checkpoint_number)
 	
-	# 番号からIDを生成（0=N, 1=S, 2=E, 3=W, ...）
-	match number:
-		0: return "N"
-		1: return "S"
-		2: return "E"
-		3: return "W"
-		_: return "CP%d" % number
+	# 番号からIDを生成（0→"1", 1→"2", 2→"3", 3→"4"）
+	return str(number + 1)
 
 
 ## チェックポイントからBFSで全タイルへの距離を計算

@@ -205,18 +205,12 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 	
 	# 特殊タイルの追加設定
 	if tile_type == "Checkpoint" and tile_data.has("checkpoint_type"):
-		var cp_type = tile_data.get("checkpoint_type", "N")
-		match cp_type:
-			"N":
-				tile.checkpoint_type = 0
-			"S":
-				tile.checkpoint_type = 1
-			"E":
-				tile.checkpoint_type = 2
-			"W":
-				tile.checkpoint_type = 3
-			_:
-				tile.checkpoint_type = 0
+		var cp_type = str(tile_data.get("checkpoint_type", "1"))
+		# "1"〜"4" → enum値 0〜3
+		var cp_index = cp_type.to_int() - 1
+		if cp_index < 0 or cp_index > 3:
+			cp_index = 0
+		tile.checkpoint_type = cp_index
 	
 	if (tile_type == "Warp" or tile_type == "WarpStop") and tile_data.has("warp_pair"):
 		var from_tile = tile_data.get("index", -1)

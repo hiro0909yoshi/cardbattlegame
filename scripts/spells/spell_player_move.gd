@@ -249,7 +249,7 @@ func get_selectable_gates(player_id: int) -> Array:
 	
 	# 未通過ゲートを列挙
 	var unvisited = []
-	for gate_key in ["N", "S"]:  # 現在は2ゲート固定
+	for gate_key in lap_system.required_checkpoints:
 		if lap_state.has(gate_key) and not lap_state[gate_key]:
 			unvisited.append(gate_key)
 	
@@ -430,8 +430,7 @@ func _trigger_gate_effect(player_id: int, _tile_index: int, gate_key: String) ->
 		print("[SpellPlayerMove] ゲート通過: %s" % gate_key)
 		
 		# 周回完了チェック
-		var lap_state = lap_system.player_lap_state[player_id]
-		if lap_state.get("N", false) and lap_state.get("S", false):
+		if lap_system.check_lap_complete(player_id):
 			# 周回完了処理をlap_systemに委譲
 			lap_system.complete_lap(player_id)
 	
@@ -468,7 +467,8 @@ func _would_complete_lap(player_id: int, gate_key: String) -> bool:
 	var lap_state = lap_system.player_lap_state[player_id]
 	
 	# 仮にこのゲートを通過した場合をシミュレート
-	for key in ["N", "S"]:
+	var required = lap_system.required_checkpoints
+	for key in required:
 		if key == gate_key:
 			continue  # このゲートは通過済みとして扱う
 		if not lap_state.get(key, false):

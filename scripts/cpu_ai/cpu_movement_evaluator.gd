@@ -1124,7 +1124,7 @@ func _is_gate_unvisited(tile_info: Dictionary, player_id: int) -> bool:
 	var checkpoint_type = tile_info.get("checkpoint_type", "")
 	if checkpoint_type == "":
 		var gate_number = tile_info.get("gate_number", tile_info.get("checkpoint_number", 0))
-		checkpoint_type = "N" if gate_number == 0 else "S"
+		checkpoint_type = str(gate_number + 1)
 	
 	var player_state = lap_system.player_lap_state.get(player_id, {})
 	return not player_state.get(checkpoint_type, false)
@@ -1172,11 +1172,7 @@ func _get_checkpoint_id_at_tile(tile_index: int) -> String:
 		if typeof(cp_type) == TYPE_STRING and cp_type != "":
 			return cp_type
 		elif typeof(cp_type) == TYPE_INT:
-			match cp_type:
-				0: return "N"
-				1: return "S"
-				2: return "E"
-				3: return "W"
+			return str(cp_type + 1)
 	
 	return ""
 

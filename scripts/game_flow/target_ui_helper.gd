@@ -67,7 +67,7 @@ static func format_target_info(target_data: Dictionary, current_index: int, tota
 		"gate":
 			var tile_idx = target_data.get("tile_index", -1)
 			var gate_key = target_data.get("gate_key", "")
-			var gate_name = "北ゲート" if gate_key == "N" else "南ゲート"
+			var gate_name = "%sゲート" % gate_key
 			text += "%s (タイル%d)" % [gate_name, tile_idx]
 	
 	text += "\n[Enter: 次へ] [C: 閉じる]"

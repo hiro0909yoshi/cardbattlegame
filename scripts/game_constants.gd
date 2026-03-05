@@ -165,10 +165,10 @@ const LAP_BONUS_PRESETS = {
 # === チェックポイントプリセット ===
 # 周回完了に必要なチェックポイント
 const CHECKPOINT_PRESETS = {
-	"standard": ["N", "S"],
-	"three_way": ["N", "S", "W"],
-	"three_way_alt": ["N", "E", "W"],
-	"four_way": ["N", "S", "W", "E"]
+	"standard": ["1", "2"],
+	"three_way": ["1", "2", "3"],
+	"three_way_alt": ["1", "2", "3"],
+	"four_way": ["1", "2", "3", "4"]
 }
 
 # =============================================================================

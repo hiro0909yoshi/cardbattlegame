@@ -1,0 +1,58 @@
+[gd_scene load_steps=7 format=3 uid="uid://df30e8cbhe7cd"]
+
+[ext_resource type="Shader" uid="uid://bltkiarbij3cp" path="res://assets/shaders/card_back.gdshader" id="1_shader"]
+[ext_resource type="FontFile" uid="uid://dwr7ddagywwe0" path="res://assets/fonts/NotoSansJP-Regular.ttf" id="2_font"]
+[ext_resource type="Script" uid="uid://co3ljyut1ph4f" path="res://scripts/test_card_back.gd" id="3_script"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.05, 0.05, 0.1, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/time_scale = 0.5
+shader_parameter/bg_color_top = Color(0.02, 0.08, 0.12, 1)
+shader_parameter/bg_color_bottom = Color(0.01, 0.03, 0.06, 1)
+shader_parameter/moon_color_base = Color(0.8, 0.55, 0.1, 1)
+shader_parameter/moon_color_bright = Color(1, 0.85, 0.3, 1)
+shader_parameter/moon_edge_color = Color(1, 0.95, 0.6, 1)
+shader_parameter/moon_size = 0.17400000500512
+shader_parameter/moon_offset = 0.06200000224648
+shader_parameter/moon_inner_size = 0.86400003778012
+shader_parameter/moon_angle = 45.0
+shader_parameter/moon_position = Vector2(0.43, 0.34)
+
+[sub_resource type="QuadMesh" id="QuadMesh_1"]
+material = SubResource("ShaderMaterial_1")
+size = Vector2(2.4, 3.6)
+
+[node name="CardBackTest" type="Node3D"]
+script = ExtResource("3_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+fov = 45.0
+
+[node name="CardMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("QuadMesh_1")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+size = Vector2i(220, 293)
+render_target_update_mode = 3
+
+[node name="ArcanaLabel" type="Label" parent="SubViewport"]
+offset_top = 220.0
+offset_right = 220.0
+offset_bottom = 255.0
+theme_override_colors/font_color = Color(0.9, 0.75, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "ARCANA"
+horizontal_alignment = 1

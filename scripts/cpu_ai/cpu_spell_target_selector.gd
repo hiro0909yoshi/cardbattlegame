@@ -863,17 +863,12 @@ func _get_checkpoint_tile_index(checkpoint_type: String) -> int:
 	
 	return -1
 
-## タイルからチェックポイントタイプ文字列を取得（N, S, E, W対応）
+## タイルからチェックポイントタイプ文字列を取得（"1"〜"4"）
 func get_checkpoint_type_string(tile) -> String:
 	if not tile:
 		return ""
 	var cp_type = tile.checkpoint_type if "checkpoint_type" in tile else 0
-	match cp_type:
-		0: return "N"
-		1: return "S"
-		2: return "E"
-		3: return "W"
-		_: return ""
+	return str(cp_type + 1)
 
 # =============================================================================
 # ヘルパー関数

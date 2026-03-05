@@ -10,7 +10,7 @@
 	  "x": 20,
 	  "z": 20,
 	  "type": "Checkpoint",
-	  "checkpoint_type": "N",
+	  "checkpoint_type": "1",
 	  "index": 0
 	},
 	{
@@ -72,7 +72,7 @@
 	  "x": 0,
 	  "z": 0,
 	  "type": "Checkpoint",
-	  "checkpoint_type": "S",
+	  "checkpoint_type": "2",
 	  "index": 10
 	},
 	{
@@ -187,7 +187,7 @@
 	  "x": 40,
 	  "z": 40,
 	  "type": "Checkpoint",
-	  "checkpoint_type": "S",
+	  "checkpoint_type": "2",
 	  "index": 29
 	},
 	{
