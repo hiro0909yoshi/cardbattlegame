@@ -137,11 +137,16 @@ float stars(vec2 uv, float t) {
 // 枠の装飾（カード縁）
 // ============================================
 float card_border(vec2 uv) {
-    float border_w = 0.04;
     float bx = min(uv.x, 1.0 - uv.x);
     float by = min(uv.y, 1.0 - uv.y);
-    float border = min(bx, by);
-    return 1.0 - smoothstep(border_w * 0.5, border_w, border);
+    float d = min(bx, by);
+
+    // 外側細ライン
+    float outer = 1.0 - smoothstep(0.0, 0.006, abs(d - 0.005));
+    // 内側細ライン
+    float inner = 1.0 - smoothstep(0.0, 0.006, abs(d - 0.03));
+
+    return clamp(outer + inner, 0.0, 1.0);
 }
 
 // ============================================
