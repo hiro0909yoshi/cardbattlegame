@@ -50,17 +50,18 @@ func set_references(css, csui, gfm) -> void:
 func _ready():
 	# 元のサイズを記録
 	original_size = size
-	
+
 	# マウスイベントを接続
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
-	
+
 	# マウスフィルターを設定（重要！）
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	
+
 	# サイズ変更時に子要素を調整
 	resized.connect(_on_resized)
 	adjust_children_size()
+
 	
 	# 制限理由ラベルを作成
 	_create_restriction_label()
@@ -721,36 +722,40 @@ func set_viewing_player(viewer_id: int):
 func update_secret_display():
 	SkillSecret.apply_secret_display(self, card_data, viewing_player_id, owner_player_id)
 
-# 裏面表示に切り替え（真っ黒にする）
+# 裏面表示に切り替え（表面の子ノードを隠し、裏面を表示）
 func show_secret_back():
 	if is_showing_secret_back:
 		return
-	
-	is_showing_secret_back = true
-	
-	# カード全体を覆う黒いColorRectを作成
-	var black_overlay = ColorRect.new()
-	black_overlay.name = "SecretBlackOverlay"
-	black_overlay.color = Color(0, 0, 0, 1)
-	black_overlay.size = size
-	black_overlay.position = Vector2.ZERO
-	black_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウスイベントを透過
-	
-	# 最前面に配置
-	add_child(black_overlay)
-	move_child(black_overlay, get_child_count() - 1)
 
-# 通常表示に切り替え
+	is_showing_secret_back = true
+
+	# 表面の子ノードを全て非表示にする
+	for child in get_children():
+		if child.name != "CardBackOverlay":
+			child.visible = false
+
+	# 裏面を表示
+	var card_back = get_node_or_null("CardBackOverlay")
+	if card_back:
+		card_back.visible = true
+		move_child(card_back, get_child_count() - 1)
+
+# 通常表示に切り替え（表面の子ノードを復帰し、裏面を非表示）
 func show_card_front():
 	if not is_showing_secret_back:
 		return
-	
+
 	is_showing_secret_back = false
-	
-	# 黒いオーバーレイを削除
-	var overlay = get_node_or_null("SecretBlackOverlay")
-	if overlay:
-		overlay.queue_free()
+
+	# 裏面を非表示
+	var card_back = get_node_or_null("CardBackOverlay")
+	if card_back:
+		card_back.visible = false
+
+	# 表面の子ノードを全て表示に戻す
+	for child in get_children():
+		if child.name != "CardBackOverlay":
+			child.visible = true
 
 # ========================================
 # カードタイプ記号表示システム

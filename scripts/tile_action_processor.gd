@@ -48,6 +48,7 @@ var debug_disable_cannot_use: bool:
 
 # 状態管理
 var is_action_processing = false
+var _completion_id: int = 0  # 古いawaitコルーチンからの遅延発火を防止
 
 ## アクション処理状態を開始
 func begin_action_processing():
@@ -419,15 +420,20 @@ func set_pending_comment(message: String, player_id: int = -1, force_click_wait:
 # アクション完了（内部用）
 func _complete_action():
 	if not is_action_processing:
-		print("[TileActionProcessor] 既に完了済み、スキップ")
 		return
-	
+
 	is_action_processing = false
-	
-	# コメント表示
+	_completion_id += 1
+	var my_completion_id = _completion_id
+
+	# コメント表示（awaitで遅延する可能性あり）
 	if not pending_comment.is_empty():
 		await _show_pending_comment()
-	
+
+	# awaitの間に新しいアクションが開始・完了した場合、古い完了をスキップ
+	if my_completion_id != _completion_id:
+		return
+
 	# カメラを追従モードに戻す（人間プレイヤーのみ）
 	var current_idx = board_system.current_player_index if board_system else 0
 	var cpu_flags = game_flow_manager.player_is_cpu if game_flow_manager else []
@@ -435,7 +441,7 @@ func _complete_action():
 	if board_system and not is_cpu:
 		board_system.enable_follow_camera()
 		board_system.return_camera_to_player()
-	
+
 	remote_placement_tile = -1
 
 	emit_signal("action_completed")

@@ -105,6 +105,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "is_secret": true,
+	  "keywords": ["密命"],
 	  "cost": {
 		"ep": 70
 	  },
@@ -915,6 +916,7 @@
 	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
+	  "keywords": ["密命"],
 	  "cost": {
 		"ep": 100
 	  },
@@ -1261,6 +1263,7 @@
 	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
+	  "keywords": ["密命"],
 	  "cost": {
 		"ep": 100
 	  },
@@ -1486,6 +1489,7 @@
 	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
+	  "keywords": ["密命"],
 	  "cost": {
 		"ep": 100
 	  },

@@ -923,7 +923,7 @@ func _initialize_phase1a_handlers() -> void:
 	)
 
 	# デバッグ: 密命カードを一時的に無効化（テスト用）
-	DebugSettings.disable_secret_cards = true
+	DebugSettings.disable_secret_cards = false
 	
 	# ItemPhaseHandlerを作成
 	var ItemPhaseHandlerClass = preload("res://scripts/game_flow/item_phase_handler.gd")

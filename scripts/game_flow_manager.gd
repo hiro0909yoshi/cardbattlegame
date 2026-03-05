@@ -322,12 +322,10 @@ func roll_dice():
 
 func _on_tile_action_completed_3d():
 	# 重複呼び出しを防ぐ（BUG-000対策: フェーズチェック + フラグチェック）
-	if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP:
-		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
+	if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP or current_phase == GamePhase.DICE_ROLL:
 		return
 
 	if _is_ending_turn:
-		print("Warning: tile_action_completed ignored (already ending turn)")
 		return
 
 	end_turn()

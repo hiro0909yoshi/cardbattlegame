@@ -12,6 +12,32 @@
 
 ---
 
+## 2026年3月6日（Session: 密命カード裏面 + StateMachine修正）
+
+### 完了した作業
+
+- カード裏面を2Dシェーダー（card_back_2d.gdshader）で実装、Card.tscnにCardBackOverlayとして統合
+- 密命（SkillSecret）キーワードを6枚のスペルカードに追加（spell_1.json: 2004, 2031, 2042, 2050 / spell_2.json: 2082, 2131）
+- card.gd に show_secret_back() / show_card_front() 実装（子ノード表示切替方式）
+- DebugSettings.disable_secret_cards を false に修正
+- StateMachine DICE_ROLL->END_TURN エラー: _completion_id ガード追加（tile_action_processor.gd）、フェーズガードにDICE_ROLL追加（game_flow_manager.gd）
+
+### 次の作業: ドロー演出
+
+ユーザーが希望するドロー演出の仕様:
+1. カードが画面外から裏面を見せて飛んでくる
+2. 画面中央で表にフリップする
+3. クリックで手札に加わる
+4. スペルによる複数枚ドローの場合、中央から扇状に広がる
+5. 2Dアプローチで実装（Card.tscn + CardBackOverlay を活用）
+
+関連ファイル:
+- scenes/Card.tscn（CardBackOverlay ノード追加済み）
+- scripts/card.gd（show_secret_back / show_card_front 実装済み）
+- assets/shaders/card_back_2d.gdshader（2Dシェーダー追加済み）
+
+---
+
 ## 2026年2月20日（Session: Phase 11 全完了 + UIEventHub）
 
 ### ✅ Phase 11-A: サブコンポーネント直接アクセスのファサード化

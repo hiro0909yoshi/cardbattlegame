@@ -190,26 +190,39 @@ func build_status_text(player_id: int) -> String:
 func build_hand_text(player_id: int) -> String:
 	if not card_system_ref:
 		return "データなし"
-	
+
 	# CardSystemから手札を取得（player_hands[player_id]["data"]）
 	if not card_system_ref.player_hands.has(player_id):
 		return "なし"
-	
+
 	var hand = card_system_ref.player_hands[player_id].get("data", [])
 	if hand.is_empty():
 		return "なし"
-	
+
+	# 閲覧者（ローカルプレイヤー = 0）と所有者が異なる場合、密命カードを隠す
+	var viewer_id = 0
+	var is_enemy_hand = (player_id != viewer_id)
+
 	var text = "[font_size=55]"
 	for card in hand:
 		if card is Dictionary:
-			var card_name = card.get("name", "不明")
-			var symbol = _get_card_symbol(card)
-			text += symbol + " " + card_name + "\n"
+			if is_enemy_hand and _is_secret_card(card):
+				text += "[color=#666666]■ ??????[/color]\n"
+			else:
+				var card_name = card.get("name", "不明")
+				var symbol = _get_card_symbol(card)
+				text += symbol + " " + card_name + "\n"
 		else:
 			text += str(card) + "\n"
 	text += "[/font_size]"
-	
+
 	return text.strip_edges()
+
+# 密命カードかどうかを判定
+func _is_secret_card(card: Dictionary) -> bool:
+	if DebugSettings.disable_secret_cards:
+		return false
+	return card.get("keywords", []).has("密命")
 
 # カードの記号を取得（タイプと属性/種類で色分け）
 func _get_card_symbol(card: Dictionary) -> String:
