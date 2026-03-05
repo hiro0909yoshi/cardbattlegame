@@ -19,11 +19,11 @@ shader_parameter/bg_color_bottom = Color(0.01, 0.03, 0.06, 1)
 shader_parameter/moon_color_base = Color(0.8, 0.55, 0.1, 1)
 shader_parameter/moon_color_bright = Color(1, 0.85, 0.3, 1)
 shader_parameter/moon_edge_color = Color(1, 0.95, 0.6, 1)
-shader_parameter/moon_size = 0.16300000448262
-shader_parameter/moon_offset = 0.06200000224648
-shader_parameter/moon_inner_size = 0.6410000271876201
+shader_parameter/moon_size = 0.10000000149012
+shader_parameter/moon_offset = 0.04000000120148
+shader_parameter/moon_inner_size = 0.69800002989512
 shader_parameter/moon_angle = 45.0
-shader_parameter/moon_position = Vector2(0.455, 0.4)
+shader_parameter/moon_position = Vector2(0.48, 0.3)
 
 [sub_resource type="QuadMesh" id="QuadMesh_1"]
 material = SubResource("ShaderMaterial_1")
@@ -51,7 +51,7 @@ render_target_update_mode = 3
 offset_top = 235.0
 offset_right = 220.0
 offset_bottom = 270.0
-theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 12
