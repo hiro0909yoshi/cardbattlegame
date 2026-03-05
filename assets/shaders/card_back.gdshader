@@ -200,17 +200,37 @@ void fragment() {
 
     // --- 合成 ---
     vec3 final_color = bg.rgb;
-    // 大円内は星を消して暗くする
-    final_color = mix(final_color, bg.rgb, inner_mask);
-    final_color += star_color * (1.0 - inner_mask);
+    // 三日月の内側マスク（欠け円内）と三日月本体を除いた部分だけ星を表示
+    float crescent_fill = 1.0 - mask; // 1=三日月内
+    float no_star_mask = clamp(inner_mask + crescent_fill, 0.0, 1.0);
+    final_color += star_color * (1.0 - no_star_mask);
 
-    // 三日月を合成（mask=0の部分が三日月）
-    final_color = mix(moon_rgb, final_color, mask);
+    // 三日月を背景色で塗りつぶす
+    final_color = mix(final_color, bg.rgb, crescent_fill);
+
+    // 月の外周2重ライン（金色）
+    vec2 aspect_uv_moon = uv;
+    aspect_uv_moon.x = (uv.x - 0.5) * (220.0 / 293.0) + 0.5;
+    float rad_line = moon_angle * 3.14159265 / 180.0;
+    vec2 cut_center_line = moon_position + vec2(cos(rad_line), sin(rad_line)) * moon_offset;
+
+    float big_sdf = sdf_circle(aspect_uv_moon, moon_position, moon_size);
+    float cut_sdf = sdf_circle(aspect_uv_moon, cut_center_line, moon_size * (2.0 - moon_inner_size));
+    float crescent_sdf = max(-big_sdf, cut_sdf);
+
+    // ラインの内側を黒く
+    float moon_inside = 1.0 - smoothstep(-0.01, 0.0, crescent_sdf);
+    final_color = mix(final_color, vec3(0.0, 0.0, 0.0), moon_inside);
+
+    // 1本ライン
+    float moon_line = 1.0 - smoothstep(0.0, 0.008, abs(crescent_sdf));
+    vec3 line_color = moon_color_bright.rgb;
+    final_color = mix(final_color, line_color, moon_line);
 
 
 
     // 装飾ライン
-    final_color = mix(final_color, moon_color_bright.rgb, deco_line * 0.9);
+    final_color = mix(final_color, vec3(1.0, 1.0, 1.0), deco_line * 0.9);
 
     // 枠
     final_color = mix(final_color, border_color, border * 0.9);
