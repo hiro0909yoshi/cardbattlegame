@@ -12,27 +12,68 @@
 
 ---
 
-## 2026年3月6日（Session 2: カード裏面修正 + 城壁環境生成）
+## 2026年3月6日（Session 3: 城壁環境の大幅改善 + 門の実装）
 
 ### 完了した作業
 
-- ✅ カード裏面のArcanaLabel位置修正: ピクセルベースのオフセット配置（anchor_top=1.0 + offset_top=-55）をアンカーベースの比率配置（anchor_top=0.80, anchor_bottom=0.87）に変更。シーンとゲーム内でサイズが異なっても装飾ラインとテキストが正しく整列するように修正
-- ✅ クエストマップ用の城壁環境を新規作成（`scripts/quest/castle_environment.gd`）
-  - CSGBox3Dで土の地面（マップ全体を覆う）
-  - CSGBox3Dで四方の石壁（高さ4ユニット）+ 胸壁（バトルメント）
-  - CSGCylinder3Dで四隅の角塔（高さ6ユニット）
-  - quest_game.gd の `_setup_3d_scene_before_init()` に統合
+#### モバイル最適化
+- ✅ 全CSGノード（CSGBox3D, CSGCylinder3D）をMeshInstance3D + プリミティブメッシュに置換
+  - BoxMesh, CylinderMesh, SphereMesh で再構築
+  - 円錐屋根は `top_radius = 0.01` の CylinderMesh で代替
+- ✅ 松明を無効化（OmniLight3Dがモバイルで重い）: `#_create_torches()` でコメントアウト
+- ✅ 霧機能を完全削除（コード・定数・`flowing_fog.gdshader` ファイルすべて）
+
+#### ビジュアル改善
+- ✅ 蔦の葉をハート型に変更（`_create_heart_leaf_mesh()` ArrayMesh）
+  - 法線を Vector3(0,0,-1) に修正（光の影が反転していた問題を解決）
+- ✅ 蔦の茎を蛇行させる改善（`grow_lean` で方向バリエーション、`drift` で蛇行）
+- ✅ 草の形状を弧状に改善（`_create_grass_blade_mesh()` 5セグメント、根元太く先端細く垂れる）
+- ✅ 草の配置ロジック改善: マップタイル範囲を除外、城壁寄りほど密に
+
+#### ライティング・環境
+- ✅ quest_game.gd: 既存WorldEnvironmentを除去し、ProceduralSkyMaterial で空を追加
+- ✅ DirectionalLight3D（太陽光）追加、energy=1.0
+- ✅ 環境光をスカイベースに設定
+- ✅ WALL_MARGIN=11.0 に拡大（タイルから壁を離す）
+
+#### 門の実装（東西壁）
+- ✅ `_create_gate()` メソッド実装: 重厚な閉じた門
+  - 扉: BoxMesh（四角部分）+ ArrayMesh半円（アーチ部分）の2パーツ構成
+  - アーチ枠: `_create_arch_frame_mesh()` 半円リング状レンガ枠（frame_thickness=0.6）
+  - アーチ半径3.0、門幅4.0でクリップ（`_create_semicircle_mesh` / `_create_arch_frame_mesh` にclip_half_w引数追加）
+  - 鉄帯3本、合わせ目線、門柱（左右）、柱キャップ、キーストーン（楔石）
+- ✅ 門を壁の内側面にオフセット配置（`gate_offset = WALL_THICKNESS/2 + GATE_THICKNESS/2`）
+- ✅ 壁の高さ WALL_HEIGHT=6.0、塔の高さ TOWER_HEIGHT=8.0 に調整
+- ✅ 門パラメータ: GATE_WIDTH=4.0, GATE_HEIGHT=4.5, GATE_THICKNESS=0.3
+
+#### コーディング規約
+- ✅ castle_environment.gd: 51箇所の型注釈追加（`.new()` 呼び出しの変数宣言）
+- ✅ quest_game.gd: 10箇所の型注釈追加
+
+### 現在の門の構成
+```
+gate_root (Node3D) - 壁の内側面にオフセット配置
+  ├── DoorPanel (BoxMesh) - 四角い扉 4.0×4.5×0.3
+  ├── ArchDoor (ArrayMesh半円) - 上部アーチ扉 r=3.0, clip=2.0
+  ├── ArchFrame (ArrayMesh半円リング) - レンガ枠 frame=0.6
+  ├── DoorSeam (BoxMesh) - 合わせ目線
+  ├── IronBand_0~2 (BoxMesh) - 鉄帯3本
+  ├── GatePillar_-1/1 (BoxMesh) - 門柱
+  ├── PillarCap_-1/1 (BoxMesh) - 柱キャップ
+  └── Keystone (BoxMesh) - 楔石
+```
 
 ### 次の作業
 
-- 城壁環境のゲーム内確認・パラメータ調整（壁の高さ、色、マージン等）
-- 草の追加（MultiMeshInstance3D）
+- 門の扉をglbモデルで差し替え（サイズ: 幅4.0 × 高さ4.5 × 厚み0.3、原点=底辺中央、上部アーチ付き）
+- 1枚メッシュの扉にすることでテクスチャを貼れるようにする
 - ドロー演出の実装（前セッションからの継続）
 
 関連ファイル:
-- scenes/Card.tscn（ArcanaLabelアンカー修正）
-- scripts/quest/castle_environment.gd（新規）
-- scripts/quest/quest_game.gd（城壁生成呼び出し追加）
+- scripts/quest/castle_environment.gd（城壁環境・門の生成）
+- scripts/quest/quest_game.gd（ライティング・空の設定）
+- assets/shaders/brick_wall.gdshader（レンガシェーダー）
+- assets/shaders/stone_cap.gdshader（笠石シェーダー）
 
 ---
 

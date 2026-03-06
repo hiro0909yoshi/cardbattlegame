@@ -15,7 +15,7 @@ var _torch_time := 0.0
 
 # 城壁パラメータ
 const WALL_MARGIN := 11.0      # マップ端からの余白
-const WALL_HEIGHT := 4.0       # 壁の高さ
+const WALL_HEIGHT := 6.0       # 壁の高さ
 const WALL_THICKNESS := 1.2    # 壁の厚み
 const BATTLEMENT_HEIGHT := 0.8 # 胸壁（凹凸）の高さ
 const BATTLEMENT_WIDTH := 1.5  # 胸壁の幅
@@ -23,8 +23,13 @@ const BATTLEMENT_GAP := 1.2    # 胸壁の隙間
 
 # 塔パラメータ
 const TOWER_RADIUS := 2.0
-const TOWER_HEIGHT := 6.0
+const TOWER_HEIGHT := 8.0
 const TOWER_SIDES := 12
+
+# 門パラメータ
+const GATE_WIDTH := 4.0         # 門の幅
+const GATE_HEIGHT := 4.5        # 門の高さ
+const GATE_THICKNESS := 0.3     # 扉の厚み
 
 # 地面パラメータ
 const GROUND_MARGIN := 8.0     # 城壁の外側余白
@@ -219,20 +224,153 @@ func _create_walls():
 	_create_wall_cap("WallCapSouth", Vector3(center_x, WALL_HEIGHT, center_z + half),
 		Vector3(ns_size.x + 0.2, 0.15, WALL_THICKNESS + 0.2), cap_mat)
 
-	# 西壁 (X-)
+	# 西壁 (X-) - 1枚壁 + 門を貼り付け
 	var ew_size = Vector3(WALL_THICKNESS, WALL_HEIGHT, half * 2.0 + WALL_THICKNESS)
 	_create_single_wall("WallWest", Vector3(center_x - half, wall_y, center_z), ew_size, _brick_material)
 	_create_wall_cap("WallCapWest", Vector3(center_x - half, WALL_HEIGHT, center_z),
 		Vector3(WALL_THICKNESS + 0.2, 0.15, ew_size.z + 0.2), cap_mat)
+	# 門を壁の内側面に貼り付け（+X方向にオフセット）
+	var gate_offset: float = WALL_THICKNESS / 2.0 + GATE_THICKNESS / 2.0
+	_create_gate("GateWest", Vector3(center_x - half + gate_offset, 0, center_z), true)
 
-	# 東壁 (X+)
+	# 東壁 (X+) - 1枚壁 + 門を貼り付け
 	_create_single_wall("WallEast", Vector3(center_x + half, wall_y, center_z), ew_size, _brick_material)
 	_create_wall_cap("WallCapEast", Vector3(center_x + half, WALL_HEIGHT, center_z),
 		Vector3(WALL_THICKNESS + 0.2, 0.15, ew_size.z + 0.2), cap_mat)
+	# 門を壁の内側面に貼り付け（-X方向にオフセット）
+	_create_gate("GateEast", Vector3(center_x + half - gate_offset, 0, center_z), true)
 
 	# 胸壁（バトルメント）を各壁の上に追加
 	_create_battlements_north_south(center_x, center_z, half, cap_mat)
 	_create_battlements_east_west(center_x, center_z, half, cap_mat)
+
+
+## 重厚な門を生成（両開き扉 + 装飾枠）
+## is_ew: 東西壁の門（true）か南北壁の門（false）か
+func _create_gate(gate_name: String, base_pos: Vector3, is_ew: bool):
+	var gate_root: Node3D = Node3D.new()
+	gate_root.name = gate_name
+	gate_root.position = base_pos
+	add_child(gate_root)
+
+	var door_mat: StandardMaterial3D = StandardMaterial3D.new()
+	door_mat.albedo_color = Color(0.22, 0.14, 0.08)
+	door_mat.roughness = 0.85
+
+	var iron_mat: StandardMaterial3D = StandardMaterial3D.new()
+	iron_mat.albedo_color = Color(0.15, 0.15, 0.16)
+	iron_mat.roughness = 0.6
+	iron_mat.metallic = 0.7
+
+	var door_half: float = GATE_WIDTH / 2.0
+	var arch_radius: float = 3.0
+	var rect_h: float = GATE_HEIGHT - arch_radius  # 四角部分の高さ
+
+	# 扉（四角部分）
+	var full_door: MeshInstance3D = MeshInstance3D.new()
+	full_door.name = "DoorPanel"
+	var full_door_mesh: BoxMesh = BoxMesh.new()
+	if is_ew:
+		full_door_mesh.size = Vector3(GATE_THICKNESS, GATE_HEIGHT, GATE_WIDTH)
+		full_door.position = Vector3(0, GATE_HEIGHT / 2.0, 0)
+	else:
+		full_door_mesh.size = Vector3(GATE_WIDTH, GATE_HEIGHT, GATE_THICKNESS)
+		full_door.position = Vector3(0, GATE_HEIGHT / 2.0, 0)
+	full_door.mesh = full_door_mesh
+	full_door.material_override = door_mat
+	gate_root.add_child(full_door)
+
+	# アーチ部分の扉（半円）
+	var arch_door: MeshInstance3D = MeshInstance3D.new()
+	arch_door.name = "ArchDoor"
+	arch_door.mesh = _create_semicircle_mesh(arch_radius, GATE_THICKNESS + 0.01, is_ew, door_half)
+	arch_door.position = Vector3(0, rect_h, 0)
+	arch_door.material_override = door_mat
+	gate_root.add_child(arch_door)
+
+	# アーチ枠（半円リング状のレンガ枠）
+	var frame_thickness := 0.6
+	var arch_frame: MeshInstance3D = MeshInstance3D.new()
+	arch_frame.name = "ArchFrame"
+	arch_frame.mesh = _create_arch_frame_mesh(arch_radius, frame_thickness, GATE_THICKNESS + 0.1, is_ew, door_half)
+	arch_frame.position = Vector3(0, rect_h, 0)
+	arch_frame.material_override = _brick_material
+	gate_root.add_child(arch_frame)
+
+	# 中央の隙間線（扉の合わせ目）
+	var seam: MeshInstance3D = MeshInstance3D.new()
+	seam.name = "DoorSeam"
+	var seam_mesh: BoxMesh = BoxMesh.new()
+	if is_ew:
+		seam_mesh.size = Vector3(GATE_THICKNESS + 0.02, GATE_HEIGHT, 0.04)
+	else:
+		seam_mesh.size = Vector3(0.04, GATE_HEIGHT, GATE_THICKNESS + 0.02)
+	seam.mesh = seam_mesh
+	seam.position = Vector3(0, GATE_HEIGHT / 2.0, 0)
+	seam.material_override = iron_mat
+	gate_root.add_child(seam)
+
+	# 鉄の横帯（3本、四角部分のみ）
+	for bi in range(3):
+		var band: MeshInstance3D = MeshInstance3D.new()
+		band.name = "IronBand_%d" % bi
+		var band_mesh: BoxMesh = BoxMesh.new()
+		var band_y: float = GATE_HEIGHT * (0.2 + 0.25 * float(bi))
+		if is_ew:
+			band_mesh.size = Vector3(GATE_THICKNESS + 0.02, 0.12, GATE_WIDTH)
+		else:
+			band_mesh.size = Vector3(GATE_WIDTH, 0.12, GATE_THICKNESS + 0.02)
+		band.mesh = band_mesh
+		band.position = Vector3(0, band_y, 0)
+		band.material_override = iron_mat
+		gate_root.add_child(band)
+
+	# 門柱（左右の太い柱）
+	var pillar_mat: ShaderMaterial = _brick_material
+	for side in [-1.0, 1.0]:
+		var pillar: MeshInstance3D = MeshInstance3D.new()
+		pillar.name = "GatePillar_%d" % int(side)
+		var pillar_mesh: BoxMesh = BoxMesh.new()
+		var pillar_w := 0.5
+		if is_ew:
+			pillar_mesh.size = Vector3(GATE_THICKNESS + 0.15, GATE_HEIGHT + 0.5, pillar_w)
+			pillar.position = Vector3(0, (GATE_HEIGHT + 0.5) / 2.0, (door_half + pillar_w * 0.3) * side)
+		else:
+			pillar_mesh.size = Vector3(pillar_w, GATE_HEIGHT + 0.5, GATE_THICKNESS + 0.15)
+			pillar.position = Vector3((door_half + pillar_w * 0.3) * side, (GATE_HEIGHT + 0.5) / 2.0, 0)
+		pillar.mesh = pillar_mesh
+		pillar.material_override = pillar_mat
+		gate_root.add_child(pillar)
+
+	# 門柱の上のキャップストーン
+	var cap_mat: StandardMaterial3D = _create_cap_material()
+	for side in [-1.0, 1.0]:
+		var pcap: MeshInstance3D = MeshInstance3D.new()
+		pcap.name = "PillarCap_%d" % int(side)
+		var pcap_mesh: BoxMesh = BoxMesh.new()
+		if is_ew:
+			pcap_mesh.size = Vector3(GATE_THICKNESS + 0.3, 0.15, 0.7)
+			pcap.position = Vector3(0, GATE_HEIGHT + 0.5, (door_half + 0.15) * side)
+		else:
+			pcap_mesh.size = Vector3(0.7, 0.15, GATE_THICKNESS + 0.3)
+			pcap.position = Vector3((door_half + 0.15) * side, GATE_HEIGHT + 0.5, 0)
+		pcap.mesh = pcap_mesh
+		pcap.material_override = cap_mat
+		gate_root.add_child(pcap)
+
+	# アーチの頂点のキーストーン（楔石）
+	var keystone: MeshInstance3D = MeshInstance3D.new()
+	keystone.name = "Keystone"
+	var keystone_mesh: BoxMesh = BoxMesh.new()
+	if is_ew:
+		keystone_mesh.size = Vector3(GATE_THICKNESS + 0.15, 0.4, 0.35)
+		keystone.position = Vector3(0, rect_h + arch_radius + frame_thickness * 0.5, 0)
+	else:
+		keystone_mesh.size = Vector3(0.35, 0.4, GATE_THICKNESS + 0.15)
+		keystone.position = Vector3(0, rect_h + arch_radius + frame_thickness * 0.5, 0)
+	keystone.mesh = keystone_mesh
+	keystone.material_override = cap_mat
+	gate_root.add_child(keystone)
 
 
 ## 壁1枚を生成
@@ -660,6 +798,239 @@ func _create_grass_patches():
 	mm_inst.multimesh = mm
 	mm_inst.material_override = _create_grass_material()
 	add_child(mm_inst)
+
+
+## アーチ付き扉メッシュ生成（四角部分＋上部アーチを1枚で、UV付き）
+func _create_arched_door_mesh(half_w: float, rect_h: float, arch_r: float, thickness: float, is_ew: bool) -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+
+	# アーチのクリップ角度
+	var start_angle := 0.0
+	var end_angle := PI
+	if half_w < arch_r:
+		var clip_angle: float = acos(half_w / arch_r)
+		start_angle = clip_angle
+		end_angle = PI - clip_angle
+	var arch_top_y: float = rect_h + arch_r  # UV正規化用
+	var arch_segments := 16
+
+	# 表面と裏面
+	for face in [1.0, -1.0]:
+		var offset: int = verts.size()
+		var face_d: float = thickness / 2.0 * face
+		var n_vec: Vector3
+
+		# --- 四角部分（4頂点、2三角形）---
+		# 0: 左下, 1: 右下, 2: 右上, 3: 左上
+		var rect_pts: Array[Vector2] = [
+			Vector2(-half_w, 0.0),
+			Vector2(half_w, 0.0),
+			Vector2(half_w, rect_h),
+			Vector2(-half_w, rect_h),
+		]
+		for p in rect_pts:
+			if is_ew:
+				verts.append(Vector3(face_d, p.y, p.x))
+				n_vec = Vector3(face, 0, 0)
+			else:
+				verts.append(Vector3(p.x, p.y, face_d))
+				n_vec = Vector3(0, 0, face)
+			normals.append(n_vec)
+			uvs.append(Vector2((p.x + half_w) / (half_w * 2.0), 1.0 - p.y / arch_top_y))
+
+		if face > 0:
+			indices.append_array([offset, offset + 1, offset + 2])
+			indices.append_array([offset, offset + 2, offset + 3])
+		else:
+			indices.append_array([offset, offset + 2, offset + 1])
+			indices.append_array([offset, offset + 3, offset + 2])
+
+		# --- アーチ部分（ファン: 中心=arch底辺中央、外周=アーチカーブ）---
+		var arch_offset: int = verts.size()
+		# ファン中心（アーチの底辺中央 = 0, rect_h）
+		if is_ew:
+			verts.append(Vector3(face_d, rect_h, 0.0))
+		else:
+			verts.append(Vector3(0.0, rect_h, face_d))
+		normals.append(n_vec)
+		uvs.append(Vector2(0.5, 1.0 - rect_h / arch_top_y))
+
+		# アーチカーブの頂点
+		for i in range(arch_segments + 1):
+			var angle: float = start_angle + (end_angle - start_angle) * float(i) / float(arch_segments)
+			var px: float = -cos(angle) * arch_r
+			var py: float = rect_h + sin(angle) * arch_r
+			if is_ew:
+				verts.append(Vector3(face_d, py, px))
+			else:
+				verts.append(Vector3(px, py, face_d))
+			normals.append(n_vec)
+			uvs.append(Vector2((px + half_w) / (half_w * 2.0), 1.0 - py / arch_top_y))
+
+		# アーチのファン三角形
+		for i in range(arch_segments):
+			if face > 0:
+				indices.append(arch_offset)
+				indices.append(arch_offset + 1 + i)
+				indices.append(arch_offset + 1 + i + 1)
+			else:
+				indices.append(arch_offset)
+				indices.append(arch_offset + 1 + i + 1)
+				indices.append(arch_offset + 1 + i)
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = indices
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## 半円板メッシュ生成（アーチ扉用、clip_half_w で左右をクリップ）
+func _create_semicircle_mesh(radius: float, thickness: float, is_ew: bool, clip_half_w: float) -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var indices := PackedInt32Array()
+	var segments := 24
+
+	# クリップ角度を計算（半径 > クリップ幅なら端をカット）
+	var start_angle := 0.0
+	var end_angle := PI
+	if clip_half_w > 0.0 and clip_half_w < radius:
+		var clip_angle: float = acos(clip_half_w / radius)
+		start_angle = clip_angle
+		end_angle = PI - clip_angle
+
+	# 表面と裏面を作成（厚みのある板）
+	for face in [1.0, -1.0]:
+		var offset: int = verts.size()
+		var face_offset: float = thickness / 2.0 * face
+		# 中心点
+		if is_ew:
+			verts.append(Vector3(face_offset, 0, 0))
+			normals.append(Vector3(face, 0, 0))
+		else:
+			verts.append(Vector3(0, 0, face_offset))
+			normals.append(Vector3(0, 0, face))
+
+		# 半円の外周（クリップ範囲内）
+		for i in range(segments + 1):
+			var angle: float = start_angle + (end_angle - start_angle) * float(i) / float(segments)
+			var px: float = -cos(angle) * radius
+			var py: float = sin(angle) * radius
+			if is_ew:
+				verts.append(Vector3(face_offset, py, px))
+				normals.append(Vector3(face, 0, 0))
+			else:
+				verts.append(Vector3(px, py, face_offset))
+				normals.append(Vector3(0, 0, face))
+
+		# 三角形ファン
+		for i in range(segments):
+			if face > 0:
+				indices.append(offset)
+				indices.append(offset + 1 + i)
+				indices.append(offset + 1 + i + 1)
+			else:
+				indices.append(offset)
+				indices.append(offset + 1 + i + 1)
+				indices.append(offset + 1 + i)
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = indices
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## 半円リングメッシュ生成（アーチ枠用、clip_half_w で左右をクリップ）
+func _create_arch_frame_mesh(inner_radius: float, frame_w: float, depth: float, is_ew: bool, clip_half_w: float) -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var indices := PackedInt32Array()
+	var segments := 24
+	var outer_r: float = inner_radius + frame_w
+	var half_d: float = depth / 2.0
+
+	# クリップ角度を計算
+	var start_angle := 0.0
+	var end_angle := PI
+	if clip_half_w > 0.0 and clip_half_w < inner_radius:
+		var clip_angle: float = acos(clip_half_w / inner_radius)
+		start_angle = clip_angle
+		end_angle = PI - clip_angle
+
+	# 前面と後面のリング
+	for face in [1.0, -1.0]:
+		var offset: int = verts.size()
+		var face_d: float = half_d * face
+		for i in range(segments + 1):
+			var angle: float = start_angle + (end_angle - start_angle) * float(i) / float(segments)
+			var ix: float = -cos(angle) * inner_radius
+			var iy: float = sin(angle) * inner_radius
+			var ox: float = -cos(angle) * outer_r
+			var oy: float = sin(angle) * outer_r
+			if is_ew:
+				verts.append(Vector3(face_d, iy, ix))
+				normals.append(Vector3(face, 0, 0))
+				verts.append(Vector3(face_d, oy, ox))
+				normals.append(Vector3(face, 0, 0))
+			else:
+				verts.append(Vector3(ix, iy, face_d))
+				normals.append(Vector3(0, 0, face))
+				verts.append(Vector3(ox, oy, face_d))
+				normals.append(Vector3(0, 0, face))
+
+		for i in range(segments):
+			var b: int = offset + i * 2
+			if face > 0:
+				indices.append_array([b, b + 2, b + 1])
+				indices.append_array([b + 1, b + 2, b + 3])
+			else:
+				indices.append_array([b, b + 1, b + 2])
+				indices.append_array([b + 1, b + 3, b + 2])
+
+	# 外側面（上面）
+	var offset_top: int = verts.size()
+	for i in range(segments + 1):
+		var angle: float = start_angle + (end_angle - start_angle) * float(i) / float(segments)
+		var ox: float = -cos(angle) * outer_r
+		var oy: float = sin(angle) * outer_r
+		var nx: float = -cos(angle)
+		var ny: float = sin(angle)
+		if is_ew:
+			verts.append(Vector3(-half_d, oy, ox))
+			verts.append(Vector3(half_d, oy, ox))
+			normals.append(Vector3(0, ny, nx))
+			normals.append(Vector3(0, ny, nx))
+		else:
+			verts.append(Vector3(ox, oy, -half_d))
+			verts.append(Vector3(ox, oy, half_d))
+			normals.append(Vector3(nx, ny, 0))
+			normals.append(Vector3(nx, ny, 0))
+
+	for i in range(segments):
+		var b: int = offset_top + i * 2
+		indices.append_array([b, b + 1, b + 2])
+		indices.append_array([b + 1, b + 3, b + 2])
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = indices
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 ## 草の葉メッシュ生成（根元から上がって先端が垂れ下がる弧状）
