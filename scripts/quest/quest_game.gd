@@ -71,7 +71,7 @@ func _ready():
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():
 	# カメラ作成
-	var camera = Camera3D.new()
+	var camera: Camera3D = Camera3D.new()
 	camera.name = "Camera3D"
 	camera.transform = Transform3D(
 		Basis(Vector3(1, 0, 0), Vector3(0, 0.707107, 0.707107), Vector3(0, -0.707107, 0.707107)),
@@ -80,47 +80,44 @@ func _setup_3d_scene_before_init():
 	camera.top_level = true
 	add_child(camera)
 	
-	# シーン側の既存ライト・環境を無効化
-	var existing_light = get_node_or_null("DirectionalLight3D")
-	if existing_light:
-		existing_light.visible = false
+	# シーン側の既存環境を置き換え
 	var existing_env = get_node_or_null("WorldEnvironment")
 	if existing_env:
+		remove_child(existing_env)
 		existing_env.queue_free()
 
-	# メインライト（月光）
-	var light = DirectionalLight3D.new()
-	light.name = "MoonLight"
-	light.rotation_degrees = Vector3(-35, -20, 0)
-	light.light_energy = 0.5
-	light.light_color = Color(0.5, 0.55, 0.85)
-	light.shadow_enabled = true
-	light.directional_shadow_max_distance = 60.0
-	add_child(light)
+	# 太陽光（メインライト）
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "SunLight"
+	sun.rotation_degrees = Vector3(-45, 30, 0)
+	sun.light_energy = 1.0
+	sun.light_color = Color(1.0, 0.95, 0.9)
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 60.0
+	add_child(sun)
 
-	# 補助ライト（微弱な反射光）
-	var fill_light = DirectionalLight3D.new()
-	fill_light.name = "FillLight"
-	fill_light.rotation_degrees = Vector3(-20, 160, 0)
-	fill_light.light_energy = 0.05
-	fill_light.light_color = Color(0.4, 0.45, 0.7)
-	fill_light.shadow_enabled = false
-	add_child(fill_light)
-
-	# 夜空の環境光
-	var world_env = WorldEnvironment.new()
-	world_env.name = "WorldEnvironment"
-	var env = Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.05, 0.06, 0.12)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.08, 0.09, 0.15)
-	env.ambient_light_energy = 0.25
+	# 空 + フォグ
+	var world_env: WorldEnvironment = WorldEnvironment.new()
+	world_env.name = "QuestWorldEnv"
+	var env: Environment = Environment.new()
+	# 空（プロシージャルスカイ）
+	var sky: Sky = Sky.new()
+	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.35, 0.55, 0.85)
+	sky_mat.sky_horizon_color = Color(0.65, 0.75, 0.88)
+	sky_mat.ground_bottom_color = Color(0.25, 0.22, 0.18)
+	sky_mat.ground_horizon_color = Color(0.55, 0.55, 0.50)
+	sky.sky_material = sky_mat
+	env.sky = sky
+	env.background_mode = Environment.BG_SKY
+	# 環境光（空から）
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.4
 	world_env.environment = env
 	add_child(world_env)
 	
 	# タイルコンテナ作成
-	var tiles_container = Node3D.new()
+	var tiles_container: Node3D = Node3D.new()
 	tiles_container.name = "Tiles"
 	add_child(tiles_container)
 	
@@ -129,14 +126,14 @@ func _setup_3d_scene_before_init():
 	stage_loader.generate_map()
 	
 	# 城壁・地面を作成（タイル範囲から動的にサイズ決定、45度回転）
-	var castle_env = CastleEnvironment.new()
+	var castle_env: CastleEnvironment = CastleEnvironment.new()
 	castle_env.name = "CastleEnvironment"
 	castle_env.rotation.y = deg_to_rad(45)
 	add_child(castle_env)
 	castle_env.setup_from_tiles(tiles_container)
 
 	# プレイヤーコンテナ作成
-	var players_container = Node3D.new()
+	var players_container: Node3D = Node3D.new()
 	players_container.name = "Players"
 	add_child(players_container)
 	
@@ -297,7 +294,7 @@ func _apply_stage_settings():
 	system_manager.set_stage_data(stage_data)
 
 	# リザルト画面を作成・設定
-	var result_screen = ResultScreen.new()
+	var result_screen: ResultScreen = ResultScreen.new()
 	result_screen.name = "ResultScreen"
 	add_child(result_screen)
 	system_manager.set_result_screen(result_screen)

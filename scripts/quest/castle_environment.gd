@@ -116,7 +116,7 @@ func _build() -> void:
 func _create_ground():
 	var floor_scene = load(FLOOR_MODEL_PATH) as PackedScene
 	if not floor_scene:
-		push_error("[CastleEnvironment] floor3.glb not found, falling back to CSGBox")
+		push_error("[CastleEnvironment] floor3.glb not found, falling back to simple ground")
 		_create_ground_fallback()
 		return
 
@@ -140,7 +140,7 @@ func _create_ground():
 	print("[CastleEnvironment] floor3 real world size: %s" % str(real_size))
 
 	# タイリング
-	var ground_container = Node3D.new()
+	var ground_container: Node3D = Node3D.new()
 	ground_container.name = "Ground"
 	add_child(ground_container)
 
@@ -184,17 +184,19 @@ func _find_all_mesh_instances_in(node: Node) -> Array[MeshInstance3D]:
 	return result
 
 
-## フォールバック: CSGBox3Dの単色地面
+## フォールバック: MeshInstance3Dの単色地面
 func _create_ground_fallback():
-	var ground = CSGBox3D.new()
+	var ground: MeshInstance3D = MeshInstance3D.new()
 	ground.name = "Ground"
 	var total_size = _map_half_size * 2.0 + (WALL_MARGIN + GROUND_MARGIN) * 2.0
-	ground.size = Vector3(total_size, 0.3, total_size)
+	var box: BoxMesh = BoxMesh.new()
+	box.size = Vector3(total_size, 0.3, total_size)
+	ground.mesh = box
 	ground.position = Vector3(_map_center.x, GROUND_Y, _map_center.z)
-	var mat = StandardMaterial3D.new()
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.albedo_color = COLOR_GROUND
 	mat.roughness = 0.95
-	ground.material = mat
+	ground.material_override = mat
 	add_child(ground)
 
 
@@ -235,21 +237,25 @@ func _create_walls():
 
 ## 壁1枚を生成
 func _create_single_wall(wall_name: String, pos: Vector3, wall_size: Vector3, mat: Material):
-	var wall = CSGBox3D.new()
+	var wall: MeshInstance3D = MeshInstance3D.new()
 	wall.name = wall_name
-	wall.size = wall_size
+	var box: BoxMesh = BoxMesh.new()
+	box.size = wall_size
+	wall.mesh = box
 	wall.position = pos
-	wall.material = mat
+	wall.material_override = mat
 	add_child(wall)
 
 
 ## 壁の上の笠石（キャップストーン）を生成
 func _create_wall_cap(cap_name: String, pos: Vector3, cap_size: Vector3, mat: Material):
-	var cap = CSGBox3D.new()
+	var cap: MeshInstance3D = MeshInstance3D.new()
 	cap.name = cap_name
-	cap.size = cap_size
+	var box: BoxMesh = BoxMesh.new()
+	box.size = cap_size
+	cap.mesh = box
 	cap.position = pos
-	cap.material = mat
+	cap.material_override = mat
 	add_child(cap)
 
 
@@ -267,11 +273,13 @@ func _create_battlements_north_south(cx: float, cz: float, half: float, cap_mat:
 		var idx = 0
 		while x < end_x:
 			var bx = x + BATTLEMENT_WIDTH / 2.0
-			var b = CSGBox3D.new()
+			var b: MeshInstance3D = MeshInstance3D.new()
 			b.name = "BattlementNS_%d_%d" % [int(z_sign), idx]
-			b.size = Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)
+			var b_mesh: BoxMesh = BoxMesh.new()
+			b_mesh.size = Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)
+			b.mesh = b_mesh
 			b.position = Vector3(bx, top_y, z_pos)
-			b.material = _brick_material
+			b.material_override = _brick_material
 			add_child(b)
 			# 胸壁キャップ
 			_create_wall_cap("BattCapNS_%d_%d" % [int(z_sign), idx],
@@ -295,11 +303,13 @@ func _create_battlements_east_west(cx: float, cz: float, half: float, cap_mat: M
 		var idx = 0
 		while z < end_z:
 			var bz = z + BATTLEMENT_WIDTH / 2.0
-			var b = CSGBox3D.new()
+			var b: MeshInstance3D = MeshInstance3D.new()
 			b.name = "BattlementEW_%d_%d" % [int(x_sign), idx]
-			b.size = Vector3(WALL_THICKNESS + 0.3, BATTLEMENT_HEIGHT, BATTLEMENT_WIDTH)
+			var b_mesh: BoxMesh = BoxMesh.new()
+			b_mesh.size = Vector3(WALL_THICKNESS + 0.3, BATTLEMENT_HEIGHT, BATTLEMENT_WIDTH)
+			b.mesh = b_mesh
 			b.position = Vector3(x_pos, top_y, bz)
-			b.material = _brick_material
+			b.material_override = _brick_material
 			add_child(b)
 			# 胸壁キャップ
 			_create_wall_cap("BattCapEW_%d_%d" % [int(x_sign), idx],
@@ -325,39 +335,48 @@ func _create_corner_towers():
 		Vector3(cx + half, tower_y, cz + half),  # 南東
 	]
 
+	var roof_mat: StandardMaterial3D = StandardMaterial3D.new()
+	roof_mat.albedo_color = Color(0.3, 0.32, 0.35)
+	roof_mat.roughness = 0.8
+
 	for i in range(corners.size()):
 		# 塔本体
-		var tower = CSGCylinder3D.new()
+		var tower: MeshInstance3D = MeshInstance3D.new()
 		tower.name = "Tower_%d" % i
-		tower.radius = TOWER_RADIUS
-		tower.height = TOWER_HEIGHT
-		tower.sides = TOWER_SIDES
+		var tower_mesh: CylinderMesh = CylinderMesh.new()
+		tower_mesh.top_radius = TOWER_RADIUS
+		tower_mesh.bottom_radius = TOWER_RADIUS
+		tower_mesh.height = TOWER_HEIGHT
+		tower_mesh.radial_segments = TOWER_SIDES
+		tower.mesh = tower_mesh
 		tower.position = corners[i]
-		tower.material = tower_mat
+		tower.material_override = tower_mat
 		add_child(tower)
 
 		# 塔の上部（少し広い円柱）
-		var tower_top = CSGCylinder3D.new()
+		var tower_top: MeshInstance3D = MeshInstance3D.new()
 		tower_top.name = "TowerTop_%d" % i
-		tower_top.radius = TOWER_RADIUS + 0.4
-		tower_top.height = 0.6
-		tower_top.sides = TOWER_SIDES
+		var top_mesh: CylinderMesh = CylinderMesh.new()
+		top_mesh.top_radius = TOWER_RADIUS + 0.4
+		top_mesh.bottom_radius = TOWER_RADIUS + 0.4
+		top_mesh.height = 0.6
+		top_mesh.radial_segments = TOWER_SIDES
+		tower_top.mesh = top_mesh
 		tower_top.position = Vector3(corners[i].x, TOWER_HEIGHT + 0.3, corners[i].z)
-		tower_top.material = tower_mat
+		tower_top.material_override = tower_mat
 		add_child(tower_top)
 
 		# 塔の円錐屋根
-		var roof = CSGCylinder3D.new()
+		var roof: MeshInstance3D = MeshInstance3D.new()
 		roof.name = "TowerRoof_%d" % i
-		roof.radius = TOWER_RADIUS + 0.6
-		roof.height = 3.0
-		roof.sides = TOWER_SIDES
-		roof.cone = true
+		var roof_mesh: CylinderMesh = CylinderMesh.new()
+		roof_mesh.top_radius = 0.01
+		roof_mesh.bottom_radius = TOWER_RADIUS + 0.6
+		roof_mesh.height = 3.0
+		roof_mesh.radial_segments = TOWER_SIDES
+		roof.mesh = roof_mesh
 		roof.position = Vector3(corners[i].x, TOWER_HEIGHT + 0.6 + 1.5, corners[i].z)
-		var roof_mat = StandardMaterial3D.new()
-		roof_mat.albedo_color = Color(0.3, 0.32, 0.35)
-		roof_mat.roughness = 0.8
-		roof.material = roof_mat
+		roof.material_override = roof_mat
 		add_child(roof)
 
 
@@ -393,50 +412,50 @@ func _create_torches():
 
 ## 松明1本を生成（柄 + 炎 + ポイントライト）
 func _create_single_torch(pos: Vector3, idx: int):
-	var torch_root = Node3D.new()
+	var torch_root: Node3D = Node3D.new()
 	torch_root.name = "Torch_%d" % idx
 	torch_root.position = pos
 	add_child(torch_root)
 
 	# 柄（細い棒）
-	var handle = MeshInstance3D.new()
+	var handle: MeshInstance3D = MeshInstance3D.new()
 	handle.name = "Handle"
-	var handle_mesh = CylinderMesh.new()
+	var handle_mesh: CylinderMesh = CylinderMesh.new()
 	handle_mesh.top_radius = 0.03
 	handle_mesh.bottom_radius = 0.04
 	handle_mesh.height = 0.6
 	handle.mesh = handle_mesh
 	handle.position = Vector3(0, -0.15, 0)
-	var handle_mat = StandardMaterial3D.new()
+	var handle_mat: StandardMaterial3D = StandardMaterial3D.new()
 	handle_mat.albedo_color = Color(0.25, 0.15, 0.08)
 	handle_mat.roughness = 0.95
 	handle.material_override = handle_mat
 	torch_root.add_child(handle)
 
 	# 炎の土台（布巻き部分）
-	var wrap = MeshInstance3D.new()
+	var wrap: MeshInstance3D = MeshInstance3D.new()
 	wrap.name = "Wrap"
-	var wrap_mesh = CylinderMesh.new()
+	var wrap_mesh: CylinderMesh = CylinderMesh.new()
 	wrap_mesh.top_radius = 0.06
 	wrap_mesh.bottom_radius = 0.05
 	wrap_mesh.height = 0.15
 	wrap.mesh = wrap_mesh
 	wrap.position = Vector3(0, 0.12, 0)
-	var wrap_mat = StandardMaterial3D.new()
+	var wrap_mat: StandardMaterial3D = StandardMaterial3D.new()
 	wrap_mat.albedo_color = Color(0.3, 0.18, 0.08)
 	wrap_mat.roughness = 0.9
 	wrap.material_override = wrap_mat
 	torch_root.add_child(wrap)
 
 	# 炎（明るい球）
-	var flame = MeshInstance3D.new()
+	var flame: MeshInstance3D = MeshInstance3D.new()
 	flame.name = "Flame"
-	var flame_mesh = SphereMesh.new()
+	var flame_mesh: SphereMesh = SphereMesh.new()
 	flame_mesh.radius = 0.1
 	flame_mesh.height = 0.2
 	flame.mesh = flame_mesh
 	flame.position = Vector3(0, 0.25, 0)
-	var flame_mat = StandardMaterial3D.new()
+	var flame_mat: StandardMaterial3D = StandardMaterial3D.new()
 	flame_mat.albedo_color = Color(1.0, 0.6, 0.15)
 	flame_mat.emission_enabled = true
 	flame_mat.emission = Color(1.0, 0.5, 0.1)
@@ -447,7 +466,7 @@ func _create_single_torch(pos: Vector3, idx: int):
 	torch_root.add_child(flame)
 
 	# ポイントライト（暖色の揺らめく光）
-	var light = OmniLight3D.new()
+	var light: OmniLight3D = OmniLight3D.new()
 	light.name = "TorchLight"
 	light.position = Vector3(0, 0.3, 0)
 	light.light_color = Color(1.0, 0.7, 0.3)
@@ -465,7 +484,7 @@ func _create_ivy():
 	var half = _map_half_size + WALL_MARGIN
 	var cx = _map_center.x
 	var cz = _map_center.z
-	var rng = RandomNumberGenerator.new()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 54321
 
 	# 全壁の蔦データを先に収集
@@ -484,27 +503,54 @@ func _create_ivy():
 			var along = rng.randf_range(wall.start + 2.0, wall.end - 2.0)
 			var ivy_h = rng.randf_range(IVY_MIN_HEIGHT, IVY_MAX_HEIGHT)
 			var ivy_w = rng.randf_range(IVY_WIDTH_MIN, IVY_WIDTH_MAX)
+			# 蔦全体の伸びる方向（斜めにばらつかせる）
+			var grow_lean = rng.randf_range(-0.6, 0.6)  # 横方向への傾き
 
-			# 茎
-			var stem_pos: Vector3
-			var stem_basis := Basis.IDENTITY.scaled(Vector3(0.06, ivy_h, 0.02))
-			if wall.is_ns:
-				stem_pos = Vector3(along, ivy_h * 0.5, wall.wall_pos)
-			else:
-				stem_pos = Vector3(wall.wall_pos, ivy_h * 0.5, along)
-				stem_basis = stem_basis.rotated(Vector3.UP, deg_to_rad(90))
-			stem_transforms.append(Transform3D(stem_basis, stem_pos))
+			# 茎（複数セグメントで蛇行、経路を記録）
+			var seg_count = int(ivy_h / 0.4) + 1
+			var seg_h = ivy_h / float(seg_count)
+			var drift := 0.0
+			var stem_path: Array[Vector2] = []  # Y座標と横ドリフトの記録
+			stem_path.append(Vector2(0.0, 0.0))
+			for si in range(seg_count):
+				# 全体の傾きに沿いつつランダムに蛇行
+				drift += grow_lean * 0.15 + rng.randf_range(-0.25, 0.25)
+				drift = clampf(drift, -ivy_w * 0.4, ivy_w * 0.4)
+				var seg_y = seg_h * (float(si) + 0.5)
+				var prev_drift = stem_path[stem_path.size() - 1].y
+				var tilt = atan2(drift - prev_drift, seg_h)
+				stem_path.append(Vector2(seg_y + seg_h * 0.5, drift))
+				var seg_basis := Basis.IDENTITY.scaled(Vector3(0.05, seg_h, 0.02))
+				var seg_pos: Vector3
+				if wall.is_ns:
+					seg_basis = seg_basis.rotated(Vector3.FORWARD, tilt)
+					seg_pos = Vector3(along + drift, seg_y, wall.wall_pos)
+				else:
+					seg_basis = seg_basis.rotated(Vector3.UP, deg_to_rad(90))
+					seg_basis = seg_basis.rotated(Vector3.RIGHT, tilt)
+					seg_pos = Vector3(wall.wall_pos, seg_y, along + drift)
+				stem_transforms.append(Transform3D(seg_basis, seg_pos))
 
-			# 葉
+			# 葉（茎の経路に沿って配置）
 			var leaf_count = int(ivy_h * 3.0)
 			for _j in range(leaf_count):
 				var leaf_y = rng.randf_range(0.2, ivy_h)
-				var leaf_offset = rng.randf_range(-ivy_w * 0.4, ivy_w * 0.4)
+				# 茎の経路から該当Y位置のドリフトを補間で取得
+				var stem_drift := 0.0
+				for pi in range(stem_path.size() - 1):
+					if leaf_y >= stem_path[pi].x and leaf_y <= stem_path[pi + 1].x:
+						var t = (leaf_y - stem_path[pi].x) / maxf(stem_path[pi + 1].x - stem_path[pi].x, 0.01)
+						stem_drift = lerpf(stem_path[pi].y, stem_path[pi + 1].y, t)
+						break
+					elif pi == stem_path.size() - 2:
+						stem_drift = stem_path[pi + 1].y
+				# 茎から少しだけ左右にずらす
+				var leaf_offset = stem_drift + rng.randf_range(-0.3, 0.3)
 				var leaf_size = rng.randf_range(0.25, 0.50)
 				var leaf_pos: Vector3
 				var leaf_basis := Basis.IDENTITY.scaled(Vector3(leaf_size, leaf_size, 1.0))
-				leaf_basis = leaf_basis.rotated(Vector3.FORWARD, rng.randf_range(-0.4, 0.4))
-				leaf_basis = leaf_basis.rotated(Vector3.RIGHT, rng.randf_range(-0.2, 0.2))
+				leaf_basis = leaf_basis.rotated(Vector3.FORWARD, rng.randf_range(-0.5, 0.5))
+				leaf_basis = leaf_basis.rotated(Vector3.RIGHT, rng.randf_range(-0.3, 0.3))
 				if wall.is_ns:
 					leaf_pos = Vector3(along + leaf_offset, leaf_y, wall.wall_pos)
 				else:
@@ -514,19 +560,19 @@ func _create_ivy():
 
 	# 葉の MultiMesh（色バリエーション付き）
 	if not leaf_transforms.is_empty():
-		var leaf_mm = MultiMesh.new()
+		var leaf_mm: MultiMesh = MultiMesh.new()
 		leaf_mm.transform_format = MultiMesh.TRANSFORM_3D
 		leaf_mm.use_colors = true
 		leaf_mm.mesh = _create_heart_leaf_mesh()
 		leaf_mm.instance_count = leaf_transforms.size()
-		var color_rng = RandomNumberGenerator.new()
+		var color_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 		color_rng.seed = 99999
 		for i in range(leaf_transforms.size()):
 			leaf_mm.set_instance_transform(i, leaf_transforms[i])
 			var g = color_rng.randf_range(0.25, 0.45)
 			var r = color_rng.randf_range(0.12, 0.22)
 			leaf_mm.set_instance_color(i, Color(r, g, r * 0.5))
-		var leaf_inst = MultiMeshInstance3D.new()
+		var leaf_inst: MultiMeshInstance3D = MultiMeshInstance3D.new()
 		leaf_inst.name = "IvyLeaves"
 		leaf_inst.multimesh = leaf_mm
 		leaf_inst.material_override = _create_ivy_material()
@@ -534,44 +580,57 @@ func _create_ivy():
 
 	# 茎の MultiMesh
 	if not stem_transforms.is_empty():
-		var stem_mm = MultiMesh.new()
+		var stem_mm: MultiMesh = MultiMesh.new()
 		stem_mm.transform_format = MultiMesh.TRANSFORM_3D
 		stem_mm.mesh = BoxMesh.new()
 		stem_mm.instance_count = stem_transforms.size()
 		for i in range(stem_transforms.size()):
 			stem_mm.set_instance_transform(i, stem_transforms[i])
-		var stem_inst = MultiMeshInstance3D.new()
+		var stem_inst: MultiMeshInstance3D = MultiMeshInstance3D.new()
 		stem_inst.name = "IvyStems"
 		stem_inst.multimesh = stem_mm
-		var stem_mat = StandardMaterial3D.new()
+		var stem_mat: StandardMaterial3D = StandardMaterial3D.new()
 		stem_mat.albedo_color = Color(0.18, 0.28, 0.10)
 		stem_inst.material_override = stem_mat
 		add_child(stem_inst)
 
 
 ## 地面に草を配置（MultiMeshInstance3D: 1ノード）
+## 城壁寄りに多く、マップタイル付近には生成しない
 func _create_grass_patches():
 	var half = _map_half_size + WALL_MARGIN
 	var cx = _map_center.x
 	var cz = _map_center.z
-	var rng = RandomNumberGenerator.new()
+	var tile_half = _map_half_size + 1.5  # タイルがある範囲（少し余裕）
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 12345
 
 	var transforms: Array[Transform3D] = []
 
 	for _i in range(GRASS_PATCH_COUNT):
-		var center: Vector3
-		if rng.randf() < 0.7:
-			var side = rng.randi_range(0, 3)
-			match side:
-				0: center = Vector3(rng.randf_range(cx - half + 1.0, cx + half - 1.0), 0.0, rng.randf_range(cz - half + 1.5, cz - half + 4.0))
-				1: center = Vector3(rng.randf_range(cx - half + 1.0, cx + half - 1.0), 0.0, rng.randf_range(cz + half - 4.0, cz + half - 1.5))
-				2: center = Vector3(rng.randf_range(cx - half + 1.5, cx - half + 4.0), 0.0, rng.randf_range(cz - half + 1.0, cz + half - 1.0))
-				3: center = Vector3(rng.randf_range(cx + half - 4.0, cx + half - 1.5), 0.0, rng.randf_range(cz - half + 1.0, cz + half - 1.0))
-		else:
-			center = Vector3(rng.randf_range(cx - half + 2.0, cx + half - 2.0), 0.0, rng.randf_range(cz - half + 2.0, cz + half - 2.0))
+		# 城壁寄りにランダム配置を試行
+		var center := Vector3.ZERO
+		var valid := false
+		for _try in range(10):
+			var px = rng.randf_range(cx - half + 1.0, cx + half - 1.0)
+			var pz = rng.randf_range(cz - half + 1.0, cz + half - 1.0)
+			# マップタイル範囲内はスキップ
+			if abs(px - cx) < tile_half and abs(pz - cz) < tile_half:
+				continue
+			center = Vector3(px, 0.0, pz)
+			valid = true
+			break
+		if not valid:
+			continue
 
-		var blade_count = rng.randi_range(3, 6)
+		# 壁からの距離で密度を調整（壁に近いほど草を多く）
+		var dist_to_wall = min(
+			abs(center.x - (cx - half)), abs(center.x - (cx + half)),
+			abs(center.z - (cz - half)), abs(center.z - (cz + half))
+		)
+		var wall_proximity = 1.0 - clampf(dist_to_wall / (half * 2.0), 0.0, 1.0)
+		var blade_count = rng.randi_range(3, 4) + int(wall_proximity * 5.0)
+
 		for _j in range(blade_count):
 			var offset = Vector3(rng.randf_range(-0.3, 0.3), 0.0, rng.randf_range(-0.3, 0.3))
 			var h = GRASS_BLADE_HEIGHT * rng.randf_range(0.6, 1.4)
@@ -584,18 +643,64 @@ func _create_grass_patches():
 	if transforms.is_empty():
 		return
 
-	var mm = MultiMesh.new()
+	var mm: MultiMesh = MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = QuadMesh.new()
+	mm.use_colors = true
+	mm.mesh = _create_grass_blade_mesh()
 	mm.instance_count = transforms.size()
+	var color_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	color_rng.seed = 77777
 	for i in range(transforms.size()):
 		mm.set_instance_transform(i, transforms[i])
+		var g = color_rng.randf_range(0.35, 0.55)
+		mm.set_instance_color(i, Color(g * 0.4, g, g * 0.2))
 
-	var mm_inst = MultiMeshInstance3D.new()
+	var mm_inst: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	mm_inst.name = "GrassPatches"
 	mm_inst.multimesh = mm
 	mm_inst.material_override = _create_grass_material()
 	add_child(mm_inst)
+
+
+## 草の葉メッシュ生成（根元から上がって先端が垂れ下がる弧状）
+func _create_grass_blade_mesh() -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	var verts = PackedVector3Array()
+	var normals = PackedVector3Array()
+	var uvs = PackedVector2Array()
+	var indices = PackedInt32Array()
+
+	# 弧状の草：根元→上→先端が垂れる
+	var segments := 5
+	for i in range(segments + 1):
+		var t = float(i) / float(segments)
+		# 幅: 根元で広く先端で細く
+		var w = lerpf(0.5, 0.02, t)
+		# 高さ: 放物線的に上がって落ちる（ピークは t=0.5 付近）
+		var y = -0.5 + t * 1.2 - t * t * 0.8
+		# 先端が前方に垂れる
+		var z = t * t * 0.3
+		verts.append(Vector3(-w, y, z))
+		verts.append(Vector3(w, y, z))
+		normals.append(Vector3(0.0, 0.0, 1.0))
+		normals.append(Vector3(0.0, 0.0, 1.0))
+		uvs.append(Vector2(0.0, 1.0 - t))
+		uvs.append(Vector2(1.0, 1.0 - t))
+
+	# 三角形ストリップをインデックスに変換
+	for i in range(segments):
+		var base = i * 2
+		indices.append_array([base, base + 1, base + 2])
+		indices.append_array([base + 1, base + 3, base + 2])
+
+	var arrays = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = indices
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 # --- マテリアル生成 ---
@@ -606,7 +711,7 @@ func _create_brick_material() -> ShaderMaterial:
 	if not shader:
 		push_error("[CastleEnvironment] brick_wall.gdshader not found")
 		return null
-	var mat = ShaderMaterial.new()
+	var mat: ShaderMaterial = ShaderMaterial.new()
 	mat.shader = shader
 	return mat
 
@@ -616,7 +721,7 @@ func _create_tower_brick_material() -> ShaderMaterial:
 	var shader = load(BRICK_SHADER_PATH) as Shader
 	if not shader:
 		return _brick_material
-	var mat = ShaderMaterial.new()
+	var mat: ShaderMaterial = ShaderMaterial.new()
 	mat.shader = shader
 	mat.set_shader_parameter("brick_color_1", Vector3(0.44, 0.43, 0.40))
 	mat.set_shader_parameter("brick_color_2", Vector3(0.50, 0.48, 0.45))
@@ -629,7 +734,7 @@ func _create_tower_brick_material() -> ShaderMaterial:
 
 ## 笠石（キャップストーン）用マテリアル（floor3の石テクスチャを流用）
 func _create_cap_material() -> StandardMaterial3D:
-	var mat = StandardMaterial3D.new()
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	var tex = load("res://assets/building_parts/floor3_stone_ground_05_color.jpg") as Texture2D
 	if tex:
 		mat.albedo_texture = tex
@@ -644,7 +749,7 @@ func _create_cap_material() -> StandardMaterial3D:
 
 ## ハート型の蔦の葉メッシュ生成
 func _create_heart_leaf_mesh() -> ArrayMesh:
-	var mesh = ArrayMesh.new()
+	var mesh: ArrayMesh = ArrayMesh.new()
 	var verts = PackedVector3Array()
 	var uvs = PackedVector2Array()
 	var indices = PackedInt32Array()
@@ -711,7 +816,7 @@ func _create_heart_leaf_mesh() -> ArrayMesh:
 
 ## 蔦用マテリアル
 func _create_ivy_material() -> StandardMaterial3D:
-	var mat = StandardMaterial3D.new()
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.albedo_color = Color(1.0, 1.0, 1.0)
 	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 0.9
@@ -721,8 +826,9 @@ func _create_ivy_material() -> StandardMaterial3D:
 
 ## 草用マテリアル
 func _create_grass_material() -> StandardMaterial3D:
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.22, 0.42, 0.12)
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 1.0, 1.0)
+	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 0.9
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return mat
