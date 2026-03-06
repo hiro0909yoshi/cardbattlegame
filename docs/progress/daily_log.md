@@ -12,7 +12,31 @@
 
 ---
 
-## 2026年3月6日（Session: 密命カード裏面 + StateMachine修正）
+## 2026年3月6日（Session 2: カード裏面修正 + 城壁環境生成）
+
+### 完了した作業
+
+- ✅ カード裏面のArcanaLabel位置修正: ピクセルベースのオフセット配置（anchor_top=1.0 + offset_top=-55）をアンカーベースの比率配置（anchor_top=0.80, anchor_bottom=0.87）に変更。シーンとゲーム内でサイズが異なっても装飾ラインとテキストが正しく整列するように修正
+- ✅ クエストマップ用の城壁環境を新規作成（`scripts/quest/castle_environment.gd`）
+  - CSGBox3Dで土の地面（マップ全体を覆う）
+  - CSGBox3Dで四方の石壁（高さ4ユニット）+ 胸壁（バトルメント）
+  - CSGCylinder3Dで四隅の角塔（高さ6ユニット）
+  - quest_game.gd の `_setup_3d_scene_before_init()` に統合
+
+### 次の作業
+
+- 城壁環境のゲーム内確認・パラメータ調整（壁の高さ、色、マージン等）
+- 草の追加（MultiMeshInstance3D）
+- ドロー演出の実装（前セッションからの継続）
+
+関連ファイル:
+- scenes/Card.tscn（ArcanaLabelアンカー修正）
+- scripts/quest/castle_environment.gd（新規）
+- scripts/quest/quest_game.gd（城壁生成呼び出し追加）
+
+---
+
+## 2026年3月6日（Session 1: 密命カード裏面 + StateMachine修正）
 
 ### 完了した作業
 

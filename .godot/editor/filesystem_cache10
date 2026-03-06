@@ -1,5 +1,5 @@
 72322a848ab928aa5c89f0cb78209805
-::res://::1772760007
+::res://::1772764354
 ANALYSIS_COMPLETE.txt::TextFile::-1::1771635891::0::1::::<><><>0<>0<><>::
 CLAUDE.md::TextFile::-1::1772345047::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1772037422::0::1::::<><><>0<>0<><>::
@@ -424,9 +424,9 @@ implementation_patterns.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
 signal_catalog.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
 ::res://docs/platform/::1771778721
 web_mobile_guide.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
-::res://docs/progress/::1772735857
+::res://docs/progress/::1772762247
 architecture_migration_plan.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
-daily_log.md::TextFile::-1::1772735857::0::1::::<><><>0<>0<><>::
+daily_log.md::TextFile::-1::1772762247::0::1::::<><><>0<>0<><>::
 refactoring_next_steps.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
 roadmap.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
 skill_curse_rename_tracking.md::TextFile::-1::1771793582::0::1::::<><><>0<>0<><>::
@@ -452,11 +452,11 @@ sp_tile3.glb::PackedScene::8746159773036466132::1772593149::1772593149::1::::<><
 sp_tile4.glb::PackedScene::7894274299626352393::1772593875::1772593875::1::::<><><>0<>0<>14383176a5750c527475ee64dcda1747<>res://.godot/imported/sp_tile4.glb-6b94950d44763ca79f170b7e4dc307b3.scn::
 sp_tile.glb::PackedScene::4629497316376673713::1772561258::1772561258::1::::<><><>0<>0<>0d42fc28699e6bbfd84763b1ed33635c<>res://.godot/imported/sp_tile.glb-7311946e65482852c826dc17a0b672fc.scn::
 water.glb::PackedScene/PackedScene::3289590131022902559::1758742811::1766349747::1::::<><><>0<>0<>9d0e612a5f7e9666fd710586b910f74a<>res://.godot/imported/water.glb-28445de90635cab7db33dcf74ad48a1a.scn::
-::res://scenes/::1772731945
+::res://scenes/::1772761275
 Album.tscn::PackedScene::1838399245830026324::1770220522::0::1::::<><><>0<>0<><>::uid://22mnb0t8rwge::::res://scripts/album.gd
 battle_test_tool.tscn::PackedScene::4242350048326050357::1771160915::0::1::::<><><>0<>0<><>::uid://dtcuvqmwqhbuf::::res://scripts/battle_test/battle_test_ui.gd
 BookSelect.tscn::PackedScene::-1::1770220522::0::1::::<><><>0<>0<><>::res://scripts/quest/book_select.gd
-Card.tscn::PackedScene::3979912009216199989::1772731945::0::1::::<><><>0<>0<><>::uid://bw5351gab84up::::res://scripts/card.gd<>uid://dk8t11n2s1gsw::::res://assets/shaders/camouflage_pattern.gdshader<>res://assets/shaders/card_back_2d.gdshader<>uid://dwr7ddagywwe0::::res://assets/fonts/NotoSansJP-Regular.ttf
+Card.tscn::PackedScene::3979912009216199989::1772761275::0::1::::<><><>0<>0<><>::uid://bw5351gab84up::::res://scripts/card.gd<>uid://dk8t11n2s1gsw::::res://assets/shaders/camouflage_pattern.gdshader<>res://assets/shaders/card_back_2d.gdshader<>uid://dwr7ddagywwe0::::res://assets/fonts/NotoSansJP-Regular.ttf
 CardFrame.tscn::PackedScene::616053539500702035::1769456164::0::1::::<><><>0<>0<><>::uid://ccowsb6buk6f4::::res://scripts/card_frame.gd<>uid://dk8t11n2s1gsw::::res://assets/shaders/camouflage_pattern.gdshader
 Card_old.tscn::PackedScene::5937974502856177204::1769456164::0::1::::<><><>0<>0<><>::uid://bw5351gab84up::::res://scripts/card.gd
 CpuDeckEditor.tscn::PackedScene::-1::1770577104::0::1::::<><><>0<>0<><>::res://scripts/cpu_deck_editor.gd
@@ -704,9 +704,10 @@ card_sacrifice_helper.gd::GDScript::8944320748822380463::1771778718::0::1::::Car
 item_use_restriction.gd::GDScript::810428059599432750::1771778718::0::1::::ItemUseRestriction<>RefCounted<><>0<>0<><>::
 ::res://scripts/network/::1771778718
 network_manager.gd::GDScript::3612650836201403448::1771778718::0::1::::NetworkManager<>Node<><>0<>0<><>::
-::res://scripts/quest/::1772131799
+::res://scripts/quest/::1772762152
 book_select.gd::GDScript::1284887146983104942::1771778718::0::1::::<>Control<><>0<>0<><>::
-quest_game.gd::GDScript::5648318008280290163::1772129197::0::1::::QuestGame<>Node<><>0<>0<><>::
+castle_environment.gd::GDScript::7204425949940145823::1772762130::0::1::::CastleEnvironment<>Node3D<><>0<>0<><>::
+quest_game.gd::GDScript::5648318008280290163::1772762136::0::1::::QuestGame<>Node<><>0<>0<><>::
 quest_select.gd::GDScript::184951356549583808::1771778718::0::1::::<>Control<><>0<>0<><>::
 stage_loader.gd::GDScript::6218014551570080856::1772595496::0::1::::StageLoader<>Node<><>0<>0<><>::
 world_stage_select.gd::GDScript::8106881943840263341::1772131799::0::1::::<>Control<><>0<>0<><>::

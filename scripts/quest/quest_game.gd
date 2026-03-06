@@ -80,14 +80,44 @@ func _setup_3d_scene_before_init():
 	camera.top_level = true
 	add_child(camera)
 	
-	# ライト作成
+	# シーン側の既存ライト・環境を無効化
+	var existing_light = get_node_or_null("DirectionalLight3D")
+	if existing_light:
+		existing_light.visible = false
+	var existing_env = get_node_or_null("WorldEnvironment")
+	if existing_env:
+		existing_env.queue_free()
+
+	# メインライト（月光）
 	var light = DirectionalLight3D.new()
-	light.name = "DirectionalLight3D"
-	light.transform = Transform3D(
-		Basis(Vector3(0.707107, 0.5, -0.5), Vector3(0, 0.707107, 0.707107), Vector3(0.707107, -0.5, 0.5)),
-		Vector3(-50, 50, 0)
-	)
+	light.name = "MoonLight"
+	light.rotation_degrees = Vector3(-35, -20, 0)
+	light.light_energy = 0.5
+	light.light_color = Color(0.5, 0.55, 0.85)
+	light.shadow_enabled = true
+	light.directional_shadow_max_distance = 60.0
 	add_child(light)
+
+	# 補助ライト（微弱な反射光）
+	var fill_light = DirectionalLight3D.new()
+	fill_light.name = "FillLight"
+	fill_light.rotation_degrees = Vector3(-20, 160, 0)
+	fill_light.light_energy = 0.05
+	fill_light.light_color = Color(0.4, 0.45, 0.7)
+	fill_light.shadow_enabled = false
+	add_child(fill_light)
+
+	# 夜空の環境光
+	var world_env = WorldEnvironment.new()
+	world_env.name = "WorldEnvironment"
+	var env = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.05, 0.06, 0.12)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.08, 0.09, 0.15)
+	env.ambient_light_energy = 0.25
+	world_env.environment = env
+	add_child(world_env)
 	
 	# タイルコンテナ作成
 	var tiles_container = Node3D.new()
@@ -98,6 +128,13 @@ func _setup_3d_scene_before_init():
 	stage_loader.set_tiles_container(tiles_container)
 	stage_loader.generate_map()
 	
+	# 城壁・地面を作成（タイル範囲から動的にサイズ決定、45度回転）
+	var castle_env = CastleEnvironment.new()
+	castle_env.name = "CastleEnvironment"
+	castle_env.rotation.y = deg_to_rad(45)
+	add_child(castle_env)
+	castle_env.setup_from_tiles(tiles_container)
+
 	# プレイヤーコンテナ作成
 	var players_container = Node3D.new()
 	players_container.name = "Players"
