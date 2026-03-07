@@ -499,6 +499,33 @@ static func fade_non_target_tiles(handler, target_tile_indices: Array) -> void:
 		_set_node_transparency(player_node, OCCLUDER_ALPHA)
 
 
+## 複数プレイヤー対象時に全クリーチャーカードを半透明にする（全プレイヤースペル用）
+##
+## handler: board_system を持つオブジェクト
+## target_player_tile_indices: 対象プレイヤーがいるタイルインデックスの配列
+static func fade_non_target_players(handler, target_player_tile_indices: Array) -> void:
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys:
+		return
+
+	# 全タイルのクリーチャーカードを半透明化（対象はプレイヤーなのでカードは常に半透明）
+	for tile_idx in board_sys.tile_nodes.keys():
+		var tile = board_sys.tile_nodes[tile_idx]
+		if "creature_card_3d" in tile and tile.creature_card_3d:
+			if tile.creature_card_3d.has_method("set_transparency"):
+				tile.creature_card_3d.set_transparency(OCCLUDER_ALPHA)
+
+	# 全プレイヤーの3Dキャラを処理（対象プレイヤーは不透明、それ以外は半透明）
+	for player_id in range(board_sys.player_nodes.size()):
+		var player_node = board_sys.player_nodes[player_id]
+		if not player_node:
+			continue
+		var player_tile: int = board_sys.get_player_tile(player_id)
+		var is_target: bool = target_player_tile_indices.has(player_tile)
+		var char_alpha: float = 1.0 if is_target else OCCLUDER_ALPHA
+		_set_node_transparency(player_node, char_alpha)
+
+
 ## すべてのカード・キャラの透明度を復元
 static func restore_all_creature_transparency(handler) -> void:
 	var board_sys = handler.board_system if "board_system" in handler else null

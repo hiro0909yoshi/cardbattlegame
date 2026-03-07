@@ -374,7 +374,8 @@ static func show_confirmation_highlights(handler, target_type: String, target_in
 						highlighted_tiles.append(player_tile)
 			TargetMarkerSystem.highlight_multiple_tiles(handler, highlighted_tiles)
 			TargetMarkerSystem.show_multiple_markers(handler, highlighted_tiles)
-		
+			TargetMarkerSystem.fade_non_target_players(handler, highlighted_tiles)
+
 		"world":
 			if handler.board_system:
 				for tile_index in handler.board_system.tile_nodes.keys():
