@@ -13,22 +13,17 @@ class_name TargetMarkerSystem
 
 # マーカーアニメーション定数
 const MARKER_BOB_SPEED: float = 2.5        # ボビング速度
-const MARKER_BOB_AMPLITUDE: float = 0.2    # ボビング振幅
-const MARKER_BOB_BASE_Y: float = 0.5       # ボビング基準Y位置
-const MARKER_ROTATE_SPEED: float = 2.5     # Y軸周回速度(rad/s)
+const MARKER_BOB_AMPLITUDE: float = 0.6    # ボビング振幅
+const MARKER_BOB_BASE_Y: float = 1.2       # ボビング基準Y位置
+const MARKER_ROTATE_SPEED: float = 4.5     # Y軸周回速度(rad/s)
 const MARKER_ORBIT_RADIUS: float = 1.8     # 周回半径（タイルを包むサイズ）
 const MARKER_ORB_COUNT: int = 2            # 光の玉の数
 const MARKER_ORB_RADIUS: float = 0.12      # 光の玉の半径
 const MARKER_ORB_HEIGHT: float = 0.24      # 光の玉の高さ
 
-# トレイル（残光）定数
-const TRAIL_AMOUNT: int = 80               # トレイル粒子の数
-const TRAIL_LIFETIME: float = 0.2          # トレイル寿命(秒)
-const TRAIL_QUAD_SIZE: float = 0.2         # トレイルQuadのサイズ
-const TRAIL_SCALE_MIN: float = 0.1         # トレイル粒子の最小スケール（生成時）
-const TRAIL_SCALE_MAX: float = 1.0         # トレイル粒子の最大スケール（生成時）
-const TRAIL_SCALE_OVER_LIFE_MIN: float = 1.0  # ライフ開始時のスケール
-const TRAIL_SCALE_OVER_LIFE_MAX: float = 0.0  # ライフ終了時のスケール（消滅）
+# ゴーストトレイル定数（各光の玉の後ろに配置する残像）
+const TRAIL_GHOST_COUNT: int = 30           # 1つの玉あたりのゴースト数
+const TRAIL_ANGLE_STEP: float = 0.04       # ゴースト間の角度間隔(rad ≈ 7度)
 
 # ============================================
 # 選択マーカー管理
@@ -181,99 +176,64 @@ static func rotate_confirmation_markers(handler, delta: float):
 
 
 ## マーカーを作成（内部用）
-## 光の玉が円状に周回するマーカー
-## 戻り値: Node3D（コンテナ）の中に複数の光の玉（MeshInstance3D）
+## 光の玉が円状に周回するマーカー + ゴーストトレイル
+## コンテナをY軸回転すると、玉もゴーストも一緒に回り、尾を引いて見える
 static func create_marker_mesh() -> Node3D:
 	var container = Node3D.new()
 
-	# 発光マテリアルを共有
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1.0, 1.0, 0.3, 0.85)
-	material.emission_enabled = true
-	material.emission = Color(1.0, 0.9, 0.2)
-	material.emission_energy_multiplier = 4.0
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-
-	# トレイル用QuadMesh（ビルボード、全パーティクル共有 - 2ポリゴンで軽量）
-	var trail_quad = QuadMesh.new()
-	trail_quad.size = Vector2(TRAIL_QUAD_SIZE, TRAIL_QUAD_SIZE)
-
-	# トレイル用マテリアル（発光＋半透明、ビルボード、VertexColor対応）
-	var trail_material = StandardMaterial3D.new()
-	trail_material.albedo_color = Color(1.0, 1.0, 0.3, 0.8)
-	trail_material.emission_enabled = true
-	trail_material.emission = Color(1.0, 0.9, 0.2)
-	trail_material.emission_energy_multiplier = 3.0
-	trail_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	trail_material.vertex_color_use_as_albedo = true  # color_rampのフェードを反映
-	trail_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED  # 常にカメラを向く
+	# メインの球メッシュ（共有）
+	var sphere = SphereMesh.new()
+	sphere.radius = MARKER_ORB_RADIUS
+	sphere.height = MARKER_ORB_HEIGHT
 
 	# 光の玉を等間隔に配置
 	for i in range(MARKER_ORB_COUNT):
+		var base_angle: float = TAU * i / MARKER_ORB_COUNT
+
+		# メインの光の玉
 		var orb = MeshInstance3D.new()
-		var sphere = SphereMesh.new()
-		sphere.radius = MARKER_ORB_RADIUS
-		sphere.height = MARKER_ORB_HEIGHT
 		orb.mesh = sphere
-		orb.material_override = material
-
-		# 周回半径上に等間隔配置
-		var angle: float = TAU * i / MARKER_ORB_COUNT
+		orb.material_override = _create_orb_material(1.0)
 		orb.position = Vector3(
-			cos(angle) * MARKER_ORBIT_RADIUS,
+			cos(base_angle) * MARKER_ORBIT_RADIUS,
 			0,
-			sin(angle) * MARKER_ORBIT_RADIUS
+			sin(base_angle) * MARKER_ORBIT_RADIUS
 		)
-
-		# トレイル（残光パーティクル）を追加
-		var trail = _create_trail_particles(trail_quad, trail_material)
-		orb.add_child(trail)
-
 		container.add_child(orb)
+
+		# ゴーストトレイル（回転方向の後ろに配置）
+		for g in range(TRAIL_GHOST_COUNT):
+			var ghost_angle: float = base_angle + TRAIL_ANGLE_STEP * (g + 1)
+			var t: float = float(g + 1) / TRAIL_GHOST_COUNT  # 0→1（遠いほど1）
+			var alpha: float = lerpf(0.5, 0.0, t)
+			var scale_factor: float = lerpf(0.85, 0.15, t)
+
+			var ghost = MeshInstance3D.new()
+			ghost.mesh = sphere
+			ghost.material_override = _create_orb_material(alpha, t)
+			ghost.scale = Vector3.ONE * scale_factor
+			ghost.position = Vector3(
+				cos(ghost_angle) * MARKER_ORBIT_RADIUS,
+				0,
+				sin(ghost_angle) * MARKER_ORBIT_RADIUS
+			)
+			container.add_child(ghost)
 
 	return container
 
 
-## トレイル用GPUParticles3Dを作成
-static func _create_trail_particles(draw_mesh: QuadMesh, mat_override: StandardMaterial3D) -> GPUParticles3D:
-	var particles = GPUParticles3D.new()
-	particles.amount = TRAIL_AMOUNT
-	particles.lifetime = TRAIL_LIFETIME
-	particles.local_coords = false  # ワールド座標で残す（移動跡が残る）
-	particles.draw_pass_1 = draw_mesh
-	particles.material_override = mat_override
-
-	# パーティクルの挙動設定
-	var mat = ParticleProcessMaterial.new()
-	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
-	mat.direction = Vector3.ZERO
-	mat.spread = 0.0
-	mat.initial_velocity_min = 0.0
-	mat.initial_velocity_max = 0.0
-	mat.gravity = Vector3.ZERO
-	mat.scale_min = TRAIL_SCALE_MIN
-	mat.scale_max = TRAIL_SCALE_MAX
-
-	# 色のフェードアウト（明るい黄金色 → 透明に徐々に薄くなる）
-	var color_gradient = Gradient.new()
-	color_gradient.set_color(0, Color(1.0, 1.0, 0.3, 0.7))
-	color_gradient.add_point(0.3, Color(1.0, 0.95, 0.2, 0.4))
-	color_gradient.set_color(1, Color(1.0, 0.7, 0.1, 0.0))
-	var color_texture = GradientTexture1D.new()
-	color_texture.gradient = color_gradient
-	mat.color_ramp = color_texture
-
-	# スケールのフェード（大→小に縮んで消える）
-	var scale_curve = CurveTexture.new()
-	var curve = Curve.new()
-	curve.add_point(Vector2(0.0, TRAIL_SCALE_OVER_LIFE_MIN))
-	curve.add_point(Vector2(1.0, TRAIL_SCALE_OVER_LIFE_MAX))
-	scale_curve.curve = curve
-	mat.scale_curve = scale_curve
-
-	particles.process_material = mat
-
-	return particles
+## 光の玉用マテリアルを作成
+## alpha: 透明度（1.0=不透明、0.0=透明）
+## fade: 色フェード（0.0=黄色、1.0=白）
+static func _create_orb_material(alpha: float, fade: float = 0.0) -> StandardMaterial3D:
+	var mat = StandardMaterial3D.new()
+	var albedo = Color(1.0, 1.0, 0.3, alpha).lerp(Color(1.0, 1.0, 1.0, alpha), fade)
+	mat.albedo_color = albedo
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.9, 0.2).lerp(Color(1.0, 1.0, 1.0), fade)
+	mat.emission_energy_multiplier = lerpf(1.0, 4.0, alpha)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return mat
 
 
 ## マーカーの初期トランスフォームを設定
