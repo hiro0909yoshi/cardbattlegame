@@ -196,9 +196,9 @@ func _focus_camera(tile_index: int):
 		return
 	
 	var tile_pos = tile.global_position
-	var camera_offset = Vector3(12, 15, 12)
-	camera.position = tile_pos + camera_offset
-	camera.look_at(tile_pos + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
+	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	camera.position = look_target + GameConstants.CAMERA_OFFSET
+	camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 # ============================================
 # 委譲: TargetMarkerSystem

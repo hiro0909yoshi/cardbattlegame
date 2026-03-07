@@ -316,13 +316,13 @@ static func focus_camera_on_tile(handler, tile_index: int):
 	if not camera:
 		return
 	
-	# カメラを土地の上方に移動
+	# カメラを土地の上方に移動（通常ゲームと同じアングル）
 	var tile_pos = tile.global_position
-	var camera_offset = Vector3(12, 15, 12)
-	camera.position = tile_pos + camera_offset
-	
+	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	camera.position = look_target + GameConstants.CAMERA_OFFSET
+
 	# カメラを土地に向ける
-	camera.look_at(tile_pos + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
+	camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 
 ## カメラをプレイヤーにフォーカス
