@@ -191,7 +191,8 @@ static func rotate_confirmation_markers(handler, delta: float):
 ## マーカーを作成（内部用）
 ## 光の玉が円状に周回するマーカー + ゴーストトレイル
 ## コンテナをY軸回転すると、玉もゴーストも一緒に回り、尾を引いて見える
-static func create_marker_mesh() -> Node3D:
+## marker_color: マーカーの色（"yellow"=選択用、"red"=効果適用用）
+static func create_marker_mesh(marker_color: String = "yellow") -> Node3D:
 	var container = Node3D.new()
 
 	# メインの球メッシュ（共有）
@@ -206,7 +207,7 @@ static func create_marker_mesh() -> Node3D:
 		# メインの光の玉
 		var orb = MeshInstance3D.new()
 		orb.mesh = sphere
-		orb.material_override = _create_orb_material(1.0)
+		orb.material_override = _create_orb_material(1.0, 0.0, marker_color)
 		orb.position = Vector3(
 			cos(base_angle) * MARKER_ORBIT_RADIUS,
 			0,
@@ -223,7 +224,7 @@ static func create_marker_mesh() -> Node3D:
 
 			var ghost = MeshInstance3D.new()
 			ghost.mesh = sphere
-			ghost.material_override = _create_orb_material(alpha, t)
+			ghost.material_override = _create_orb_material(alpha, t, marker_color)
 			ghost.scale = Vector3.ONE * scale_factor
 			ghost.position = Vector3(
 				cos(ghost_angle) * MARKER_ORBIT_RADIUS,
@@ -237,13 +238,22 @@ static func create_marker_mesh() -> Node3D:
 
 ## 光の玉用マテリアルを作成
 ## alpha: 透明度（1.0=不透明、0.0=透明）
-## fade: 色フェード（0.0=黄色、1.0=白）
-static func _create_orb_material(alpha: float, fade: float = 0.0) -> StandardMaterial3D:
+## fade: 色フェード（0.0=基本色、1.0=白）
+## marker_color: "yellow"（選択用）または "red"（効果適用用）
+static func _create_orb_material(alpha: float, fade: float = 0.0, marker_color: String = "yellow") -> StandardMaterial3D:
 	var mat = StandardMaterial3D.new()
-	var albedo = Color(1.0, 1.0, 0.3, alpha).lerp(Color(1.0, 1.0, 1.0, alpha), fade)
+	var base_albedo: Color
+	var base_emission: Color
+	if marker_color == "red":
+		base_albedo = Color(1.0, 0.2, 0.1, alpha)
+		base_emission = Color(1.0, 0.15, 0.05)
+	else:
+		base_albedo = Color(1.0, 1.0, 0.3, alpha)
+		base_emission = Color(1.0, 0.9, 0.2)
+	var albedo = base_albedo.lerp(Color(1.0, 1.0, 1.0, alpha), fade)
 	mat.albedo_color = albedo
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.9, 0.2).lerp(Color(1.0, 1.0, 1.0), fade)
+	mat.emission = base_emission.lerp(Color(1.0, 1.0, 1.0), fade)
 	mat.emission_energy_multiplier = lerpf(1.0, 4.0, alpha)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	return mat
@@ -269,6 +279,63 @@ static func _animate_marker(marker: Node3D, delta: float) -> void:
 
 	# コンテナをY軸回転（子の光の玉が円状に周回する）
 	marker.rotation.y += delta * MARKER_ROTATE_SPEED
+
+
+## 赤マーカーのTweenアニメーション開始（Y軸回転 + ボビング）
+static func _start_marker_tween(marker: Node3D, parent: Node) -> void:
+	# Y軸回転（0.8秒で1回転）
+	var rotate_tween: Tween = parent.create_tween()
+	rotate_tween.tween_property(marker, "rotation:y", TAU, 0.8)
+
+	# ボビング（上下）
+	var bob_tween: Tween = parent.create_tween()
+	var bob_top: float = MARKER_BOB_BASE_Y + MARKER_BOB_AMPLITUDE
+	var bob_bottom: float = MARKER_BOB_BASE_Y - MARKER_BOB_AMPLITUDE
+	bob_tween.tween_property(marker, "position:y", bob_top, 0.4).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	bob_tween.tween_property(marker, "position:y", bob_bottom, 0.4).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+
+# ============================================
+# 効果適用マーカー（赤マーカー、0.8秒で自動消滅）
+# ============================================
+
+## スペル効果適用時に赤マーカーを表示（0.8秒で自動消滅）
+##
+## handler: board_system を持つオブジェクト
+## tile_index: マーカーを表示するタイルインデックス
+## target_type: ターゲットタイプ（"creature", "player", "land" 等）
+## target_player_id: プレイヤーターゲット時の対象プレイヤーID
+static func show_effect_marker(handler, tile_index: int, target_type: String = "", target_player_id: int = -1, skip_fade: bool = false) -> Node3D:
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys or not board_sys.tile_nodes.has(tile_index):
+		return null
+
+	var tile = board_sys.tile_nodes[tile_index]
+
+	# 赤マーカーを作成
+	var marker: Node3D = create_marker_mesh("red")
+	tile.add_child(marker)
+	_init_marker_transform(marker)
+
+	# Tweenでアニメーション（_processに依存しない自律駆動）
+	_start_marker_tween(marker, tile)
+
+	# 半透明化（全体スペルでは一括管理するためスキップ可能）
+	if not skip_fade:
+		fade_non_target_objects(handler, tile_index, target_type, target_player_id)
+
+	return marker
+
+
+## 赤マーカーを消去して半透明を復元
+## skip_restore: trueなら半透明復元をスキップ（全体スペルで一括復元する場合）
+static func hide_effect_marker(handler, marker: Node3D, skip_restore: bool = false) -> void:
+	if marker and is_instance_valid(marker):
+		if marker.get_parent():
+			marker.get_parent().remove_child(marker)
+		marker.queue_free()
+	if not skip_restore:
+		restore_all_creature_transparency(handler)
 
 
 # ============================================
@@ -403,6 +470,33 @@ static func fade_non_target_objects(handler, target_tile_index: int, target_type
 				char_alpha = OCCLUDER_ALPHA if target_type == "creature" else 1.0
 
 		_set_node_transparency(player_node, char_alpha)
+
+
+## 複数タイルの対象以外を半透明にする（全体スペル用）
+##
+## handler: board_system を持つオブジェクト
+## target_tile_indices: 対象タイルインデックスの配列
+static func fade_non_target_tiles(handler, target_tile_indices: Array) -> void:
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys:
+		return
+
+	# 全タイルのカードを処理
+	for tile_idx in board_sys.tile_nodes.keys():
+		var tile = board_sys.tile_nodes[tile_idx]
+		var is_target: bool = target_tile_indices.has(tile_idx)
+		var card_alpha: float = 1.0 if is_target else OCCLUDER_ALPHA
+
+		if "creature_card_3d" in tile and tile.creature_card_3d:
+			if tile.creature_card_3d.has_method("set_transparency"):
+				tile.creature_card_3d.set_transparency(card_alpha)
+
+	# 全プレイヤーの3Dキャラを半透明化（対象はクリーチャーなのでプレイヤーは常に半透明）
+	for player_id in range(board_sys.player_nodes.size()):
+		var player_node = board_sys.player_nodes[player_id]
+		if not player_node:
+			continue
+		_set_node_transparency(player_node, OCCLUDER_ALPHA)
 
 
 ## すべてのカード・キャラの透明度を復元

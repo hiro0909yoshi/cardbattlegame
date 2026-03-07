@@ -1900,7 +1900,7 @@
 			},
 			"effect": "全セプターのEPを平均化する",
 			"effect_parsed": {
-				"target_type": "self",
+				"target_type": "all_players",
 				"effects": [
 					{
 						"effect_type": "balance_all_magic"

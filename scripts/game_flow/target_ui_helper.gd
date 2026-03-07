@@ -35,43 +35,31 @@ static func _get_actual_handler(handler):
 ## total_count: 総ターゲット数
 ## 戻り値: 表示用テキスト
 static func format_target_info(target_data: Dictionary, current_index: int, total_count: int) -> String:
-	var text = "対象を選択: [↑↓で切替]\n"
-	text += "対象 %d/%d: " % [current_index, total_count]
-	
-	# ターゲット情報表示
+	var target_name = ""
 	match target_data.get("type", ""):
 		"land":
 			var tile_idx = target_data.get("tile_index", -1)
 			var element = target_data.get("element", "neutral")
 			var level = target_data.get("level", 1)
 			var owner_id = target_data.get("owner", -1)
-			
-			# 属性名を日本語に変換
 			var element_name = _get_element_name_jp(element)
-			
 			var owner_id_text = ""
 			if owner_id >= 0:
 				owner_id_text = " (P%d)" % (owner_id + 1)
-			
-			text += "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_id_text]
-		
+			target_name = "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_id_text]
 		"creature":
 			var tile_idx = target_data.get("tile_index", -1)
 			var creature_name = target_data.get("creature", {}).get("name", "???")
-			text += "タイル%d %s" % [tile_idx, creature_name]
-		
+			target_name = "タイル%d %s" % [tile_idx, creature_name]
 		"player":
 			var player_id = target_data.get("player_id", -1)
-			text += "プレイヤー%d" % (player_id + 1)
-		
+			target_name = "プレイヤー%d" % (player_id + 1)
 		"gate":
 			var tile_idx = target_data.get("tile_index", -1)
 			var gate_key = target_data.get("gate_key", "")
-			var gate_name = "%sゲート" % gate_key
-			text += "%s (タイル%d)" % [gate_name, tile_idx]
-	
-	text += "\n[Enter: 次へ] [C: 閉じる]"
-	return text
+			target_name = "%sゲート (タイル%d)" % [gate_key, tile_idx]
+
+	return "対象を選択: %d/%d %s" % [current_index, total_count, target_name]
 
 
 ## 確認フェーズ用：対象の説明テキストを生成

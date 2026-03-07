@@ -224,6 +224,12 @@ func enable_manual_mode():
 	current_mode = CameraMode.MANUAL
 
 
+## 固定モード（操作不可）
+func enable_fixed_mode():
+	current_mode = CameraMode.FIXED
+	is_dragging = false
+
+
 ## 固定モードに戻す
 func enable_follow_mode():
 	current_mode = CameraMode.FOLLOW

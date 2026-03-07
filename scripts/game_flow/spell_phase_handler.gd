@@ -221,11 +221,13 @@ func complete_spell_phase():
 		push_error("[SPH] spell_state が見つかりません")
 		return
 
-	# フェーズ状態を INACTIVE に遷移
-	spell_state.transition_to(SpellStateHandler.State.INACTIVE)
-
-	# スペルフェーズ完了シグナルを発行（GameFlowManager が待っている）
-	spell_phase_completed.emit()
+	# SpellFlowHandler経由で完了処理（UI整理含む）
+	if spell_flow:
+		spell_flow.complete_spell_phase()
+	else:
+		# フォールバック: spell_flowがない場合は直接完了
+		spell_state.transition_to(SpellStateHandler.State.INACTIVE)
+		spell_phase_completed.emit()
 
 ## === ヘルパーメソッド ===
 

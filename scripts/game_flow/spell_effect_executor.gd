@@ -41,6 +41,13 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	if handler.spell_state:
 		handler.spell_state.set_spell_failed(false)
 
+	# カメラをロック（効果適用中はドラッグ不可）
+	if handler.board_system:
+		handler.board_system.lock_camera()
+
+	# 赤マーカー表示（0.8秒で自動消滅、fire-and-forget）
+	_show_effect_marker_for_target(handler, target_data)
+
 	# 発動通知を表示（クリック待ち）
 	var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
 	var caster_name = "プレイヤー%d" % (current_player_id + 1)
@@ -101,6 +108,36 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# さらに待機してからスペルフェーズ完了
 	await handler.get_tree().create_timer(0.5).timeout
 	handler.complete_spell_phase()
+
+
+## 赤マーカーをターゲットに表示（0.8秒で自動消滅）
+## skip_fade: trueなら半透明化/復元をスキップ（全体スペルで一括管理する場合）
+func _show_effect_marker_for_target(handler, target_data: Dictionary, skip_fade: bool = false) -> void:
+	if not handler or not handler.board_system:
+		return
+
+	var target_type: String = target_data.get("type", "")
+	var tile_index: int = TargetSelectionHelper.get_tile_index_from_target(target_data, handler.board_system)
+	var target_player_id: int = target_data.get("player_id", -1) if target_type == "player" else -1
+
+	if tile_index < 0:
+		return
+
+	var marker: Node3D = TargetMarkerSystem.show_effect_marker(handler, tile_index, target_type, target_player_id, skip_fade)
+	if not marker:
+		return
+
+	# 0.8秒後に自動消滅（fire-and-forget）
+	_auto_hide_effect_marker(handler, marker, skip_fade)
+
+
+## 赤マーカーを0.8秒後に自動消去（fire-and-forget用コルーチン）
+func _auto_hide_effect_marker(handler, marker: Node3D, skip_restore: bool = false) -> void:
+	if not handler or not handler.get_tree():
+		return
+	await handler.get_tree().create_timer(0.8).timeout
+	TargetMarkerSystem.hide_effect_marker(handler, marker, skip_restore)
+
 
 ## 単一の効果を適用
 func apply_single_effect(effect: Dictionary, target_data: Dictionary):
@@ -234,27 +271,50 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 	else:
 		push_error("[SpellEffectExecutor] spell_state が未設定")
 		return
-	
+
+	# カメラをロック（効果適用中はドラッグ不可）
+	if handler.board_system:
+		handler.board_system.lock_camera()
+
 	# 発動通知を表示
 	var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
 	var caster_name = "プレイヤー%d" % (current_player_id + 1)
 	if handler.player_system and current_player_id >= 0 and current_player_id < handler.player_system.players.size():
 		caster_name = handler.player_system.players[current_player_id].name
-	
+
 	var target_data_for_notification = {"type": "all"}
 	await handler.show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
-	
+
 	# スペル効果を取得
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
-	
+
 	# 対象クリーチャーを取得
 	var targets = TargetSelectionHelper.get_valid_targets(handler, "creature", target_info)
-	
-	# 各対象に効果を適用
+
+	# 対象タイル一覧を収集して一括半透明化
+	var target_tile_indices: Array = []
 	for target in targets:
+		var tile_idx = target.get("tile_index", -1)
+		if tile_idx >= 0 and not target_tile_indices.has(tile_idx):
+			target_tile_indices.append(tile_idx)
+	if not target_tile_indices.is_empty() and handler.board_system:
+		TargetMarkerSystem.fade_non_target_tiles(handler, target_tile_indices)
+
+	# 各対象に個別フォーカス+赤マーカー+効果を適用
+	for target in targets:
+		var tile_idx: int = target.get("tile_index", -1)
+		# 現在のターゲット以外を半透明化
+		if tile_idx >= 0 and handler.board_system:
+			TargetMarkerSystem.fade_non_target_objects(handler, tile_idx, "creature")
+			TargetMarkerSystem.focus_camera_on_tile(handler, tile_idx)
+		_show_effect_marker_for_target(handler, target, true)
 		for effect in effects:
 			await apply_single_effect(effect, target)
+
+	# 半透明を一括復元
+	if handler.board_system:
+		TargetMarkerSystem.restore_all_creature_transparency(handler)
 	
 	# spell_failed フラグを取得（spell_state経由）
 	var spell_failed = handler.spell_state.is_spell_failed() if handler.spell_state else false

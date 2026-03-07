@@ -362,6 +362,7 @@ static func show_confirmation_highlights(handler, target_type: String, target_in
 					highlighted_tiles.append(tile_index)
 			TargetMarkerSystem.highlight_multiple_tiles(handler, highlighted_tiles)
 			TargetMarkerSystem.show_multiple_markers(handler, highlighted_tiles)
+			TargetMarkerSystem.fade_non_target_tiles(handler, highlighted_tiles)
 		
 		"all_players":
 			var targets = TargetFinder.get_valid_targets(handler, "player", target_info)

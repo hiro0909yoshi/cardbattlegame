@@ -80,6 +80,7 @@ var _ui_hide_dominio_btn_cb: Callable = Callable()
 var _ui_show_card_selection_cb: Callable = Callable()
 var _ui_hide_card_selection_cb: Callable = Callable()
 var _ui_enable_navigation_cb: Callable = Callable()
+var _ui_show_action_prompt_cb: Callable = Callable()
 
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
@@ -291,7 +292,9 @@ func start_turn():
 		change_phase(GamePhase.DICE_ROLL)
 		if _ui_set_phase_text_cb.is_valid():
 			_ui_set_phase_text_cb.call("サイコロを振ってください")
-		
+		if _ui_show_action_prompt_cb.is_valid():
+			_ui_show_action_prompt_cb.call("サイコロを振ってください")
+
 		# カメラを手動モードに設定（マップ確認可能にする）
 		board_system_3d.enable_manual_camera()
 		
@@ -760,6 +763,7 @@ func inject_ui_callbacks(callbacks: Dictionary) -> void:
 	_ui_show_card_selection_cb = callbacks.get("show_card_selection", Callable())
 	_ui_hide_card_selection_cb = callbacks.get("hide_card_selection", Callable())
 	_ui_enable_navigation_cb = callbacks.get("enable_navigation", Callable())
+	_ui_show_action_prompt_cb = callbacks.get("show_action_prompt", Callable())
 
 # ============================================================
 # チュートリアルモード判定

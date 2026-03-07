@@ -996,6 +996,11 @@ func enable_manual_camera():
 	if camera_controller:
 		camera_controller.enable_manual_mode()
 
+## カメラを固定モードに切替（操作不可）
+func lock_camera():
+	if camera_controller:
+		camera_controller.enable_fixed_mode()
+
 ## カメラを追従モードに切替
 func enable_follow_camera():
 	if camera_controller:
