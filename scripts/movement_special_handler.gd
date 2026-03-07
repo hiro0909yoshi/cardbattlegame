@@ -90,19 +90,17 @@ func clear_all_down_states_for_player(player_id: int) -> int:
 	return cleared_count
 
 
-# カメラをプレイヤーにフォーカス
+# カメラをプレイヤーにフォーカス（タイル位置基準）
 func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
-	if not controller.camera or player_id >= controller.player_nodes.size():
+	var tile_index: int = controller.get_player_tile(player_id)
+	if tile_index < 0 or not controller.tile_nodes.has(tile_index):
+		return
+	if not controller.camera:
 		return
 
-	var player_node = controller.player_nodes[player_id]
-	if not player_node:
-		return
-
-	var player_pos = player_node.global_position
-	var look_target = player_pos + Vector3(0, 1.0, 0)
+	var tile_pos = controller.tile_nodes[tile_index].global_position
+	var look_target = tile_pos + Vector3(0, 1.0, 0)
 	var target_pos = look_target + GameConstants.CAMERA_OFFSET
-
 	if smooth:
 		var tween = controller.get_tree().create_tween()
 		tween.set_parallel(true)

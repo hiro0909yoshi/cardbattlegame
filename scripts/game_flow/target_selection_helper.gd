@@ -208,13 +208,11 @@ func _restore_all_creature_transparency() -> void:
 func _focus_camera(tile_index: int):
 	if not board_system or not board_system.tile_nodes.has(tile_index):
 		return
-	
+
 	var tile = board_system.tile_nodes[tile_index]
 	var camera = board_system.camera
-	
 	if not camera:
 		return
-	
 	var tile_pos = tile.global_position
 	var look_target = tile_pos + Vector3(0, 1.0, 0)
 	camera.position = look_target + GameConstants.CAMERA_OFFSET

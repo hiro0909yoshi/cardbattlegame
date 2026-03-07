@@ -281,19 +281,14 @@ static func _animate_marker(marker: Node3D, delta: float) -> void:
 static func focus_camera_on_tile(handler, tile_index: int):
 	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
 		return
-	
+
 	var tile = handler.board_system.tile_nodes[tile_index]
 	var camera = handler.board_system.camera
-	
 	if not camera:
 		return
-	
-	# カメラを土地の上方に移動（通常ゲームと同じアングル）
 	var tile_pos = tile.global_position
 	var look_target = tile_pos + Vector3(0, 1.0, 0)
 	camera.position = look_target + GameConstants.CAMERA_OFFSET
-
-	# カメラを土地に向ける
 	camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 

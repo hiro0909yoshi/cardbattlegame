@@ -1216,14 +1216,11 @@ func _focus_camera_on_creature(creature_info: Dictionary) -> void:
 	
 	if not board_system_ref or not board_system_ref.tile_nodes.has(tile_index):
 		return
-	
+
 	var tile = board_system_ref.tile_nodes[tile_index]
 	var camera = board_system_ref.camera
-	
 	if not camera:
 		return
-	
-	# カメラを土地の上方に移動（通常ゲームと同じアングル）
 	var tile_pos = tile.global_position
 	var look_target = tile_pos + Vector3(0, 1.0, 0)
 	camera.position = look_target + GameConstants.CAMERA_OFFSET

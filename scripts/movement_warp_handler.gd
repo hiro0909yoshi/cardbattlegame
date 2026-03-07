@@ -60,13 +60,14 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 		target_pos.y += MovementController3D.MOVE_HEIGHT
 		player_node.global_position = target_pos
 
-		# カメラも瞬間移動
+		# カメラも瞬間移動（タイル位置基準）
 		if controller.camera and controller.player_system and player_id == controller.player_system.current_player_index:
 			var gfm = controller.game_flow_manager
 			if gfm and gfm.board_system_3d:
 				gfm.board_system_3d.cancel_direction_tween()
-			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
-			controller.camera.global_position = cam_target
+			var tile_pos = controller.tile_nodes[to_tile].global_position
+			var cam_look = tile_pos + Vector3(0, 1.0, 0)
+			controller.camera.global_position = cam_look + GameConstants.CAMERA_OFFSET
 
 	# 拡大して現れる
 	var tween2 = controller.get_tree().create_tween()

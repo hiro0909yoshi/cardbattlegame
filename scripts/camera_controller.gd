@@ -103,13 +103,13 @@ func _calculate_boundary_hull():
 	
 	# 凸包を計算
 	_boundary_hull = _compute_convex_hull(points)
-	
+
 	# 中心点を計算
 	_boundary_center = Vector2.ZERO
 	for point in _boundary_hull:
 		_boundary_center += point
 	_boundary_center /= _boundary_hull.size()
-	
+
 	_boundary_initialized = true
 
 
@@ -474,23 +474,47 @@ func focus_on_player(player_id: int, smooth: bool = true):
 func focus_on_tile(tile_index: int, smooth: bool = true):
 	if not camera or not board_system:
 		return
-	
+
 	if not board_system.tile_nodes.has(tile_index):
 		return
-	
+
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_pos = tile.global_position
 	var look_target = tile_pos + Vector3(0, 1.0, 0)
 	var new_camera_pos = look_target + GameConstants.CAMERA_OFFSET
-	
+
 	if camera.global_position.distance_to(new_camera_pos) < 0.5:
 		return
-	
+
 	if smooth:
 		_smooth_move_to(new_camera_pos, look_target)
 	else:
 		camera.global_position = new_camera_pos
 		camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
+
+
+## 指定タイルにフォーカス（await対応）
+func focus_on_tile_await(tile_index: int, duration: float = 0.5) -> void:
+	if not camera or not board_system:
+		return
+	if not board_system.tile_nodes.has(tile_index):
+		return
+
+	var tile = board_system.tile_nodes[tile_index]
+	var tile_pos = tile.global_position
+	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	var target_pos = look_target + GameConstants.CAMERA_OFFSET
+
+	if camera.global_position.distance_to(target_pos) < 0.5:
+		return
+
+	cancel_tween()
+	current_tween = create_tween()
+	current_tween.set_parallel(true)
+	current_tween.tween_property(camera, "global_position", target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	current_tween.set_parallel(false)
+	current_tween.tween_callback(func(): camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP))
+	await current_tween.finished
 
 ## 指定タイルにゆっくりフォーカス（到着予測カメラ用）
 func focus_on_tile_slow(tile_index: int, duration: float = 1.2):
@@ -536,6 +560,7 @@ func _smooth_transition_to(target_pos: Vector3, _look_target: Vector3, duration:
 		_direction_tween.kill()
 	_direction_tween = create_tween()
 	_direction_tween.tween_property(camera, "global_position", target_pos, duration).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+
 
 ## スムーズにカメラを移動
 func _smooth_move_to(target_pos: Vector3, look_target: Vector3):

@@ -9,7 +9,8 @@ var _torch_flames: Array[MeshInstance3D] = []
 var _torch_time := 0.0
 
 # 城壁パラメータ
-const WALL_MARGIN := 11.0      # マップ端からの余白
+const WALL_MARGIN := 11.0      # マップ端からの余白（北・東・西）
+const WALL_MARGIN_SOUTH := 15.0  # 南壁マージン（カメラ干渉回避のため広め）
 const WALL_HEIGHT := 6.0       # 壁の高さ
 const WALL_THICKNESS := 1.2    # 壁の厚み
 const BATTLEMENT_HEIGHT := 0.8 # 胸壁（凹凸）の高さ
@@ -61,7 +62,7 @@ func _process(delta: float) -> void:
 
 
 func _get_environment_margin() -> float:
-	return WALL_MARGIN
+	return WALL_MARGIN_SOUTH  # 最大マージンを返す（地面が全壁を覆うように）
 
 
 func _build() -> void:
@@ -78,40 +79,46 @@ func _build() -> void:
 
 ## 四方の壁を生成
 func _create_walls() -> void:
-	var half: float = _map_half_size + WALL_MARGIN
+	var half_n: float = _map_half_size + WALL_MARGIN       # 北・東・西
+	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH  # 南（カメラ干渉回避のため広め）
 	var center_x: float = _map_center.x
 	var center_z: float = _map_center.z
 	var wall_y: float = WALL_HEIGHT / 2.0
 	var cap_mat: StandardMaterial3D = _create_cap_material()
 
-	# 北壁 (Z-)
-	var ns_size: Vector3 = Vector3(half * 2.0 + WALL_THICKNESS, WALL_HEIGHT, WALL_THICKNESS)
-	_create_single_wall("WallNorth", Vector3(center_x, wall_y, center_z - half), ns_size, _brick_material)
-	_create_wall_cap("WallCapNorth", Vector3(center_x, WALL_HEIGHT, center_z - half),
+	# 北壁 (Z-) — 東西の広い方に合わせる
+	var ns_width: float = half_n * 2.0 + WALL_THICKNESS
+	var ns_size: Vector3 = Vector3(ns_width, WALL_HEIGHT, WALL_THICKNESS)
+	_create_single_wall("WallNorth", Vector3(center_x, wall_y, center_z - half_n), ns_size, _brick_material)
+	_create_wall_cap("WallCapNorth", Vector3(center_x, WALL_HEIGHT, center_z - half_n),
 		Vector3(ns_size.x + 0.2, 0.15, WALL_THICKNESS + 0.2), cap_mat)
 
-	# 南壁 (Z+)
-	_create_single_wall("WallSouth", Vector3(center_x, wall_y, center_z + half), ns_size, _brick_material)
-	_create_wall_cap("WallCapSouth", Vector3(center_x, WALL_HEIGHT, center_z + half),
+	# 南壁 (Z+) — 同じ幅で南側マージン位置に配置
+	_create_single_wall("WallSouth", Vector3(center_x, wall_y, center_z + half_s), ns_size, _brick_material)
+	_create_wall_cap("WallCapSouth", Vector3(center_x, WALL_HEIGHT, center_z + half_s),
 		Vector3(ns_size.x + 0.2, 0.15, WALL_THICKNESS + 0.2), cap_mat)
+
+	# 東西壁は北端〜南端を繋ぐ（非対称）
+	var ew_length: float = half_n + half_s + WALL_THICKNESS
+	var ew_center_z: float = center_z + (half_s - half_n) / 2.0
+	var ew_size: Vector3 = Vector3(WALL_THICKNESS, WALL_HEIGHT, ew_length)
 
 	# 西壁 (X-) - 1枚壁 + 門を貼り付け
-	var ew_size: Vector3 = Vector3(WALL_THICKNESS, WALL_HEIGHT, half * 2.0 + WALL_THICKNESS)
-	_create_single_wall("WallWest", Vector3(center_x - half, wall_y, center_z), ew_size, _brick_material)
-	_create_wall_cap("WallCapWest", Vector3(center_x - half, WALL_HEIGHT, center_z),
+	_create_single_wall("WallWest", Vector3(center_x - half_n, wall_y, ew_center_z), ew_size, _brick_material)
+	_create_wall_cap("WallCapWest", Vector3(center_x - half_n, WALL_HEIGHT, ew_center_z),
 		Vector3(WALL_THICKNESS + 0.2, 0.15, ew_size.z + 0.2), cap_mat)
 	var gate_offset: float = WALL_THICKNESS / 2.0 + GATE_THICKNESS / 2.0
-	_create_gate("GateWest", Vector3(center_x - half + gate_offset, 0, center_z), true, false)
+	_create_gate("GateWest", Vector3(center_x - half_n + gate_offset, 0, center_z), true, false)
 
 	# 東壁 (X+) - 1枚壁 + 門を貼り付け
-	_create_single_wall("WallEast", Vector3(center_x + half, wall_y, center_z), ew_size, _brick_material)
-	_create_wall_cap("WallCapEast", Vector3(center_x + half, WALL_HEIGHT, center_z),
+	_create_single_wall("WallEast", Vector3(center_x + half_n, wall_y, ew_center_z), ew_size, _brick_material)
+	_create_wall_cap("WallCapEast", Vector3(center_x + half_n, WALL_HEIGHT, ew_center_z),
 		Vector3(WALL_THICKNESS + 0.2, 0.15, ew_size.z + 0.2), cap_mat)
-	_create_gate("GateEast", Vector3(center_x + half - gate_offset, 0, center_z), true, true)
+	_create_gate("GateEast", Vector3(center_x + half_n - gate_offset, 0, center_z), true, true)
 
 	# 胸壁（バトルメント）
-	_create_battlements_north_south(center_x, center_z, half, cap_mat)
-	_create_battlements_east_west(center_x, center_z, half, cap_mat)
+	_create_battlements_north_south(center_x, center_z, half_n, half_s, cap_mat)
+	_create_battlements_east_west(center_x, center_z, half_n, half_s, cap_mat)
 
 
 ## 重厚な門を生成（GLBモデル扉 + 装飾枠）
@@ -226,28 +233,32 @@ func _create_wall_cap(cap_name: String, pos: Vector3, cap_size: Vector3, mat: Ma
 # --- 胸壁 ---
 
 ## 北壁・南壁の胸壁
-func _create_battlements_north_south(cx: float, cz: float, half: float, cap_mat: Material) -> void:
+func _create_battlements_north_south(cx: float, cz: float, half_n: float, half_s: float, cap_mat: Material) -> void:
 	var step: float = BATTLEMENT_WIDTH + BATTLEMENT_GAP
-	var start_x: float = cx - half
-	var end_x: float = cx + half
+	var start_x: float = cx - half_n
+	var end_x: float = cx + half_n
 	var top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT / 2.0
 	var cap_top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT
 
-	for z_sign in [-1.0, 1.0]:
-		var z_pos: float = cz + half * z_sign
+	var z_data: Array[Dictionary] = [
+		{"sign": -1.0, "half": half_n},
+		{"sign": 1.0, "half": half_s},
+	]
+	for data in z_data:
+		var z_pos: float = cz + data.half * data.sign
 		var x: float = start_x
 		var idx := 0
 		while x < end_x:
 			var bx: float = x + BATTLEMENT_WIDTH / 2.0
 			var b: MeshInstance3D = MeshInstance3D.new()
-			b.name = "BattlementNS_%d_%d" % [int(z_sign), idx]
+			b.name = "BattlementNS_%d_%d" % [int(data.sign), idx]
 			var b_mesh: BoxMesh = BoxMesh.new()
 			b_mesh.size = Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)
 			b.mesh = b_mesh
 			b.position = Vector3(bx, top_y, z_pos)
 			b.material_override = _brick_material
 			add_child(b)
-			_create_wall_cap("BattCapNS_%d_%d" % [int(z_sign), idx],
+			_create_wall_cap("BattCapNS_%d_%d" % [int(data.sign), idx],
 				Vector3(bx, cap_top_y, z_pos),
 				Vector3(BATTLEMENT_WIDTH + 0.1, 0.1, WALL_THICKNESS + 0.4), cap_mat)
 			x += step
@@ -255,15 +266,15 @@ func _create_battlements_north_south(cx: float, cz: float, half: float, cap_mat:
 
 
 ## 東壁・西壁の胸壁
-func _create_battlements_east_west(cx: float, cz: float, half: float, cap_mat: Material) -> void:
+func _create_battlements_east_west(cx: float, cz: float, half_n: float, half_s: float, cap_mat: Material) -> void:
 	var step: float = BATTLEMENT_WIDTH + BATTLEMENT_GAP
-	var start_z: float = cz - half
-	var end_z: float = cz + half
+	var start_z: float = cz - half_n
+	var end_z: float = cz + half_s
 	var top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT / 2.0
 	var cap_top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT
 
 	for x_sign in [-1.0, 1.0]:
-		var x_pos: float = cx + half * x_sign
+		var x_pos: float = cx + half_n * x_sign
 		var z: float = start_z
 		var idx := 0
 		while z < end_z:
@@ -287,7 +298,8 @@ func _create_battlements_east_west(cx: float, cz: float, half: float, cap_mat: M
 
 ## 四隅の塔を生成
 func _create_corner_towers() -> void:
-	var half: float = _map_half_size + WALL_MARGIN
+	var half_n: float = _map_half_size + WALL_MARGIN
+	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH
 	var cx: float = _map_center.x
 	var cz: float = _map_center.z
 	var tower_y: float = TOWER_HEIGHT / 2.0
@@ -295,10 +307,10 @@ func _create_corner_towers() -> void:
 	var tower_mat: ShaderMaterial = _create_tower_brick_material()
 
 	var corners: Array[Vector3] = [
-		Vector3(cx - half, tower_y, cz - half),
-		Vector3(cx + half, tower_y, cz - half),
-		Vector3(cx - half, tower_y, cz + half),
-		Vector3(cx + half, tower_y, cz + half),
+		Vector3(cx - half_n, tower_y, cz - half_n),
+		Vector3(cx + half_n, tower_y, cz - half_n),
+		Vector3(cx - half_n, tower_y, cz + half_s),
+		Vector3(cx + half_n, tower_y, cz + half_s),
 	]
 
 	var roof_mat: StandardMaterial3D = StandardMaterial3D.new()
@@ -442,15 +454,16 @@ func _create_single_torch(pos: Vector3, idx: int) -> void:
 # --- 植生（VegetationBuilder に委譲） ---
 
 func _create_ivy() -> void:
-	var half: float = _map_half_size + WALL_MARGIN
+	var half_n: float = _map_half_size + WALL_MARGIN
+	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH
 	var cx: float = _map_center.x
 	var cz: float = _map_center.z
 
 	var walls: Array[Dictionary] = [
-		{"start": cx - half, "end": cx + half, "wall_pos": cz - half + WALL_THICKNESS * 0.5 + 0.05, "is_ns": true},
-		{"start": cx - half, "end": cx + half, "wall_pos": cz + half - WALL_THICKNESS * 0.5 - 0.05, "is_ns": true},
-		{"start": cz - half, "end": cz + half, "wall_pos": cx - half + WALL_THICKNESS * 0.5 + 0.05, "is_ns": false},
-		{"start": cz - half, "end": cz + half, "wall_pos": cx + half - WALL_THICKNESS * 0.5 - 0.05, "is_ns": false},
+		{"start": cx - half_n, "end": cx + half_n, "wall_pos": cz - half_n + WALL_THICKNESS * 0.5 + 0.05, "is_ns": true},
+		{"start": cx - half_n, "end": cx + half_n, "wall_pos": cz + half_s - WALL_THICKNESS * 0.5 - 0.05, "is_ns": true},
+		{"start": cz - half_n, "end": cz + half_s, "wall_pos": cx - half_n + WALL_THICKNESS * 0.5 + 0.05, "is_ns": false},
+		{"start": cz - half_n, "end": cz + half_s, "wall_pos": cx + half_n - WALL_THICKNESS * 0.5 - 0.05, "is_ns": false},
 	]
 
 	VegetationBuilder.create_ivy(self, walls, IVY_COUNT_PER_WALL,
@@ -458,7 +471,7 @@ func _create_ivy() -> void:
 
 
 func _create_grass() -> void:
-	var half: float = _map_half_size + WALL_MARGIN
+	var half: float = _map_half_size + WALL_MARGIN_SOUTH  # 最大マージンで草を配置
 	var tile_half: float = _map_half_size + 1.5
 	VegetationBuilder.create_grass_patches(self, _map_center, half, tile_half,
 		GRASS_PATCH_COUNT, GRASS_BLADE_HEIGHT, GRASS_BLADE_WIDTH)
