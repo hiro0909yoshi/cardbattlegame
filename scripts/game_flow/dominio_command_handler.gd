@@ -28,7 +28,7 @@ var player_owned_lands: Array = []
 var current_land_selection_index: int = 0  # 現在選択中の土地インデックス
 
 # Phase 1-A: 選択マーカー
-var selection_marker: MeshInstance3D = null
+var selection_marker: Node3D = null
 
 # Phase 1-A: 移動先選択
 var move_source_tile: int = -1  # 移動元タイル

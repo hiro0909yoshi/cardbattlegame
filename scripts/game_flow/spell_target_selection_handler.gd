@@ -24,14 +24,14 @@ var _tap_target_manager: TapTargetManager = null
 ## 対象選択用の状態
 var _available_targets: Array = []
 var _current_target_index: int = 0
-var _selection_marker: MeshInstance3D = null
+var _selection_marker: Node3D = null
 var _confirmation_markers: Array = []
 
 ## 状態フラグ
 var _is_selecting: bool = false
 
 # 互換性プロパティ（target_marker_system.gd, target_ui_helper.gd との互換性用）
-var selection_marker: MeshInstance3D:
+var selection_marker: Node3D:
 	get:
 		return _selection_marker
 	set(value):
@@ -63,12 +63,9 @@ func _is_cpu_player(player_id: int) -> bool:
 func _ready() -> void:
 	pass
 
-func _process(delta: float) -> void:
-	# 選択マーカーを回転
-	if _is_selecting:
-		TargetSelectionHelper.rotate_selection_marker(_spell_phase_handler, delta)
-		# 確認フェーズ用マーカーを回転
-		TargetSelectionHelper.rotate_confirmation_markers(_spell_phase_handler, delta)
+func _process(_delta: float) -> void:
+	# マーカーアニメーションは SpellPhaseHandler._process() で一括処理
+	pass
 
 ## 初期化（setup() 時に呼ぶ）
 func setup(
@@ -580,11 +577,11 @@ func _on_target_next() -> void:
 	_update_target_selection()
 
 ## 選択マーカーを取得（外部アクセス用）
-func get_selection_marker() -> MeshInstance3D:
+func get_selection_marker() -> Node3D:
 	return _selection_marker
 
 ## 選択マーカーを設定（外部アクセス用）
-func set_selection_marker(marker: MeshInstance3D) -> void:
+func set_selection_marker(marker: Node3D) -> void:
 	_selection_marker = marker
 
 ## 確認マーカー配列を取得（外部アクセス用）
@@ -592,7 +589,7 @@ func get_confirmation_markers() -> Array:
 	return _confirmation_markers
 
 ## 確認マーカーを追加（外部アクセス用）
-func add_confirmation_marker(marker: MeshInstance3D) -> void:
+func add_confirmation_marker(marker: Node3D) -> void:
 	if marker:
 		_confirmation_markers.append(marker)
 

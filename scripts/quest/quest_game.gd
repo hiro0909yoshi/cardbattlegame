@@ -96,17 +96,16 @@ func _setup_3d_scene_before_init():
 	sun.directional_shadow_max_distance = 60.0
 	add_child(sun)
 
-	# 空 + フォグ
+	# 空
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.name = "QuestWorldEnv"
 	var env: Environment = Environment.new()
-	# 空（プロシージャルスカイ）
 	var sky: Sky = Sky.new()
 	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.35, 0.55, 0.85)
-	sky_mat.sky_horizon_color = Color(0.65, 0.75, 0.88)
-	sky_mat.ground_bottom_color = Color(0.25, 0.22, 0.18)
-	sky_mat.ground_horizon_color = Color(0.55, 0.55, 0.50)
+	sky_mat.sky_top_color = Color(0.30, 0.55, 0.80)
+	sky_mat.sky_horizon_color = Color(0.55, 0.68, 0.80)
+	sky_mat.ground_bottom_color = Color(0.6, 0.6, 0.6)
+	sky_mat.ground_horizon_color = Color(0.75, 0.75, 0.75)
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.background_mode = Environment.BG_SKY
@@ -207,13 +206,17 @@ func _integrate_walk_animation(walk_model: Node, idle_model: Node) -> void:
 		print("[QuestGame] walkアニメーション統合完了: ", idle_model.name)
 
 ## 外部PNGテクスチャを両モデルに適用する
-## FBX内のCamera/Lightノードを非表示にする
+## FBX内のCamera/Lightノードをツリーから除去する
 func _hide_fbx_extras(model: Node) -> void:
+	var to_remove: Array[Node] = []
 	for child in model.get_children():
-		if child is Camera3D or child is Light3D:
-			child.visible = false
-		# 再帰的に子も確認
-		_hide_fbx_extras(child)
+		if child is Light3D or child is Camera3D:
+			to_remove.append(child)
+		else:
+			_hide_fbx_extras(child)
+	for node in to_remove:
+		node.get_parent().remove_child(node)
+		node.queue_free()
 
 func _share_material(idle_model: Node, walk_model: Node) -> void:
 	# キャラクターのテクスチャPNGパスを取得（Idle FBXと同じフォルダ）

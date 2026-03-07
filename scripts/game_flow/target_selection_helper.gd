@@ -31,7 +31,7 @@ var game_flow_manager = null
 var is_tile_selecting: bool = false
 var available_tile_indices: Array = []
 var current_tile_index: int = 0
-var selection_marker: MeshInstance3D = null
+var selection_marker: Node3D = null
 
 # ============================================
 # 初期化
@@ -44,10 +44,10 @@ func initialize(board_sys, message_svc: MessageService, nav_svc: NavigationServi
 	_navigation_service = nav_svc
 	game_flow_manager = flow_mgr
 
-## マーカー回転処理（_processから呼ばれる）
+## マーカーアニメーション処理（_processから呼ばれる）
 func process(delta: float):
 	if selection_marker and selection_marker.has_meta("rotating"):
-		selection_marker.rotate_y(delta * 2.0)
+		TargetMarkerSystem._animate_marker(selection_marker, delta)
 
 # ============================================
 # タイル選択（インスタンスメソッド - await対応）
@@ -177,8 +177,7 @@ func _show_instance_marker(tile_index: int):
 		selection_marker.get_parent().remove_child(selection_marker)
 	
 	tile.add_child(selection_marker)
-	selection_marker.position = Vector3(0, 0.5, 0)
-	selection_marker.set_meta("rotating", true)
+	TargetMarkerSystem._init_marker_transform(selection_marker)
 
 ## インスタンス用マーカーを非表示
 func _hide_instance_marker():

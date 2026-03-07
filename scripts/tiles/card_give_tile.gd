@@ -20,6 +20,7 @@ var _board_system = null
 func _ready():
 	tile_type = "card_give"
 	super._ready()
+	CardMarkGenerator.create_card_mark(self, Color(0.55, 0.75, 0.90))
 
 ## 特殊タイルアクション実行（special_tile_systemから呼び出される）
 func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:

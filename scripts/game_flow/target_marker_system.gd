@@ -1,7 +1,7 @@
 # TargetMarkerSystem - マーカー・カメラ・ハイライト管理
 #
 # ターゲット選択時の視覚的フィードバックを担当
-# - 選択マーカーの作成・表示・回転
+# - 選択マーカーの作成・表示・回転・ボビング
 # - カメラフォーカス
 # - タイルハイライト
 #
@@ -10,6 +10,25 @@
 #   TargetMarkerSystem.focus_camera_on_tile(handler, tile_index)
 extends RefCounted
 class_name TargetMarkerSystem
+
+# マーカーアニメーション定数
+const MARKER_BOB_SPEED: float = 2.5        # ボビング速度
+const MARKER_BOB_AMPLITUDE: float = 0.2    # ボビング振幅
+const MARKER_BOB_BASE_Y: float = 0.5       # ボビング基準Y位置
+const MARKER_ROTATE_SPEED: float = 2.5     # Y軸周回速度(rad/s)
+const MARKER_ORBIT_RADIUS: float = 1.8     # 周回半径（タイルを包むサイズ）
+const MARKER_ORB_COUNT: int = 2            # 光の玉の数
+const MARKER_ORB_RADIUS: float = 0.12      # 光の玉の半径
+const MARKER_ORB_HEIGHT: float = 0.24      # 光の玉の高さ
+
+# トレイル（残光）定数
+const TRAIL_AMOUNT: int = 80               # トレイル粒子の数
+const TRAIL_LIFETIME: float = 0.2          # トレイル寿命(秒)
+const TRAIL_QUAD_SIZE: float = 0.2         # トレイルQuadのサイズ
+const TRAIL_SCALE_MIN: float = 0.1         # トレイル粒子の最小スケール（生成時）
+const TRAIL_SCALE_MAX: float = 1.0         # トレイル粒子の最大スケール（生成時）
+const TRAIL_SCALE_OVER_LIFE_MIN: float = 1.0  # ライフ開始時のスケール
+const TRAIL_SCALE_OVER_LIFE_MAX: float = 0.0  # ライフ終了時のスケール（消滅）
 
 # ============================================
 # 選択マーカー管理
@@ -33,25 +52,7 @@ static func create_selection_marker(handler):
 	if actual_handler.selection_marker:
 		return  # 既に存在する場合は何もしない
 
-	# シンプルなリング形状のマーカーを作成
-	actual_handler.selection_marker = MeshInstance3D.new()
-
-	# トーラス（ドーナツ型）メッシュを作成
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.8
-	torus.outer_radius = 1.0
-	torus.rings = 32
-	torus.ring_segments = 16
-
-	actual_handler.selection_marker.mesh = torus
-
-	# マテリアル設定（黄色で発光）
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1.0, 1.0, 0.0, 1.0)  # 黄色
-	material.emission_enabled = true
-	material.emission = Color(1.0, 1.0, 0.0)
-	material.emission_energy_multiplier = 2.0
-	actual_handler.selection_marker.material_override = material
+	actual_handler.selection_marker = create_marker_mesh()
 
 
 ## 選択マーカーを表示
@@ -81,12 +82,8 @@ static func show_selection_marker(handler, tile_index: int):
 
 	tile.add_child(actual_handler.selection_marker)
 
-	# 位置を土地の少し上に設定
-	actual_handler.selection_marker.position = Vector3(0, 0.5, 0)
-
-	# 回転アニメーションを追加
-	if not actual_handler.selection_marker.has_meta("rotating"):
-		actual_handler.selection_marker.set_meta("rotating", true)
+	# 位置・傾きを初期化
+	_init_marker_transform(actual_handler.selection_marker)
 
 
 ## 選択マーカーを非表示
@@ -101,7 +98,8 @@ static func hide_selection_marker(handler):
 		actual_handler.selection_marker.get_parent().remove_child(actual_handler.selection_marker)
 
 
-## 選択マーカーを回転（_process内で呼ぶ）
+## 選択マーカーをアニメーション（_process内で呼ぶ）
+## ボビング（上下浮き沈み）+ 傾き回転
 ##
 ## handler: 選択マーカーを保持するオブジェクト
 ## delta: フレーム間の経過時間
@@ -111,7 +109,7 @@ static func rotate_selection_marker(handler, delta: float):
 		return
 
 	if actual_handler.selection_marker and actual_handler.selection_marker.has_meta("rotating"):
-		actual_handler.selection_marker.rotate_y(delta * 2.0)  # 1秒で約114度回転
+		_animate_marker(actual_handler.selection_marker, delta)
 
 
 ## 複数マーカーを表示（確認フェーズ用）
@@ -140,8 +138,7 @@ static func show_multiple_markers(handler, tile_indices: Array):
 		# マーカーを作成
 		var marker = create_marker_mesh()
 		tile.add_child(marker)
-		marker.position = Vector3(0, 0.5, 0)
-		marker.set_meta("rotating", true)
+		_init_marker_transform(marker)
 
 		actual_handler.confirmation_markers.append(marker)
 
@@ -180,30 +177,125 @@ static func rotate_confirmation_markers(handler, delta: float):
 
 	for marker in actual_handler.confirmation_markers:
 		if marker and is_instance_valid(marker) and marker.has_meta("rotating"):
-			marker.rotate_y(delta * 2.0)
+			_animate_marker(marker, delta)
 
 
-## マーカーメッシュを作成（内部用）
-static func create_marker_mesh() -> MeshInstance3D:
-	var marker = MeshInstance3D.new()
-	
-	# トーラス（ドーナツ型）メッシュを作成
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.8
-	torus.outer_radius = 1.0
-	torus.rings = 32
-	torus.ring_segments = 16
-	marker.mesh = torus
-	
-	# マテリアル設定（黄色で発光）
+## マーカーを作成（内部用）
+## 光の玉が円状に周回するマーカー
+## 戻り値: Node3D（コンテナ）の中に複数の光の玉（MeshInstance3D）
+static func create_marker_mesh() -> Node3D:
+	var container = Node3D.new()
+
+	# 発光マテリアルを共有
 	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1.0, 1.0, 0.0, 1.0)  # 黄色
+	material.albedo_color = Color(1.0, 1.0, 0.3, 0.85)
 	material.emission_enabled = true
-	material.emission = Color(1.0, 1.0, 0.0)
-	material.emission_energy_multiplier = 2.0
-	marker.material_override = material
-	
-	return marker
+	material.emission = Color(1.0, 0.9, 0.2)
+	material.emission_energy_multiplier = 4.0
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+
+	# トレイル用QuadMesh（ビルボード、全パーティクル共有 - 2ポリゴンで軽量）
+	var trail_quad = QuadMesh.new()
+	trail_quad.size = Vector2(TRAIL_QUAD_SIZE, TRAIL_QUAD_SIZE)
+
+	# トレイル用マテリアル（発光＋半透明、ビルボード、VertexColor対応）
+	var trail_material = StandardMaterial3D.new()
+	trail_material.albedo_color = Color(1.0, 1.0, 0.3, 0.8)
+	trail_material.emission_enabled = true
+	trail_material.emission = Color(1.0, 0.9, 0.2)
+	trail_material.emission_energy_multiplier = 3.0
+	trail_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	trail_material.vertex_color_use_as_albedo = true  # color_rampのフェードを反映
+	trail_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED  # 常にカメラを向く
+
+	# 光の玉を等間隔に配置
+	for i in range(MARKER_ORB_COUNT):
+		var orb = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = MARKER_ORB_RADIUS
+		sphere.height = MARKER_ORB_HEIGHT
+		orb.mesh = sphere
+		orb.material_override = material
+
+		# 周回半径上に等間隔配置
+		var angle: float = TAU * i / MARKER_ORB_COUNT
+		orb.position = Vector3(
+			cos(angle) * MARKER_ORBIT_RADIUS,
+			0,
+			sin(angle) * MARKER_ORBIT_RADIUS
+		)
+
+		# トレイル（残光パーティクル）を追加
+		var trail = _create_trail_particles(trail_quad, trail_material)
+		orb.add_child(trail)
+
+		container.add_child(orb)
+
+	return container
+
+
+## トレイル用GPUParticles3Dを作成
+static func _create_trail_particles(draw_mesh: QuadMesh, mat_override: StandardMaterial3D) -> GPUParticles3D:
+	var particles = GPUParticles3D.new()
+	particles.amount = TRAIL_AMOUNT
+	particles.lifetime = TRAIL_LIFETIME
+	particles.local_coords = false  # ワールド座標で残す（移動跡が残る）
+	particles.draw_pass_1 = draw_mesh
+	particles.material_override = mat_override
+
+	# パーティクルの挙動設定
+	var mat = ParticleProcessMaterial.new()
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
+	mat.direction = Vector3.ZERO
+	mat.spread = 0.0
+	mat.initial_velocity_min = 0.0
+	mat.initial_velocity_max = 0.0
+	mat.gravity = Vector3.ZERO
+	mat.scale_min = TRAIL_SCALE_MIN
+	mat.scale_max = TRAIL_SCALE_MAX
+
+	# 色のフェードアウト（明るい黄金色 → 透明に徐々に薄くなる）
+	var color_gradient = Gradient.new()
+	color_gradient.set_color(0, Color(1.0, 1.0, 0.3, 0.7))
+	color_gradient.add_point(0.3, Color(1.0, 0.95, 0.2, 0.4))
+	color_gradient.set_color(1, Color(1.0, 0.7, 0.1, 0.0))
+	var color_texture = GradientTexture1D.new()
+	color_texture.gradient = color_gradient
+	mat.color_ramp = color_texture
+
+	# スケールのフェード（大→小に縮んで消える）
+	var scale_curve = CurveTexture.new()
+	var curve = Curve.new()
+	curve.add_point(Vector2(0.0, TRAIL_SCALE_OVER_LIFE_MIN))
+	curve.add_point(Vector2(1.0, TRAIL_SCALE_OVER_LIFE_MAX))
+	scale_curve.curve = curve
+	mat.scale_curve = scale_curve
+
+	particles.process_material = mat
+
+	return particles
+
+
+## マーカーの初期トランスフォームを設定
+static func _init_marker_transform(marker: Node3D) -> void:
+	marker.position = Vector3(0, MARKER_BOB_BASE_Y, 0)
+	marker.rotation = Vector3.ZERO
+	marker.set_meta("rotating", true)
+	marker.set_meta("anim_time", 0.0)
+
+
+## マーカーの毎フレームアニメーション
+## コンテナをY軸回転（光の玉が周回）+ ボビング（上下浮き沈み）
+static func _animate_marker(marker: Node3D, delta: float) -> void:
+	# 経過時間を更新
+	var t: float = marker.get_meta("anim_time", 0.0) + delta
+	marker.set_meta("anim_time", t)
+
+	# ボビング（上下浮き沈み）
+	marker.position.y = MARKER_BOB_BASE_Y + sin(t * MARKER_BOB_SPEED) * MARKER_BOB_AMPLITUDE
+
+	# コンテナをY軸回転（子の光の玉が円状に周回する）
+	marker.rotation.y += delta * MARKER_ROTATE_SPEED
 
 
 # ============================================
