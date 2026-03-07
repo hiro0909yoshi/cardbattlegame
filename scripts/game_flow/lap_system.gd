@@ -175,7 +175,7 @@ func _reinitialize_player_states():
 ## 注意: チェックポイント状態のリセットは complete_lap() で既に実施済み
 ## ここでリセットすると、周回完了後のチェックポイント状態が失われ、
 ## CPU の方向選択ロジックが誤動作する原因となる
-func on_start_passed(player_id: int):
+func on_start_passed(_player_id: int):
 	# デバッグログのみ
 	pass
 

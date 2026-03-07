@@ -407,19 +407,19 @@ func _create_single_torch(pos: Vector3, idx: int) -> void:
 	handle.material_override = handle_mat
 	torch_root.add_child(handle)
 
-	var wrap: MeshInstance3D = MeshInstance3D.new()
-	wrap.name = "Wrap"
-	var wrap_mesh: CylinderMesh = CylinderMesh.new()
-	wrap_mesh.top_radius = 0.06
-	wrap_mesh.bottom_radius = 0.05
-	wrap_mesh.height = 0.15
-	wrap.mesh = wrap_mesh
-	wrap.position = Vector3(0, 0.12, 0)
-	var wrap_mat: StandardMaterial3D = StandardMaterial3D.new()
-	wrap_mat.albedo_color = Color(0.3, 0.18, 0.08)
-	wrap_mat.roughness = 0.9
-	wrap.material_override = wrap_mat
-	torch_root.add_child(wrap)
+	var cloth: MeshInstance3D = MeshInstance3D.new()
+	cloth.name = "Wrap"
+	var cloth_mesh: CylinderMesh = CylinderMesh.new()
+	cloth_mesh.top_radius = 0.06
+	cloth_mesh.bottom_radius = 0.05
+	cloth_mesh.height = 0.15
+	cloth.mesh = cloth_mesh
+	cloth.position = Vector3(0, 0.12, 0)
+	var cloth_mat: StandardMaterial3D = StandardMaterial3D.new()
+	cloth_mat.albedo_color = Color(0.3, 0.18, 0.08)
+	cloth_mat.roughness = 0.9
+	cloth.material_override = cloth_mat
+	torch_root.add_child(cloth)
 
 	var flame: MeshInstance3D = MeshInstance3D.new()
 	flame.name = "Flame"

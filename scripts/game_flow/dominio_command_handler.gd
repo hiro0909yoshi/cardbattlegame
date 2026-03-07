@@ -868,7 +868,7 @@ func _on_invasion_completed(success: bool, tile_index: int):
 	if board_system and board_system.tile_action_processor:
 		board_system.complete_action()
 
-func _on_movement_completed(player_id: int, final_tile: int):
+func _on_movement_completed(_player_id: int, _final_tile: int):
 	# 移動完了時の処理が必要な場合はここに追加
 	pass
 

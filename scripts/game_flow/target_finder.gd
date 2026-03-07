@@ -308,7 +308,7 @@ static func _find_player_targets(sys_player, current_player_id: int, target_info
 	var target_filter = target_info.get("target_filter", "any")
 
 	for player in sys_player.players:
-		var is_current = (player.id == current_player_id)
+		var _is_current = (player.id == current_player_id)
 
 		var matches = false
 		if target_filter == "own":

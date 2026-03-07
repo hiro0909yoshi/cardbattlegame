@@ -193,8 +193,8 @@ func remove_card(card_id: int, amount: int = 1, user_id: String = "player1") -> 
 		var key = _web_key(user_id, card_id)
 		if not _web_data.has(key):
 			return false
-		var current_count = _web_data[key].get("count", 0)
-		_web_data[key]["count"] = max(0, current_count - amount)
+		var web_count = _web_data[key].get("count", 0)
+		_web_data[key]["count"] = max(0, web_count - amount)
 		return true
 	
 	if not db:

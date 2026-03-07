@@ -531,7 +531,7 @@
 			},
 			"cpu_rule": {
 				"pattern": "profit_calc",
-				"profit_condition": "enemy_magic_gte_300",
+				"profit_condition": "enemy_magic_higher",
 				"priority": "medium"
 			}
 		},

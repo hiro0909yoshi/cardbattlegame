@@ -55,7 +55,7 @@ static func create_selection_marker(handler):
 ## handler: 選択マーカーを保持するオブジェクト
 ##          handler.selection_marker と handler.board_system が必要
 ## tile_index: マーカーを表示する土地のインデックス
-static func show_selection_marker(handler, tile_index: int, target_type: String = ""):
+static func show_selection_marker(handler, tile_index: int, target_type: String = "", target_player_id: int = -1):
 	var actual_handler = _get_actual_handler(handler)
 	if not actual_handler:
 		return
@@ -80,11 +80,12 @@ static func show_selection_marker(handler, tile_index: int, target_type: String 
 	# 位置・傾きを初期化
 	_init_marker_transform(actual_handler.selection_marker)
 
-	# ターゲットタイプを記憶（カメラドラッグ復帰時に使用）
+	# ターゲットタイプとプレイヤーIDを記憶（カメラドラッグ復帰時に使用）
 	actual_handler.selection_marker.set_meta("target_type", target_type)
+	actual_handler.selection_marker.set_meta("target_player_id", target_player_id)
 
 	# 選択タイル以外のカード・クリーチャーを半透明化
-	fade_non_target_objects(handler, tile_index, target_type)
+	fade_non_target_objects(handler, tile_index, target_type, target_player_id)
 
 
 ## 選択マーカーを非表示
@@ -361,9 +362,10 @@ const OCCLUDER_ALPHA: float = 0.35  # 遮蔽物の半透明度
 
 ## 選択タイル以外のオブジェクトを半透明にする
 ## target_type: "creature" → 選択タイルのカードは不透明、キャラは半透明
-##              "player"   → 選択タイルのキャラは不透明、カードは半透明
+##              "player"   → 対象プレイヤーのキャラのみ不透明、他は全て半透明
 ##              その他     → 選択タイルは全て不透明
-static func fade_non_target_objects(handler, target_tile_index: int, target_type: String = "") -> void:
+## target_player_id: プレイヤーターゲット時の対象プレイヤーID（-1で未指定）
+static func fade_non_target_objects(handler, target_tile_index: int, target_type: String = "", target_player_id: int = -1) -> void:
 	var board_sys = handler.board_system if "board_system" in handler else null
 	if not board_sys:
 		return
@@ -389,14 +391,16 @@ static func fade_non_target_objects(handler, target_tile_index: int, target_type
 		if not player_node:
 			continue
 
-		var player_tile: int = board_sys.get_player_tile(player_id)
-		var is_target_tile: bool = (player_tile == target_tile_index)
-
 		# キャラ透明度を決定
 		var char_alpha: float = OCCLUDER_ALPHA
-		if is_target_tile:
-			# 対象タイル: playerターゲット時はキャラ不透明、creatureターゲット時はキャラ半透明
-			char_alpha = OCCLUDER_ALPHA if target_type == "creature" else 1.0
+		if target_type == "player" and target_player_id >= 0:
+			# プレイヤーターゲット: 対象プレイヤーIDで直接判定
+			char_alpha = 1.0 if player_id == target_player_id else OCCLUDER_ALPHA
+		else:
+			var player_tile: int = board_sys.get_player_tile(player_id)
+			var is_target_tile: bool = (player_tile == target_tile_index)
+			if is_target_tile:
+				char_alpha = OCCLUDER_ALPHA if target_type == "creature" else 1.0
 
 		_set_node_transparency(player_node, char_alpha)
 
@@ -438,7 +442,8 @@ static func _update_fade_for_camera(handler, marker: Node3D) -> void:
 		var parent_tile = marker.get_parent()
 		if parent_tile and "tile_index" in parent_tile:
 			var target_type: String = marker.get_meta("target_type", "")
-			fade_non_target_objects(handler, parent_tile.tile_index, target_type)
+			var target_pid: int = marker.get_meta("target_player_id", -1)
+			fade_non_target_objects(handler, parent_tile.tile_index, target_type, target_pid)
 		marker.set_meta("was_camera_dragging", false)
 
 

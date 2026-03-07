@@ -324,7 +324,8 @@ static func select_target_visually(handler, target_data: Dictionary):
 	var target_type = target_data.get("type", "")
 
 	if tile_index >= 0:
-		TargetMarkerSystem.show_selection_marker(handler, tile_index, target_type)
+		var target_player_id: int = target_data.get("player_id", -1) if target_type == "player" else -1
+		TargetMarkerSystem.show_selection_marker(handler, tile_index, target_type, target_player_id)
 		TargetMarkerSystem.focus_camera_on_tile(handler, tile_index)
 		TargetMarkerSystem.highlight_tile(handler, tile_index)
 	
