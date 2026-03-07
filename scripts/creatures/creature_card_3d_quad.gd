@@ -66,18 +66,17 @@ func _setup_card():
 	var material = StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED  # カメラに向く
-	material.render_priority = -1  # 他の3D要素より後ろに描画
-	
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+
 	# テクスチャを設定（次のフレームで）
 	await get_tree().process_frame
 	await get_tree().process_frame
-	
+
 	var texture = viewport.get_texture()
 	material.albedo_texture = texture
 	mesh_instance.material_override = material
-	
+
 	add_child(mesh_instance)
 	
 
@@ -125,3 +124,18 @@ func update_creature_data(data: Dictionary):
 func set_height(height: float):
 	if mesh_instance:
 		mesh_instance.position.y = height
+
+
+## 半透明化（ターゲット選択時に他タイルのカードを薄くする）
+func set_transparency(alpha: float) -> void:
+	if not mesh_instance:
+		return
+	var mat = mesh_instance.material_override as StandardMaterial3D
+	if not mat:
+		return
+	if alpha < 1.0:
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(1, 1, 1, alpha)
+	else:
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+		mat.albedo_color = Color(1, 1, 1, 1)

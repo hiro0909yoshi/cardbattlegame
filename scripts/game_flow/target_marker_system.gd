@@ -55,7 +55,7 @@ static func create_selection_marker(handler):
 ## handler: 選択マーカーを保持するオブジェクト
 ##          handler.selection_marker と handler.board_system が必要
 ## tile_index: マーカーを表示する土地のインデックス
-static func show_selection_marker(handler, tile_index: int):
+static func show_selection_marker(handler, tile_index: int, target_type: String = ""):
 	var actual_handler = _get_actual_handler(handler)
 	if not actual_handler:
 		return
@@ -80,6 +80,12 @@ static func show_selection_marker(handler, tile_index: int):
 	# 位置・傾きを初期化
 	_init_marker_transform(actual_handler.selection_marker)
 
+	# ターゲットタイプを記憶（カメラドラッグ復帰時に使用）
+	actual_handler.selection_marker.set_meta("target_type", target_type)
+
+	# 選択タイル以外のカード・クリーチャーを半透明化
+	fade_non_target_objects(handler, tile_index, target_type)
+
 
 ## 選択マーカーを非表示
 ##
@@ -91,6 +97,9 @@ static func hide_selection_marker(handler):
 
 	if actual_handler.selection_marker and actual_handler.selection_marker.get_parent():
 		actual_handler.selection_marker.get_parent().remove_child(actual_handler.selection_marker)
+
+	# 全カード・クリーチャーの透明度を復元
+	restore_all_creature_transparency(handler)
 
 
 ## 選択マーカーをアニメーション（_process内で呼ぶ）
@@ -105,6 +114,9 @@ static func rotate_selection_marker(handler, delta: float):
 
 	if actual_handler.selection_marker and actual_handler.selection_marker.has_meta("rotating"):
 		_animate_marker(actual_handler.selection_marker, delta)
+
+		# カメラドラッグ中は半透明解除、戻ったら再適用
+		_update_fade_for_camera(handler, actual_handler.selection_marker)
 
 
 ## 複数マーカーを表示（確認フェーズ用）
@@ -332,15 +344,122 @@ static func clear_all_highlights(handler):
 
 
 ## 複数タイルをハイライト
-## 
+##
 ## handler: board_system を持つオブジェクト
 ## tile_indices: ハイライトするタイルインデックスの配列
 static func highlight_multiple_tiles(handler, tile_indices: Array):
 	if not handler.board_system:
 		return
-	
+
 	for tile_index in tile_indices:
 		if handler.board_system.tile_nodes.has(tile_index):
 			var tile = handler.board_system.tile_nodes[tile_index]
 			if tile.has_method("set_highlight"):
 				tile.set_highlight(true)
+
+
+# ============================================
+# 遮蔽物の半透明化（ターゲット選択時）
+# ============================================
+
+const OCCLUDER_ALPHA: float = 0.35  # 遮蔽物の半透明度
+
+## 選択タイル以外のオブジェクトを半透明にする
+## target_type: "creature" → 選択タイルのカードは不透明、キャラは半透明
+##              "player"   → 選択タイルのキャラは不透明、カードは半透明
+##              その他     → 選択タイルは全て不透明
+static func fade_non_target_objects(handler, target_tile_index: int, target_type: String = "") -> void:
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys:
+		return
+
+	# 全タイルのカードを処理
+	for tile_idx in board_sys.tile_nodes.keys():
+		var tile = board_sys.tile_nodes[tile_idx]
+		var is_target_tile: bool = (tile_idx == target_tile_index)
+
+		# カード透明度を決定
+		var card_alpha: float = OCCLUDER_ALPHA
+		if is_target_tile:
+			# 対象タイル: creatureターゲット時はカード不透明、playerターゲット時はカード半透明
+			card_alpha = OCCLUDER_ALPHA if target_type == "player" else 1.0
+
+		if "creature_card_3d" in tile and tile.creature_card_3d:
+			if tile.creature_card_3d.has_method("set_transparency"):
+				tile.creature_card_3d.set_transparency(card_alpha)
+
+	# 全プレイヤーの3Dキャラを処理
+	for player_id in range(board_sys.player_nodes.size()):
+		var player_node = board_sys.player_nodes[player_id]
+		if not player_node:
+			continue
+
+		var player_tile: int = board_sys.get_player_tile(player_id)
+		var is_target_tile: bool = (player_tile == target_tile_index)
+
+		# キャラ透明度を決定
+		var char_alpha: float = OCCLUDER_ALPHA
+		if is_target_tile:
+			# 対象タイル: playerターゲット時はキャラ不透明、creatureターゲット時はキャラ半透明
+			char_alpha = OCCLUDER_ALPHA if target_type == "creature" else 1.0
+
+		_set_node_transparency(player_node, char_alpha)
+
+
+## すべてのカード・キャラの透明度を復元
+static func restore_all_creature_transparency(handler) -> void:
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys:
+		return
+
+	# カード復元
+	for tile_idx in board_sys.tile_nodes.keys():
+		var tile = board_sys.tile_nodes[tile_idx]
+		if "creature_card_3d" in tile and tile.creature_card_3d:
+			if tile.creature_card_3d.has_method("set_transparency"):
+				tile.creature_card_3d.set_transparency(1.0)
+
+	# キャラ復元
+	for player_node in board_sys.player_nodes:
+		if player_node:
+			_set_node_transparency(player_node, 1.0)
+
+
+## カメラドラッグ中は半透明を解除、戻ったら再適用
+static func _update_fade_for_camera(handler, marker: Node3D) -> void:
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys or not board_sys.camera_controller:
+		return
+
+	var is_dragging: bool = board_sys.camera_controller.is_user_controlling()
+	var was_dragging: bool = marker.get_meta("was_camera_dragging", false)
+
+	if is_dragging and not was_dragging:
+		# ドラッグ開始 → 全て不透明に
+		restore_all_creature_transparency(handler)
+		marker.set_meta("was_camera_dragging", true)
+	elif not is_dragging and was_dragging:
+		# ドラッグ終了 → 半透明を再適用
+		var parent_tile = marker.get_parent()
+		if parent_tile and "tile_index" in parent_tile:
+			var target_type: String = marker.get_meta("target_type", "")
+			fade_non_target_objects(handler, parent_tile.tile_index, target_type)
+		marker.set_meta("was_camera_dragging", false)
+
+
+## Node3D配下の全MeshInstance3Dの透明度を設定
+static func _set_node_transparency(node: Node3D, alpha: float) -> void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var mat = child.get_active_material(0)
+			if mat and mat is StandardMaterial3D:
+				var mat_copy: StandardMaterial3D = mat.duplicate() if not child.material_override else child.material_override
+				if alpha < 1.0:
+					mat_copy.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+					mat_copy.albedo_color.a = alpha
+				else:
+					mat_copy.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+					mat_copy.albedo_color.a = 1.0
+				child.material_override = mat_copy
+		if child is Node3D:
+			_set_node_transparency(child, alpha)

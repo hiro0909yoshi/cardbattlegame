@@ -179,10 +179,30 @@ func _show_instance_marker(tile_index: int):
 	tile.add_child(selection_marker)
 	TargetMarkerSystem._init_marker_transform(selection_marker)
 
+	# 選択タイル以外を半透明化（タイル選択なのでtarget_typeは"land"）
+	_fade_non_target_objects(tile_index, "land")
+
 ## インスタンス用マーカーを非表示
 func _hide_instance_marker():
 	if selection_marker and selection_marker.get_parent():
 		selection_marker.get_parent().remove_child(selection_marker)
+
+	# 全カード・クリーチャーの透明度を復元
+	_restore_all_creature_transparency()
+
+
+## 選択タイル以外を半透明化
+func _fade_non_target_objects(target_tile_index: int, target_type: String = "") -> void:
+	if not board_system:
+		return
+	TargetMarkerSystem.fade_non_target_objects(self, target_tile_index, target_type)
+
+
+## 全カード・クリーチャーの透明度を復元
+func _restore_all_creature_transparency() -> void:
+	if not board_system:
+		return
+	TargetMarkerSystem.restore_all_creature_transparency(self)
 
 ## カメラをフォーカス
 func _focus_camera(tile_index: int):
@@ -207,8 +227,8 @@ func _focus_camera(tile_index: int):
 static func create_selection_marker(handler):
 	TargetMarkerSystem.create_selection_marker(handler)
 
-static func show_selection_marker(handler, tile_index: int):
-	TargetMarkerSystem.show_selection_marker(handler, tile_index)
+static func show_selection_marker(handler, tile_index: int, target_type: String = ""):
+	TargetMarkerSystem.show_selection_marker(handler, tile_index, target_type)
 
 static func hide_selection_marker(handler):
 	TargetMarkerSystem.hide_selection_marker(handler)
@@ -303,8 +323,10 @@ static func select_target_visually(handler, target_data: Dictionary):
 	
 	var tile_index = get_tile_index_from_target(target_data, handler.board_system)
 	
+	var target_type = target_data.get("type", "")
+
 	if tile_index >= 0:
-		TargetMarkerSystem.show_selection_marker(handler, tile_index)
+		TargetMarkerSystem.show_selection_marker(handler, tile_index, target_type)
 		TargetMarkerSystem.focus_camera_on_tile(handler, tile_index)
 		TargetMarkerSystem.highlight_tile(handler, tile_index)
 	

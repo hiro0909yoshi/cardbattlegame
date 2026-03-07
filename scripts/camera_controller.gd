@@ -21,6 +21,8 @@ enum CameraMode {
 signal tile_tapped(tile_index: int, tile_data: Dictionary)
 signal creature_tapped(tile_index: int, creature_data: Dictionary)
 signal empty_tapped()  # タイル外をタップした時
+signal drag_started()  # ドラッグ開始
+signal drag_ended()    # ドラッグ終了
 
 # ========================================
 # 設定
@@ -308,11 +310,13 @@ func _start_touch(position: Vector2):
 	_total_drag_distance = 0.0
 	_is_potential_tap = true
 	is_dragging = true
+	drag_started.emit()
 
 
 func _end_touch(position: Vector2):
 	"""タッチ/クリック終了"""
 	is_dragging = false
+	drag_ended.emit()
 
 	# 移動量が閾値以下ならタップとして処理
 	if _is_potential_tap and _total_drag_distance < tap_threshold:
