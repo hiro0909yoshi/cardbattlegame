@@ -46,51 +46,45 @@ func apply_effect(handler: Node, effect: Dictionary, target_data: Dictionary) ->
 # ============================================
 
 ## 単体ダメージ効果を適用（カメラ、通知、クリック待ち含む）
-func apply_damage_effect(handler: Node, tile_index: int, value: int) -> void:
+func apply_damage_effect(handler: Node, tile_index: int, value: int) -> Dictionary:
 	if tile_index < 0:
-		return
-	
+		return {}
+
 	# カメラをターゲットにフォーカス
 	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
-	
+
 	# ダメージ処理
 	var result = apply_damage(tile_index, value)
-	
-	if result["success"]:
-		var notification_text = format_damage_notification(result, value)
-		await _show_notification_and_wait(notification_text)
+
+	return result
 
 
-## 単体固定値回復効果を適用（カメラ、通知、クリック待ち含む）
-func apply_heal_effect(handler: Node, tile_index: int, value: int) -> void:
+## 単体固定値回復効果を適用（カメラ含む）
+func apply_heal_effect(handler: Node, tile_index: int, value: int) -> Dictionary:
 	if tile_index < 0 or value <= 0:
-		return
-	
+		return {}
+
 	# カメラをターゲットにフォーカス
 	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
-	
+
 	# 回復処理
 	var result = apply_heal(tile_index, value)
-	
-	if result["success"]:
-		var notification_text = format_heal_notification(result, value)
-		await _show_notification_and_wait(notification_text)
+
+	return result
 
 
-## 単体HP全回復効果を適用（カメラ、通知、クリック待ち含む）
-func apply_full_heal_effect(handler: Node, tile_index: int) -> void:
+## 単体HP全回復効果を適用（カメラ含む）
+func apply_full_heal_effect(handler: Node, tile_index: int) -> Dictionary:
 	if tile_index < 0:
-		return
-	
+		return {}
+
 	# カメラをターゲットにフォーカス
 	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
-	
+
 	# 全回復処理
 	var result = apply_full_heal(tile_index)
-	
-	if result["success"]:
-		var notification_text = format_heal_notification(result)
-		await _show_notification_and_wait(notification_text)
+
+	return result
 
 
 ## ダウン解除効果を適用（カメラ、通知、クリック待ち含む）

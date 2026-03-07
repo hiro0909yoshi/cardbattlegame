@@ -240,6 +240,9 @@ static func get_target_display_name(target_data: Dictionary, board_system = null
 		
 		"all", "all_lands", "all_creatures":
 			return "全体"
+
+		"all_players":
+			return "全プレイヤー"
 		
 		"world":
 			return "世界"

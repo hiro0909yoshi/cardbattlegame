@@ -67,14 +67,22 @@ func execute(context: Dictionary) -> Dictionary:
 	_log("効果実行開始 (tile_index: %d, value: %d)" % [target_data.get("tile_index", -1), value])
 
 	# SpellDamage に委譲
-	await spell_damage.apply_damage_effect(handler, target_data.get("tile_index", -1), value)
+	var result = await spell_damage.apply_damage_effect(handler, target_data.get("tile_index", -1), value)
 
-	# ★ NEW: effect_message を構築
-	var effect_message = "%dダメージ" % value
+	# effect_message を構築（HP情報付き）
+	var effect_message = ""
+	if result and result.get("success", false):
+		var creature_name = result.get("creature_name", "")
+		var new_hp = result.get("new_hp", 0)
+		var max_hp = result.get("max_hp", 0)
+		if result.get("destroyed", false):
+			effect_message = "%sに%dダメージ！ %sは倒された！" % [creature_name, value, creature_name]
+		else:
+			effect_message = "%sに%dダメージ！ HP: %d/%d" % [creature_name, value, new_hp, max_hp]
 
 	_log("効果実行完了")
 
 	return {
 		"effect_message": effect_message,
-		"success": true
+		"success": result.get("success", false) if result else false
 	}

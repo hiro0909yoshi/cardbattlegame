@@ -176,7 +176,9 @@
 	  "effect": "全ドミニオに刻印[枷]",
 	  "effect_parsed": {
 		"target_type": "all_creatures",
-		"target_info": {},
+		"target_info": {
+			"owner_filter": "any"
+		},
 		"effects": [
 		  {
 			"effect_type": "creature_curse",

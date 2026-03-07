@@ -65,49 +65,53 @@ func execute(context: Dictionary) -> Dictionary:
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
-	# ★ NEW: effect_message を構築
+	# ★ effect_message を構築（JSONの name フィールドを優先）
+	var curse_name = effect.get("name", "")
 	var effect_message = ""
-	match effect_type:
-		"skill_nullify":
-			effect_message = "スキルを無効化"
-		"battle_disable":
-			effect_message = "戦闘不能化"
-		"ap_nullify":
-			effect_message = "AP無効化"
-		"stat_reduce":
-			effect_message = "ステータス低下"
-		"random_stat_curse":
-			effect_message = "ランダムな刻印"
-		"command_growth_curse":
-			effect_message = "昇華刻印"
-		"plague_curse":
-			effect_message = "疫病の刻印"
-		"creature_curse":
-			effect_message = "クリーチャー刻印"
-		"forced_stop":
-			effect_message = "停滞"
-		"indomitable":
-			effect_message = "奮闘スキル付与"
-		"land_effect_disable":
-			effect_message = "土地効果無効化"
-		"land_effect_grant":
-			effect_message = "土地効果付与"
-		"metal_form":
-			effect_message = "硬化"
-		"magic_barrier":
-			effect_message = "魔法障壁"
-		"destroy_after_battle":
-			effect_message = "戦闘後消滅"
-		"bounty_curse":
-			effect_message = "報奨金の刻印"
-		"grant_mystic_arts":
-			effect_message = "神秘術付与"
-		"land_curse":
-			effect_message = "土地刻印"
-		"apply_curse":
-			effect_message = "刻印適用"
-		_:
-			effect_message = "刻印効果実行"
+	if not curse_name.is_empty():
+		effect_message = "%sの刻印" % curse_name
+	else:
+		match effect_type:
+			"skill_nullify":
+				effect_message = "スキルを無効化"
+			"battle_disable":
+				effect_message = "戦闘不能化"
+			"ap_nullify":
+				effect_message = "AP無効化"
+			"stat_reduce":
+				effect_message = "ステータス低下"
+			"random_stat_curse":
+				effect_message = "ランダムな刻印"
+			"command_growth_curse":
+				effect_message = "昇華刻印"
+			"plague_curse":
+				effect_message = "疫病の刻印"
+			"creature_curse":
+				effect_message = "クリーチャー刻印"
+			"forced_stop":
+				effect_message = "停滞"
+			"indomitable":
+				effect_message = "奮闘スキル付与"
+			"land_effect_disable":
+				effect_message = "土地効果無効化"
+			"land_effect_grant":
+				effect_message = "土地効果付与"
+			"metal_form":
+				effect_message = "硬化"
+			"magic_barrier":
+				effect_message = "魔法障壁"
+			"destroy_after_battle":
+				effect_message = "戦闘後消滅"
+			"bounty_curse":
+				effect_message = "報奨金の刻印"
+			"grant_mystic_arts":
+				effect_message = "神秘術付与"
+			"land_curse":
+				effect_message = "土地刻印"
+			"apply_curse":
+				effect_message = "刻印適用"
+			_:
+				effect_message = "刻印効果実行"
 
 	# target_type チェック（元のロジックを再現）
 	var target_type = target_data.get("type", "")

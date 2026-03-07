@@ -76,17 +76,26 @@ func execute(context: Dictionary) -> Dictionary:
 
 	_log("効果実行開始 (effect_type: %s, tile_index: %d)" % [effect_type, tile_index])
 
-	# ★ NEW: effect_message を構築
+	# SpellDamage に委譲して結果からメッセージ構築
+	var result = {}
 	var effect_message = ""
 
 	match effect_type:
 		"heal":
 			var value = effect.get("value", 0)
-			await spell_damage.apply_heal_effect(handler, tile_index, value)
-			effect_message = "%dHP回復" % value
+			result = await spell_damage.apply_heal_effect(handler, tile_index, value)
+			if result and result.get("success", false):
+				var creature_name = result.get("creature_name", "")
+				var new_hp = result.get("new_hp", 0)
+				var max_hp = result.get("max_hp", 0)
+				effect_message = "%sを%dHP回復！ HP: %d/%d" % [creature_name, value, new_hp, max_hp]
 		"full_heal":
-			await spell_damage.apply_full_heal_effect(handler, tile_index)
-			effect_message = "完全回復"
+			result = await spell_damage.apply_full_heal_effect(handler, tile_index)
+			if result and result.get("success", false):
+				var creature_name = result.get("creature_name", "")
+				var new_hp = result.get("new_hp", 0)
+				var max_hp = result.get("max_hp", 0)
+				effect_message = "%sのHPが全回復！ HP: %d/%d" % [creature_name, new_hp, max_hp]
 		_:
 			_log_error("未対応の effect_type: %s" % effect_type)
 			return { "effect_message": "" }
@@ -95,5 +104,5 @@ func execute(context: Dictionary) -> Dictionary:
 
 	return {
 		"effect_message": effect_message,
-		"success": true
+		"success": result.get("success", false) if result else false
 	}
