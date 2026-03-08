@@ -112,6 +112,11 @@ func _setup_ui():
 	# ========== 新規追加: ビジュアルモード設定UI ==========
 	_setup_visual_mode_ui()
 
+	# DetailWindowの×ボタン対応
+	if not detail_window.close_requested.is_connected(_on_detail_window_close_requested):
+		detail_window.close_requested.connect(_on_detail_window_close_requested)
+
+
 ## ========== 新規追加: ビジュアルモード設定UI作成 ==========
 func _setup_visual_mode_ui():
 	# 実行ボタンの親コンテナを取得
@@ -739,7 +744,9 @@ func _execute_logic_mode():
 	await get_tree().process_frame
 
 	# バトル実行
-	results = BattleTestExecutor.execute_all_battles(config)
+	var executor = BattleTestExecutor.new()
+	executor.scene_tree_parent = self
+	results = await executor.execute_all_battles(config)
 
 	# 統計計算
 	statistics = BattleTestStatistics.calculate(results)
@@ -847,7 +854,7 @@ func _display_detail_table():
 			result.battle_id,
 			result.attacker_name,
 			result.defender_name,
-			"攻撃側勝利" if result.winner == "attacker" else "防御側勝利",
+			_get_winner_text(result.winner),
 			result.attacker_final_hp,
 			result.defender_final_hp,
 			result.attacker_final_ap,
@@ -861,6 +868,20 @@ func _display_detail_table():
 			line += " [防:" + ",".join(result.defender_granted_skills) + "]"
 		
 		detail_table.add_item(line)
+
+## 勝利テキスト変換
+func _get_winner_text(winner: String) -> String:
+	match winner:
+		"attacker":
+			return "攻撃側勝利"
+		"defender":
+			return "防御側勝利"
+		"attacker_survived":
+			return "攻撃側生存（引き分け）"
+		"both_defeated":
+			return "相打ち"
+		_:
+			return "不明"
 
 ## 結果表示クリア
 func _clear_result_display():
@@ -902,7 +923,7 @@ func _show_detail_window(result: BattleTestResult):
 " % [result.defender_name, result.defender_id]
 	text += "  勝者: [b]%s[/b]
 
-" % ("攻撃側" if result.winner == "attacker" else "防御側")
+" % _get_winner_text(result.winner)
 	
 	# アイテム・スペル
 	text += "[color=yellow]■ 装備・使用[/color]
@@ -987,6 +1008,10 @@ func _show_detail_window(result: BattleTestResult):
 	
 	print("[BattleTestUI] 詳細ウィンドウを表示: Battle #", result.battle_id)
 
+
+func _on_detail_window_close_requested():
+	detail_window.visible = false
+
 ## ============================================
 ## カード一覧機能
 ## ============================================
@@ -995,8 +1020,8 @@ func _show_detail_window(result: BattleTestResult):
 func show_card_list_window():
 	var card_list_window = Window.new()
 	card_list_window.title = "全カード一覧"
-	card_list_window.size = Vector2i(1000, 700)
-	card_list_window.min_size = Vector2i(800, 500)
+	card_list_window.size = Vector2i(1500, 1000)
+	card_list_window.min_size = Vector2i(1200, 800)
 	card_list_window.popup_window = true
 	
 	var vbox = VBoxContainer.new()
@@ -1013,9 +1038,11 @@ func show_card_list_window():
 	
 	var type_label = Label.new()
 	type_label.text = "タイプ: "
+	type_label.add_theme_font_size_override("font_size", 36)
 	filter_hbox.add_child(type_label)
-	
+
 	var type_option = OptionButton.new()
+	type_option.add_theme_font_size_override("font_size", 36)
 	type_option.add_item("全て", 0)
 	type_option.add_item("クリーチャー", 1)
 	type_option.add_item("アイテム", 2)
@@ -1024,9 +1051,11 @@ func show_card_list_window():
 	
 	var element_label = Label.new()
 	element_label.text = "  属性: "
+	element_label.add_theme_font_size_override("font_size", 36)
 	filter_hbox.add_child(element_label)
-	
+
 	var element_option = OptionButton.new()
+	element_option.add_theme_font_size_override("font_size", 36)
 	element_option.add_item("全て", 0)
 	element_option.add_item("火", 1)
 	element_option.add_item("水", 2)
@@ -1037,6 +1066,8 @@ func show_card_list_window():
 	
 	# テーブル
 	var table = Tree.new()
+	table.add_theme_font_size_override("font_size", 36)
+	table.add_theme_font_size_override("title_button_font_size", 36)
 	table.columns = 6
 	table.set_column_title(0, "ID")
 	table.set_column_title(1, "名前")
@@ -1047,17 +1078,17 @@ func show_card_list_window():
 	
 	# カラム幅を設定
 	table.set_column_expand(0, false)  # ID
-	table.set_column_custom_minimum_width(0, 50)
+	table.set_column_custom_minimum_width(0, 80)
 	table.set_column_expand(1, false)  # 名前
-	table.set_column_custom_minimum_width(1, 150)
+	table.set_column_custom_minimum_width(1, 220)
 	table.set_column_expand(2, false)  # タイプ
-	table.set_column_custom_minimum_width(2, 60)
+	table.set_column_custom_minimum_width(2, 90)
 	table.set_column_expand(3, false)  # AP
-	table.set_column_custom_minimum_width(3, 50)
+	table.set_column_custom_minimum_width(3, 70)
 	table.set_column_expand(4, false)  # HP
-	table.set_column_custom_minimum_width(4, 50)
+	table.set_column_custom_minimum_width(4, 70)
 	table.set_column_expand(5, true)   # スキル（残り全部）
-	table.set_column_custom_minimum_width(5, 300)
+	table.set_column_custom_minimum_width(5, 450)
 	
 	table.column_titles_visible = true
 	table.hide_root = true
@@ -1102,7 +1133,12 @@ func show_card_list_window():
 			_auto_fill_card_id(card_id)
 			card_list_window.queue_free()
 	)
-	
+
+	# ×ボタンで閉じる
+	card_list_window.close_requested.connect(func():
+		card_list_window.queue_free()
+	)
+
 	add_child(card_list_window)
 	card_list_window.popup_centered()
 
@@ -1285,19 +1321,16 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 		defender_data.get("name", "?")
 	])
 
-	# BattleScreenManagerが存在するか確認
-	if not _battle_screen_manager:
-		push_error("[ビジュアルモード] BattleScreenManager が初期化されていません")
-		return
-
-	# バトル画面を開く
-	await _battle_screen_manager.start_battle(attacker_data, defender_data)
+	# バトル画面を開く（BattleScreenManagerが有効な場合のみ）
+	if _battle_screen_manager and _battle_screen_manager.is_inside_tree():
+		await _battle_screen_manager.start_battle(attacker_data, defender_data)
 
 	# start_battle()内でイントロ完了済み（await不要）
 
 	# バトル実行（BattleSystemを使用）
 	var battle_system = BattleSystem.new()
-	battle_system._ready()
+	battle_system.name = "BattleSystem_Visual"
+	add_child(battle_system)
 
 	# 実際のBoardSystem3Dを使用（テスト環境用に最小限の初期化）
 	var mock_board = BoardSystem3D.new()
@@ -1334,10 +1367,12 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 	# BattleSystemにSpellMagic/SpellDrawを手動で設定
 	battle_system.spell_magic = spell_magic
 	battle_system.spell_draw = spell_draw
-	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic, mock_card)
+	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic, mock_card, _battle_screen_manager)
 	battle_system.battle_preparation.setup_systems(mock_board, mock_card, mock_player, spell_magic)
+	battle_system.battle_execution.setup_systems(mock_card, _battle_screen_manager)
+	battle_system.battle_skill_processor.setup_systems(mock_board, null, mock_card, _battle_screen_manager, battle_system.battle_preparation)
 
-	# BattleParticipant作成
+	# BattleParticipant作成（通常モードと同じフロー）
 	var attacker = BattleParticipant.new(
 		attacker_data,
 		attacker_data.get("hp", 0),
@@ -1346,8 +1381,12 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 		true,
 		0
 	)
-	attacker.current_hp = attacker_data.get("current_hp", attacker_data.get("hp", 0))
+	# current_hpを初期化（BattleParticipant._init()では設定されないため）
+	attacker.current_hp = attacker_data.get("hp", 0)
 	attacker.spell_magic_ref = spell_magic
+
+	# 効果配列を適用
+	battle_system.battle_preparation.apply_effect_arrays(attacker, attacker_data)
 
 	var defender = BattleParticipant.new(
 		defender_data,
@@ -1357,54 +1396,61 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 		false,
 		1
 	)
-	defender.current_hp = defender_data.get("current_hp", defender_data.get("hp", 0))
+	# current_hpを初期化（BattleParticipant._init()では設定されないため）
+	defender.current_hp = defender_data.get("hp", 0) + land_bonus
 	defender.spell_magic_ref = spell_magic
 
-	# ========== 新規追加: 刻印スペル適用 ==========
+	# 効果配列を適用
+	battle_system.battle_preparation.apply_effect_arrays(defender, defender_data)
+
+	# アイテム効果適用
+	if test_case.attacker_item_id > 0:
+		var att_item_data = CardLoader.get_card_by_id(test_case.attacker_item_id)
+		if att_item_data:
+			battle_system.battle_preparation.item_applier.apply_item_effects(attacker, att_item_data, defender)
+
+	if test_case.defender_item_id > 0:
+		var def_item_data = CardLoader.get_card_by_id(test_case.defender_item_id)
+		if def_item_data:
+			battle_system.battle_preparation.item_applier.apply_item_effects(defender, def_item_data, attacker)
+
+	# 刻印スペル適用
 	if config.attacker_curse_spell_id > 0:
 		_apply_curse_spell_visual(attacker, config.attacker_curse_spell_id)
 	if config.defender_curse_spell_id > 0:
 		_apply_curse_spell_visual(defender, config.defender_curse_spell_id)
 
-	# ダメージ計算（簡易版）
-	var attacker_damage = attacker.current_ap
-	var defender_damage = defender.current_ap
-
-	# 攻撃表示
-	await _battle_screen_manager.show_attack("attacker", attacker_damage)
-
-	# HP更新
-	defender.current_hp -= attacker_damage
-	var defender_hp_data = {
-		"current_hp": defender.current_hp,
-		"base_hp": defender.base_hp
+	# ダミータイル情報作成
+	var tile_info = {
+		"element": config.defender_battle_land,
+		"level": config.defender_battle_land_level,
+		"index": 0,
+		"owner": 1,
+		"creature": defender_data
 	}
-	await _battle_screen_manager.update_hp("defender", defender_hp_data)
 
-	# 防御側が生きていれば反撃
-	if defender.current_hp > 0:
-		await _battle_screen_manager.show_attack("defender", defender_damage)
-		attacker.current_hp -= defender_damage
-		var attacker_hp_data = {
-			"current_hp": attacker.current_hp,
-			"base_hp": attacker.base_hp
-		}
-		await _battle_screen_manager.update_hp("attacker", attacker_hp_data)
+	# スキル適用（通常モードと同じ）
+	var participants = {"attacker": attacker, "defender": defender}
+	await battle_system.battle_skill_processor.apply_pre_battle_skills(participants, tile_info, 0)
 
-	# 勝者判定
-	var result = BattleSystem.BattleResult.ATTACKER_WIN
-	if attacker.current_hp <= 0 and defender.current_hp <= 0:
-		result = BattleSystem.BattleResult.BOTH_DEFEATED
-	elif attacker.current_hp <= 0:
-		result = BattleSystem.BattleResult.DEFENDER_WIN
-	elif defender.current_hp > 0:
-		result = BattleSystem.BattleResult.ATTACKER_SURVIVED
+	# 攻撃順を決定
+	var attack_order = battle_system.battle_execution.determine_attack_order(attacker, defender)
 
-	# 結果表示
-	await _battle_screen_manager.show_battle_result(result)
+	# 攻撃シーケンス実行（BattleScreenManager連携でアニメーション表示）
+	await battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
 
-	# バトル画面を閉じる
-	await _battle_screen_manager.close_battle_screen()
+	# 結果判定（通常モードと同じ）
+	var result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
+
+	# 結果表示（BattleScreenManagerが有効な場合のみ）
+	if _battle_screen_manager and _battle_screen_manager.is_inside_tree():
+		await _battle_screen_manager.show_battle_result(result)
+		await _battle_screen_manager.close_battle_screen()
+
+	# BattleSystemクリーンアップ
+	if battle_system.is_inside_tree():
+		remove_child(battle_system)
+	battle_system.queue_free()
 
 	print("[ビジュアルモード] バトル%d完了" % battle_num)
 
@@ -1415,11 +1461,44 @@ func _apply_curse_spell_visual(participant: BattleParticipant, spell_id: int):
 		push_error("[BattleTestUI] 刻印スペルID ", spell_id, " が見つかりません")
 		return
 
-	if not participant.creature_data.has("curse"):
-		participant.creature_data["curse"] = []
+	# スペルデータのeffect_parsedからcurse用Dictionaryを構築
+	# メインゲームの spell_curse.curse_creature() と同じ形式にする
+	var effect_parsed = spell_data.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
 
-	participant.creature_data["curse"].append(spell_data.duplicate(true))
-	print("[ビジュアルモード] ", participant.creature_data.get("name", "?"), " に刻印スペル適用: ", spell_data.get("name", "?"))
+	# effect_type → curse_type の変換マップ（spell_curse.gdと同じ変換）
+	var _curse_type_map = {
+		"random_stat_curse": "random_stat",
+		"command_growth_curse": "command_growth",
+		"plague_curse": "plague",
+		"bounty_curse": "bounty",
+	}
+
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		# draw等の非刻印効果はスキップ
+		if effect_type in ["draw", "magic_gain", ""]:
+			continue
+		# effect_typeをcurse_typeに変換（マップにあれば変換、なければそのまま）
+		# creature_curse型の場合はcurse_typeが別途指定されている
+		var curse_type = effect.get("curse_type", _curse_type_map.get(effect_type, effect_type))
+		var curse_name = effect.get("name", spell_data.get("name", "不明"))
+		# effectの全パラメータをparamsに入れる
+		var params = effect.duplicate(true)
+		params["name"] = curse_name
+		# magic_barrierのEP移動パラメータ
+		if curse_type == "magic_barrier":
+			params["ep_transfer"] = effect.get("gold_transfer", 100)
+		participant.creature_data["curse"] = {
+			"curse_type": curse_type,
+			"name": curse_name,
+			"duration": effect.get("duration", -1),
+			"params": params
+		}
+		print("[ビジュアルモード] ", participant.creature_data.get("name", "?"), " に刻印付与: ", curse_name, " (", curse_type, ")")
+		return
+
+	push_warning("[BattleTestUI] スペルID ", spell_id, " に刻印効果が見つかりません")
 
 ## ユーザークリック待ち
 func _wait_for_user_click():

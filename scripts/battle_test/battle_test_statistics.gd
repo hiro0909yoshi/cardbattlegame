@@ -36,8 +36,9 @@ static func calculate(results: Array) -> BattleTestStatistics:
 		# 勝敗集計
 		if result.winner == "attacker":
 			stats.attacker_wins += 1
-		else:
+		elif result.winner == "defender":
 			stats.defender_wins += 1
+		# attacker_survived, both_defeated はどちらのwinsにも加算しない
 		
 		# 実行時間集計
 		stats.total_duration_ms += result.battle_duration_ms

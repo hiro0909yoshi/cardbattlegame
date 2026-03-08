@@ -2,16 +2,26 @@
 class_name BattleTestExecutor
 extends RefCounted
 
+## シーンツリーに追加するための親ノード（BattleSystemのawaitに必要）
+var scene_tree_parent: Node = null
+
 class MockCardSystem extends CardSystem:
 	func _init():
 		pass  # CardSystemの初期化をスキップ
 
 class MockPlayerSystem extends PlayerSystem:
 	func _init():
-		pass  # PlayerSystemの初期化をスキップ
+		# ダミープレイヤー2人を作成（蓄魔系スキルのsteal_magic用）
+		var p0 = PlayerData.new()
+		p0.id = 0
+		p0.name = "テスト攻撃側"
+		var p1 = PlayerData.new()
+		p1.id = 1
+		p1.name = "テスト防御側"
+		players = [p0, p1]
 
 ## バトル実行
-static func execute_all_battles(config: BattleTestConfig) -> Array:
+func execute_all_battles(config: BattleTestConfig) -> Array:
 	var results: Array = []
 	var battle_id = 0
 	
@@ -35,7 +45,7 @@ static func execute_all_battles(config: BattleTestConfig) -> Array:
 				for def_item_id in def_items:
 					battle_id += 1
 					
-					var result = _execute_single_battle(
+					var result = await _execute_single_battle(
 						battle_id,
 						att_creature_id, att_item_id, config.attacker_spell,
 						def_creature_id, def_item_id, config.defender_spell,
@@ -55,7 +65,7 @@ static func execute_all_battles(config: BattleTestConfig) -> Array:
 	return results
 
 ## 単一バトル実行
-static func _execute_single_battle(
+func _execute_single_battle(
 	battle_id: int,
 	att_creature_id: int, att_item_id: int, att_spell_id: int,
 	def_creature_id: int, def_item_id: int, def_spell_id: int,
@@ -72,13 +82,15 @@ static func _execute_single_battle(
 		push_error("カードデータ取得失敗")
 		return null
 	
-	# BattleSystemを先に作成
 	# BattleSystemを作成して初期化
 	var battle_system = BattleSystem.new()
 	battle_system.name = "BattleSystem_Test"
-	
-	# _ready()を手動で呼び出してサブシステムを初期化
-	battle_system._ready()
+
+	# シーンツリーに追加（awaitが正しく動作するために必須）
+	if scene_tree_parent:
+		scene_tree_parent.add_child(battle_system)
+	else:
+		battle_system._ready()
 	
 	# BattleParticipant作成
 	var attacker = BattleParticipant.new(
@@ -89,7 +101,9 @@ static func _execute_single_battle(
 		true,  # is_attacker
 		0  # player_id
 	)
-	
+	# current_hpを初期化（BattleParticipant._init()では設定されないため）
+	attacker.current_hp = att_card_data.hp
+
 	# 効果配列を適用（Phase 2追加）
 	battle_system.battle_preparation.apply_effect_arrays(attacker, att_card_data)
 	
@@ -108,7 +122,9 @@ static func _execute_single_battle(
 		false,  # is_attacker
 		1  # player_id
 	)
-	
+	# current_hpを初期化（BattleParticipant._init()では設定されないため）
+	defender.current_hp = def_card_data.hp + def_land_bonus
+
 	# 効果配列を適用（Phase 2追加）
 	battle_system.battle_preparation.apply_effect_arrays(defender, def_card_data)
 
@@ -195,10 +211,10 @@ static func _execute_single_battle(
 	
 	# スキル適用
 	var participants = {"attacker": attacker, "defender": defender}
-	battle_system.battle_skill_processor.apply_pre_battle_skills(participants, tile_info, 0)
+	await battle_system.battle_skill_processor.apply_pre_battle_skills(participants, tile_info, 0)
 	
 	# 攻撃シーケンス実行
-	battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
+	await battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
 	
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
@@ -217,7 +233,7 @@ static func _execute_single_battle(
 	test_result.attacker_base_ap = attacker.creature_data.get("ap", 0)
 	test_result.attacker_base_hp = attacker.creature_data.get("hp", 0)
 	test_result.attacker_final_ap = attacker.current_ap
-	test_result.attacker_final_hp = attacker.base_hp
+	test_result.attacker_final_hp = attacker.current_hp
 	test_result.attacker_granted_skills = attacker_granted_skills
 	test_result.attacker_skills_triggered = _get_triggered_skills(attacker)
 	test_result.attacker_effect_info = _get_effect_info(attacker)
@@ -232,7 +248,7 @@ static func _execute_single_battle(
 	test_result.defender_base_ap = defender.creature_data.get("ap", 0)
 	test_result.defender_base_hp = defender.creature_data.get("hp", 0)
 	test_result.defender_final_ap = defender.current_ap
-	test_result.defender_final_hp = defender.base_hp
+	test_result.defender_final_hp = defender.current_hp
 	test_result.defender_granted_skills = defender_granted_skills
 	test_result.defender_skills_triggered = _get_triggered_skills(defender)
 	test_result.defender_effect_info = _get_effect_info(defender)
@@ -245,7 +261,9 @@ static func _execute_single_battle(
 		BattleSystem.BattleResult.DEFENDER_WIN:
 			winner_str = "defender"
 		BattleSystem.BattleResult.ATTACKER_SURVIVED:
-			winner_str = "draw"
+			winner_str = "attacker_survived"
+		BattleSystem.BattleResult.BOTH_DEFEATED:
+			winner_str = "both_defeated"
 	
 	test_result.winner = winner_str
 	test_result.battle_duration_ms = Time.get_ticks_msec() - start_time
@@ -256,11 +274,16 @@ static func _execute_single_battle(
 	test_result.defender_owned_lands = config.defender_owned_lands.duplicate()
 	test_result.attacker_has_adjacent = config.attacker_has_adjacent
 	test_result.defender_has_adjacent = config.defender_has_adjacent
-	
+
+	# BattleSystemクリーンアップ
+	if battle_system.is_inside_tree():
+		battle_system.get_parent().remove_child(battle_system)
+	battle_system.queue_free()
+
 	return test_result
 
 ## アイテム名取得
-static func _get_item_name(item_id: int) -> String:
+func _get_item_name(item_id: int) -> String:
 	if item_id <= 0:
 		return "なし"
 	var item = CardLoader.get_item_by_id(item_id)
@@ -269,7 +292,7 @@ static func _get_item_name(item_id: int) -> String:
 	return item.name
 
 ## スペル名取得
-static func _get_spell_name(spell_id: int) -> String:
+func _get_spell_name(spell_id: int) -> String:
 	if spell_id <= 0:
 		return "なし"
 	var spell = CardLoader.get_spell_by_id(spell_id)
@@ -278,7 +301,7 @@ static func _get_spell_name(spell_id: int) -> String:
 	return spell.name
 
 ## アイテム効果適用とスキル付与記録
-static func _apply_item_effects_and_record(battle_system: BattleSystem, participant: BattleParticipant, item_id: int, enemy_participant: BattleParticipant) -> Array:
+func _apply_item_effects_and_record(battle_system: BattleSystem, participant: BattleParticipant, item_id: int, enemy_participant: BattleParticipant) -> Array:
 	var granted_skills = []
 	
 	# アイテムデータ取得
@@ -300,8 +323,8 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 		participant.creature_data["items"] = []
 	participant.creature_data["items"].append(item_data)
 	
-	# BattleSystemのアイテム効果適用を使用
-	battle_system.battle_preparation.apply_item_effects(participant, item_data, enemy_participant)
+	# BattleSystemのアイテム効果適用を使用（item_applier経由）
+	battle_system.battle_preparation.item_applier.apply_item_effects(participant, item_data, enemy_participant)
 	
 	# 付与後のスキル状態をチェック
 	if participant.has_item_first_strike and not had_first_strike_before:
@@ -320,7 +343,7 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 	return granted_skills
 
 ## 発動したスキルを取得
-static func _get_triggered_skills(participant: BattleParticipant) -> Array:
+func _get_triggered_skills(participant: BattleParticipant) -> Array:
 	var skills = []
 	
 	# クリーチャーの基本スキルをチェック
@@ -366,7 +389,7 @@ static func _get_triggered_skills(participant: BattleParticipant) -> Array:
 	return skills
 
 ## 効果情報を取得（Phase 2追加）
-static func _get_effect_info(participant: BattleParticipant) -> Dictionary:
+func _get_effect_info(participant: BattleParticipant) -> Dictionary:
 	var info = {
 		"base_up_hp": participant.base_up_hp,
 		"base_up_ap": participant.base_up_ap,
@@ -397,7 +420,7 @@ static func _get_effect_info(participant: BattleParticipant) -> Dictionary:
 ## ========== 新規追加: Phase 5用メソッド ==========
 
 ## 刻印スペルをBattleParticipantに適用
-static func _apply_curse_spell(participant: BattleParticipant, spell_id: int):
+func _apply_curse_spell(participant: BattleParticipant, spell_id: int):
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if not spell_data:
 		push_error("[BattleTestExecutor] 刻印スペルID ", spell_id, " が見つかりません")
@@ -405,16 +428,47 @@ static func _apply_curse_spell(participant: BattleParticipant, spell_id: int):
 
 	print("[BattleTestExecutor] 刻印スペル適用: ", spell_data.get("name", "?"), " (ID:", spell_id, ")")
 
-	# creature_dataのcurse配列に刻印を追加
-	if not participant.creature_data.has("curse"):
-		participant.creature_data["curse"] = []
+	# スペルデータのeffect_parsedからcurse用Dictionaryを構築
+	# メインゲームの spell_curse.curse_creature() と同じ形式にする
+	var effect_parsed = spell_data.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
 
-	participant.creature_data["curse"].append(spell_data.duplicate(true))
+	# effect_type → curse_type の変換マップ（spell_curse.gdと同じ変換）
+	var _curse_type_map = {
+		"random_stat_curse": "random_stat",
+		"command_growth_curse": "command_growth",
+		"plague_curse": "plague",
+		"bounty_curse": "bounty",
+	}
 
-	print("  → ", participant.creature_data.get("name", "?"), " に刻印付与完了")
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		# draw等の非刻印効果はスキップ
+		if effect_type in ["draw", "magic_gain", ""]:
+			continue
+		# effect_typeをcurse_typeに変換（マップにあれば変換、なければそのまま）
+		# creature_curse型の場合はcurse_typeが別途指定されている
+		var curse_type = effect.get("curse_type", _curse_type_map.get(effect_type, effect_type))
+		var curse_name = effect.get("name", spell_data.get("name", "不明"))
+		# effectの全パラメータをparamsに入れる
+		var params = effect.duplicate(true)
+		params["name"] = curse_name
+		# magic_barrierのEP移動パラメータ
+		if curse_type == "magic_barrier":
+			params["ep_transfer"] = effect.get("gold_transfer", 100)
+		participant.creature_data["curse"] = {
+			"curse_type": curse_type,
+			"name": curse_name,
+			"duration": effect.get("duration", -1),
+			"params": params
+		}
+		print("  → ", participant.creature_data.get("name", "?"), " に刻印付与完了: ", curse_name, " (", curse_type, ")")
+		return
+
+	push_warning("[BattleTestExecutor] スペルID ", spell_id, " に刻印効果が見つかりません")
 
 ## バフ適用
-static func _apply_buff_config(participant: BattleParticipant, buff_config: Dictionary):
+func _apply_buff_config(participant: BattleParticipant, buff_config: Dictionary):
 	if buff_config.is_empty():
 		return
 
@@ -445,7 +499,7 @@ static func _apply_buff_config(participant: BattleParticipant, buff_config: Dict
 
 ## テスト用：TileDataManagerに土地データを設定
 ## lands = {"fire": 3, "water": 2, ...} の形式
-static func _setup_mock_lands_for_battle(tile_data_mgr: TileDataManager, player_id: int, lands: Dictionary):
+func _setup_mock_lands_for_battle(tile_data_mgr: TileDataManager, player_id: int, lands: Dictionary):
 	# TileDataManagerはtile_nodesがないとget_owner_element_counts()で失敗するため
 	# ダミーのタイルオブジェクトを作成して登録する必要はなく、
 	# tile_nodesが空でもget_owner_element_counts()は安全に実行される

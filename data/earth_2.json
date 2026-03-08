@@ -651,7 +651,7 @@
 			"ap": 60,
 			"hp": 60,
 			"ability": "先制・属性変化・再生",
-			"ability_detail": "先制；属性変化[🌱]；再生",
+			"ability_detail": "先制；属性変化[地]；再生",
 			"ability_parsed": {
 				"keywords": [
 					"先制",
