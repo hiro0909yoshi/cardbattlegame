@@ -126,135 +126,55 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 			
 			return
 
-## ウォーロックディスク: 敵の全能力を無効化
+## 参加者1人分の全スキル・能力を無条件でクリア
 ##
-## アイテム「ウォーロックディスク」(ID: 1004) の効果
-## 装備者の敵のすべてのスキル・能力を無効化し、基礎ステータスのみで戦闘させる
+## 沈黙発動時に呼ばれる。検出は呼び出し側（battle_skill_processor）で行い、
+## この関数はチェックなしで無条件にクリアする。
 ##
-## @param self_participant 装備者（攻撃側 or 防御側）
-## @param enemy_participant 敵（無効化対象）
-static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_participant: BattleParticipant) -> void:
-	print("[DEBUG沈黙] apply_nullify_enemy_abilities 呼び出し:")
-	print("  self=", self_participant.creature_data.get("name", "?"), " enemy=", enemy_participant.creature_data.get("name", "?"))
-	print("  enemy curse=", enemy_participant.creature_data.get("curse", {}))
-	print("  enemy ability_parsed=", enemy_participant.creature_data.get("ability_parsed", {}))
+## @param participant クリア対象の参加者
+static func clear_all_abilities(participant: BattleParticipant) -> void:
+	var name = participant.creature_data.get("name", "?")
 
-	var has_nullify_ability = false
-	var nullify_source = ""
-
-	# 1. クリーチャー自身のability_parsedをチェック（シーボンズなど）
-	var self_ability_parsed = self_participant.creature_data.get("ability_parsed", {})
-	var self_effects = self_ability_parsed.get("effects", [])
-	for effect in self_effects:
-		if effect.get("effect_type") == "nullify_all_enemy_abilities":
-			has_nullify_ability = true
-			nullify_source = "creature"
-			break
-
-	# 2. アイテム（ウォーロックディスク）をチェック
-	if not has_nullify_ability:
-		var items = self_participant.creature_data.get("items", [])
-		for item in items:
-			var effect_parsed = item.get("effect_parsed", {})
-			var effects = effect_parsed.get("effects", [])
-			for effect in effects:
-				if effect.get("effect_type") == "nullify_all_enemy_abilities":
-					has_nullify_ability = true
-					nullify_source = "item"
-					break
-			if has_nullify_ability:
-				break
-
-	# 3. 敵に skill_nullify 刻印がついているかチェック
-	var enemy_curse = enemy_participant.creature_data.get("curse", {})
-	var enemy_has_skill_nullify = enemy_curse.get("curse_type") == "skill_nullify"
-
-	print("  → has_nullify_ability=", has_nullify_ability, " enemy_has_skill_nullify=", enemy_has_skill_nullify)
-
-	# どちらも該当しなければ何もしない
-	if not has_nullify_ability and not enemy_has_skill_nullify:
-		print("  → 該当なし、スキップ")
-		return
-	
-	# ログ出力（発動元を区別）
-	if has_nullify_ability:
-		if nullify_source == "creature":
-			print("【戦闘中能力無効発動】", self_participant.creature_data.get("name", "?"), 
-			  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
-		else:
-			print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
-			  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
-	elif enemy_has_skill_nullify:
-		var curse_name = enemy_curse.get("name", "錯乱")
-		print("【刻印発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
-	
-	# 敵のクリーチャー固有スキルを無効化
-	var old_ability_parsed = enemy_participant.creature_data.get("ability_parsed", {})
+	# クリーチャー固有スキルを無効化
+	var old_ability_parsed = participant.creature_data.get("ability_parsed", {})
 	if not old_ability_parsed.is_empty():
-		# ログ出力
 		var old_keywords = old_ability_parsed.get("keywords", [])
 		if old_keywords.size() > 0:
-			print("  無効化されたスキル: ", old_keywords)
+			print("  [沈黙] ", name, " 無効化されたスキル: ", old_keywords)
 		var old_effects = old_ability_parsed.get("effects", [])
 		if old_effects.size() > 0:
 			var effect_types: Array[String] = []
 			for eff in old_effects:
 				effect_types.append(eff.get("effect_type", "?"))
-			print("  無効化されたクリーチャー効果: ", effect_types)
+			print("  [沈黙] ", name, " 無効化されたクリーチャー効果: ", effect_types)
 
-		# ability_parsed全体を空で置き換え（参照問題を回避）
-		enemy_participant.creature_data["ability_parsed"] = {
-			"keywords": [],
-			"effects": [],
-			"keyword_conditions": {}
-		}
+	# ability_parsed全体を空で置き換え
+	participant.creature_data["ability_parsed"] = {
+		"keywords": [],
+		"effects": [],
+		"keyword_conditions": {}
+	}
 
-	# ability / ability_detail のテキストもクリア（テキスト参照のスキルチェック対策）
-	enemy_participant.creature_data["ability"] = ""
-	enemy_participant.creature_data["ability_detail"] = ""
+	# ability / ability_detail のテキストもクリア
+	participant.creature_data["ability"] = ""
+	participant.creature_data["ability_detail"] = ""
 
-	print("[DEBUG沈黙] クリア後確認:")
-	print("  ability_parsed=", enemy_participant.creature_data.get("ability_parsed", {}))
-	print("  ability=", enemy_participant.creature_data.get("ability", ""))
-	print("  ability_detail=", enemy_participant.creature_data.get("ability_detail", ""))
-	
-	# 敵のアイテムで付与されたスキルを無効化
-	var enemy_items = enemy_participant.creature_data.get("items", [])
-	for enemy_item in enemy_items:
-		if enemy_item.has("effect_parsed"):
-			var effect_parsed = enemy_item.get("effect_parsed", {})
-			
-			# keywordsを空にする
-			if effect_parsed.has("keywords"):
-				var keywords = effect_parsed.get("keywords", [])
-				if keywords.size() > 0:
-					print("  無効化されたアイテムキーワード: ", keywords)
-					effect_parsed["keywords"] = []
-			
-			# effectsを空にする（反射、無効化などの特殊効果）
-			if effect_parsed.has("effects"):
-				var effects = effect_parsed.get("effects", [])
-				if effects.size() > 0:
-					var effect_types = []
-					for eff in effects:
-						effect_types.append(eff.get("effect_type", "?"))
-					print("  無効化されたアイテム効果: ", effect_types)
-					effect_parsed["effects"] = []
-			
-			# grant_skillsを削除
-			if effect_parsed.has("grant_skills"):
-				var grant_skills = effect_parsed.get("grant_skills", [])
-				if grant_skills.size() > 0:
-					print("  無効化されたアイテムスキル: ", grant_skills)
-					effect_parsed.erase("grant_skills")
-	
-	# 敵のスキルフラグを全て無効化
-	enemy_participant.has_first_strike = false
-	enemy_participant.has_last_strike = false
-	enemy_participant.has_item_first_strike = false
-	enemy_participant.attack_count = 1  # 通常攻撃に戻す（2回攻撃無効化）
-	
-	print("  → 敵は基礎ステータスのみで戦闘")
+	# アイテムのスキル効果を無効化（stat_bonusのみ残す）
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		if item.has("effect_parsed"):
+			var effect_parsed = item.get("effect_parsed", {})
+			var stat_bonus = effect_parsed.get("stat_bonus", {})
+			# effect_parsed丸ごと差し替え（stat_bonusのみ残す）
+			item["effect_parsed"] = {"stat_bonus": stat_bonus}
+
+	# スキルフラグを全て無効化
+	participant.has_first_strike = false
+	participant.has_last_strike = false
+	participant.has_item_first_strike = false
+	participant.attack_count = 1
+
+	print("  [沈黙] ", name, " → 基礎ステータスのみで戦闘")
 
 
 # =============================================================================

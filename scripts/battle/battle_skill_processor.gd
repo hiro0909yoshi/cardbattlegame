@@ -64,42 +64,36 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	# ============================================================
 	# 【Phase 0-N】沈黙チェック（刻印適用後）
 	# ============================================================
-	var _dbg_wd_a = _has_warlock_disk(attacker)
-	var _dbg_wd_d = _has_warlock_disk(defender)
-	var _dbg_sn_a = _has_skill_nullify_curse(attacker)
-	var _dbg_sn_d = _has_skill_nullify_curse(defender)
-	var _dbg_nc_a = _has_nullify_creature_ability(attacker)
-	var _dbg_nc_d = _has_nullify_creature_ability(defender)
-	print("[DEBUG Phase0-N] warlock_disk: att=", _dbg_wd_a, " def=", _dbg_wd_d)
-	print("[DEBUG Phase0-N] skill_nullify_curse: att=", _dbg_sn_a, " def=", _dbg_sn_d)
-	print("[DEBUG Phase0-N] nullify_creature_ability: att=", _dbg_nc_a, " def=", _dbg_nc_d)
-	print("[DEBUG Phase0-N] attacker curse=", attacker.creature_data.get("curse", {}))
-	print("[DEBUG Phase0-N] defender curse=", defender.creature_data.get("curse", {}))
-	var has_nullify = _dbg_wd_a or _dbg_wd_d \
-		or _dbg_sn_a or _dbg_sn_d \
-		or _dbg_nc_a or _dbg_nc_d
+	# 検出（クリア前に結果を保存）
+	var nullify_warlock_att = _has_warlock_disk(attacker)
+	var nullify_warlock_def = _has_warlock_disk(defender)
+	var nullify_curse_att = _has_skill_nullify_curse(attacker)
+	var nullify_curse_def = _has_skill_nullify_curse(defender)
+	var nullify_creature_att = _has_nullify_creature_ability(attacker)
+	var nullify_creature_def = _has_nullify_creature_ability(defender)
+	var has_nullify = nullify_warlock_att or nullify_warlock_def \
+		or nullify_curse_att or nullify_curse_def \
+		or nullify_creature_att or nullify_creature_def
 
 	if has_nullify:
 		if not silent:
 			print("【沈黙発動】以降のスキル・変身・鼓舞をスキップして基礎ステータスでバトル")
-		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
-		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
-		
-		# 🎬 沈黙スキル表示（どちらが持っているか判定）
-		# ウォーロックディスクの場合は「アイテム名 を使用」、それ以外は「戦闘中能力無効」
+		# 検出と実行を分離: 検出は上で完了、ここでは無条件で両方クリア
+		SkillSpecialCreatureScript.clear_all_abilities(attacker)
+		SkillSpecialCreatureScript.clear_all_abilities(defender)
+
+		# 🎬 沈黙スキル表示（クリア前の検出結果を使用）
 		if battle_screen_manager:
-			if _has_warlock_disk(attacker):
-				var attacker_item_name = _get_warlock_disk_name(attacker)
-				await battle_screen_manager.show_skill_activation("attacker", "%s を使用" % attacker_item_name, {})
-			elif _has_warlock_disk(defender):
-				var defender_item_name = _get_warlock_disk_name(defender)
-				await battle_screen_manager.show_skill_activation("defender", "%s を使用" % defender_item_name, {})
+			if nullify_warlock_att:
+				await battle_screen_manager.show_skill_activation("attacker", "ウォーロックディスク を使用", {})
+			elif nullify_warlock_def:
+				await battle_screen_manager.show_skill_activation("defender", "ウォーロックディスク を使用", {})
 			else:
 				# クリーチャー能力 or skill_nullify刻印 → 「戦闘中能力無効」
 				var skill_name = SkillDisplayConfig.get_skill_name("nullify_abilities")
-				if _has_skill_nullify_curse(attacker) or _has_nullify_creature_ability(attacker):
+				if nullify_curse_att or nullify_creature_att:
 					await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
-				elif _has_skill_nullify_curse(defender) or _has_nullify_creature_ability(defender):
+				elif nullify_curse_def or nullify_creature_def:
 					await battle_screen_manager.show_skill_activation("defender", skill_name, {})
 		
 		# 沈黙でもアイテムステータスは適用
@@ -1083,8 +1077,8 @@ func apply_skills_for_simulation(participants: Dictionary, tile_info: Dictionary
 
 	if has_nullify:
 		var SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
-		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
-		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
+		SkillSpecialCreatureScript.clear_all_abilities(attacker)
+		SkillSpecialCreatureScript.clear_all_abilities(defender)
 		if not silent:
 			print("[シミュレーション] 沈黙発動 → スキル適用スキップ")
 		return
