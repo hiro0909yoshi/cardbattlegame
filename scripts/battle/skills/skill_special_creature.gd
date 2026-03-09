@@ -134,9 +134,14 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 ## @param self_participant 装備者（攻撃側 or 防御側）
 ## @param enemy_participant 敵（無効化対象）
 static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_participant: BattleParticipant) -> void:
+	print("[DEBUG沈黙] apply_nullify_enemy_abilities 呼び出し:")
+	print("  self=", self_participant.creature_data.get("name", "?"), " enemy=", enemy_participant.creature_data.get("name", "?"))
+	print("  enemy curse=", enemy_participant.creature_data.get("curse", {}))
+	print("  enemy ability_parsed=", enemy_participant.creature_data.get("ability_parsed", {}))
+
 	var has_nullify_ability = false
 	var nullify_source = ""
-	
+
 	# 1. クリーチャー自身のability_parsedをチェック（シーボンズなど）
 	var self_ability_parsed = self_participant.creature_data.get("ability_parsed", {})
 	var self_effects = self_ability_parsed.get("effects", [])
@@ -145,7 +150,7 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 			has_nullify_ability = true
 			nullify_source = "creature"
 			break
-	
+
 	# 2. アイテム（ウォーロックディスク）をチェック
 	if not has_nullify_ability:
 		var items = self_participant.creature_data.get("items", [])
@@ -159,13 +164,16 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 					break
 			if has_nullify_ability:
 				break
-	
+
 	# 3. 敵に skill_nullify 刻印がついているかチェック
 	var enemy_curse = enemy_participant.creature_data.get("curse", {})
 	var enemy_has_skill_nullify = enemy_curse.get("curse_type") == "skill_nullify"
-	
+
+	print("  → has_nullify_ability=", has_nullify_ability, " enemy_has_skill_nullify=", enemy_has_skill_nullify)
+
 	# どちらも該当しなければ何もしない
 	if not has_nullify_ability and not enemy_has_skill_nullify:
+		print("  → 該当なし、スキップ")
 		return
 	
 	# ログ出力（発動元を区別）
@@ -181,25 +189,34 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 		print("【刻印発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	
 	# 敵のクリーチャー固有スキルを無効化
-	if enemy_participant.creature_data.has("ability_parsed"):
-		var ability_parsed = enemy_participant.creature_data.get("ability_parsed", {})
-		
-		# keywordsを空にする
-		if ability_parsed.has("keywords"):
-			var keywords = ability_parsed.get("keywords", [])
-			if keywords.size() > 0:
-				print("  無効化されたスキル: ", keywords)
-				ability_parsed["keywords"] = []
-		
-		# effectsを空にする（特殊効果）
-		if ability_parsed.has("effects"):
-			var effects = ability_parsed.get("effects", [])
-			if effects.size() > 0:
-				var effect_types = []
-				for eff in effects:
-					effect_types.append(eff.get("effect_type", "?"))
-				print("  無効化されたクリーチャー効果: ", effect_types)
-				ability_parsed["effects"] = []
+	var old_ability_parsed = enemy_participant.creature_data.get("ability_parsed", {})
+	if not old_ability_parsed.is_empty():
+		# ログ出力
+		var old_keywords = old_ability_parsed.get("keywords", [])
+		if old_keywords.size() > 0:
+			print("  無効化されたスキル: ", old_keywords)
+		var old_effects = old_ability_parsed.get("effects", [])
+		if old_effects.size() > 0:
+			var effect_types: Array[String] = []
+			for eff in old_effects:
+				effect_types.append(eff.get("effect_type", "?"))
+			print("  無効化されたクリーチャー効果: ", effect_types)
+
+		# ability_parsed全体を空で置き換え（参照問題を回避）
+		enemy_participant.creature_data["ability_parsed"] = {
+			"keywords": [],
+			"effects": [],
+			"keyword_conditions": {}
+		}
+
+	# ability / ability_detail のテキストもクリア（テキスト参照のスキルチェック対策）
+	enemy_participant.creature_data["ability"] = ""
+	enemy_participant.creature_data["ability_detail"] = ""
+
+	print("[DEBUG沈黙] クリア後確認:")
+	print("  ability_parsed=", enemy_participant.creature_data.get("ability_parsed", {}))
+	print("  ability=", enemy_participant.creature_data.get("ability", ""))
+	print("  ability_detail=", enemy_participant.creature_data.get("ability_detail", ""))
 	
 	# 敵のアイテムで付与されたスキルを無効化
 	var enemy_items = enemy_participant.creature_data.get("items", [])

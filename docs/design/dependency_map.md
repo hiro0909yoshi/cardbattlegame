@@ -74,25 +74,25 @@ GameFlowManager
 │   └⚡ phase_changed
 │
 └── 子システム（自身が作成・保持）
-    ├── SpellPhaseHandler
-    │   ├── SpellFlowHandler
-    │   ├── SpellStateHandler
-    │   ├── SpellTargetSelectionHandler
-    │   ├── MysticArtsHandler
-    │   ├── SpellEffectExecutor
-    │   ├── SpellUIManager
-    │   └── CPUSpellPhaseHandler
-    ├── ItemPhaseHandler
-    ├── DominioCommandHandler
-    ├── DicePhaseHandler
-    ├── TollPaymentHandler
-    ├── DiscardHandler
-    ├── BankruptcyHandler
-    ├── LapSystem
-    ├── BattleScreenManager
-    ├── TargetSelectionHelper
-    ├── GameFlowStateMachine
-    └── SpecialTileSystem（2つ目の参照）
+	├── SpellPhaseHandler
+	│   ├── SpellFlowHandler
+	│   ├── SpellStateHandler
+	│   ├── SpellTargetSelectionHandler
+	│   ├── MysticArtsHandler
+	│   ├── SpellEffectExecutor
+	│   ├── SpellUIManager
+	│   └── CPUSpellPhaseHandler
+	├── ItemPhaseHandler
+	├── DominioCommandHandler
+	├── DicePhaseHandler
+	├── TollPaymentHandler
+	├── DiscardHandler
+	├── BankruptcyHandler
+	├── LapSystem
+	├── BattleScreenManager
+	├── TargetSelectionHelper
+	├── GameFlowStateMachine
+	└── SpecialTileSystem（2つ目の参照）
 ```
 
 ### 改善内容（Phase 10-D）
@@ -135,14 +135,14 @@ BoardSystem3D
 │   └⚡ movement_started
 │
 └── 子システム（自身が作成・保持）
-    ├── CreatureManager
-    ├── TileDataManager
-    ├── TileNeighborSystem
-    ├── TileInfoDisplay
-    ├── MovementController3D
-    ├── TileActionProcessor
-    ├── CPUTurnProcessor
-    └── CPUAIHandler
+	├── CreatureManager
+	├── TileDataManager
+	├── TileNeighborSystem
+	├── TileInfoDisplay
+	├── MovementController3D
+	├── TileActionProcessor
+	├── CPUTurnProcessor
+	└── CPUAIHandler
 ```
 
 ### 改善内容（Phase 7）
@@ -181,13 +181,13 @@ UIManager
 │   └── Phase 6-8で実装（UI層分離のための UI Signal駆動化）
 │
 └── UIコンポーネント（15+個）
-    ├── CardSelectionUI
-    ├── HandDisplay
-    ├── PhaseDisplay
-    ├── CreatureInfoPanel
-    ├── PlayerInfoPanel
-    ├── (その他)
-    └── ...
+	├── CardSelectionUI
+	├── HandDisplay
+	├── PhaseDisplay
+	├── CreatureInfoPanel
+	├── PlayerInfoPanel
+	├── (その他)
+	└── ...
 ```
 
 ### 改善内容（Phase 6～10-C）
@@ -223,13 +223,13 @@ SpellPhaseHandler
 │   └── (その他11個)
 │
 └── サブハンドラー（自身が作成・保持）
-    ├── SpellFlowHandler
-    ├── SpellStateHandler
-    ├── SpellTargetSelectionHandler
-    ├── MysticArtsHandler
-    ├── SpellEffectExecutor
-    ├── SpellUIManager
-    └── CPUSpellPhaseHandler
+	├── SpellFlowHandler
+	├── SpellStateHandler
+	├── SpellTargetSelectionHandler
+	├── MysticArtsHandler
+	├── SpellEffectExecutor
+	├── SpellUIManager
+	└── CPUSpellPhaseHandler
 ```
 
 ### 改善内容（Phase 6-A）
@@ -342,7 +342,7 @@ GameSystemManager（初期化の総合調整役）
 │       └── PlayerInfoService
 │
 └── Visual Effects
-    └── BattleScreenManager
+	└── BattleScreenManager
 ```
 
 ### 参照方向の確認

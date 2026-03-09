@@ -109,7 +109,7 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 ## @return Dictionary {target_died: bool, activated_skills: Array}
 static func _process_effects(self_participant, enemy_participant, context: Dictionary) -> Dictionary:
 	var result = {"target_died": false, "activated_skills": []}
-	
+
 	# クリーチャーのeffectsを取得
 	var ability_parsed = self_participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", []).duplicate()

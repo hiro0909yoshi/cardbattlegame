@@ -354,7 +354,20 @@ func reset() -> void:
 	# ツイーンをキャンセル（Godot 4 では自動クリーンアップされるため不要）
 	# Note: ツイーンは対象ノードに紐づいているため、明示的なキャンセルは不要
 
+	# クリーチャー表示の視覚状態をリセット（敗北アニメーション後の状態が残るため）
+	_reset_creature_display(_attacker_display)
+	_reset_creature_display(_defender_display)
+
 	# エフェクトレイヤーをクリア
 	if _effect_layer:
 		for child in _effect_layer.get_children():
 			child.queue_free()
+
+
+## クリーチャー表示の視覚状態をリセット
+func _reset_creature_display(display: BattleCreatureDisplay) -> void:
+	if not display:
+		return
+	display.modulate.a = 1.0
+	display.rotation = 0.0
+	display.position = display.original_position

@@ -103,20 +103,6 @@ text = "プリセット"
 
 [node name="CreaturePresetOption" type="OptionButton" parent="MainSplitContainer/MainContainer/AttackerContainer"]
 layout_mode = 2
-item_count = 7
-popup/item_0/text = "火"
-popup/item_0/id = 0
-popup/item_1/text = "水"
-popup/item_1/id = 1
-popup/item_2/text = "風"
-popup/item_2/id = 2
-popup/item_3/text = "地"
-popup/item_3/id = 3
-popup/item_4/text = "先制攻撃"
-popup/item_4/id = 4
-popup/item_5/text = "強打持ち"
-popup/item_5/id = 5
-popup/item_6/text = "無効化持ち"
 popup/item_6/id = 6
 
 [node name="AttackerCreaturePresetAddButton" type="Button" parent="MainSplitContainer/MainContainer/AttackerContainer"]
@@ -250,21 +236,6 @@ text = "プリセット"
 
 [node name="CreaturePresetOption" type="OptionButton" parent="MainSplitContainer/MainContainer/DefenderContainer"]
 layout_mode = 2
-item_count = 7
-popup/item_0/text = "火"
-popup/item_0/id = 0
-popup/item_1/text = "水"
-popup/item_1/id = 1
-popup/item_2/text = "風"
-popup/item_2/id = 2
-popup/item_3/text = "地"
-popup/item_3/id = 3
-popup/item_4/text = "先制攻撃"
-popup/item_4/id = 4
-popup/item_5/text = "強打持ち"
-popup/item_5/id = 5
-popup/item_6/text = "無効化持ち"
-popup/item_6/id = 6
 
 [node name="DefenderCreaturePresetAddButton" type="Button" parent="MainSplitContainer/MainContainer/DefenderContainer"]
 layout_mode = 2

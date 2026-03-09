@@ -323,10 +323,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						var instant_death_activated = special_effects.check_instant_death(attacker_p, defender_p)
 						if instant_death_activated and battle_screen_manager:
 							var skill_name = SkillDisplayConfig.get_skill_name("instant_death")
-							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+							var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+							await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
 							# 🎬 即死でHPが0になった側のHPバーを更新
 							await _update_hp_bar_after_damage(defender_p)
-					
+	
 					# 防御側撃破チェック（即死後）
 					if not defender_p.is_alive():
 						print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
@@ -486,7 +487,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				# 🎬 反射スキル表示
 				if battle_screen_manager:
 					var skill_name = SkillDisplayConfig.get_skill_name("reflect_damage")
-					await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+					var defender_side = "attacker" if defender_p.is_attacker else "defender"
+					await battle_screen_manager.show_skill_activation(defender_side, skill_name, {})
 				print("
   【反射ダメージ適用】")
 				attacker_p.take_damage(reflect_result["reflect_damage"])
@@ -505,7 +507,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				var instant_death_activated = special_effects.check_instant_death(attacker_p, defender_p)
 				if instant_death_activated and battle_screen_manager:
 					var skill_name = SkillDisplayConfig.get_skill_name("instant_death")
-					await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+					var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+					await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
 					# 🎬 即死でHPが0になった側のHPバーを更新
 					await _update_hp_bar_after_damage(defender_p)
 			
@@ -533,10 +536,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						# 🎬 変身スキル表示（攻撃側が変身）
 						if battle_screen_manager:
 							var skill_name = SkillDisplayConfig.get_skill_name("transform")
-							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+							var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+							await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
 							# 🎬 カード表示を更新
 							var display_data = _create_display_data(attacker_p)
-							await battle_screen_manager.update_creature("attacker", display_data)
+							await battle_screen_manager.update_creature(attacker_side, display_data)
 					if transform_result.get("defender_transformed", false):
 						battle_result["defender_transformed"] = true
 						# 変質（revert_after_battle: false）の場合、以前のoriginal_dataをクリア
@@ -546,10 +550,12 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						# 🎬 変身スキル表示（防御側が変身させられた）
 						if battle_screen_manager:
 							var skill_name = SkillDisplayConfig.get_skill_name("transform")
-							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+							var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+							await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
 							# 🎬 カード表示を更新
+							var defender_side = "attacker" if defender_p.is_attacker else "defender"
 							var display_data = _create_display_data(defender_p)
-							await battle_screen_manager.update_creature("defender", display_data)
+							await battle_screen_manager.update_creature(defender_side, display_data)
 					
 					# 🔄 ツインスパイク：侵略側が変身した場合、スキル再計算
 					if transform_result.get("needs_attacker_skill_recalc", false):
@@ -571,8 +577,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						await skill_processor.recalculate_skills_after_transform(defender_p, recalc_context)
 						# 🎬 カード表示を再更新（スキル適用後）
 						if battle_screen_manager:
+							var recalc_side = "attacker" if defender_p.is_attacker else "defender"
 							var display_data = _create_display_data(defender_p)
-							await battle_screen_manager.update_creature("defender", display_data)
+							await battle_screen_manager.update_creature(recalc_side, display_data)
 			
 			# 🔒 攻撃成功時効果（刻印付与、ダウン付与、APドレイン等）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
@@ -692,19 +699,19 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		var turn_count = 1  # TODO: 実際の周回数を取得する必要がある
 		
 		# 攻撃側のスキルチェック（生存している場合）
-		if attacker_p.is_alive():
-			var attacker_has_item = attacker_p.creature_data.get("items", []).size() > 0
-			var stolen = SkillMagicSteal.apply_no_item_steal(attacker_p, attacker_has_item, turn_count, spell_magic_ref, defender_p)
+		if original_attacker.is_alive():
+			var attacker_has_item = original_attacker.creature_data.get("items", []).size() > 0
+			var stolen = SkillMagicSteal.apply_no_item_steal(original_attacker, attacker_has_item, turn_count, spell_magic_ref, original_defender)
 			if stolen > 0 and battle_screen_manager:
-				var side = "attacker" if attacker_p.is_attacker else "defender"
+				var side = "attacker" if original_attacker.is_attacker else "defender"
 				await battle_screen_manager.show_skill_activation(side, "%d吸魔" % stolen, {})
-		
+
 		# 防御側のスキルチェック（生存している場合）
-		if defender_p.is_alive():
-			var defender_has_item = defender_p.creature_data.get("items", []).size() > 0
-			var stolen = SkillMagicSteal.apply_no_item_steal(defender_p, defender_has_item, turn_count, spell_magic_ref, attacker_p)
+		if original_defender.is_alive():
+			var defender_has_item = original_defender.creature_data.get("items", []).size() > 0
+			var stolen = SkillMagicSteal.apply_no_item_steal(original_defender, defender_has_item, turn_count, spell_magic_ref, original_attacker)
 			if stolen > 0 and battle_screen_manager:
-				var side = "attacker" if defender_p.is_attacker else "defender"
+				var side = "attacker" if original_defender.is_attacker else "defender"
 				await battle_screen_manager.show_skill_activation(side, "%d吸魔" % stolen, {})
 	
 	# 🃏 生き残り時効果（カード獲得スキル）
@@ -771,10 +778,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			battle_result["spawn_tile_index"] = spawn_tile
 	
 	# 💀 崩壊刻印チェック（生き残った側に刻印があれば破壊）
-	await _check_destroy_after_battle(attacker_p, defender_p)
-	
+	# original_attacker/defenderを使用（ループ変数は攻撃順で入れ替わるため）
+	await _check_destroy_after_battle(original_attacker, original_defender)
+
 	# 🔮 崩壊付与スキル（オトヒメ等：両者生存時に敵へ刻印付与）
-	_check_apply_destroy_after_battle_skill(attacker_p, defender_p)
+	_check_apply_destroy_after_battle_skill(original_attacker, original_defender)
 	
 	return battle_result
 
@@ -841,23 +849,21 @@ func _check_destroy_after_battle(attacker: BattleParticipant, defender: BattlePa
 	# 攻撃側チェック
 	if attacker.is_alive() and SpellCurseBattle.has_destroy_after_battle(attacker.creature_data):
 		print("【崩壊】", attacker.creature_data.get("name", "?"), " は刻印により破壊される")
-		# スキル表示
 		if battle_screen_manager:
 			var skill_name = SkillDisplayConfig.get_skill_name("self_destruct")
-			await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+			var side = "attacker" if attacker.is_attacker else "defender"
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 		attacker.current_hp = 0
-		# 刻印を消費
 		attacker.creature_data.erase("curse")
-	
+
 	# 防御側チェック
 	if defender.is_alive() and SpellCurseBattle.has_destroy_after_battle(defender.creature_data):
 		print("【崩壊】", defender.creature_data.get("name", "?"), " は刻印により破壊される")
-		# スキル表示
 		if battle_screen_manager:
 			var skill_name = SkillDisplayConfig.get_skill_name("self_destruct")
-			await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+			var side = "attacker" if defender.is_attacker else "defender"
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 		defender.current_hp = 0
-		# 刻印を消費
 		defender.creature_data.erase("curse")
 
 
@@ -866,7 +872,7 @@ func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defend
 	# 両者生存時のみ
 	if not attacker.is_alive() or not defender.is_alive():
 		return
-	
+
 	# 攻撃側がスキルを持っているかチェック
 	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
 	if "崩壊" in attacker_keywords:
@@ -947,7 +953,7 @@ func _show_death_effects(death_effects: Dictionary, defeated: BattleParticipant)
 ## 攻撃成功時効果を適用（APドレイン、蓄魔等）
 func _apply_on_attack_success_effects(attacker: BattleParticipant, defender: BattleParticipant, spell_magic_ref = null) -> Dictionary:
 	var result = {"ap_drained": false, "magic_gained": 0}
-	
+
 	# クリーチャーeffectsを取得
 	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", []).duplicate()

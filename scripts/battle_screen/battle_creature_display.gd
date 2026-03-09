@@ -57,7 +57,11 @@ func _setup_ui() -> void:
 func setup(data: Dictionary, attacker: bool = true, show_hp_bar: bool = true) -> void:
 	creature_data = data
 	is_attacker = attacker
-	
+
+	# 視覚状態をリセット（ObjectPool再利用時に敗北アニメーション状態が残るため）
+	modulate.a = 1.0
+	rotation = 0.0
+
 	# 実際のカードをインスタンス化して表示
 	_create_card_instance(data)
 	

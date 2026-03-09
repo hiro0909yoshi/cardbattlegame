@@ -41,7 +41,7 @@ func set_player_system(p_system) -> void:
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
 	"""
 	無効化判定を行う
-	
+
 	Returns:
 		{
 			"is_nullified": bool,  # 無効化されたか
@@ -52,7 +52,7 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 	if _has_nullify_nullify(attacker):
 		print("【ムラサメ】攻撃無効化を無効化")
 		return {"is_nullified": false, "reduction_rate": 1.0}
-	
+
 	var ability_parsed = defender.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
@@ -485,7 +485,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	if _is_on_death_disabled():
 		print("【死亡時効果】ハングドマンズシールにより無効化")
 		return result
-	
+
 	# 撃破されたクリーチャーのアイテムをチェック
 	var items = defeated.creature_data.get("items", [])
 	
@@ -856,7 +856,7 @@ func check_on_survive_effects(survivor: BattleParticipant) -> Dictionary:
 	
 	if not spell_draw_ref:
 		return result
-	
+
 	# クリーチャーのskill_idsをチェック
 	var ability_parsed = survivor.creature_data.get("ability_parsed", {})
 	var skill_ids = ability_parsed.get("skill_ids", [])

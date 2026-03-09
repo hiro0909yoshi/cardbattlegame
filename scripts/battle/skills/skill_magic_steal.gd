@@ -45,11 +45,11 @@ static func apply_damage_based_steal(attacker, defender, damage: int, spell_magi
 	if not spell_magic:
 		print("[吸魔] spell_magic is null")
 		return 0
-	
+
 	if damage <= 0:
 		print("[吸魔] damage <= 0: ", damage)
 		return 0
-	
+
 	var has_skill = has_damage_based_steal(attacker.creature_data)
 	print("[吸魔] チェック: ", attacker.creature_data.get("name", "?"), " has_skill=", has_skill)
 	
@@ -82,11 +82,11 @@ static func apply_damage_based_steal(attacker, defender, damage: int, spell_magi
 static func apply_no_item_steal(participant, has_item: bool, turn_count: int, spell_magic, enemy_participant) -> int:
 	if not spell_magic:
 		return 0
-	
+
 	# アイテムを使用している場合は発動しない
 	if has_item:
 		return 0
-	
+
 	if has_no_item_steal(participant.creature_data):
 		var multiplier = _extract_turn_multiplier(participant.creature_data.get("ability_detail", ""), 30)
 		var amount = turn_count * multiplier

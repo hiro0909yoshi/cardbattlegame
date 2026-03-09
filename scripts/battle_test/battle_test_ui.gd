@@ -100,6 +100,9 @@ func _ready():
 
 ## UI初期化
 func _setup_ui():
+	# プリセットOptionButtonを動的に設定
+	_populate_preset_options()
+
 	# カード一覧ボタンを動的に追加
 	_add_card_list_button()
 
@@ -116,6 +119,15 @@ func _setup_ui():
 	if not detail_window.close_requested.is_connected(_on_detail_window_close_requested):
 		detail_window.close_requested.connect(_on_detail_window_close_requested)
 
+## プリセットOptionButtonにBattleTestPresetsから動的に項目を追加
+func _populate_preset_options():
+	var preset_names = BattleTestPresets.get_all_creature_preset_names()
+	for option_button in [attacker_creature_preset_option, defender_creature_preset_option]:
+		if not option_button:
+			continue
+		option_button.clear()
+		for i in range(preset_names.size()):
+			option_button.add_item(preset_names[i], i)
 
 ## ========== 新規追加: ビジュアルモード設定UI作成 ==========
 func _setup_visual_mode_ui():
@@ -162,10 +174,13 @@ func _setup_curse_ui():
 
 	var attacker_curse_label = Label.new()
 	attacker_curse_label.text = "攻撃側刻印スペル:"
+	attacker_curse_label.add_theme_font_size_override("font_size", 36)
 	attacker_curse_container.add_child(attacker_curse_label)
 
 	attacker_curse_option = OptionButton.new()
 	attacker_curse_option.name = "AttackerCurseOption"
+	attacker_curse_option.add_theme_font_size_override("font_size", 36)
+	attacker_curse_option.get_popup().add_theme_font_size_override("font_size", 36)
 	_populate_curse_options(attacker_curse_option)
 	attacker_curse_option.item_selected.connect(_on_attacker_curse_selected)
 	attacker_curse_container.add_child(attacker_curse_option)
@@ -184,10 +199,13 @@ func _setup_curse_ui():
 
 	var defender_curse_label = Label.new()
 	defender_curse_label.text = "防御側刻印スペル:"
+	defender_curse_label.add_theme_font_size_override("font_size", 36)
 	defender_curse_container.add_child(defender_curse_label)
 
 	defender_curse_option = OptionButton.new()
 	defender_curse_option.name = "DefenderCurseOption"
+	defender_curse_option.add_theme_font_size_override("font_size", 36)
+	defender_curse_option.get_popup().add_theme_font_size_override("font_size", 36)
 	_populate_curse_options(defender_curse_option)
 	defender_curse_option.item_selected.connect(_on_defender_curse_selected)
 	defender_curse_container.add_child(defender_curse_option)
@@ -200,24 +218,30 @@ func _setup_curse_ui():
 ## 刻印スペル選択肢を追加
 func _populate_curse_options(option_button: OptionButton):
 	option_button.add_item("なし", 0)
-	option_button.add_item("ディジーズ (AP&HP-20)", 2054)
-	option_button.add_item("ディスペア (戦闘不可)", 2068)
-	option_button.add_item("プレイグ (戦闘後HP減)", 2087)
-	option_button.add_item("ハングドマンズシール (スキル無効)", 2064)
-	option_button.add_item("ボーテックス (スキル無効)", 2094)
+	# --- ステータス系 ---
 	option_button.add_item("バイタリティ (AP&HP+20)", 2066)
-	option_button.add_item("エネルギーフィールド (攻撃無効)", 2015)
-	option_button.add_item("リキッドフォーム (ランダム)", 2120)
-	option_button.add_item("メタルフォーム (攻撃無効)", 2114)
-	option_button.add_item("マジックシェルター (結界)", 2105)
-	option_button.add_item("シニリティ (崩壊)", 2032)
-	option_button.add_item("ディスエレメント (地形無効)", 2055)
+	option_button.add_item("ディジーズ (AP&HP-20)", 2054)
+	option_button.add_item("ウィークネス (AP=0)", 2058)
+	option_button.add_item("リキッドフォーム (ランダム増減)", 2120)
+	option_button.add_item("ブースト (昇華・成長)", 2060)
+	# --- 戦闘制限系 ---
+	option_button.add_item("ディスペア (戦闘不可)", 2068)
 	option_button.add_item("ディラニー (MHP30以下不可)", 2057)
-	option_button.add_item("ハイプリーステス (刻印結界)", 2048)
-	option_button.add_item("ハーミットズパラドックス (同種破壊)", 2111)
-	option_button.add_item("ライズアップ (奮闘)", 2067)
-	option_button.add_item("グラナイト (堅牢)", 2108)
-	option_button.add_item("ブラストトラップ (焦土)", 2083)
+	# --- スキル無効系 ---
+	option_button.add_item("ハングドマンズシール (吊人)", 2064)
+	option_button.add_item("ボーテックス (スキル無効)", 2094)
+	# --- 攻撃無効系 ---
+	option_button.add_item("ウォード (祭壇)", 2015)
+	option_button.add_item("メタルフォーム (攻撃無効)", 2114)
+	# --- 地形・属性系 ---
+	option_button.add_item("ディスエレメント (地形無効)", 2055)
+	# --- 破壊・ペナルティ系 ---
+	option_button.add_item("シニリティ (崩壊)", 2032)
+	option_button.add_item("プレイグ (戦闘後HP減)", 2087)
+	option_button.add_item("マーク (賞金首)", 2069)
+	# --- ワールド刻印系（バトル影響あり） ---
+	option_button.add_item("ボンドオブラバーズ (属性連鎖)", 2036)
+	option_button.add_item("インペリアルガード (土地保護)", 2047)
 	option_button.selected = 0  # デフォルト: なし
 
 ## 攻撃側刻印スペル選択ハンドラー
@@ -1291,29 +1315,34 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 	var attacker_data = attacker_card.duplicate(true)
 	var defender_data = defender_card.duplicate(true)
 
-	# アイテム追加
+	# バフをcreature_dataに事前反映（executorと同じフロー）
+	var helper = BattleTestExecutor.new()
+	helper.apply_buff_to_creature_data(attacker_data, config.attacker_buff_config)
+	helper.apply_buff_to_creature_data(defender_data, config.defender_buff_config)
+
+	# 刻印をcreature_dataに事前設定（Phase 0-Cで処理される）
+	if config.attacker_curse_spell_id > 0:
+		helper.set_curse_on_creature_data(attacker_data, config.attacker_curse_spell_id)
+	if config.defender_curse_spell_id > 0:
+		helper.set_curse_on_creature_data(defender_data, config.defender_curse_spell_id)
+
+	# アイテムをcreature_data["items"]にセット（効果適用はPhase 0-Sで行われる）
+	attacker_data["items"] = []
+	defender_data["items"] = []
 	if test_case.attacker_item_id > 0:
 		var item = CardLoader.get_card_by_id(test_case.attacker_item_id)
 		if item:
-			attacker_data["items"] = [item]
+			attacker_data["items"].append(item)
 
 	if test_case.defender_item_id > 0:
 		var item = CardLoader.get_card_by_id(test_case.defender_item_id)
 		if item:
-			defender_data["items"] = [item]
+			defender_data["items"].append(item)
 
-	# 土地ボーナス計算（防御側のみ）
+	# 土地ボーナス計算（防御側のみ、SpellCurseBattleで刻印の追加属性も考慮）
 	var land_bonus = 0
-	if defender_data.get("element", "") == config.defender_battle_land:
+	if SpellCurseBattle.can_get_land_bonus(defender_data, config.defender_battle_land):
 		land_bonus = config.defender_battle_land_level * 10
-
-	# current_hp設定
-	attacker_data["current_hp"] = attacker_data.get("hp", 0)
-	defender_data["current_hp"] = defender_data.get("hp", 0) + land_bonus
-
-	# current_ap設定
-	attacker_data["current_ap"] = attacker_data.get("ap", 0)
-	defender_data["current_ap"] = defender_data.get("ap", 0)
 
 	print("[ビジュアルモード] バトル%d/%d: %s vs %s" % [
 		battle_num, total_battles,
@@ -1372,7 +1401,7 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 	battle_system.battle_execution.setup_systems(mock_card, _battle_screen_manager)
 	battle_system.battle_skill_processor.setup_systems(mock_board, null, mock_card, _battle_screen_manager, battle_system.battle_preparation)
 
-	# BattleParticipant作成（通常モードと同じフロー）
+	# BattleParticipant作成（prepare_participantsと同じフロー）
 	var attacker = BattleParticipant.new(
 		attacker_data,
 		attacker_data.get("hp", 0),
@@ -1381,8 +1410,10 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 		true,
 		0
 	)
-	# current_hpを初期化（BattleParticipant._init()では設定されないため）
-	attacker.current_hp = attacker_data.get("hp", 0)
+	attacker.base_up_hp = attacker_data.get("base_up_hp", 0)
+	attacker.base_up_ap = attacker_data.get("base_up_ap", 0)
+	var att_max_hp = attacker_data.get("hp", 0) + attacker.base_up_hp
+	attacker.current_hp = attacker_data.get("current_hp", att_max_hp)
 	attacker.spell_magic_ref = spell_magic
 
 	# 効果配列を適用
@@ -1396,29 +1427,17 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 		false,
 		1
 	)
-	# current_hpを初期化（BattleParticipant._init()では設定されないため）
-	defender.current_hp = defender_data.get("hp", 0) + land_bonus
+	defender.base_up_hp = defender_data.get("base_up_hp", 0)
+	defender.base_up_ap = defender_data.get("base_up_ap", 0)
+	var def_max_hp = defender_data.get("hp", 0) + defender.base_up_hp
+	defender.current_hp = defender_data.get("current_hp", def_max_hp)
 	defender.spell_magic_ref = spell_magic
 
 	# 効果配列を適用
 	battle_system.battle_preparation.apply_effect_arrays(defender, defender_data)
 
-	# アイテム効果適用
-	if test_case.attacker_item_id > 0:
-		var att_item_data = CardLoader.get_card_by_id(test_case.attacker_item_id)
-		if att_item_data:
-			battle_system.battle_preparation.item_applier.apply_item_effects(attacker, att_item_data, defender)
-
-	if test_case.defender_item_id > 0:
-		var def_item_data = CardLoader.get_card_by_id(test_case.defender_item_id)
-		if def_item_data:
-			battle_system.battle_preparation.item_applier.apply_item_effects(defender, def_item_data, attacker)
-
-	# 刻印スペル適用
-	if config.attacker_curse_spell_id > 0:
-		_apply_curse_spell_visual(attacker, config.attacker_curse_spell_id)
-	if config.defender_curse_spell_id > 0:
-		_apply_curse_spell_visual(defender, config.defender_curse_spell_id)
+	# アイテム効果はapply_pre_battle_skills() Phase 0-Sで適用される
+	# 刻印効果はapply_pre_battle_skills() Phase 0-Cで適用される
 
 	# ダミータイル情報作成
 	var tile_info = {
@@ -1429,8 +1448,13 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 		"creature": defender_data
 	}
 
-	# スキル適用（通常モードと同じ）
-	var participants = {"attacker": attacker, "defender": defender}
+	# スキル適用（実ゲームと同一のPhase処理）
+	var participants = {
+		"attacker": attacker,
+		"defender": defender,
+		"attacker_used_item": test_case.attacker_item_id > 0,
+		"defender_used_item": test_case.defender_item_id > 0
+	}
 	await battle_system.battle_skill_processor.apply_pre_battle_skills(participants, tile_info, 0)
 
 	# 攻撃順を決定
@@ -1453,52 +1477,6 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 	battle_system.queue_free()
 
 	print("[ビジュアルモード] バトル%d完了" % battle_num)
-
-## ========== 新規追加: 刻印スペル適用（ビジュアルモード用） ==========
-func _apply_curse_spell_visual(participant: BattleParticipant, spell_id: int):
-	var spell_data = CardLoader.get_card_by_id(spell_id)
-	if not spell_data:
-		push_error("[BattleTestUI] 刻印スペルID ", spell_id, " が見つかりません")
-		return
-
-	# スペルデータのeffect_parsedからcurse用Dictionaryを構築
-	# メインゲームの spell_curse.curse_creature() と同じ形式にする
-	var effect_parsed = spell_data.get("effect_parsed", {})
-	var effects = effect_parsed.get("effects", [])
-
-	# effect_type → curse_type の変換マップ（spell_curse.gdと同じ変換）
-	var _curse_type_map = {
-		"random_stat_curse": "random_stat",
-		"command_growth_curse": "command_growth",
-		"plague_curse": "plague",
-		"bounty_curse": "bounty",
-	}
-
-	for effect in effects:
-		var effect_type = effect.get("effect_type", "")
-		# draw等の非刻印効果はスキップ
-		if effect_type in ["draw", "magic_gain", ""]:
-			continue
-		# effect_typeをcurse_typeに変換（マップにあれば変換、なければそのまま）
-		# creature_curse型の場合はcurse_typeが別途指定されている
-		var curse_type = effect.get("curse_type", _curse_type_map.get(effect_type, effect_type))
-		var curse_name = effect.get("name", spell_data.get("name", "不明"))
-		# effectの全パラメータをparamsに入れる
-		var params = effect.duplicate(true)
-		params["name"] = curse_name
-		# magic_barrierのEP移動パラメータ
-		if curse_type == "magic_barrier":
-			params["ep_transfer"] = effect.get("gold_transfer", 100)
-		participant.creature_data["curse"] = {
-			"curse_type": curse_type,
-			"name": curse_name,
-			"duration": effect.get("duration", -1),
-			"params": params
-		}
-		print("[ビジュアルモード] ", participant.creature_data.get("name", "?"), " に刻印付与: ", curse_name, " (", curse_type, ")")
-		return
-
-	push_warning("[BattleTestUI] スペルID ", spell_id, " に刻印効果が見つかりません")
 
 ## ユーザークリック待ち
 func _wait_for_user_click():

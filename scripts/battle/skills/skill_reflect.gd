@@ -29,7 +29,7 @@ static func check_damage(attacker_p, defender_p, original_damage: int, attack_ty
 		"reflect_damage": 0,
 		"self_damage": original_damage
 	}
-	
+
 	# 1. 攻撃側が「反射無効」を持っているかチェック
 	if _has_nullify_reflect(attacker_p):
 		print("  【反射無効】攻撃側が反射無効を持つため、反射スキルは発動しない")

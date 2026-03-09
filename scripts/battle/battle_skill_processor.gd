@@ -64,10 +64,21 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	# ============================================================
 	# 【Phase 0-N】沈黙チェック（刻印適用後）
 	# ============================================================
-	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) \
-		or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender) \
-		or _has_nullify_creature_ability(attacker) or _has_nullify_creature_ability(defender)
-	
+	var _dbg_wd_a = _has_warlock_disk(attacker)
+	var _dbg_wd_d = _has_warlock_disk(defender)
+	var _dbg_sn_a = _has_skill_nullify_curse(attacker)
+	var _dbg_sn_d = _has_skill_nullify_curse(defender)
+	var _dbg_nc_a = _has_nullify_creature_ability(attacker)
+	var _dbg_nc_d = _has_nullify_creature_ability(defender)
+	print("[DEBUG Phase0-N] warlock_disk: att=", _dbg_wd_a, " def=", _dbg_wd_d)
+	print("[DEBUG Phase0-N] skill_nullify_curse: att=", _dbg_sn_a, " def=", _dbg_sn_d)
+	print("[DEBUG Phase0-N] nullify_creature_ability: att=", _dbg_nc_a, " def=", _dbg_nc_d)
+	print("[DEBUG Phase0-N] attacker curse=", attacker.creature_data.get("curse", {}))
+	print("[DEBUG Phase0-N] defender curse=", defender.creature_data.get("curse", {}))
+	var has_nullify = _dbg_wd_a or _dbg_wd_d \
+		or _dbg_sn_a or _dbg_sn_d \
+		or _dbg_nc_a or _dbg_nc_d
+
 	if has_nullify:
 		if not silent:
 			print("【沈黙発動】以降のスキル・変身・鼓舞をスキップして基礎ステータスでバトル")
