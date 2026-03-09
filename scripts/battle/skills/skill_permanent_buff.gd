@@ -24,17 +24,10 @@ static func apply_on_destroy_buffs(participant: BattleParticipant) -> void:
 	if not participant or not participant.creature_data:
 		return
 	
-	print("[DEBUG_永続バフ] 関数開始: ", participant.creature_data.get("name", "?"), 
-		  " ID:", participant.creature_data.get("id", "?"),
-		  " 現在のbase_up_hp:", participant.base_up_hp,
-		  " 現在のbase_up_ap:", participant.base_up_ap)
-	
 	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	print("[DEBUG_永続バフ] 破壊時効果数: ", effects.size())
-	
+
 	for effect in effects:
 		if effect.get("effect_type") == "on_enemy_destroy_permanent":
-			print("[DEBUG_永続バフ] on_enemy_destroy_permanent 効果を検出")
 			var stat_changes = effect.get("stat_changes", {})
 			
 			for stat in stat_changes:

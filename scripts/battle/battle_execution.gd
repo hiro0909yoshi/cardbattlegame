@@ -453,7 +453,6 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				await _update_hp_bar_after_damage(defender_p)
 			
 			# 💰 ダメージ時の蓄魔・奪取スキル
-			print("[DEBUG] 吸魔チェック開始 spell_magic_ref=", spell_magic_ref != null)
 			var actual_damage_dealt = (
 				damage_breakdown.get("resonance_bonus_consumed", 0) +
 				damage_breakdown.get("land_bonus_consumed", 0) +
