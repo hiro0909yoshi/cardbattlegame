@@ -285,10 +285,10 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -99.6
-offset_top = 15.2
-offset_right = 99.6
-offset_bottom = 200.2
+offset_left = -100.5
+offset_top = 9.0
+offset_right = 100.5
+offset_bottom = 226.2
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_art_container")
 
@@ -300,7 +300,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
-stretch_mode = 5
+stretch_mode = 4
 
 [node name="InnerFrame" type="Panel" parent="."]
 layout_mode = 1

@@ -59,29 +59,30 @@ func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_da
 	intro_completed.emit()
 
 
-## スキル発動演出を表示
+## スキル発動演出を表示（スキル名とステータス変更を同時に実行）
 func show_skill_activation(side: String, skill_name: String, effects: Dictionary = {}):
 	if not _battle_screen:
 		return
-	
-	await _battle_screen.show_skill_activation(side, skill_name)
-	
-	# HP/AP変更があれば適用（同時開始、完了を待つ）
+
+	# スキル名表示を開始（awaitせず並列実行）
+	_battle_screen.show_skill_activation(side, skill_name)
+
+	# HP/AP変更も同時に開始
 	if effects.has("hp_data") and effects.has("ap"):
-		# 両方同時に開始
 		_battle_screen.show_hp_change(side, effects["hp_data"])
 		_battle_screen.show_ap_change(side, effects["ap"])
-		# アニメーション時間分待つ
-		await _battle_screen.get_tree().create_timer(1.5).timeout
 	elif effects.has("hp_data"):
-		await _battle_screen.show_hp_change(side, effects["hp_data"])
+		_battle_screen.show_hp_change(side, effects["hp_data"])
 	elif effects.has("ap"):
-		await _battle_screen.show_ap_change(side, effects["ap"])
-	
+		_battle_screen.show_ap_change(side, effects["ap"])
+
+	# スキル名表示時間（1.5秒）分待つ（HP/APアニメーションも同時に進行）
+	await _battle_screen.get_tree().create_timer(1.5).timeout
+
 	# バフ表示
 	if effects.has("buff_text"):
 		_battle_screen.show_buff_popup(side, effects["buff_text"])
-	
+
 	skill_animation_completed.emit()
 
 
