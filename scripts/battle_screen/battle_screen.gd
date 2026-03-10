@@ -275,19 +275,124 @@ func update_creature_display(side: String, new_data: Dictionary):
 	hp_bar.set_ap(new_data.get("current_ap", new_data.get("ap", 0)))
 
 
-## 攻撃演出
+## 攻撃演出（光収束 → 攻撃モーション → 光の玉発射）
 func show_attack(attacker_side: String, damage: int):
 	var attacker = _attacker_display if attacker_side == "attacker" else _defender_display
 	var defender = _defender_display if attacker_side == "attacker" else _attacker_display
-	
-	# 攻撃モーション
+
+	var scaled_size = BattleCreatureDisplay.CARD_DISPLAY_SIZE * BattleCreatureDisplay.CARD_SCALE
+	var attacker_center = attacker.position + scaled_size / 2
+	var defender_center = defender.position + scaled_size / 2
+
+	# Phase 1: エネルギー収束（0.5s）- 光の粒子が集まり、中央の玉が大きくなる
+	var orb = _create_energy_orb(attacker_center)
+	_spawn_gathering_particles(attacker_center, 0.5)
+	await _animate_orb_charge(orb, 0.5)
+
+	# Phase 2: 攻撃モーション（0.2s）
 	await attacker.play_attack_animation()
-	
-	# 被ダメージ演出
+
+	# Phase 3: 光の玉が敵に飛ぶ（0.3s）
+	await _animate_orb_travel(orb, attacker_center, defender_center, 0.3)
+
+	# 着弾：ダメージ演出
+	orb.queue_free()
 	defender.play_damage_animation()
 	defender.show_damage_popup(damage)
-	
-	await get_tree().create_timer(0.3).timeout
+
+	await get_tree().create_timer(0.15).timeout
+
+
+## エネルギーの玉を作成
+func _create_energy_orb(center: Vector2) -> Panel:
+	var orb = Panel.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(1.0, 0.95, 0.7, 0.9)
+	style.corner_radius_top_left = 30
+	style.corner_radius_top_right = 30
+	style.corner_radius_bottom_left = 30
+	style.corner_radius_bottom_right = 30
+	style.shadow_color = Color(1.0, 0.8, 0.3, 0.5)
+	style.shadow_size = 12
+	orb.add_theme_stylebox_override("panel", style)
+	orb.size = Vector2(16, 16)
+	orb.position = center - Vector2(8, 8)
+	orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_effect_layer.add_child(orb)
+	return orb
+
+
+## 収束パーティクルを生成
+func _spawn_gathering_particles(center: Vector2, duration: float) -> void:
+	var particle_count = 12
+	for i in range(particle_count):
+		var particle = Panel.new()
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(1.0, 0.9, 0.5, 0.8)
+		style.corner_radius_top_left = 6
+		style.corner_radius_top_right = 6
+		style.corner_radius_bottom_left = 6
+		style.corner_radius_bottom_right = 6
+		particle.add_theme_stylebox_override("panel", style)
+		particle.size = Vector2(20, 20)
+		particle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		# ランダムな位置から出発（中心から200〜350px離れた円周上）
+		var angle = (TAU / particle_count) * i + randf_range(-0.3, 0.3)
+		var dist = randf_range(200, 350)
+		var start_pos = center + Vector2(cos(angle), sin(angle)) * dist
+		particle.position = start_pos - Vector2(10, 10)
+
+		_effect_layer.add_child(particle)
+
+		# スパイラル軌道で中心に収束
+		var delay = randf_range(0.0, duration * 0.3)
+		var travel_time = duration - delay
+		var start_angle = angle
+		var start_dist = dist
+		var rotations = 1.0  # 回転数
+		var p_center = center
+		var tween = create_tween()
+		tween.tween_interval(delay)
+		tween.tween_method(func(t: float):
+			# t: 0.0 → 1.0
+			var current_dist = start_dist * (1.0 - t)
+			var current_angle = start_angle + rotations * TAU * t
+			var pos = p_center + Vector2(cos(current_angle), sin(current_angle)) * current_dist
+			particle.position = pos - Vector2(10, 10)
+			# 終盤でフェードアウト
+			if t > 0.7:
+				particle.modulate.a = 1.0 - (t - 0.7) / 0.3
+		, 0.0, 1.0, travel_time).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+		tween.tween_callback(particle.queue_free)
+
+
+## 玉のチャージアニメーション（小→大）
+func _animate_orb_charge(orb: Panel, duration: float) -> void:
+	var center = orb.position + orb.size / 2
+	var target_size = Vector2(80, 80)
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+	# サイズ拡大
+	tween.tween_property(orb, "size", target_size, duration) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# 中心を維持
+	tween.tween_property(orb, "position", center - target_size / 2, duration) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+	await tween.finished
+
+
+## 光の玉が敵に飛ぶアニメーション
+func _animate_orb_travel(orb: Panel, _from: Vector2, to: Vector2, duration: float) -> void:
+	var target_pos = to - orb.size / 2
+
+	var tween = create_tween()
+	tween.tween_property(orb, "position", target_pos, duration) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+
+	await tween.finished
 
 
 ## 結果演出

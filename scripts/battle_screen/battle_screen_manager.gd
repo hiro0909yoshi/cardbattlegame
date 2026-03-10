@@ -90,7 +90,7 @@ func show_skill_activation(side: String, skill_name: String, effects: Dictionary
 func show_attack(attacker_side: String, damage: int):
 	if not _battle_screen:
 		return
-	
+
 	await _battle_screen.show_attack(attacker_side, damage)
 	attack_animation_completed.emit()
 
@@ -107,8 +107,10 @@ func show_damage(side: String, amount: int) -> void:
 func update_hp(side: String, hp_data: Dictionary):
 	if not _battle_screen:
 		return
-	
+
 	await _battle_screen.show_hp_change(side, hp_data)
+	# HPバー更新後の間隔（次の攻撃までの余韻）
+	await _battle_screen.get_tree().create_timer(0.5).timeout
 
 
 ## AP更新

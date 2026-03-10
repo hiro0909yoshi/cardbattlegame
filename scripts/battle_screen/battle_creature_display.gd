@@ -40,9 +40,12 @@ func _setup_ui() -> void:
 	_card_container.custom_minimum_size = scaled_size
 	add_child(_card_container)
 	
-	# スキルラベル（カード上部）
+	# スキルラベル（カードの説明欄中央から飛び出す）
 	_skill_label = SkillLabel.new()
-	_skill_label.position = Vector2((scaled_size.x - 300) / 2, -70)
+	# DescriptionBox中央: カード元サイズで (110, 293-42.5) = (110, 250.5) → スケール後
+	var desc_center_x = scaled_size.x / 2
+	var desc_center_y = (293.0 - 42.5) * CARD_SCALE  # DescriptionBox中央のY
+	_skill_label.set_base_position(Vector2(desc_center_x, desc_center_y))
 	add_child(_skill_label)
 	
 	# HP/APバー（カード下部）- 5.2倍サイズ対応
@@ -142,7 +145,7 @@ func _calculate_display_max() -> int:
 	return max(total, 100)
 
 
-## スキル名を表示
+## スキル名を表示（ズームエフェクト）
 func show_skill(skill_name: String) -> void:
 	_skill_label.show_skill(skill_name)
 
@@ -190,9 +193,9 @@ func play_attack_animation():
 	
 	var tween = create_tween()
 	# 前に移動
-	tween.tween_property(self, "position:x", target_x, 0.15).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "position:x", target_x, 0.1).set_ease(Tween.EASE_OUT)
 	# 戻る
-	tween.tween_property(self, "position:x", original_position.x, 0.15).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "position:x", original_position.x, 0.1).set_ease(Tween.EASE_IN)
 	
 	await tween.finished
 	attack_animation_completed.emit()
