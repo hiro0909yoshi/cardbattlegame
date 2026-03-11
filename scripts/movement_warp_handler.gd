@@ -47,7 +47,13 @@ func warp_player_3d(player_id: int, to_tile: int) -> void:
 func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 	var player_node = controller.player_nodes[player_id]
 
-	# ワープエフェクト（簡易版：縮小して消える→移動→拡大して現れる）
+	# ワープタイルの回転アニメーション開始（出発地）
+	if controller.tile_nodes.has(from_tile):
+		var from_tile_node = controller.tile_nodes[from_tile]
+		if from_tile_node.has_method("play_warp_animation"):
+			from_tile_node.play_warp_animation()
+
+	# ワープエフェクト（縮小して消える→移動→拡大して現れる）
 	const WARP_MIN_SCALE = Vector3(0.001, 0.001, 0.001)
 	var tween = controller.get_tree().create_tween()
 
@@ -68,6 +74,12 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 			var tile_pos = controller.tile_nodes[to_tile].global_position
 			var cam_look = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 			controller.camera.global_position = cam_look + GameConstants.CAMERA_OFFSET
+
+	# 到着先タイルの回転アニメーション開始
+	if controller.tile_nodes.has(to_tile):
+		var to_tile_node = controller.tile_nodes[to_tile]
+		if to_tile_node.has_method("play_warp_animation"):
+			to_tile_node.play_warp_animation()
 
 	# 拡大して現れる
 	var tween2 = controller.get_tree().create_tween()

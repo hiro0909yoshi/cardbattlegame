@@ -2,17 +2,18 @@ extends BaseTile
 
 ## ワープタイル（通過型）- 魔法陣 + 発光 + 浮遊パーティクル + 炎オーラ
 
-const WARP_COLOR := Color(0.533, 0.078, 1.0)
-const MAGIC_CIRCLE_RADIUS := 1.6
+const AURA_RADIUS := 1.6
 const PARTICLE_COUNT := 12
 const PARTICLE_HEIGHT := 3.5
 const AURA_HEIGHT := 1.5
 
-var _magic_circle: MeshInstance3D
 var _particles: Array[MeshInstance3D] = []
 var _particle_mats: Array[StandardMaterial3D] = []
 var _aura_ring: MeshInstance3D
+var _magic_circle_model: Node3D
 var _time := 0.0
+
+const MAGIC_CIRCLE_SCENE := preload("res://models/magic_circle.glb")
 
 # 炎オーラシェーダー（リング外周から立ち上がる炎のような揺らぎ）
 const AURA_SHADER_CODE := "
@@ -72,7 +73,6 @@ void fragment() {
 func _ready():
 	tile_type = "warp"
 	super._ready()
-	_setup_emission()
 	_create_magic_circle()
 	_create_particles()
 	_create_aura_ring()
@@ -82,9 +82,6 @@ func _ready():
 
 func _process(delta: float) -> void:
 	_time += delta
-	# 魔法陣回転
-	if _magic_circle:
-		_magic_circle.rotation.y = _time * 1.5
 	# パーティクル浮遊（不規則な動き）
 	for i in range(_particles.size()):
 		var p := _particles[i]
@@ -102,57 +99,54 @@ func _process(delta: float) -> void:
 		p.position.z = sin(phase) * base_r + sway_z
 
 
-## タイルメッシュに発光を追加
-func _setup_emission() -> void:
-	var mesh_inst := get_node_or_null("MeshInstance3D")
-	if not mesh_inst:
-		return
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = WARP_COLOR
-	mat.emission_enabled = true
-	mat.emission = WARP_COLOR
-	mat.emission_energy_multiplier = 1.0
-	mesh_inst.material_override = mat
 
 
-## 回転する魔法陣を作成
+## 魔法陣3Dモデルを配置（紫色）
 func _create_magic_circle() -> void:
-	_magic_circle = MeshInstance3D.new()
-	_magic_circle.name = "MagicCircle"
+	_magic_circle_model = MAGIC_CIRCLE_SCENE.instantiate()
+	_magic_circle_model.name = "MagicCircle"
+	_magic_circle_model.position = Vector3(1.1, 0.48, 1.1)
+	_magic_circle_model.rotation_degrees = Vector3(-90, 0, 45)
+	_magic_circle_model.scale = Vector3(0.75, 0.75, 0.75)
+	add_child(_magic_circle_model)
+	_apply_color_to_model(_magic_circle_model, Color(0.6, 0.2, 1.0))
 
-	var mesh := _build_circle_ring_mesh(MAGIC_CIRCLE_RADIUS, MAGIC_CIRCLE_RADIUS * 0.65, 32)
-	_magic_circle.mesh = mesh
 
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(WARP_COLOR, 0.6)
-	mat.emission_enabled = true
-	mat.emission = WARP_COLOR
-	mat.emission_energy_multiplier = 2.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.no_depth_test = true
-	_magic_circle.material_override = mat
-	_magic_circle.position = Vector3(0, 0.4, 0)
-	add_child(_magic_circle)
+## モデル内の全MeshInstance3Dに色を適用
+func _apply_color_to_model(node: Node3D, color: Color) -> void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = color
+			mat.emission_enabled = true
+			mat.emission = color
+			mat.emission_energy_multiplier = 1.5
+			child.material_override = mat
+		if child.get_child_count() > 0:
+			_apply_color_to_model(child, color)
 
-	# 内側の小さいリング（逆回転用）
-	var inner_circle := MeshInstance3D.new()
-	inner_circle.name = "InnerCircle"
-	var inner_mesh := _build_circle_ring_mesh(MAGIC_CIRCLE_RADIUS * 0.55, MAGIC_CIRCLE_RADIUS * 0.35, 24)
-	inner_circle.mesh = inner_mesh
-	var inner_mat := StandardMaterial3D.new()
-	inner_mat.albedo_color = Color(0.7, 0.5, 1.0, 0.4)
-	inner_mat.emission_enabled = true
-	inner_mat.emission = Color(0.7, 0.5, 1.0)
-	inner_mat.emission_energy_multiplier = 1.5
-	inner_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	inner_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	inner_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	inner_mat.no_depth_test = true
-	inner_circle.material_override = inner_mat
-	inner_circle.position = Vector3.ZERO
-	_magic_circle.add_child(inner_circle)
+
+## テレポート発動時の回転アニメーション
+## Transform3Dで視覚的中心（タイル中央）を軸にY回転
+func play_warp_animation(duration: float = 1.0) -> void:
+	if not _magic_circle_model:
+		return
+	# 視覚的中心のワールド座標
+	var center: Vector3 = to_global(Vector3(0, 0.48, 0))
+	var initial_transform: Transform3D = _magic_circle_model.global_transform
+
+	var tween := create_tween()
+	tween.tween_method(func(angle: float) -> void:
+		var rot := Transform3D(Basis(Vector3.UP, angle), Vector3.ZERO)
+		# 中心を原点に移動→回転→元に戻す
+		var t := initial_transform
+		t.origin -= center
+		t = rot * t
+		t.origin += center
+		_magic_circle_model.global_transform = t
+	, 0.0, TAU * 2.0, duration)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
 
 
 ## 浮遊パーティクルを作成（小さめ＋黄色寄り）
@@ -190,7 +184,7 @@ func _create_aura_ring() -> void:
 	_aura_ring.name = "AuraRing"
 
 	# 円筒メッシュ（UV.x=円周, UV.y=高さ）を手動構築
-	var mesh := _build_aura_cylinder_mesh(MAGIC_CIRCLE_RADIUS, AURA_HEIGHT, 48)
+	var mesh := _build_aura_cylinder_mesh(AURA_RADIUS, AURA_HEIGHT, 48)
 	_aura_ring.mesh = mesh
 
 	var shader := Shader.new()
@@ -238,41 +232,6 @@ func _build_aura_cylinder_mesh(radius: float, height: float, segments: int) -> A
 			var next_ring := (r_idx + 1) * verts_per_ring + s_idx
 			indices.append_array([current, next_ring, current + 1])
 			indices.append_array([current + 1, next_ring, next_ring + 1])
-
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_NORMAL] = normals
-	arrays[Mesh.ARRAY_TEX_UV] = uvs
-	arrays[Mesh.ARRAY_INDEX] = indices
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
-
-
-## 円形リングメッシュを生成
-func _build_circle_ring_mesh(outer_r: float, inner_r: float, segments: int) -> ArrayMesh:
-	var mesh := ArrayMesh.new()
-	var verts := PackedVector3Array()
-	var normals := PackedVector3Array()
-	var uvs := PackedVector2Array()
-	var indices := PackedInt32Array()
-
-	for i in range(segments + 1):
-		var angle := (float(i) / float(segments)) * TAU
-		var cos_a := cos(angle)
-		var sin_a := sin(angle)
-		var u := float(i) / float(segments)
-		verts.append(Vector3(cos_a * outer_r, 0, sin_a * outer_r))
-		normals.append(Vector3.UP)
-		uvs.append(Vector2(u, 0.0))
-		verts.append(Vector3(cos_a * inner_r, 0, sin_a * inner_r))
-		normals.append(Vector3.UP)
-		uvs.append(Vector2(u, 1.0))
-
-	for i in range(segments):
-		var base := i * 2
-		indices.append_array([base, base + 1, base + 2])
-		indices.append_array([base + 1, base + 3, base + 2])
 
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
