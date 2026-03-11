@@ -1,20 +1,72 @@
 extends BaseTile
 
-## ワープタイル（通過型）- 魔法陣 + 発光 + 浮遊パーティクル + 光の帯
+## ワープタイル（通過型）- 魔法陣 + 発光 + 浮遊パーティクル + 炎オーラ
 
 const WARP_COLOR := Color(0.533, 0.078, 1.0)
 const MAGIC_CIRCLE_RADIUS := 1.6
 const PARTICLE_COUNT := 12
 const PARTICLE_HEIGHT := 3.5
-const LIGHT_BEAM_COUNT := 14
-const LIGHT_BEAM_HEIGHT := 2.0
+const AURA_HEIGHT := 1.5
 
 var _magic_circle: MeshInstance3D
 var _particles: Array[MeshInstance3D] = []
 var _particle_mats: Array[StandardMaterial3D] = []
-var _light_beams: Array[MeshInstance3D] = []
-var _light_beam_mats: Array[StandardMaterial3D] = []
+var _aura_ring: MeshInstance3D
 var _time := 0.0
+
+# 炎オーラシェーダー（リング外周から立ち上がる炎のような揺らぎ）
+const AURA_SHADER_CODE := "
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_test_disabled, blend_mix;
+
+uniform vec4 color_bottom : source_color = vec4(1.0, 0.85, 0.3, 0.8);
+uniform vec4 color_top : source_color = vec4(1.0, 0.5, 0.1, 0.0);
+uniform float emission_strength = 4.0;
+uniform float aura_speed = 1.5;
+uniform float flame_intensity = 1.0;
+
+// 疑似ノイズ関数
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float noise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = hash(i);
+	float b = hash(i + vec2(1.0, 0.0));
+	float c = hash(i + vec2(0.0, 1.0));
+	float d = hash(i + vec2(1.0, 1.0));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+void fragment() {
+	// UV.x = 円周方向(0~1), UV.y = 高さ方向(0=下, 1=上)
+	float height = UV.y;
+
+	// 複数スケールのノイズで炎の揺らぎ
+	float n1 = noise(vec2(UV.x * 8.0, height * 3.0 - TIME * aura_speed));
+	float n2 = noise(vec2(UV.x * 16.0 + 5.0, height * 5.0 - TIME * aura_speed * 1.3));
+	float n3 = noise(vec2(UV.x * 4.0 + 10.0, height * 2.0 - TIME * aura_speed * 0.7));
+	float flame_noise = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
+
+	// 高さに応じたフェード（下=明るい、上=消える）
+	float height_fade = 1.0 - height;
+	height_fade = height_fade * height_fade;
+
+	// ノイズで炎の形を作る（上部を不規則にカット）
+	float flame_shape = height_fade * (0.5 + flame_noise * flame_intensity);
+	flame_shape = clamp(flame_shape, 0.0, 1.0);
+
+	// 色のグラデーション（下=黄色、上=オレンジ→透明）
+	vec3 col = mix(color_top.rgb, color_bottom.rgb, height_fade);
+
+	ALBEDO = col;
+	EMISSION = col * emission_strength * flame_shape;
+	ALPHA = flame_shape * color_bottom.a;
+}
+"
 
 
 func _ready():
@@ -23,7 +75,7 @@ func _ready():
 	_setup_emission()
 	_create_magic_circle()
 	_create_particles()
-	_create_light_beams()
+	_create_aura_ring()
 	# BaseTile._ready()でset_process(false)されるため、再有効化
 	set_process(true)
 
@@ -37,45 +89,17 @@ func _process(delta: float) -> void:
 	for i in range(_particles.size()):
 		var p := _particles[i]
 		var phase := (float(i) / float(PARTICLE_COUNT)) * TAU
-		# 各パーティクルごとに速度を変えて不規則に
 		var speed := 0.35 + float(i % 3) * 0.15
 		var t := fmod(_time * speed + phase / TAU, 1.0)
 		p.position.y = 0.5 + t * PARTICLE_HEIGHT
-		# 上昇でフェードアウト
 		var alpha := 1.0 - t
 		if _particle_mats.size() > i:
 			_particle_mats[i].albedo_color.a = alpha * 0.9
-		# 不規則な横揺れ（複数のsin波を重ねる）
 		var sway_x := sin(_time * 1.8 + phase) * 0.4 + sin(_time * 3.1 + phase * 1.7) * 0.15
 		var sway_z := cos(_time * 2.2 + phase * 0.8) * 0.4 + cos(_time * 2.7 + phase * 1.3) * 0.15
 		var base_r := 0.6 + float(i % 4) * 0.2
 		p.position.x = cos(phase) * base_r + sway_x
 		p.position.z = sin(phase) * base_r + sway_z
-	# 光の帯アニメーション（不規則な明滅、完全消灯あり）
-	for i in range(_light_beams.size()):
-		var beam := _light_beams[i]
-		var phase := (float(i) / float(LIGHT_BEAM_COUNT)) * TAU
-		var angle := _time * 0.6 + phase
-		var v_z: float = 0.0
-		if i < 14:
-			var variations: Array[float] = [0.0, 0.1, -0.1, 0.15, -0.05, 0.2, -0.15, 0.1, 0.0, -0.1, 0.18, -0.08, 0.05, -0.12]
-			v_z = variations[i]
-		var radius := MAGIC_CIRCLE_RADIUS * 0.7 + v_z
-		beam.position.x = cos(angle) * radius
-		beam.position.z = sin(angle) * radius
-		beam.rotation.y = angle
-		# 不規則な明滅（完全消灯～強発光）
-		var f1 := sin(_time * 1.8 + phase * 3.0)
-		var f2 := sin(_time * 3.3 + phase * 1.7)
-		var f3 := sin(_time * 5.9 + phase * 2.3)
-		var f4 := sin(_time * 0.7 + phase * 4.1)
-		var flicker := (f1 + f2 + f3 + f4) / 4.0
-		# -1～1を0～1に変換し、コントラストを強める（pow）
-		var pulse := pow(clampf((flicker + 1.0) / 2.0, 0.0, 1.0), 2.0)
-		if _light_beam_mats.size() > i:
-			_light_beam_mats[i].albedo_color.a = pulse * 0.45
-			_light_beam_mats[i].emission_energy_multiplier = pulse * 5.0
-			beam.visible = pulse > 0.02
 
 
 ## タイルメッシュに発光を追加
@@ -144,7 +168,6 @@ func _create_particles() -> void:
 		p.mesh = sphere
 
 		var mat := StandardMaterial3D.new()
-		# 黄色寄りの色味（より小さく強発光）
 		mat.albedo_color = Color(1.0, 0.9, 0.5, 0.9)
 		mat.emission_enabled = true
 		mat.emission = Color(1.0, 0.85, 0.35)
@@ -161,49 +184,69 @@ func _create_particles() -> void:
 		_particle_mats.append(mat)
 
 
-## 光の帯（縦方向のビーム）をサイズ違いで作成
-func _create_light_beams() -> void:
-	# 各ビームのバリエーション [高さ倍率, 太さ倍率, 半径オフセット]
-	var variations: Array[Vector3] = [
-		Vector3(1.0, 1.0, 0.0), Vector3(0.5, 0.7, 0.1), Vector3(1.3, 1.2, -0.1),
-		Vector3(0.7, 0.8, 0.15), Vector3(1.1, 0.6, -0.05), Vector3(0.4, 1.0, 0.2),
-		Vector3(1.5, 0.9, -0.15), Vector3(0.6, 0.5, 0.1), Vector3(0.9, 1.1, 0.0),
-		Vector3(1.2, 0.7, -0.1), Vector3(0.35, 0.6, 0.18), Vector3(0.8, 1.3, -0.08),
-		Vector3(1.4, 0.8, 0.05), Vector3(0.55, 0.9, -0.12),
-	]
-	for i in range(LIGHT_BEAM_COUNT):
-		var beam := MeshInstance3D.new()
-		beam.name = "LightBeam_%d" % i
+## 魔法陣外周の炎オーラリングを作成
+func _create_aura_ring() -> void:
+	_aura_ring = MeshInstance3D.new()
+	_aura_ring.name = "AuraRing"
 
-		var v := variations[i % variations.size()]
-		var h := LIGHT_BEAM_HEIGHT * v.x
-		var r := 0.04 * v.y
+	# 円筒メッシュ（UV.x=円周, UV.y=高さ）を手動構築
+	var mesh := _build_aura_cylinder_mesh(MAGIC_CIRCLE_RADIUS, AURA_HEIGHT, 48)
+	_aura_ring.mesh = mesh
 
-		var cylinder := CylinderMesh.new()
-		cylinder.top_radius = r * 0.5
-		cylinder.bottom_radius = r
-		cylinder.height = h
-		cylinder.radial_segments = 6
-		cylinder.rings = 1
-		beam.mesh = cylinder
+	var shader := Shader.new()
+	shader.code = AURA_SHADER_CODE
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("color_bottom", Color(1.0, 0.85, 0.3, 0.7))
+	mat.set_shader_parameter("color_top", Color(1.0, 0.4, 0.1, 0.0))
+	mat.set_shader_parameter("emission_strength", 4.0)
+	mat.set_shader_parameter("aura_speed", 1.5)
+	mat.set_shader_parameter("flame_intensity", 1.0)
+	_aura_ring.material_override = mat
 
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.85, 0.4, 0.3)
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.8, 0.3)
-		mat.emission_energy_multiplier = 3.0
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.no_depth_test = true
-		beam.material_override = mat
+	_aura_ring.position = Vector3(0, 0.3, 0)
+	add_child(_aura_ring)
 
-		var phase := (float(i) / float(LIGHT_BEAM_COUNT)) * TAU
-		var radius := MAGIC_CIRCLE_RADIUS * 0.7 + v.z
-		beam.position = Vector3(cos(phase) * radius, h / 2.0 + 0.3, sin(phase) * radius)
-		add_child(beam)
-		_light_beams.append(beam)
-		_light_beam_mats.append(mat)
+
+## 炎オーラ用の円筒メッシュ（UVが正しく設定された開いた円筒）
+func _build_aura_cylinder_mesh(radius: float, height: float, segments: int) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+
+	var rings := 8  # 高さ方向の分割数
+	for r_idx in range(rings + 1):
+		var y_t := float(r_idx) / float(rings)
+		var y_pos := y_t * height
+		# 上に行くほど半径が広がる（外側に放射）
+		var spread := 1.0 + y_t * y_t * 0.6
+		var r := radius * spread
+		for s_idx in range(segments + 1):
+			var angle := (float(s_idx) / float(segments)) * TAU
+			var x := cos(angle) * r
+			var z := sin(angle) * r
+			verts.append(Vector3(x, y_pos, z))
+			normals.append(Vector3(cos(angle), 0, sin(angle)))
+			uvs.append(Vector2(float(s_idx) / float(segments), y_t))
+
+	var verts_per_ring := segments + 1
+	for r_idx in range(rings):
+		for s_idx in range(segments):
+			var current := r_idx * verts_per_ring + s_idx
+			var next_ring := (r_idx + 1) * verts_per_ring + s_idx
+			indices.append_array([current, next_ring, current + 1])
+			indices.append_array([current + 1, next_ring, next_ring + 1])
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = indices
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 ## 円形リングメッシュを生成
