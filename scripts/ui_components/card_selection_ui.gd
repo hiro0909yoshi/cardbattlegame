@@ -104,7 +104,7 @@ func update_phase_label(current_player, mode: String):
 			var cards_to_discard = hand_size - 6
 			message = "手札を6枚まで減らしてください（%d枚捨てる）" % cards_to_discard
 		"spell":
-			message = "スペルを選択してください"
+			message = "スペルを使用するか、ダイスを振ってください"
 		"item":
 			if _card_selection_service and _card_selection_service.card_selection_filter == "item_or_assist":
 				message = "アイテムまたは加勢クリーチャーを選択"

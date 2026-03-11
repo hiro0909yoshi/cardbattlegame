@@ -99,7 +99,7 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 		return
 
 	var tile_pos = controller.tile_nodes[tile_index].global_position
-	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	var look_target = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 	var target_pos = look_target + GameConstants.CAMERA_OFFSET
 	if smooth:
 		var tween = controller.get_tree().create_tween()

@@ -94,41 +94,49 @@ static func apply_unconditional_magic_gain(participant, spell_magic) -> bool:
 ## @param participant バトル参加者
 ## @param damage 受けたダメージ
 ## @param spell_magic SpellMagicインスタンス
-static func apply_damage_magic_gain(participant, damage: int, spell_magic) -> void:
+## @return 蓄魔量（未発動は0）
+static func apply_damage_magic_gain(participant, damage: int, spell_magic) -> int:
 	if not spell_magic:
-		return
-	
+		return 0
+
 	if damage <= 0:
-		return
-	
+		return 0
+
 	if has_damage_magic_gain(participant.creature_data):
 		var multiplier = _extract_multiplier(participant.creature_data.get("ability_detail", ""), 5)
 		var amount = damage * multiplier
 		spell_magic.add_magic(participant.player_id, amount)
-		print("【ダメージ時蓄魔】", participant.creature_data.get("name", "?"), 
+		print("【ダメージ時蓄魔】", participant.creature_data.get("name", "?"),
 			  " → ", amount, "蓄魔（ダメージ", damage, "×", multiplier, "）")
+		return amount
+
+	return 0
 
 ## バトル開始時の蓄魔スキルをまとめて適用
 ##
 ## @param attacker 攻撃側参加者
 ## @param defender 防御側参加者
 ## @param spell_magic SpellMagicインスタンス
-## @return 発動した参加者の配列
+## @return 発動情報の配列 [{participant, amount}]
 static func apply_on_battle_start(attacker, defender, spell_magic) -> Array:
-	var activated = []
-	
+	var activated: Array[Dictionary] = []
+
 	# 侵略時蓄魔（攻撃側のみ）
 	if apply_invasion_magic_gain(attacker, spell_magic):
-		activated.append(attacker)
-	
+		var amount = _extract_magic_amount(attacker.creature_data.get("ability_detail", ""), 100)
+		activated.append({"participant": attacker, "amount": amount})
+
 	# 無条件蓄魔（両側）
 	if apply_unconditional_magic_gain(attacker, spell_magic):
-		if attacker not in activated:
-			activated.append(attacker)
-	
+		var already = activated.any(func(d): return d["participant"] == attacker)
+		if not already:
+			var amount = _extract_magic_amount(attacker.creature_data.get("ability_detail", ""), 100)
+			activated.append({"participant": attacker, "amount": amount})
+
 	if apply_unconditional_magic_gain(defender, spell_magic):
-		activated.append(defender)
-	
+		var amount = _extract_magic_amount(defender.creature_data.get("ability_detail", ""), 100)
+		activated.append({"participant": defender, "amount": amount})
+
 	return activated
 
 

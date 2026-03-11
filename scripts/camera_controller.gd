@@ -486,7 +486,7 @@ func focus_on_tile(tile_index: int, smooth: bool = true):
 
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_pos = tile.global_position
-	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	var look_target = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 	var new_camera_pos = look_target + GameConstants.CAMERA_OFFSET
 
 	if camera.global_position.distance_to(new_camera_pos) < 0.5:
@@ -508,7 +508,7 @@ func focus_on_tile_await(tile_index: int, duration: float = 0.5) -> void:
 
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_pos = tile.global_position
-	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	var look_target = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 	var target_pos = look_target + GameConstants.CAMERA_OFFSET
 
 	if camera.global_position.distance_to(target_pos) < 0.5:
@@ -530,7 +530,7 @@ func focus_on_tile_slow(tile_index: int, duration: float = 1.2):
 		return
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_pos = tile.global_position
-	var lt = tile_pos + Vector3(0, 1.0, 0)
+	var lt = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 	var cp = lt + GameConstants.CAMERA_OFFSET
 	if camera.global_position.distance_to(cp) < 0.3:
 		return
@@ -543,7 +543,7 @@ func focus_on_position_slow(world_pos: Vector3, duration: float = 0.5):
 	# マップ境界内にクランプ
 	var clamped_xz = _clamp_to_hull(Vector2(world_pos.x, world_pos.z))
 	var clamped_pos = Vector3(clamped_xz.x, world_pos.y, clamped_xz.y)
-	var lt = clamped_pos + Vector3(0, 1.0, 0)
+	var lt = clamped_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 	var cp = lt + GameConstants.CAMERA_OFFSET
 	if camera.global_position.distance_to(cp) < 0.3:
 		return

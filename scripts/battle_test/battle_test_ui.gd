@@ -1044,8 +1044,8 @@ func _on_detail_window_close_requested():
 func show_card_list_window():
 	var card_list_window = Window.new()
 	card_list_window.title = "全カード一覧"
-	card_list_window.size = Vector2i(1500, 1000)
-	card_list_window.min_size = Vector2i(1200, 800)
+	card_list_window.size = Vector2i(1800, 1000)
+	card_list_window.min_size = Vector2i(1500, 800)
 	card_list_window.popup_window = true
 	
 	var vbox = VBoxContainer.new()
@@ -1100,19 +1100,19 @@ func show_card_list_window():
 	table.set_column_title(4, "HP")
 	table.set_column_title(5, "スキル")
 	
-	# カラム幅を設定
+	# カラム幅を設定（フォントサイズ36に合わせた幅）
 	table.set_column_expand(0, false)  # ID
-	table.set_column_custom_minimum_width(0, 80)
+	table.set_column_custom_minimum_width(0, 140)
 	table.set_column_expand(1, false)  # 名前
-	table.set_column_custom_minimum_width(1, 220)
+	table.set_column_custom_minimum_width(1, 380)
 	table.set_column_expand(2, false)  # タイプ
-	table.set_column_custom_minimum_width(2, 90)
+	table.set_column_custom_minimum_width(2, 180)
 	table.set_column_expand(3, false)  # AP
-	table.set_column_custom_minimum_width(3, 70)
+	table.set_column_custom_minimum_width(3, 100)
 	table.set_column_expand(4, false)  # HP
-	table.set_column_custom_minimum_width(4, 70)
+	table.set_column_custom_minimum_width(4, 100)
 	table.set_column_expand(5, true)   # スキル（残り全部）
-	table.set_column_custom_minimum_width(5, 450)
+	table.set_column_custom_minimum_width(5, 500)
 	
 	table.column_titles_visible = true
 	table.hide_root = true
@@ -1393,9 +1393,10 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 
 	battle_system.setup_systems(mock_board, mock_card, mock_player)
 
-	# BattleSystemにSpellMagic/SpellDrawを手動で設定
+	# BattleSystemにSpellMagic/SpellDraw/BattleScreenManagerを手動で設定
 	battle_system.spell_magic = spell_magic
 	battle_system.spell_draw = spell_draw
+	battle_system.battle_screen_manager = _battle_screen_manager
 	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic, mock_card, _battle_screen_manager)
 	battle_system.battle_preparation.setup_systems(mock_board, mock_card, mock_player, spell_magic)
 	battle_system.battle_execution.setup_systems(mock_card, _battle_screen_manager)
@@ -1465,6 +1466,13 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 
 	# 結果判定（通常モードと同じ）
 	var result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
+
+	# 戦闘終了時スキル表示（帰還・殲滅・永続バフ）
+	if _battle_screen_manager and _battle_screen_manager.is_inside_tree():
+		await battle_system._apply_item_return(attacker, 0)
+		await battle_system._apply_item_return(defender, 1)
+		await battle_system._apply_annihilate_with_display(attacker, defender, result)
+		await battle_system._apply_permanent_buffs_with_display(attacker, defender, result)
 
 	# 結果表示（BattleScreenManagerが有効な場合のみ）
 	if _battle_screen_manager and _battle_screen_manager.is_inside_tree():

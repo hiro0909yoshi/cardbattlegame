@@ -9,9 +9,9 @@ var _torch_flames: Array[MeshInstance3D] = []
 var _torch_time := 0.0
 
 # 城壁パラメータ
-const WALL_MARGIN := 11.0      # マップ端からの余白（北・東・西）
-const WALL_MARGIN_SOUTH := 15.0  # 南壁マージン（カメラ干渉回避のため広め）
-const WALL_HEIGHT := 6.0       # 壁の高さ
+const WALL_MARGIN := 13.0      # マップ端からの余白（北・東・西）
+const WALL_MARGIN_SOUTH := 17.0  # 南壁マージン（カメラ干渉回避のため広め）
+const WALL_HEIGHT := 9.0       # 壁の高さ
 const WALL_THICKNESS := 1.2    # 壁の厚み
 const BATTLEMENT_HEIGHT := 0.8 # 胸壁（凹凸）の高さ
 const BATTLEMENT_WIDTH := 1.5  # 胸壁の幅
@@ -19,12 +19,12 @@ const BATTLEMENT_GAP := 1.2    # 胸壁の隙間
 
 # 塔パラメータ
 const TOWER_RADIUS := 2.0
-const TOWER_HEIGHT := 8.0
+const TOWER_HEIGHT := 11.0
 const TOWER_SIDES := 12
 
 # 門パラメータ
-const GATE_WIDTH := 4.0         # 門の幅
-const GATE_HEIGHT := 4.5        # 門の高さ
+const GATE_WIDTH := 5.5         # 門の幅
+const GATE_HEIGHT := 6.0        # 門の高さ
 const GATE_THICKNESS := 0.3     # 扉の厚み
 
 # シェーダーパス
@@ -33,7 +33,7 @@ const BRICK_SHADER_PATH := "res://assets/shaders/brick_wall.gdshader"
 # 蔦パラメータ
 const IVY_COUNT_PER_WALL := 5
 const IVY_MIN_HEIGHT := 0.5
-const IVY_MAX_HEIGHT := 3.5
+const IVY_MAX_HEIGHT := 5.0
 const IVY_WIDTH_MIN := 1.5
 const IVY_WIDTH_MAX := 3.5
 
@@ -466,8 +466,28 @@ func _create_ivy() -> void:
 		{"start": cz - half_n, "end": cz + half_s, "wall_pos": cx + half_n - WALL_THICKNESS * 0.5 - 0.05, "is_ns": false},
 	]
 
+	# 下から伸びる蔦
 	VegetationBuilder.create_ivy(self, walls, IVY_COUNT_PER_WALL,
 		IVY_MIN_HEIGHT, IVY_MAX_HEIGHT, IVY_WIDTH_MIN, IVY_WIDTH_MAX)
+
+	# 上から垂れ下がる蔦（胸壁の隙間からランダムに30%だけ）
+	var step: float = BATTLEMENT_WIDTH + BATTLEMENT_GAP
+	var gap_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	gap_rng.seed = 11223
+	var gap_positions: Array[Dictionary] = []
+	for wall in walls:
+		var pos: float = wall.start
+		while pos < wall.end:
+			var gap_center: float = pos + BATTLEMENT_WIDTH + BATTLEMENT_GAP / 2.0
+			if gap_center < wall.end and gap_rng.randf() < 0.3:
+				gap_positions.append({
+					"along": gap_center,
+					"wall_pos": wall.wall_pos,
+					"is_ns": wall.is_ns
+				})
+			pos += step
+	VegetationBuilder.create_hanging_ivy_at_positions(self, gap_positions,
+		WALL_HEIGHT, 2.0, 4.0, IVY_WIDTH_MIN * 0.5, IVY_WIDTH_MAX * 0.5)
 
 
 func _create_grass() -> void:

@@ -41,12 +41,8 @@ func _create_display_data(participant: BattleParticipant) -> Dictionary:
 	return data
 
 ## 攻撃後のHPバー更新
-func _update_hp_bar_after_damage(participant: BattleParticipant) -> void:
-	if not battle_screen_manager:
-		return
-	
-	var side = "attacker" if participant.is_attacker else "defender"
-	var hp_data = {
+func _create_hp_data(participant: BattleParticipant) -> Dictionary:
+	return {
 		"base_hp": participant.base_hp,
 		"base_up_hp": participant.base_up_hp,
 		"item_bonus_hp": participant.item_bonus_hp,
@@ -60,7 +56,13 @@ func _update_hp_bar_after_damage(participant: BattleParticipant) -> void:
 					   participant.temporary_bonus_hp + participant.spell_bonus_hp + \
 					   participant.land_bonus_hp
 	}
-	await battle_screen_manager.update_hp(side, hp_data)
+
+func _update_hp_bar_after_damage(participant: BattleParticipant) -> void:
+	if not battle_screen_manager:
+		return
+
+	var side = "attacker" if participant.is_attacker else "defender"
+	await battle_screen_manager.update_hp(side, _create_hp_data(participant))
 
 
 # バトル実行フェーズ処理
@@ -112,11 +114,21 @@ func determine_attack_order(attacker: BattleParticipant, defender: BattlePartici
 func process_damage_aftermath(damaged: BattleParticipant, opponent: BattleParticipant, _special_effects) -> bool:
 	if not damaged.is_alive():
 		return false  # 既に死亡している場合はスキップ
-	
+
 	# HP閾値での自爆＋相討チェック（リビングボム等）
 	if SkillItemCreature.check_hp_threshold_self_destruct(damaged, opponent):
+		# 🎬 相討テキスト表示 + 両者同時HP更新
+		if battle_screen_manager:
+			var damaged_side = "attacker" if damaged.is_attacker else "defender"
+			var opponent_side = "attacker" if opponent.is_attacker else "defender"
+			var skill_name = SkillDisplayConfig.get_skill_name("death_revenge")
+			await battle_screen_manager.show_skill_activation(damaged_side, skill_name, {})
+			await battle_screen_manager.update_hp_simultaneous(
+				damaged_side, _create_hp_data(damaged),
+				opponent_side, _create_hp_data(opponent)
+			)
 		return true  # 両者死亡の可能性があるため終了
-	
+
 	return false
 
 
@@ -235,27 +247,29 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			if nullify_result["is_nullified"]:
 				var reduction_rate = nullify_result["reduction_rate"]
-				
+
+				# 🎬 無効化をバトル画面に表示（完全無効化・軽減共通）
+				if battle_screen_manager:
+					var defender_side = "attacker" if defender_p.is_attacker else "defender"
+					var curse_nullify_info = _get_curse_nullify_info(defender_p)
+					if curse_nullify_info:
+						await battle_screen_manager.show_skill_activation(defender_side, "刻印[%s]" % curse_nullify_info["name"], {})
+					else:
+						await battle_screen_manager.show_skill_activation(defender_side, "無効化", {})
+
 				if reduction_rate == 0.0:
 					# 完全無効化
 					print("  【無効化】", defender_p.creature_data.get("name", "?"), " が攻撃を完全無効化")
-					
-					# 🎬 刻印による無効化の場合、刻印名を表示
-					if not attacker_p.is_using_scroll:  # 通常攻撃の無効化
-						var curse_nullify_info = _get_curse_nullify_info(defender_p)
-						if curse_nullify_info and battle_screen_manager:
-							var defender_side = "attacker" if defender_p.is_attacker else "defender"
-							await battle_screen_manager.show_skill_activation(defender_side, "刻印[%s]" % curse_nullify_info["name"], {})
-					
+
 					# magic_barrier刻印による100EP移動チェック
 					await _apply_ep_transfer_on_nullify(attacker_p, defender_p)
-					
+
 					continue  # ダメージ処理と即死判定をスキップ
 				else:
 					# 軽減
 					var original_damage = attacker_p.current_ap
 					var reduced_damage = int(original_damage * reduction_rate)
-					print("  【軽減】", defender_p.creature_data.get("name", "?"), 
+					print("  【軽減】", defender_p.creature_data.get("name", "?"),
 						  " がダメージを軽減 ", original_damage, " → ", reduced_damage)
 					
 					# 反射スキルチェック（軽減後のダメージで）
@@ -264,17 +278,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					
 					# 反射がある場合、ダメージをさらに調整
 					var actual_damage_reduced = reflect_result_reduced["self_damage"] if reflect_result_reduced["has_reflect"] else reduced_damage
-					
-					# 軽減ダメージ適用
+
+					# 軽減ダメージ適用（データ上は先に処理）
 					var damage_breakdown_reduced = defender_p.take_damage(actual_damage_reduced)
-					
-					# 🎬 ダメージポップアップ（軽減後）
-					if battle_screen_manager and actual_damage_reduced > 0:
-						var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
-						battle_screen_manager.show_damage(defender_side, actual_damage_reduced)
-						# 🎬 HPバー更新
-						await _update_hp_bar_after_damage(defender_p)
-				
+
 					# 💰 ダメージ時の蓄魔・奪取スキル
 					var actual_damage_dealt_reduced = (
 						damage_breakdown_reduced.get("resonance_bonus_consumed", 0) +
@@ -285,10 +292,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						damage_breakdown_reduced.get("base_hp_consumed", 0)
 					)
 					if spell_magic_ref:
-						# 吸魔（攻撃側）: 与えたダメージベース
 						await apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt_reduced, spell_magic_ref)
-						# 蓄魔（防御側）: 受けたダメージベース
-						SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt_reduced, spell_magic_ref)
+						var damage_magic_amount = SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt_reduced, spell_magic_ref)
+						if damage_magic_amount > 0 and battle_screen_manager:
+							var dm_side = "attacker" if defender_p.is_attacker else "defender"
+							await battle_screen_manager.show_skill_activation(dm_side, "蓄魔[%dEP]" % damage_magic_amount, {})
 
 					print("  ダメージ処理:")
 					if damage_breakdown_reduced["resonance_bonus_consumed"] > 0:
@@ -298,24 +306,42 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if damage_breakdown_reduced["base_hp_consumed"] > 0:
 						print("    - 現在HP: ", damage_breakdown_reduced["base_hp_consumed"], " 消費")
 					print("  → 残HP: ", defender_p.current_hp, " (現在HP:", defender_p.current_hp, ")")
-					
-					# ダメージ後の共通処理（HP閾値スキルなど）
-					if process_damage_aftermath(defender_p, attacker_p, special_effects):
-						break
-					
-					# 反射ダメージを攻撃側に適用
+
+					# 反射がある場合: 着弾直後に反射エフェクト → 両方のHP同時更新
 					if reflect_result_reduced["has_reflect"] and reflect_result_reduced["reflect_damage"] > 0:
-						print("
-  【反射ダメージ適用】")
+						if battle_screen_manager:
+							var reflect_defender_side = "attacker" if defender_p.is_attacker else "defender"
+							var reflect_skill_name = SkillDisplayConfig.get_skill_name("reflect_damage")
+							# テキストとエフェクトを並行開始
+							battle_screen_manager.show_skill_activation(reflect_defender_side, reflect_skill_name, {})
+							await battle_screen_manager.show_reflect_attack(reflect_defender_side)
+
+						print("\n  【反射ダメージ適用】")
 						attacker_p.take_damage(reflect_result_reduced["reflect_damage"])
 						print("    - 攻撃側が受けた反射ダメージ: ", reflect_result_reduced["reflect_damage"])
 						print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
-						
-						# 🎬 反射ダメージ後のHPバー更新
+
+						# 🎬 両方のHPバーを更新（反射着弾後にまとめて）
+						if battle_screen_manager and actual_damage_reduced > 0:
+							var def_side = "defender" if defender_p.is_attacker == false else "attacker"
+							battle_screen_manager.show_damage(def_side, actual_damage_reduced)
+						await _update_hp_bar_after_damage(defender_p)
 						await _update_hp_bar_after_damage(attacker_p)
-						
-						# 反射ダメージ後の共通処理
-						if process_damage_aftermath(attacker_p, defender_p, special_effects):
+
+						# ダメージ後の共通処理
+						if await process_damage_aftermath(defender_p, attacker_p, special_effects):
+							break
+						if await process_damage_aftermath(attacker_p, defender_p, special_effects):
+							break
+					else:
+						# 反射なし: 通常のダメージ表示
+						if battle_screen_manager and actual_damage_reduced > 0:
+							var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
+							battle_screen_manager.show_damage(defender_side, actual_damage_reduced)
+							await _update_hp_bar_after_damage(defender_p)
+
+						# ダメージ後の共通処理
+						if await process_damage_aftermath(defender_p, attacker_p, special_effects):
 							break
 					
 					# 軽減の場合は即死判定を行う
@@ -429,8 +455,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							if success_effects.get("magic_gained", 0) > 0 and battle_screen_manager:
 								var ep_side = "attacker" if attacker_p.is_attacker else "defender"
 								var ep_amount = success_effects["magic_gained"]
-								var item_name_str = attacker_p.creature_data.get("item", {}).get("name", "")
-								var ep_skill_name = "%s: %d蓄魔" % [item_name_str, ep_amount] if item_name_str else "%d蓄魔" % ep_amount
+								var ep_skill_name = "蓄魔[%dEP]" % ep_amount
 								await battle_screen_manager.show_skill_activation(ep_side, ep_skill_name, {})
 					
 					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
@@ -441,17 +466,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 反射がある場合、ダメージを調整
 			var actual_damage = reflect_result["self_damage"] if reflect_result["has_reflect"] else attacker_p.current_ap
-			
-			# ダメージ適用
+
+			# ダメージ適用（データ上は先に処理）
 			var damage_breakdown = defender_p.take_damage(actual_damage)
-			
-			# 🎬 ダメージポップアップ
-			if battle_screen_manager and actual_damage > 0:
-				var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
-				battle_screen_manager.show_damage(defender_side, actual_damage)
-				# 🎬 HPバー更新
-				await _update_hp_bar_after_damage(defender_p)
-			
+
 			# 💰 ダメージ時の蓄魔・奪取スキル
 			var actual_damage_dealt = (
 				damage_breakdown.get("resonance_bonus_consumed", 0) +
@@ -462,12 +480,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				damage_breakdown.get("current_hp_consumed", 0)
 			)
 			if spell_magic_ref:
-				# 吸魔（攻撃側）: 与えたダメージベース
 				await apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)
-				# 蓄魔（防御側）: 受けたダメージベース
-				# ※ 既に take_damage() 内で _trigger_magic_from_damage() が実行済みのため不要
 
-			
 			print("  ダメージ処理:")
 			if damage_breakdown["resonance_bonus_consumed"] > 0:
 				print("    - 共鳴ボーナス: ", damage_breakdown["resonance_bonus_consumed"], " 消費")
@@ -476,29 +490,43 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			if damage_breakdown["current_hp_consumed"] > 0:
 				print("    - 現在HP: ", damage_breakdown["current_hp_consumed"], " 消費")
 			print("  → 残HP: ", defender_p.current_hp, " (現在HP:", defender_p.current_hp, ")")
-			
-			# ダメージ後の共通処理（HP閾値スキルなど）
-			if process_damage_aftermath(defender_p, attacker_p, special_effects):
-				break
-			
-			# 反射ダメージを攻撃側に適用
+
+			# 反射がある場合: 着弾直後に反射エフェクト → 両方のHP同時更新
 			if reflect_result["has_reflect"] and reflect_result["reflect_damage"] > 0:
-				# 🎬 反射スキル表示
+				# 🎬 反射スキル表示 + 反射エフェクト（並行表示）
 				if battle_screen_manager:
-					var skill_name = SkillDisplayConfig.get_skill_name("reflect_damage")
 					var defender_side = "attacker" if defender_p.is_attacker else "defender"
-					await battle_screen_manager.show_skill_activation(defender_side, skill_name, {})
-				print("
-  【反射ダメージ適用】")
+					var skill_name = SkillDisplayConfig.get_skill_name("reflect_damage")
+					# テキストとエフェクトを並行開始（awaitせずテキスト開始）
+					battle_screen_manager.show_skill_activation(defender_side, skill_name, {})
+					await battle_screen_manager.show_reflect_attack(defender_side)
+
+				print("\n  【反射ダメージ適用】")
 				attacker_p.take_damage(reflect_result["reflect_damage"])
 				print("    - 攻撃側が受けた反射ダメージ: ", reflect_result["reflect_damage"])
 				print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
-				
-				# 🎬 反射ダメージ後のHPバー更新
+
+				# 🎬 両方のHPバーを更新（反射着弾後にまとめて）
+				if battle_screen_manager and actual_damage > 0:
+					var def_side = "defender" if defender_p.is_attacker == false else "attacker"
+					battle_screen_manager.show_damage(def_side, actual_damage)
+				await _update_hp_bar_after_damage(defender_p)
 				await _update_hp_bar_after_damage(attacker_p)
-				
-				# 反射ダメージ後の共通処理
-				if process_damage_aftermath(attacker_p, defender_p, special_effects):
+
+				# ダメージ後の共通処理
+				if await process_damage_aftermath(defender_p, attacker_p, special_effects):
+					break
+				if await process_damage_aftermath(attacker_p, defender_p, special_effects):
+					break
+			else:
+				# 反射なし: 通常のダメージ表示
+				if battle_screen_manager and actual_damage > 0:
+					var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
+					battle_screen_manager.show_damage(defender_side, actual_damage)
+					await _update_hp_bar_after_damage(defender_p)
+
+				# ダメージ後の共通処理
+				if await process_damage_aftermath(defender_p, attacker_p, special_effects):
 					break
 			
 			# 即死判定（攻撃が通った後）
@@ -615,8 +643,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if success_effects.get("magic_gained", 0) > 0 and battle_screen_manager:
 						var ep_side = "attacker" if attacker_p.is_attacker else "defender"
 						var ep_amount = success_effects["magic_gained"]
-						var item_name_str = attacker_p.creature_data.get("item", {}).get("name", "")
-						var ep_skill_name = "%s: %d蓄魔" % [item_name_str, ep_amount] if item_name_str else "%d蓄魔" % ep_amount
+						var ep_skill_name = "蓄魔[%dEP]" % ep_amount
 						await battle_screen_manager.show_skill_activation(ep_side, ep_skill_name, {})
 			
 			# 防御側撃破チェック
@@ -935,12 +962,14 @@ func _show_death_effects(death_effects: Dictionary, defeated: BattleParticipant)
 	
 	# 形見EP
 	if death_effects.get("legacy_magic_activated", false):
-		var skill_name = SkillDisplayConfig.get_skill_name("legacy_magic")
+		var ep_amount = death_effects.get("legacy_ep_amount", 0)
+		var skill_name = "形見[%dEP]" % ep_amount if ep_amount > 0 else SkillDisplayConfig.get_skill_name("legacy_magic")
 		await battle_screen_manager.show_skill_activation(side, skill_name, {})
-	
+
 	# カード獲得（死亡時）
 	if death_effects.get("draw_cards_activated", false):
-		var skill_name = SkillDisplayConfig.get_skill_name("legacy_card")
+		var card_count = death_effects.get("legacy_card_count", 1)
+		var skill_name = "形見[カード%d枚]" % card_count if card_count > 1 else "形見[カード]"
 		await battle_screen_manager.show_skill_activation(side, skill_name, {})
 	
 	# 手札復活

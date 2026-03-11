@@ -486,7 +486,7 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 		if not skip_follow:
 			# タイル位置基準でカメラ追従（他フェーズと統一）
 			var tile_pos = tile_nodes[tile_index].global_position
-			var cam_look = tile_pos + Vector3(0, 1.0, 0)
+			var cam_look = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 			var cam_target = cam_look + GameConstants.CAMERA_OFFSET
 			tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 

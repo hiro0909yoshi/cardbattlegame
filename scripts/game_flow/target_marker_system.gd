@@ -355,7 +355,7 @@ static func focus_camera_on_tile(handler, tile_index: int):
 	if not camera:
 		return
 	var tile_pos = tile.global_position
-	var look_target = tile_pos + Vector3(0, 1.0, 0)
+	var look_target = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 	camera.position = look_target + GameConstants.CAMERA_OFFSET
 	camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 

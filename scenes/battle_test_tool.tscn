@@ -103,7 +103,6 @@ text = "プリセット"
 
 [node name="CreaturePresetOption" type="OptionButton" parent="MainSplitContainer/MainContainer/AttackerContainer"]
 layout_mode = 2
-popup/item_6/id = 6
 
 [node name="AttackerCreaturePresetAddButton" type="Button" parent="MainSplitContainer/MainContainer/AttackerContainer"]
 layout_mode = 2
@@ -419,6 +418,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/normal_font_size = 32
 theme_override_font_sizes/bold_font_size = 32
-theme_override_font_sizes/italics_font_size = 32
 theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
 bbcode_enabled = true

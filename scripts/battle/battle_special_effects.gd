@@ -588,9 +588,8 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						print("【形見発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), 
 							  " → プレイヤー", player_id + 1, "が", amount, "蓄魔（MHP", mhp, "×", multiplier, "）")
 						spell_magic_ref.add_magic(player_id, amount)
-						if not result.has("legacy_magic_activated"):
-							result["legacy_magic_activated"] = false
 						result["legacy_magic_activated"] = true
+						result["legacy_ep_amount"] = amount
 					else:
 						push_error("SpellMagicの参照が設定されていません")
 				
@@ -611,8 +610,10 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	# キー名を統一して結果にマージ
 	if legacy_result.get("legacy_ep_activated", false):
 		result["legacy_magic_activated"] = true
+		result["legacy_ep_amount"] = legacy_result.get("legacy_ep_amount", 0)
 	if legacy_result.get("legacy_card_activated", false):
 		result["draw_cards_activated"] = true
+		result["legacy_card_count"] = legacy_result.get("legacy_card_count", 0)
 	
 	# 🔄 手札復活チェック（フェニックス等）
 	if _check_revive_to_hand(defeated):
@@ -988,8 +989,8 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 						print("【自破壊時効果】%s は死亡" % opponent.creature_data.get("name", "?"))
 						result["opponent_killed"] = true
 			
-			"legacy_ep":
-				# マミー等: 形見（蓄魔）- skill_legacy.gdで処理
+			"legacy_ep", "legacy_magic", "legacy_card":
+				# 形見 - skill_legacy.gdで処理
 				pass
 	
 	return result

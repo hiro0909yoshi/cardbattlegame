@@ -146,6 +146,11 @@ const CONFIG = {
 		"effect": "",
 		"sound": ""
 	},
+	"permanent_buff": {
+		"name": "強化",
+		"effect": "",
+		"sound": ""
+	},
 	"revenge_mhp_damage": {
 		"name": "報復",
 		"effect": "",

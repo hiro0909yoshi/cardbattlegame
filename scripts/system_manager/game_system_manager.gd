@@ -254,7 +254,7 @@ func phase_3_setup_basic_config() -> void:
 			if board_system_3d.tile_nodes.has(0):
 				var tile_pos = board_system_3d.tile_nodes[0].global_position
 				tile_pos.y += 1.0  # MOVE_HEIGHT
-				var look_target = tile_pos + Vector3(0, 1.0, 0)
+				var look_target = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 				
 				# カメラ位置 = タイル位置 + オフセット（移動時と同じ）
 				var cam_pos = tile_pos + GameConstants.CAMERA_OFFSET

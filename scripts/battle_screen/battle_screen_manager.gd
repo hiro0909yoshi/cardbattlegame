@@ -95,6 +95,14 @@ func show_attack(attacker_side: String, damage: int):
 	attack_animation_completed.emit()
 
 
+## 反射攻撃演出を表示
+func show_reflect_attack(defender_side: String):
+	if not _battle_screen:
+		return
+
+	await _battle_screen.show_reflect_attack(defender_side)
+
+
 ## ダメージ表示
 func show_damage(side: String, amount: int) -> void:
 	if not _battle_screen:
@@ -110,6 +118,16 @@ func update_hp(side: String, hp_data: Dictionary):
 
 	await _battle_screen.show_hp_change(side, hp_data)
 	# HPバー更新後の間隔（次の攻撃までの余韻）
+	await _battle_screen.get_tree().create_timer(0.5).timeout
+
+
+## 両者のHP同時更新（相打ち演出用）
+func update_hp_simultaneous(side_a: String, hp_data_a: Dictionary, side_b: String, hp_data_b: Dictionary):
+	if not _battle_screen:
+		return
+
+	_battle_screen.show_hp_change(side_a, hp_data_a)
+	await _battle_screen.show_hp_change(side_b, hp_data_b)
 	await _battle_screen.get_tree().create_timer(0.5).timeout
 
 

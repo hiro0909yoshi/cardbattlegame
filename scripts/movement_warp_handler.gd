@@ -66,7 +66,7 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 			if gfm and gfm.board_system_3d:
 				gfm.board_system_3d.cancel_direction_tween()
 			var tile_pos = controller.tile_nodes[to_tile].global_position
-			var cam_look = tile_pos + Vector3(0, 1.0, 0)
+			var cam_look = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0)
 			controller.camera.global_position = cam_look + GameConstants.CAMERA_OFFSET
 
 	# 拡大して現れる

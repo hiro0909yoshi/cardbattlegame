@@ -31,21 +31,23 @@ static func check_and_apply_item_return(participant: BattleParticipant, used_ite
 	if return_effects.is_empty():
 		return {"returned": false, "items": []}
 	
-	var returned_items = []
-	var returned_item_ids = []  # 重複チェック用
-	
+	var returned_items: Array[Dictionary] = []
+	var returned_item_ids: Array[int] = []  # 重複チェック用
+	var _has_deck_return := false
+	var _has_hand_return := false
+
 	# 各復帰効果に対して処理
 	for return_effect in return_effects:
 		var return_type = return_effect.get("return_type", "")
 		var target = return_effect.get("target", "self")  # "self" or "all_items"
-		
+
 		# 復帰対象のアイテムを決定
-		var items_to_return = []
+		var items_to_return: Array[Dictionary] = []
 		if target == "all_items":
 			# ケンタウロスなど：全アイテムを復帰（ただし除外リストを考慮）
 			var exclude_ids = return_effect.get("exclude_item_ids", [])
 			var all_items = return_effect.get("used_items", used_items)
-			
+
 			for item in all_items:
 				var item_id = item.get("id", -1)
 				# 除外リストに含まれていないアイテムのみ追加
@@ -54,38 +56,41 @@ static func check_and_apply_item_return(participant: BattleParticipant, used_ite
 		else:
 			# 通常：そのアイテム自身のみ復帰
 			items_to_return = [return_effect.get("item_data")]
-		
+
 		# 各アイテムを復帰
 		for item_data in items_to_return:
 			if item_data == null or item_data.is_empty():
 				continue
-			
+
 			var item_id = item_data.get("id", -1)
 			# 既に復帰済みのアイテムはスキップ
 			if item_id in returned_item_ids:
 				continue
-			
+
 			var success = false
 			match return_type:
 				"return_to_deck":
-					# player_idを渡す
 					success = _return_to_deck(player_id, item_data)
 					if success:
 						print("【帰還→ブック】", item_data.get("name", "?"))
-				
+						_has_deck_return = true
+
 				"return_to_hand":
 					success = _return_to_hand(player_id, item_data)
 					if success:
 						print("【帰還→手札】", item_data.get("name", "?"))
-			
+						_has_hand_return = true
+
 			if success:
 				returned_items.append(item_data)
 				returned_item_ids.append(item_id)
-	
+
 	return {
 		"returned": not returned_items.is_empty(),
 		"items": returned_items,
-		"count": returned_items.size()
+		"count": returned_items.size(),
+		"has_deck_return": _has_deck_return,
+		"has_hand_return": _has_hand_return
 	}
 
 ## 復帰効果の収集

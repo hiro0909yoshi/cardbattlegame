@@ -84,8 +84,9 @@ const CPU_BATTLE_RATE = 0.7       # CPUバトル確率
 const CPU_LEVELUP_RATE = 0.5      # CPUレベルアップ確率
 
 # === カメラ関連 ===
-const CAMERA_OFFSET = Vector3(8, 10, 8)  # カメラオフセット位置
+const CAMERA_OFFSET = Vector3(10, 9, 10)  # カメラオフセット位置
 const CAMERA_LOOK_OFFSET_Y = -1.0  # look_at対象のY補正（負でプレイヤーが画面上に移動）
+const CAMERA_TILE_LOOK_HEIGHT = 1.0  # タイル見目高さ（look_at対象のY加算）
 
 # === アニメーション ===
 const MOVE_SPEED = 0.3            # 移動アニメーション速度（秒）

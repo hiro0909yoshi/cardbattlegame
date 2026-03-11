@@ -42,7 +42,7 @@ CanvasLayer (layer = 110) - TransitionLayer（最前面）
 └── ColorRect (黒、フェード用)
 └── BattleStartLabel ("BATTLE!" テキスト)
 
-CanvasLayer (layer = 90) - BattleScreen  
+CanvasLayer (layer = 90) - BattleScreen
 └── Background (背景)
 ├── AttackerDisplay (左・侵略側カード)
 │   └── CardContainer (Card.tscnインスタンス、3.9倍スケール)
@@ -67,9 +67,7 @@ CanvasLayer (layer = 90) - BattleScreen
    - バトル画面を準備（非表示状態で）
 3. フェードイン（0.25秒）→ バトル画面が表示される
 4. イントロ演出
-   - 侵略側カードが左からスライドイン
-   - 防衛側カードが右からスライドイン
-   - VSが表示される
+   - VSラベルがズームイン表示
 5. クリック待ち（ユーザーがクリックするまで停止）
 6. スキル発動フェーズ → バトル開始
 ```
@@ -82,7 +80,7 @@ CanvasLayer (layer = 90) - BattleScreen
    - スキル名表示やHP/APバーの更新が可能
 3. バトル画面を閉じる - close_battle_screen()
    - フェードアウト（0.25秒）
-   - バトル画面を削除
+   - バトル画面をObject Poolに返却
    - フェードイン（0.25秒）→ 元のゲーム画面
 ```
 
@@ -108,8 +106,8 @@ CanvasLayer (layer = 90) - BattleScreen
 ### 3. スキル発動フェーズ（1つずつアニメーション）
 ```
 発動順序に従って以下を繰り返す（各スキル1.5秒）:
-1. スキル名をカード上部に表示
-2. HP/APバーを変動させる（1.5秒かけて滑らかに）
+1. スキル名をカード上部に表示（バウンスズーム演出）
+2. HP/APバーを変動させる（1.5秒かけて滑らかに、スキル名表示と並列実行）
    - 緑セグメント: current_hp + item_bonus_hp
    - バフ（水色）: 共鳴 + 一時 + スペル
    - 土地（黄）: 土地ボーナス
@@ -128,20 +126,49 @@ CanvasLayer (layer = 90) - BattleScreen
 ### 4. 攻撃フェーズ
 ```
 攻撃順序に従って:
-1. 攻撃側カードが前に移動（0.2秒）
-2. 攻撃エフェクト再生
-3. 被攻撃側カードが揺れる
-4. ダメージ数値ポップアップ
+1. エネルギー収束（0.5s）
+   - 12個の光パーティクルが周囲からスパイラル軌道で攻撃側カード中心に収束
+   - 中央のエネルギーオーブが脈動しながら拡大（16px → 300px）
+   - 6個の周回パーティクルが外周を回転
+2. 攻撃モーション（0.2s）
+   - 攻撃側カードが前方に移動
+3. 光の玉が敵に飛ぶ（0.3s）
+   - エネルギーオーブが加速しながら防御側に移動
+   - 飛行中に軌跡パーティクルを残す
+4. 着弾
+   - 被攻撃側カードが揺れる（ダメージアニメーション）
+   - ダメージ数値ポップアップ
 5. HPバー減少（1.5秒かけて右側から消費）
    - 土地(黄) → バフ(水色) → 緑セグメント の順で減少
-6. 攻撃側カードが元の位置に戻る（0.2秒）
-7. 次の攻撃へ
+6. 次の攻撃へ
+```
+
+### 4-1. 反射攻撃フェーズ
+```
+ダメージ反射スキル発動時:
+1. 反射オーブ生成（赤系グラデーション）
+2. バリアフラッシュ（0.18s）
+   - 円形の光が一瞬広がり消える演出
+   - 反射オーブが拡大（16px → 200px）
+3. 反射玉が攻撃側に飛ぶ（0.25s）
+   - 軌跡パーティクル付き
+4. 着弾
+   - 攻撃側カードが揺れる
+```
+
+### 4-2. 相打ち演出
+```
+HP閾値自爆スキル（リビングボム等）発動時:
+1. スキル名表示（「道連れ」等）
+2. 両者のHPバーを同時に減少（update_hp_simultaneous）
 ```
 
 ### 5. 結果表示
 ```
 - 勝敗に応じた演出
-- 敗北側カードが消える/倒れるアニメーション
+- 敗北側カードがフェードアウト（敗北アニメーション）
+- BOTH_DEFEATED: 両者順次フェードアウト
+- ATTACKER_SURVIVED: 特別な演出なし
 ```
 
 ## HP/APバー仕様
@@ -160,7 +187,7 @@ HPバー構造（左から右）:
   +item_bonus_hp    +スペル
   （最後に消費）
 
-数値表示: 「65 / 90」(現在の合計HP / 合計最大HP)
+数値表示: 「65 / 30+20+10」(現在の合計HP / 基本HP+バフ+土地)
 ※数値は実際の値を表示（100を超えることもある）
 ```
 
@@ -177,8 +204,8 @@ HPバー構造（左から右）:
 5. アイテムボーナス（item_bonus_hp）
 6. current_hp ← 最後に消費
 
-**色分け:**
-- 緑 `#4CAF50`: current_hp + item_bonus_hp
+**色分け（上下グラデーション描画）:**
+- 緑 `#4CAF50`: current_hp + base_up_hp + item_bonus_hp
 - バフ（水色）`#03A9F4`: 共鳴 + 一時的 + スペルボーナスの合計
 - 土地ボーナス（黄）`#FFC107`: 最初に消費
 - 空（灰）`#424242`: 残りHP枠（最大100）
@@ -186,47 +213,68 @@ HPバー構造（左から右）:
 
 **アニメーション:**
 - 変動時間: 1.5秒
-- 消費順序を反映（右から順に減少: 黄→水色→緑）
-- 回復時は全セグメント同時に増加
+- ダメージ時: 右から順に減少（黄→水色→緑）、赤フラッシュオーバーレイ
+- 回復時: 全セグメント同時に増加（単純補間）
 
 **サイズ（5.2倍スケール）:**
 - 幅: 1040px
-- 高さ: 125px
-- 数値フォント: 72pt、太字、白色、アウトライン10px
-- 枠線: 10px
+- 高さ: 150px
+- 数値フォント: 100pt、白色、アウトライン10px（黒）
+- 枠線: 5px（白）
 
 **配置:**
-- 固定位置（画面下部、y = 画面高さ - 280px）
+- 固定位置（画面下部、y = 画面高さ - 360px）
 - カードと連動せず独立配置
 - 攻撃側: 中央から左に300px（バー右端）
 - 防御側: 中央から右に300px（バー左端）
 
 ### APバー
-- 色: 青系 `#2196F3`（単色）
+- 色: 濃い赤 `#B71C1C`（上下グラデーション）
 - 最大幅: 100固定（APが100以上でもバーは100%で止まる）
 - 幅: 1040px
-- 高さ: 83px
-- 数値フォント: 62pt
+- 高さ: 140px
+- 数値フォント: 100pt、白色、アウトライン10px（黒）
 - スペーシング: 21px（HPバーとの間隔）
+- 枠線: 5px（白）
 - 数値表示: 実際のAP値
 - アニメーション: 1.5秒かけて滑らかに変動
 
 ## スキル名表示仕様
 
 - 位置: カード上部（カードの中央揃え）
-- 背景: 半透明の茶色プレート（300×60px）
 - フォント: 36pt、太字、白色
-- アウトライン: 4px、黒色
-- 表示時間: 1.5秒
-- アニメーション: フェードイン（0.15秒）→ 維持 → フェードアウト（0.15秒）
+- アウトライン: 8px、ダークブラウン `Color(0.1, 0.05, 0.0)`
+- シャドウ: オフセット(2, 3)、黒 70%透明度
+- 表示時間: 0.8秒
+- アニメーション: バウンスズーム
+  - 初期スケール0.3 → 3.5にオーバーシュート（0.25秒）→ 3.0に戻る（0.1秒）
+  - フェードイン（0.1秒）→ 維持（0.8秒）→ フェードアウト（0.2秒）
 
 ## ダメージポップアップ仕様
 
-- ダメージ: 赤色、「-30」形式
-- 回復: 緑色、「+20」形式
-- バフ: 青色、「AP+10」等
-- アニメーション: 上に浮き上がりながらフェードアウト
-- フォントサイズ: 大きめ（視認性重視）
+- ダメージ: 赤色 `#FF5252`、数値のみ（「30」形式、マイナス記号なし）
+- 回復: 緑色 `#69F0AE`、「+20」形式
+- バフ: 水色 `#40C4FF`、テキスト形式
+- フォントサイズ: 100pt、アウトライン8px（黒）
+- アニメーション:
+  - 上に50px浮き上がり（0.8秒）
+  - スケール強調: 1.0→1.2（0.1秒）→1.0に戻る（0.2秒）
+  - フェードアウト（0.8秒、0.3秒遅延）
+  - 完了後に自動削除
+
+## エネルギーオーブ仕様
+
+### 攻撃用オーブ（EnergyOrb）
+- `_draw()`ベースの円形グラデーション描画
+- 色: 青白系
+- チャージ時に脈動（4回振動、振幅0.25）
+- 16px → 300px に拡大
+
+### 反射用オーブ（ReflectOrb）
+- `_draw()`ベースの円形グラデーション描画
+- 色: 赤系
+- 16px → 200px に拡大
+- バリアフラッシュ演出（半透明赤の円が拡大消滅）
 
 ## カード表示
 
@@ -243,19 +291,22 @@ HPバー構造（左から右）:
 - カード間スペース: 片側300px（合計600px）
 - 攻撃側: 中央 - 300 - カード幅
 - 防御側: 中央 + 300
-- Y位置: 画面中央から550px上
+- Y位置: 画面中央から上方にオフセット
 
 ## 実装ファイル構成
 
 ```
 res://scripts/battle_screen/
 ├── battle_screen.gd            # メイン制御（CanvasLayer）
+├── battle_screen_manager.gd    # 既存システムとの連携（Object Pool管理）
 ├── battle_creature_display.gd  # クリーチャー表示制御（Card.tscnインスタンス化）
 ├── hp_ap_bar.gd                # バー制御（固定位置、最大値100固定）
 ├── damage_popup.gd             # ポップアップ制御
-├── skill_label.gd              # スキル名表示制御（36pt）
+├── skill_label.gd              # スキル名表示制御（バウンスズーム）
+├── skill_display_config.gd     # スキル表示設定（マッピングテーブル）
 ├── transition_layer.gd         # 画面遷移制御
-└── battle_screen_manager.gd    # 既存システムとの連携
+├── energy_orb.gd               # 攻撃用エネルギーオーブ（_draw描画）
+└── reflect_orb.gd              # 反射用オーブ（_draw描画）
 
 res://scripts/battle/
 └── battle_skill_processor.gd   # スキル適用（1つずつアニメーション対応）
@@ -270,32 +321,45 @@ class_name BattleScreenManager
 signal intro_completed
 signal skill_animation_completed
 signal attack_animation_completed
+signal battle_screen_opened       # 将来使用予定
 signal battle_screen_closed
 
-func start_battle(attacker_data, defender_data, item_data = null):
+func start_battle(attacker_data, defender_data, _item_data = null):
+	# Object Poolからインスタンス取得
 	# トランジション → バトル画面表示 → イントロ演出
 	pass
 
-func show_skill_activation(side: String, skill_name: String, effects: Dictionary):
-	# スキル発動演出（1.5秒）
-	# side: "attacker" or "defender"
-	# effects: {hp_data, ap}
+func show_skill_activation(side: String, skill_name: String, effects: Dictionary = {}):
+	# スキル名表示とHP/AP変更を並列実行（1.5秒）
+	# effects: {hp_data, ap, buff_text}
 	pass
 
 func show_attack(attacker_side: String, damage: int):
-	# 攻撃演出
+	# エネルギー収束 → 攻撃モーション → 光の玉発射
+	pass
+
+func show_reflect_attack(defender_side: String):
+	# 反射攻撃演出（防御側→攻撃側に光玉を跳ね返す）
 	pass
 
 func show_damage(side: String, amount: int):
-	# ダメージ表示
+	# ダメージポップアップ表示
 	pass
 
 func update_hp(side: String, hp_data: Dictionary):
-	# HPバー更新（1.5秒アニメーション）
+	# HPバー更新（1.5秒アニメーション + 0.5秒余韻）
+	pass
+
+func update_hp_simultaneous(side_a: String, hp_data_a: Dictionary, side_b: String, hp_data_b: Dictionary):
+	# 両者のHPバーを同時に更新（相打ち演出用）
 	pass
 
 func update_ap(side: String, value: int):
 	# APバー更新（1.5秒アニメーション）
+	pass
+
+func update_creature(side: String, new_data: Dictionary):
+	# クリーチャー表示更新（変身時など）
 	pass
 
 func show_battle_result(result: int):
@@ -304,13 +368,21 @@ func show_battle_result(result: int):
 	pass
 
 func close_battle_screen():
-	# バトル画面を閉じる
-	# トランジション → 画面削除 → シグナル発火
+	# バトル画面をObject Poolに返却
+	# トランジション → 返却 → シグナル発火
 	pass
 
 func end_battle(result: int):
 	# 後方互換性のため残す
 	# show_battle_result() + close_battle_screen() を順番に呼ぶ
+	pass
+
+func force_close() -> void:
+	# 強制終了（エラー時など）
+	pass
+
+static func create_hp_data_from_participant(participant) -> Dictionary:
+	# BattleParticipantからHP表示用データを作成
 	pass
 ```
 
@@ -324,20 +396,22 @@ func end_battle(result: int):
 
 ### Phase 2: アニメーション ✅
 - [x] 画面遷移（フェードイン/アウト）
-- [x] カードスライドイン
+- [x] VSラベルズームイン表示
 - [x] HP/APバーのTweenアニメーション（1.5秒）
 - [x] ダメージポップアップ
 - [x] クリック待ち機能
 - [x] 右から順にHP消費するアニメーション
 
 ### Phase 3: スキル演出 ✅
-- [x] スキル名表示（36pt、1.5秒）
+- [x] スキル名表示（36pt、バウンスズーム、0.8秒）
 - [x] スキル1つずつアニメーション表示
-- [x] 攻撃アニメーション
-- [ ] 基本エフェクト
+- [x] 攻撃アニメーション（エネルギーオーブシステム）
+- [x] 反射攻撃演出（ReflectOrb）
+- [x] 相打ち演出（両者同時HP更新）
+- [ ] 基本エフェクト（SE等）
 
 ### Phase 4: 既存システム連携 ✅
-- [x] BattleScreenManager実装
+- [x] BattleScreenManager実装（Object Pool管理）
 - [x] battle_system.gdとの統合
 - [x] battle_skill_processor.gdのスキル別アニメーション対応
 - [x] awaitによる演出待機
@@ -346,19 +420,6 @@ func end_battle(result: int):
 - [ ] 効果音追加
 - [ ] BGM切り替え
 - [ ] エフェクト追加・調整
-
-## 実装メモ
-
-### 2024年12月実装
-- BattleCreatureDisplayでCard.tscnをインスタンス化
-- HPバーを固定位置に配置（カードと連動しない）
-- バトル開始後のクリック待ち機能
-- カード間隔: 片側300px（合計600px）
-- HPバー間隔: 中央から左右に300pxずつ
-- HP/APバー最大値100固定（100以上でもバーは100%で止まる）
-- スキル1つずつアニメーション表示（1.5秒）
-- スキル名表示を大きく（36pt、背景300×60px）
-- HP消費アニメーション: 右から順（黄→水色→緑）
 
 ---
 
@@ -517,7 +578,7 @@ const CONFIG = {
 		"effect": "shield_break",
 		"sound": "se_break"
 	},
-	
+
 	# パラメータで分岐するスキル
 	"change_tile_element": {
 		"name": "属性変化",
@@ -529,7 +590,7 @@ const CONFIG = {
 		},
 		"sound": "se_element_change"
 	},
-	
+
 	# エフェクト未実装のスキル（名前のみ表示）
 	"resonance": {
 		"name": "共鳴",

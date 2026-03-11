@@ -253,15 +253,25 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# 5. 結果判定
 	var result = battle_execution.resolve_battle_result(attacker, defender)
-	
-	# 🎬 バトル画面で結果表示
-	if battle_screen_manager:
-		await battle_screen_manager.show_battle_result(result)
-	
-	# 🎬 戦闘終了時能力（バトル画面表示が必要なもの）
+
+	# 🎬 戦闘終了時能力（カードが見える状態で表示）
 	await battle_special_effects.apply_regeneration(attacker)
 	await battle_special_effects.apply_regeneration(defender)
-	
+
+	# 🎬 帰還処理
+	await _apply_item_return(attacker, attacker_index)
+	await _apply_item_return(defender, defender.player_id)
+
+	# 🎬 殲滅効果
+	await _apply_annihilate_with_display(attacker, defender, result)
+
+	# 🎬 永続バフ
+	await _apply_permanent_buffs_with_display(attacker, defender, result)
+
+	# 🎬 バトル画面で結果表示（カード倒れる演出）
+	if battle_screen_manager:
+		await battle_screen_manager.show_battle_result(result)
+
 	# 🎬 バトル画面を閉じる
 	if battle_screen_manager:
 		await battle_screen_manager.close_battle_screen()
@@ -567,9 +577,7 @@ func _apply_post_battle_effects(
 			await _show_land_effect_notification(attacker.creature_data, land_effect_result)
 			print("[DEBUG] 土地効果通知完了")
 
-			# 💀 殲滅効果（アネイマブル）
-			print("[DEBUG] 殲滅効果チェック")
-			battle_special_effects.check_and_apply_annihilate(attacker, defender)
+			# 💀 殲滅効果はバトル画面を閉じる前に実行済み
 
 			print("[DEBUG] invasion_completed シグナル emit 直前: tile=%d" % tile_index)
 			emit_signal("invasion_completed", true, tile_index)
@@ -586,13 +594,8 @@ func _apply_post_battle_effects(
 			# 注: 攻撃側には通常刻印はないが、移動侵略の場合はあり得る
 			await _check_and_apply_bounty_reward(attacker, defender)
 			
-			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
-			SkillPermanentBuff.apply_on_destroy_buffs(defender)
-			
-			# バトル後の永続変化を適用（ロックタイタン等）
-			SkillPermanentBuff.apply_after_battle_changes(attacker)
-			SkillPermanentBuff.apply_after_battle_changes(defender)
-			
+			# 永続バフ・永続変化はバトル画面を閉じる前に実行済み
+
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
@@ -610,8 +613,7 @@ func _apply_post_battle_effects(
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
 			await _show_land_effect_notification(defender.creature_data, land_effect_result)
 			
-			# 💀 殲滅効果（アネイマブル）
-			battle_special_effects.check_and_apply_annihilate(defender, attacker)
+			# 💀 殲滅効果はバトル画面を閉じる前に実行済み
 
 			# NOTE: 移動元タイルは移動コマンド時に既に削除・空き地化済み（land_action_helper.gd:349）
 			# 移動侵略の場合、移動元タイルに戻していないので削除不要
@@ -629,11 +631,9 @@ func _apply_post_battle_effects(
 		BattleResult.ATTACKER_SURVIVED:
 			print("
 【結果】侵略失敗！攻撃側が生き残り")
-			
-			# バトル後の永続変化を適用（ロックタイタン等）
-			SkillPermanentBuff.apply_after_battle_changes(attacker)
-			SkillPermanentBuff.apply_after_battle_changes(defender)
-			
+
+			# 永続バフ・永続変化はバトル画面を閉じる前に実行済み
+
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
@@ -777,10 +777,8 @@ func _apply_post_battle_effects(
 	
 	# 🔄 手札復活処理はcheck_on_death_effects内で即座に実行済み
 	
-	# 📦 帰還処理
-	_apply_item_return(attacker, attacker_index)
-	_apply_item_return(defender, defender.player_id)
-	
+	# 📦 帰還処理はバトル画面を閉じる前に実行済み
+
 	# 表示更新
 	if board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
@@ -832,17 +830,84 @@ func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattlePart
 func _apply_item_return(participant: BattleParticipant, player_id: int):
 	if not participant or not participant.creature_data:
 		return
-	
+
 	# 使用したアイテムを取得
 	var used_items = participant.creature_data.get("items", [])
 	if used_items.is_empty():
 		return
-	
+
 	# 帰還スキルをチェックして適用
 	var return_result = _skill_item_return.check_and_apply_item_return(participant, used_items, player_id)
-	
+
 	if return_result.get("returned", false):
 		var count = return_result.get("count", 0)
 		print("【帰還完了】", count, "個のアイテムが復帰しました")
+
+		# 🎬 バトル画面にスキル表示（復帰先を表示）
+		if battle_screen_manager:
+			var side = "attacker" if participant.is_attacker else "defender"
+			var base_name = SkillDisplayConfig.get_skill_name("item_return")
+			var destination = ""
+			if return_result.get("has_hand_return", false):
+				destination = "[手札]"
+			elif return_result.get("has_deck_return", false):
+				destination = "[ブック]"
+			await battle_screen_manager.show_skill_activation(side, base_name + destination, {})
+
+# 殲滅効果（バトル画面表示付き）
+func _apply_annihilate_with_display(attacker: BattleParticipant, defender: BattleParticipant, result: BattleResult):
+	# 勝者が殲滅スキルを持つ場合のみ
+	var winner: BattleParticipant = null
+	var loser: BattleParticipant = null
+	if result == BattleResult.ATTACKER_WIN:
+		winner = attacker
+		loser = defender
+	elif result == BattleResult.DEFENDER_WIN:
+		winner = defender
+		loser = attacker
+
+	if not winner or not loser:
+		return
+
+	var deleted_count = battle_special_effects.check_and_apply_annihilate(winner, loser)
+	if deleted_count > 0 and battle_screen_manager:
+		var side = "attacker" if winner.is_attacker else "defender"
+		var skill_name = SkillDisplayConfig.get_skill_name("annihilate")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
+
+
+# 永続バフ（バトル画面表示付き）
+func _apply_permanent_buffs_with_display(attacker: BattleParticipant, defender: BattleParticipant, result: BattleResult):
+	# 敵破壊時の永続バフ（バルキリー・ダスクドウェラー）
+	if result == BattleResult.ATTACKER_WIN:
+		var old_ap = attacker.base_up_ap
+		var old_hp = attacker.base_up_hp
+		SkillPermanentBuff.apply_on_destroy_buffs(attacker)
+		if (attacker.base_up_ap != old_ap or attacker.base_up_hp != old_hp) and battle_screen_manager:
+			var side = "attacker" if attacker.is_attacker else "defender"
+			await battle_screen_manager.show_skill_activation(side, SkillDisplayConfig.get_skill_name("permanent_buff"), {})
+	elif result == BattleResult.DEFENDER_WIN:
+		var old_ap = defender.base_up_ap
+		var old_hp = defender.base_up_hp
+		SkillPermanentBuff.apply_on_destroy_buffs(defender)
+		if (defender.base_up_ap != old_ap or defender.base_up_hp != old_hp) and battle_screen_manager:
+			var side = "attacker" if defender.is_attacker else "defender"
+			await battle_screen_manager.show_skill_activation(side, SkillDisplayConfig.get_skill_name("permanent_buff"), {})
+
+	# バトル後の永続変化（ロックタイタン等）
+	var att_old_ap = attacker.base_up_ap
+	var att_old_hp = attacker.base_up_hp
+	SkillPermanentBuff.apply_after_battle_changes(attacker)
+	if (attacker.base_up_ap != att_old_ap or attacker.base_up_hp != att_old_hp) and battle_screen_manager:
+		var side = "attacker" if attacker.is_attacker else "defender"
+		await battle_screen_manager.show_skill_activation(side, SkillDisplayConfig.get_skill_name("permanent_buff"), {})
+
+	var def_old_ap = defender.base_up_ap
+	var def_old_hp = defender.base_up_hp
+	SkillPermanentBuff.apply_after_battle_changes(defender)
+	if (defender.base_up_ap != def_old_ap or defender.base_up_hp != def_old_hp) and battle_screen_manager:
+		var side = "attacker" if defender.is_attacker else "defender"
+		await battle_screen_manager.show_skill_activation(side, SkillDisplayConfig.get_skill_name("permanent_buff"), {})
+
 
 # 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsに移動

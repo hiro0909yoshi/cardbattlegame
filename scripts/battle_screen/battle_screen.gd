@@ -67,7 +67,7 @@ func _setup_ui() -> void:
 	_vs_label.text = "VS"
 	_vs_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_vs_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_vs_label.add_theme_font_size_override("font_size", 48)
+	_vs_label.add_theme_font_size_override("font_size", 100)
 	_vs_label.add_theme_color_override("font_color", Color.WHITE)
 	_vs_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_vs_label.add_theme_constant_override("outline_size", 4)
@@ -138,7 +138,7 @@ func _layout_ui() -> void:
 	
 	# HPバー固定位置（画面下部、片側300px = 合計600px離す）
 	var hp_bar_width = 1040  # HP_BAR_WIDTH
-	var hp_bar_y = viewport_size.y - 280  # 画面下から280px
+	var hp_bar_y = viewport_size.y - 360  # 画面下から360px
 	var hp_bar_spacing = 300  # HPバーの中央からの距離
 	
 	# 攻撃側HPバー - 中央から左に300px
@@ -295,26 +295,85 @@ func show_attack(attacker_side: String, damage: int):
 	# Phase 3: 光の玉が敵に飛ぶ（0.3s）
 	await _animate_orb_travel(orb, attacker_center, defender_center, 0.3)
 
-	# 着弾：ダメージ演出
+	# 着弾：ダメージ演出（ポップアップはbattle_execution側で表示）
 	orb.queue_free()
 	defender.play_damage_animation()
-	defender.show_damage_popup(damage)
 
 	await get_tree().create_timer(0.15).timeout
 
 
-## エネルギーの玉を作成
-func _create_energy_orb(center: Vector2) -> Panel:
-	var orb = Panel.new()
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(1.0, 0.95, 0.7, 0.9)
-	style.corner_radius_top_left = 30
-	style.corner_radius_top_right = 30
-	style.corner_radius_bottom_left = 30
-	style.corner_radius_bottom_right = 30
-	style.shadow_color = Color(1.0, 0.8, 0.3, 0.5)
-	style.shadow_size = 12
-	orb.add_theme_stylebox_override("panel", style)
+## 反射攻撃演出（防御側→攻撃側に光玉を跳ね返す）
+func show_reflect_attack(defender_side: String):
+	var defender = _attacker_display if defender_side == "attacker" else _defender_display
+	var attacker = _defender_display if defender_side == "attacker" else _attacker_display
+
+	var scaled_size = BattleCreatureDisplay.CARD_DISPLAY_SIZE * BattleCreatureDisplay.CARD_SCALE
+	var defender_center = defender.position + scaled_size / 2
+	var attacker_center = attacker.position + scaled_size / 2
+
+	# 反射の光玉を生成（赤系）
+	var orb = _create_reflect_orb(defender_center)
+
+	# 反射チャージ（短め、0.3s）
+	await _animate_reflect_charge(orb, defender_center, 0.3)
+
+	# 反射玉が攻撃側に飛ぶ
+	await _animate_orb_travel(orb, defender_center, attacker_center, 0.25)
+
+	# 着弾
+	orb.queue_free()
+	attacker.play_damage_animation()
+	await get_tree().create_timer(0.15).timeout
+
+
+## 反射用の光玉を作成（赤系グラデーション）
+func _create_reflect_orb(center: Vector2) -> Control:
+	var orb = ReflectOrb.new()
+	orb.size = Vector2(16, 16)
+	orb.position = center - Vector2(8, 8)
+	orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_effect_layer.add_child(orb)
+	return orb
+
+
+## 反射チャージアニメーション（短め、バリアが光って跳ね返す感じ）
+func _animate_reflect_charge(orb: Control, center: Vector2, duration: float) -> void:
+	# バリアフラッシュ（円形の光が一瞬広がる）
+	var flash = Panel.new()
+	var flash_style = StyleBoxFlat.new()
+	flash_style.bg_color = Color(1.0, 0.3, 0.2, 0.4)
+	flash_style.corner_radius_top_left = 200
+	flash_style.corner_radius_top_right = 200
+	flash_style.corner_radius_bottom_left = 200
+	flash_style.corner_radius_bottom_right = 200
+	flash.add_theme_stylebox_override("panel", flash_style)
+	flash.size = Vector2(50, 50)
+	flash.position = center - Vector2(25, 25)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_effect_layer.add_child(flash)
+
+	var flash_tween = create_tween()
+	flash_tween.set_parallel(true)
+	flash_tween.tween_property(flash, "size", Vector2(400, 400), duration * 0.6)
+	flash_tween.tween_property(flash, "position", center - Vector2(200, 200), duration * 0.6)
+	flash_tween.tween_property(flash, "modulate:a", 0.0, duration * 0.6)
+	flash_tween.chain().tween_callback(flash.queue_free)
+
+	# 玉の拡大
+	var tween = create_tween()
+	tween.tween_method(func(t: float):
+		var base_t = t / duration
+		var current_size = Vector2(16, 16).lerp(Vector2(200, 200), base_t)
+		orb.size = current_size
+		orb.position = center - current_size / 2
+		orb.queue_redraw()
+	, 0.0, duration, duration)
+	await tween.finished
+
+
+## エネルギーの玉を作成（_draw()ベースのなめらかグラデーション）
+func _create_energy_orb(center: Vector2) -> Control:
+	var orb = EnergyOrb.new()
 	orb.size = Vector2(16, 16)
 	orb.position = center - Vector2(8, 8)
 	orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -328,7 +387,7 @@ func _spawn_gathering_particles(center: Vector2, duration: float) -> void:
 	for i in range(particle_count):
 		var particle = Panel.new()
 		var style = StyleBoxFlat.new()
-		style.bg_color = Color(1.0, 0.9, 0.5, 0.8)
+		style.bg_color = Color(0.4, 0.7, 1.0, 0.8)
 		style.corner_radius_top_left = 6
 		style.corner_radius_top_right = 6
 		style.corner_radius_bottom_left = 6
@@ -367,32 +426,95 @@ func _spawn_gathering_particles(center: Vector2, duration: float) -> void:
 		tween.tween_callback(particle.queue_free)
 
 
-## 玉のチャージアニメーション（小→大）
-func _animate_orb_charge(orb: Panel, duration: float) -> void:
+## 玉のチャージアニメーション（小→大 + 脈動 + 周回パーティクル）
+func _animate_orb_charge(orb: Control, duration: float) -> void:
 	var center = orb.position + orb.size / 2
-	var target_size = Vector2(80, 80)
+	var target_size = Vector2(300, 300)
 
+	# メインの拡大アニメーション
 	var tween = create_tween()
-	tween.set_parallel(true)
-	# サイズ拡大
-	tween.tween_property(orb, "size", target_size, duration) \
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	# 中心を維持
-	tween.tween_property(orb, "position", center - target_size / 2, duration) \
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_method(func(t: float):
+		var base_t = t / duration
+		# 脈動: 振幅0.25で4回、はっきり膨張・収縮
+		var pulse = sin(base_t * TAU * 4.0) * 0.25 * base_t
+		var scale_factor = base_t + pulse
+		var current_size = Vector2(16, 16).lerp(target_size, clampf(scale_factor, 0.0, 1.3))
+		orb.size = current_size
+		orb.position = center - current_size / 2
+		orb.queue_redraw()
+	, 0.0, duration, duration)
+
+	# 周回パーティクル（チャージ後半から出現）
+	_spawn_orbiting_particles(center, duration)
 
 	await tween.finished
 
 
-## 光の玉が敵に飛ぶアニメーション
-func _animate_orb_travel(orb: Panel, _from: Vector2, to: Vector2, duration: float) -> void:
+## 周回パーティクル（玉の周りを回る大きめの光）
+func _spawn_orbiting_particles(center: Vector2, duration: float) -> void:
+	var orbit_count = 6
+	for i in range(orbit_count):
+		var p = EnergyOrb.new()
+		p.size = Vector2(30, 30)
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		p.modulate.a = 0.0
+		_effect_layer.add_child(p)
+
+		var start_angle = (TAU / orbit_count) * i
+		var delay = duration * 0.3
+		var orbit_time = duration - delay
+		var p_center = center
+
+		var tween = create_tween()
+		tween.tween_interval(delay)
+		tween.tween_method(func(t: float):
+			# 玉の外周を周回（半径180〜220で揺らぐ）
+			var orbit_radius = 180.0 + 40.0 * sin(t * TAU * 3.0)
+			var angle = start_angle + t * TAU * 3.0
+			var pos = p_center + Vector2(cos(angle), sin(angle)) * orbit_radius
+			p.position = pos - p.size / 2
+			p.modulate.a = minf(t * 3.0, 0.8)
+			p.queue_redraw()
+		, 0.0, 1.0, orbit_time)
+		tween.tween_callback(p.queue_free)
+
+
+## 光の玉が敵に飛ぶアニメーション（軌跡パーティクル付き）
+func _animate_orb_travel(orb: Control, _from: Vector2, to: Vector2, duration: float) -> void:
+	var start_pos = orb.position
 	var target_pos = to - orb.size / 2
 
 	var tween = create_tween()
-	tween.tween_property(orb, "position", target_pos, duration) \
-		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.tween_method(func(t: float):
+		orb.position = start_pos.lerp(target_pos, t)
+		# 軌跡パーティクル
+		if randf() < 0.6:
+			_spawn_trail_particle(orb.position + orb.size / 2)
+	, 0.0, 1.0, duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 
 	await tween.finished
+
+
+## 軌跡パーティクル（飛行中に残る小さな光）
+func _spawn_trail_particle(pos: Vector2) -> void:
+	var p = Panel.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.4, 0.7, 1.0, 0.6)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	p.add_theme_stylebox_override("panel", style)
+	p.size = Vector2(14, 14)
+	p.position = pos - Vector2(7, 7) + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_effect_layer.add_child(p)
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(p, "modulate:a", 0.0, 0.3)
+	tween.tween_property(p, "scale", Vector2(0.2, 0.2), 0.3)
+	tween.chain().tween_callback(p.queue_free)
 
 
 ## 結果演出

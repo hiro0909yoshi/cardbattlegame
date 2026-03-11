@@ -10,13 +10,13 @@ const COLOR_CYAN = Color("#03A9F4")       # 水色: 共鳴 + 一時 + スペル
 const COLOR_YELLOW = Color("#FFC107")     # 黄: 土地ボーナス
 const COLOR_GRAY = Color("#424242")       # 灰: 空
 const COLOR_RED = Color("#F44336")        # 赤: ダメージ演出
-const COLOR_BLUE = Color("#2196F3")       # 青: APバー
+const COLOR_DARK_RED = Color("#B71C1C")    # 濃い赤: APバー
 
 # バーサイズ（4倍 × 1.3 = 5.2倍）
 const HP_BAR_WIDTH = 1040.0
-const HP_BAR_HEIGHT = 125.0
+const HP_BAR_HEIGHT = 150.0
 const AP_BAR_WIDTH = 1040.0
-const AP_BAR_HEIGHT = 83.0
+const AP_BAR_HEIGHT = 140.0
 const BAR_SPACING = 21.0
 
 # HPデータ
@@ -58,7 +58,7 @@ func _setup_labels() -> void:
 	hp_label.size = Vector2(HP_BAR_WIDTH, HP_BAR_HEIGHT)
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 72)
+	hp_label.add_theme_font_size_override("font_size", 100)
 	hp_label.add_theme_color_override("font_color", Color.WHITE)
 	hp_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	hp_label.add_theme_constant_override("outline_size", 10)
@@ -70,7 +70,7 @@ func _setup_labels() -> void:
 	ap_label.size = Vector2(AP_BAR_WIDTH, AP_BAR_HEIGHT)
 	ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ap_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	ap_label.add_theme_font_size_override("font_size", 62)
+	ap_label.add_theme_font_size_override("font_size", 100)
 	ap_label.add_theme_color_override("font_color", Color.WHITE)
 	ap_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	ap_label.add_theme_constant_override("outline_size", 10)
@@ -111,21 +111,21 @@ func _draw_hp_bar() -> void:
 	if green_remaining > 0:
 		var green_width = minf((float(green_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
 		if green_width > 0:
-			draw_rect(Rect2(x_offset, 0, green_width, HP_BAR_HEIGHT), COLOR_GREEN)
+			_draw_gradient_segment(x_offset, 0, green_width, HP_BAR_HEIGHT, COLOR_GREEN)
 		x_offset += green_width
-	
+
 	# 水色セグメント（共鳴 + 一時 + スペル）
 	if cyan_remaining > 0 and x_offset < HP_BAR_WIDTH:
 		var cyan_width = minf((float(cyan_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
 		if cyan_width > 0:
-			draw_rect(Rect2(x_offset, 0, cyan_width, HP_BAR_HEIGHT), COLOR_CYAN)
+			_draw_gradient_segment(x_offset, 0, cyan_width, HP_BAR_HEIGHT, COLOR_CYAN)
 		x_offset += cyan_width
-	
+
 	# 黄色セグメント（土地ボーナス）
 	if yellow_remaining > 0 and x_offset < HP_BAR_WIDTH:
 		var yellow_width = minf((float(yellow_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
 		if yellow_width > 0:
-			draw_rect(Rect2(x_offset, 0, yellow_width, HP_BAR_HEIGHT), COLOR_YELLOW)
+			_draw_gradient_segment(x_offset, 0, yellow_width, HP_BAR_HEIGHT, COLOR_YELLOW)
 	
 	# ダメージフラッシュ（赤いオーバーレイ）
 	if _damage_flash_amount > 0:
@@ -134,7 +134,7 @@ func _draw_hp_bar() -> void:
 		draw_rect(bar_rect, flash_color)
 	
 	# 枠線（5.2倍の太さ）
-	draw_rect(bar_rect, Color.WHITE, false, 10.0)
+	draw_rect(bar_rect, Color.WHITE, false, 5.0)
 
 
 ## APバーを描画
@@ -145,14 +145,14 @@ func _draw_ap_bar() -> void:
 	# 背景（灰色）
 	draw_rect(bar_rect, COLOR_GRAY)
 	
-	# APバー（単色青）- 最大値は100固定
+	# APバー（濃い赤グラデーション）- 最大値は100固定
 	const BAR_MAX = 100.0
 	var filled_width = minf((float(current_ap) / BAR_MAX) * AP_BAR_WIDTH, AP_BAR_WIDTH)
 	if filled_width > 0:
-		draw_rect(Rect2(0, y_offset, filled_width, AP_BAR_HEIGHT), COLOR_BLUE)
-	
+		_draw_gradient_segment(0, y_offset, filled_width, AP_BAR_HEIGHT, COLOR_DARK_RED)
+
 	# 枠線（5.2倍の太さ）
-	draw_rect(bar_rect, Color.WHITE, false, 10.0)
+	draw_rect(bar_rect, Color.WHITE, false, 5.0)
 
 
 ## HPデータを設定
@@ -336,3 +336,20 @@ func _update_displayed_ap(value: int) -> void:
 	current_ap = value
 	_update_ap_label()
 	queue_redraw()
+
+
+## HPバー用：上下グラデーション描画（上が明るく下が暗い）
+func _draw_gradient_segment(x: float, y: float, w: float, h: float, base_color: Color) -> void:
+	var steps = 8
+	var step_h = h / steps
+	for i in range(steps):
+		# 上ほど明るく（+0.2）、下ほど暗く（-0.15）
+		var t = float(i) / float(steps - 1)
+		var brightness = lerp(0.2, -0.15, t)
+		var color = Color(
+			clampf(base_color.r + brightness, 0.0, 1.0),
+			clampf(base_color.g + brightness, 0.0, 1.0),
+			clampf(base_color.b + brightness, 0.0, 1.0),
+			base_color.a
+		)
+		draw_rect(Rect2(x, y + step_h * i, w, step_h + 1), color)

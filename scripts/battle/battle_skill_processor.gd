@@ -974,10 +974,12 @@ func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: Bat
 	var activated = _skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
 	
 	# 発動したスキルをバトル画面に表示
-	for participant in activated:
+	for info in activated:
 		if battle_screen_manager:
+			var participant = info["participant"]
+			var amount = info.get("amount", 0)
 			var side = "attacker" if participant.is_attacker else "defender"
-			var skill_name = SkillDisplayConfig.get_skill_name("magic_gain")
+			var skill_name = "蓄魔[%dEP]" % amount if amount > 0 else SkillDisplayConfig.get_skill_name("magic_gain")
 			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 ## 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）

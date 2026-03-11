@@ -104,8 +104,8 @@ func _setup_3d_scene_before_init():
 	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color(0.30, 0.55, 0.80)
 	sky_mat.sky_horizon_color = Color(0.55, 0.68, 0.80)
-	sky_mat.ground_bottom_color = Color(0.6, 0.6, 0.6)
-	sky_mat.ground_horizon_color = Color(0.75, 0.75, 0.75)
+	sky_mat.ground_bottom_color = Color(0.45, 0.58, 0.72)
+	sky_mat.ground_horizon_color = Color(0.55, 0.68, 0.80)
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.background_mode = Environment.BG_SKY

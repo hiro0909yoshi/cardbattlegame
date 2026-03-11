@@ -358,14 +358,14 @@ func close_dominio_order():
 	if board_system and player_system:
 		var player_id = player_system.current_player_index
 		var player_tile_index = board_system.get_player_tile(player_id)
-		
+
 		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = board_system.tile_nodes[player_tile_index].global_position
-			
-			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + GameConstants.CAMERA_OFFSET
-			
+
+			var new_camera_pos = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0) + GameConstants.CAMERA_OFFSET
+
 			board_system.camera.position = new_camera_pos
-			board_system.camera.look_at(tile_pos + Vector3(0, 1.0 + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
+			board_system.camera.look_at(tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 	
 	# UIを非表示
 	if _dominio_order_ui:

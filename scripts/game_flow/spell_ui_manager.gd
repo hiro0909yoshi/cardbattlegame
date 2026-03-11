@@ -281,10 +281,10 @@ func return_camera_to_player() -> void:
 		if _board_system.camera and _board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = _board_system.tile_nodes[player_tile_index].global_position
 
-			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + GameConstants.CAMERA_OFFSET
+			var new_camera_pos = tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT, 0) + GameConstants.CAMERA_OFFSET
 
 			_board_system.camera.position = new_camera_pos
-			_board_system.camera.look_at(tile_pos + Vector3(0, 1.0 + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
+			_board_system.camera.look_at(tile_pos + Vector3(0, GameConstants.CAMERA_TILE_LOOK_HEIGHT + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 
 # =============================================================================

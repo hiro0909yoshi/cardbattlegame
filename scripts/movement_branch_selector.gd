@@ -78,15 +78,8 @@ func show_branch_tile_selection(choices: Array) -> int:
 # 分岐選択UI更新
 func _update_ui():
 	if _message_service:
-		var choices_text = ""
-		for i in range(available_branches.size()):
-			var tile_num = available_branches[i]
-			if i == selected_branch_index:
-				choices_text += "[→タイル%d←] " % tile_num
-			else:
-				choices_text += " タイル%d " % tile_num
-		var remaining_text = "（残り%dマス）" % controller.current_remaining_steps if controller.current_remaining_steps > 0 else ""
-		_message_service.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
+		var remaining_text = " 残り%dマス" % controller.current_remaining_steps if controller.current_remaining_steps > 0 else ""
+		_message_service.show_action_prompt("進む方向を選択:%s" % remaining_text)
 
 	# 到着予測ハイライトを更新
 	controller.destination_predictor.update_destination_highlight_for_branch(
