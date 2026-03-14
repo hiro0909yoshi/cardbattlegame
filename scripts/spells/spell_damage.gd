@@ -25,17 +25,17 @@ func apply_effect(handler: Node, effect: Dictionary, target_data: Dictionary) ->
 	match effect_type:
 		"damage":
 			var value = effect.get("value", 0)
-			await apply_damage_effect(handler, tile_index, value)
+			apply_damage_effect(handler, tile_index, value)
 			return true
 		"heal":
 			var value = effect.get("value", 0)
-			await apply_heal_effect(handler, tile_index, value)
+			apply_heal_effect(handler, tile_index, value)
 			return true
 		"full_heal":
-			await apply_full_heal_effect(handler, tile_index)
+			apply_full_heal_effect(handler, tile_index)
 			return true
 		"clear_down":
-			await apply_clear_down_effect(handler, tile_index)
+			apply_clear_down_effect(handler, tile_index)
 			return true
 	
 	return false

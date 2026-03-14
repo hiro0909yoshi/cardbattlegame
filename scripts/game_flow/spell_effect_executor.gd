@@ -133,9 +133,11 @@ func _show_effect_marker_for_target(handler, target_data: Dictionary, skip_fade:
 
 ## 赤マーカーを0.8秒後に自動消去（fire-and-forget用コルーチン）
 func _auto_hide_effect_marker(handler, marker: Node3D, skip_restore: bool = false) -> void:
-	if not handler or not handler.get_tree():
+	if not is_instance_valid(handler) or not handler.get_tree():
 		return
 	await handler.get_tree().create_timer(0.8).timeout
+	if not is_instance_valid(handler) or not is_instance_valid(marker):
+		return
 	TargetMarkerSystem.hide_effect_marker(handler, marker, skip_restore)
 
 

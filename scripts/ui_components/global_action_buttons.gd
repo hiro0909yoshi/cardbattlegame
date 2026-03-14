@@ -66,8 +66,8 @@ func _setup_ui():
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	add_child(confirm_button)
 
-	# 戻るボタン（✕）
-	back_button = _create_button("✕", Color(0.6, 0.3, 0.3), 100)
+	# 戻るボタン（×）
+	back_button = _create_button("×", Color(0.6, 0.3, 0.3), 100)
 	back_button.pressed.connect(_on_back_pressed)
 	add_child(back_button)
 
@@ -118,6 +118,10 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 	button.add_theme_font_size_override("font_size", font_size)
 	button.add_theme_color_override("font_color", Color.WHITE)
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
+	# Web版でフォントフォールバックが効かないため明示指定
+	var font = load("res://assets/fonts/NotoSansJP-Regular.ttf")
+	if font:
+		button.add_theme_font_override("font", font)
 
 	return button
 

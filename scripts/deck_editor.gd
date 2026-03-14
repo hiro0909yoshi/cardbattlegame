@@ -310,6 +310,8 @@ func _show_info_in_right_panel(card: Dictionary, card_type: String):
 	await get_tree().process_frame
 	
 	# デバッグ出力
+	if not info_panel_container or not is_instance_valid(info_panel_container):
+		return
 	var container_size = info_panel_container.size
 	var panel_size = current_info_panel.size
 	print("Container size: ", container_size)
@@ -370,14 +372,6 @@ func _on_count_selected(count: int):
 	if count > max_count:
 		print("所持数を超えています")
 		return
-	
-	# 現在のデッキ枚数を計算
-	var current_total = 0
-	for card_id in current_deck.keys():
-		if card_id != selected_card_id:
-			current_total += current_deck[card_id]
-	
-	# 50枚超えても追加可能（ただし保存不可）
 	
 	# デッキに設定
 	if count == 0:

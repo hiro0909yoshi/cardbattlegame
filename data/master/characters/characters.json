@@ -7,7 +7,7 @@
 	  "description": "開発テスト用。削除可。",
 	  "battle_policy": {
 		"attack": {
-		  "always_battle": 0.0,
+		  "always_battle": 1.0,
 		  "both_no_item": 0.0,
 		  "vs_enemy_item": 1.0,
 		  "never_battle": 0.0

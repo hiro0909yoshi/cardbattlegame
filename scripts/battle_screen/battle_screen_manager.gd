@@ -87,11 +87,11 @@ func show_skill_activation(side: String, skill_name: String, effects: Dictionary
 
 
 ## 攻撃演出を表示
-func show_attack(attacker_side: String, damage: int):
+func show_attack(attacker_side: String, _damage: int):
 	if not _battle_screen:
 		return
 
-	await _battle_screen.show_attack(attacker_side, damage)
+	await _battle_screen.show_attack(attacker_side, _damage)
 	attack_animation_completed.emit()
 
 

@@ -784,9 +784,14 @@ func _on_move_item_phase_completed():
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_move_battle_tile_info.get("creature", {})
 				
-				# バトルステータスオーバーレイを防御側に切り替え
+				# 防御側のバトルステータスオーバーレイを再表示
 				if battle_status_overlay:
-					battle_status_overlay.highlight_side("defender")
+					var attacker_display = pending_move_battle_creature_data.duplicate()
+					attacker_display["land_bonus_hp"] = 0
+					var defender_display = defender_creature.duplicate()
+					defender_display["land_bonus_hp"] = _calculate_land_bonus(defender_creature, pending_move_battle_tile_info)
+					battle_status_overlay.show_battle_status(
+						attacker_display, defender_display, "defender")
 				
 				_item_phase_handler.start_item_phase(defender_owner, defender_creature)
 			else:

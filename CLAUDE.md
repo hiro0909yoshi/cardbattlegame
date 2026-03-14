@@ -59,10 +59,10 @@ GameFlowManager (Central state machine)
 ### Game Flow
 
 ```
-Turn Start → Spell Phase → Dice Roll → Movement → Tile Landing
+Turn Start → Draw Card → Spell Phase → Dice Roll → Movement → Tile Landing
 	→ (Empty Tile: Summon) OR (Enemy Tile: Battle)
 	→ Land Commands (Level Up / Move Creature / Swap)
-	→ Draw Card → Turn End → Next Player
+	→ Turn End → Next Player
 ```
 
 ### Key Architectural Patterns

@@ -27,6 +27,7 @@ var _card_selection_service = null
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
 var spell_world_curse = null  # SpellWorldCurse: 世界刻印
 var _item_phase_handler = null  # ItemPhaseHandler: GSMから注入、setup時にbattle_executorへ伝播
+var _battle_status_overlay = null  # BattleStatusOverlay: setup後にbattle_executorへ伝播
 
 # サブシステム
 var summon_executor: TileSummonExecutor = null
@@ -101,9 +102,11 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	battle_executor = TileBattleExecutor.new()
 	battle_executor.initialize(b_system, p_system, c_system, bt_system, ui, gf_manager, summon_executor)
 
-	# _item_phase_handler が既に注入されていれば battle_executor に伝播
+	# 既に注入済みの参照を battle_executor に伝播
 	if _item_phase_handler:
 		battle_executor._item_phase_handler = _item_phase_handler
+	if _battle_status_overlay:
+		battle_executor.set_battle_status_overlay(_battle_status_overlay)
 
 	if not battle_executor.invasion_completed.is_connected(_on_invasion_completed):
 		battle_executor.invasion_completed.connect(_on_invasion_completed)
@@ -127,6 +130,7 @@ func set_spell_systems_direct(cost_modifier, world_curse) -> void:
 	print("[TileActionProcessor] spell_cost_modifier, spell_world_curse 直接参照を設定")
 
 func set_battle_status_overlay(overlay) -> void:
+	_battle_status_overlay = overlay
 	if battle_executor:
 		battle_executor.set_battle_status_overlay(overlay)
 	print("[TileActionProcessor] battle_status_overlay 直接参照を設定")

@@ -288,9 +288,15 @@ func _on_item_phase_completed():
 		if defender_owner >= 0:
 			is_waiting_for_defender_item = true
 			
-			# 防御側を強調表示に切り替え
+			# 防御側のバトルステータスオーバーレイを再表示
 			if battle_status_overlay:
-				battle_status_overlay.highlight_side("defender")
+				var defender_creature = pending_battle_tile_info.get("creature", {})
+				var attacker_display = pending_battle_card_data.duplicate()
+				attacker_display["land_bonus_hp"] = 0
+				var defender_display = defender_creature.duplicate()
+				defender_display["land_bonus_hp"] = calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
+				battle_status_overlay.show_battle_status(
+					attacker_display, defender_display, "defender")
 			
 			# 防御側のアイテムフェーズ開始
 			if _item_phase_handler:

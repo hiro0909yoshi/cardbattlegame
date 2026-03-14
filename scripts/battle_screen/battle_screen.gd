@@ -276,7 +276,7 @@ func update_creature_display(side: String, new_data: Dictionary):
 
 
 ## 攻撃演出（光収束 → 攻撃モーション → 光の玉発射）
-func show_attack(attacker_side: String, damage: int):
+func show_attack(attacker_side: String, _damage: int):
 	var attacker = _attacker_display if attacker_side == "attacker" else _defender_display
 	var defender = _defender_display if attacker_side == "attacker" else _attacker_display
 

@@ -18,7 +18,7 @@ var card_index = -1
 var is_selectable = false
 var is_selected = false
 var is_grayed_out = false  # グレーアウト状態（選択不可だがインフォパネルは表示可能）
-var restriction_label: Label = null  # 制限理由表示用ラベル（🚫）
+var restriction_overlay: Control = null  # 制限理由表示用（禁止マーク描画）
 var restriction_e_label: Label = null  # EP不足用ラベル（E）
 var restriction_reason: String = ""  # 制限理由（"ep", "restriction", ""）
 var original_position: Vector2
@@ -78,22 +78,21 @@ func adjust_children_size():
 	pass
 
 
-# 制限理由ラベルを作成（2つのラベルを重ねて表示）
+# 制限理由表示を作成（禁止マーク＋Eラベル）
 func _create_restriction_label():
-	if restriction_label:
+	if restriction_overlay:
 		return
-	
-	# コンテナを作成（カード中央に配置）
-	var container = Control.new()
-	container.name = "RestrictionContainer"
-	container.set_anchors_preset(Control.PRESET_CENTER)
-	container.size = Vector2(150, 150)
-	container.position = Vector2(-75, -75)  # 中央配置
-	container.z_index = 10
-	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(container)
-	
-	# 背景の「E」ラベル（白色、大きめ）
+
+	# 「E」ラベル（カード中央）
+	var e_container = Control.new()
+	e_container.name = "RestrictionEContainer"
+	e_container.set_anchors_preset(Control.PRESET_CENTER)
+	e_container.size = Vector2(150, 150)
+	e_container.position = Vector2(-75, -75)
+	e_container.z_index = 10
+	e_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(e_container)
+
 	restriction_e_label = Label.new()
 	restriction_e_label.name = "RestrictionELabel"
 	restriction_e_label.text = "E"
@@ -105,18 +104,24 @@ func _create_restriction_label():
 	restriction_e_label.add_theme_color_override("font_outline_color", GC.COLOR_BLACK)
 	restriction_e_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	restriction_e_label.visible = false
-	container.add_child(restriction_e_label)
-	
-	# 前面の「🚫」ラベル（赤色）
-	restriction_label = Label.new()
-	restriction_label.name = "RestrictionLabel"
-	restriction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	restriction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	restriction_label.add_theme_font_size_override("font_size", 150)
-	restriction_label.add_theme_color_override("font_color", GC.COLOR_RESTRICTION_ICON)
-	restriction_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	restriction_label.visible = false
-	container.add_child(restriction_label)
+	e_container.add_child(restriction_e_label)
+
+	# 禁止マーク（カード中央やや下、コード描画）
+	var overlay_container = Control.new()
+	overlay_container.name = "RestrictionOverlayContainer"
+	overlay_container.set_anchors_preset(Control.PRESET_CENTER)
+	overlay_container.size = Vector2(150, 150)
+	overlay_container.position = Vector2(-75, -35)
+	overlay_container.z_index = 11
+	overlay_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(overlay_container)
+
+	restriction_overlay = _ProhibitionMark.new()
+	restriction_overlay.name = "RestrictionOverlay"
+	restriction_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	restriction_overlay.visible = false
+	restriction_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay_container.add_child(restriction_overlay)
 
 
 # 制限理由を設定
@@ -128,25 +133,22 @@ func set_restriction_reason(reason: String):
 
 # 制限理由の表示を更新
 func _update_restriction_display():
-	if not restriction_label:
+	if not restriction_overlay:
 		_create_restriction_label()
-	
+
 	match restriction_reason:
 		"ep":
-			# EP不足 / 土地条件未達 - 「E」と「🚫」を重ねて表示
+			# EP不足 / 土地条件未達 - 「E」と禁止マークを重ねて表示
 			restriction_e_label.visible = true
-			restriction_label.text = "🚫"
-			restriction_label.visible = true
+			restriction_overlay.visible = true
 		"restriction":
-			# 配置制限 / 禁呪刻印等 - 「🚫」のみ
+			# 配置制限 / 禁呪刻印等 - 禁止マークのみ
 			restriction_e_label.visible = false
-			restriction_label.text = "🚫"
-			restriction_label.visible = true
+			restriction_overlay.visible = true
 		_:
 			# 制限なし
 			restriction_e_label.visible = false
-			restriction_label.text = ""
-			restriction_label.visible = false
+			restriction_overlay.visible = false
 
 func _on_mouse_entered():
 	mouse_over = true
@@ -408,8 +410,8 @@ func load_creature_image(card_id: int):
 	# カードタイプと属性からパスを構築
 	var image_path = _get_card_image_path(card_id)
 
-	# 画像ファイルが存在するか確認
-	if FileAccess.file_exists(image_path):
+	# 画像ファイルが存在するか確認（Web版では.pck内リソースはFileAccessで検出不可）
+	if ResourceLoader.exists(image_path):
 		var texture = load(image_path)
 		if texture:
 			card_art.texture = texture
@@ -858,3 +860,22 @@ func _get_spell_type_color(spell_type: String) -> Color:
 			return Color(0.67, 0.27, 1.0)  # 紫
 		_:
 			return Color.WHITE
+
+
+## 禁止マーク描画用内部クラス（絵文字はWeb版で文字化けするためコード描画）
+class _ProhibitionMark extends Control:
+	func _draw():
+		var center = size / 2.0
+		var radius = min(size.x, size.y) * 0.4
+		var color = GC.COLOR_RESTRICTION_ICON
+		var line_width = radius * 0.2
+
+		# 赤い丸
+		draw_arc(center, radius, 0, TAU, 64, color, line_width, true)
+		# 斜め線（左上→右下）
+		var offset = radius * 0.707  # cos(45°)
+		draw_line(
+			center + Vector2(-offset, -offset),
+			center + Vector2(offset, offset),
+			color, line_width, true
+		)

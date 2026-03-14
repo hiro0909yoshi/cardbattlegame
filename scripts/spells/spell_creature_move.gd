@@ -204,9 +204,15 @@ func _on_spell_move_item_phase_completed() -> void:
 				# タイル情報を設定（シミュレーション用）
 				item_handler.set_defense_tile_info(pending_battle_tile_info)
 				
-				# バトルステータスオーバーレイを防御側に切り替え
+				# 防御側のバトルステータスオーバーレイを再表示
 				if battle_status_overlay:
-					battle_status_overlay.highlight_side("defender")
+					var attacker_creature = pending_battle_result.get("creature_data", {})
+					var attacker_display = attacker_creature.duplicate()
+					attacker_display["land_bonus_hp"] = 0
+					var defender_display = defender_creature.duplicate()
+					defender_display["land_bonus_hp"] = _calculate_land_bonus(defender_creature, pending_battle_tile_info)
+					battle_status_overlay.show_battle_status(
+						attacker_display, defender_display, "defender")
 				
 				item_handler.start_item_phase(defender_owner, defender_creature)
 			else:

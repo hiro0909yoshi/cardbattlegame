@@ -339,14 +339,6 @@ func _show_count_dialog():
 	card_dialog.popup()
 
 func _on_count_selected(count: int):
-	# 現在のデッキ枚数を計算
-	var current_total = 0
-	for card_id in current_deck.keys():
-		if card_id != selected_card_id:
-			current_total += current_deck[card_id]
-	
-	# 50枚超えても追加可能（ただし保存不可）
-	
 	# デッキに設定
 	if count == 0:
 		current_deck.erase(selected_card_id)
