@@ -623,9 +623,8 @@ func _input(event):
 	# 入力ロック中は無視
 	var game_flow_manager = _game_flow_manager_ref
 	if game_flow_manager and game_flow_manager.is_input_locked():
-		#print("[Card] 入力ロック中のためスキップ")
 		return
-	
+
 	# アルカナアーツ選択フェーズ中はインフォパネル表示のみ許可
 	if _is_mystic_selection_phase() and mouse_over and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

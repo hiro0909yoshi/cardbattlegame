@@ -53,23 +53,23 @@ func show_selection(current_player, mode: String = "summon"):
 	if not card_system_ref:
 		print("Error: CardSystem reference not set")
 		return
-	
+
 	# 前回の選択状態をリセット（ダブルクリック検出誤動作防止）
 	pending_card_index = -1
-	
+
 	# 入力ロックを解除（選択待ち状態になった）
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()
-	
+
 	# 既存のボタンをクリア
 	cleanup_buttons()
-	
+
 	# プレイヤーの手札を取得
 	var hand_data = card_system_ref.get_all_cards_for_player(current_player.id)
 	if hand_data.is_empty():
 		emit_signal("selection_cancelled")
 		return
-	
+
 	is_active = true
 	selection_mode = mode
 	current_selection_player_id = current_player.id  # 選択中のプレイヤーIDを保存
@@ -654,11 +654,11 @@ func _confirm_card_selection(card_index: int):
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref:
 		game_flow_manager_ref.lock_input()
-	
+
 	# アクション指示パネルを閉じる
 	if ui_manager_ref and ui_manager_ref.phase_display:
 		ui_manager_ref.phase_display.hide_action_prompt()
-	
+
 	hide_selection()
 	emit_signal("card_selected", card_index)
 
@@ -892,24 +892,34 @@ func _connect_info_panel_signals(panel) -> void:
 
 # インフォパネルで確認された（全パネル共通）
 func _on_info_panel_confirmed(card_data: Dictionary):
+	# card_selection_uiが非アクティブなら無視（他システムの確認を誤処理しない）
+	if not is_active:
+		return
+
+	# このシステムがインフォパネルを開いていない場合は無視
+	if pending_card_index < 0:
+		return
+
 	var card_index = card_data.get("hand_index", pending_card_index)
 	pending_card_index = -1
-	
+
 	# 表示中のパネルを閉じる＆ナビゲーション保存状態をクリア
 	if ui_manager_ref:
 		ui_manager_ref.hide_all_info_panels()
 		ui_manager_ref.clear_navigation_saved_state()
-	
+
 	_confirm_card_selection(card_index)
 
 
 # インフォパネルでキャンセルされた（全パネル共通）
 func _on_info_panel_cancelled():
-	# card_selection_handlerが選択中の場合はそちらに任せる
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
-		if handler and handler.is_selecting():
-			return
+	# card_selection_uiが非アクティブなら無視（他システムの確認を誤処理しない）
+	if not is_active:
+		return
+
+	# このシステムがインフォパネルを開いていない場合は無視
+	if pending_card_index < 0:
+		return
 
 	pending_card_index = -1
 

@@ -584,6 +584,10 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	# 非同期効果の場合はCardSelectionHandler完了後に終了
 	if is_async and spell_phase_handler_ref and spell_phase_handler_ref.card_selection_handler:
 		if spell_phase_handler_ref.card_selection_handler.is_selecting():
+			# フラグと選択状態を解除（カード選択の閲覧モード化を防止）
+			# end_mystic_phase()は呼ばない（mystic_phase_completedがスペルフェーズをリセットするため）
+			is_mystic_phase_active = false
+			clear_selection()
 			return
 
 	# アルカナアーツフェーズ完了

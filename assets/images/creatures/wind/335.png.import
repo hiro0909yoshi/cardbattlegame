@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b13es55qsos7f"
-valid=false
+uid="uid://d4e8fbgkpykgh"
+path="res://.godot/imported/335.png-6241bcae13c47bd126326b60749fa175.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/images/creatures/wind/335.png"
+dest_files=["res://.godot/imported/335.png-6241bcae13c47bd126326b60749fa175.ctex"]
 
 [params]
 

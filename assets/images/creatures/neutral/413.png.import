@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bkbx1lluws7p0"
-path="res://.godot/imported/324.png-8b35e556b564a00e76ca0a29d4849ba8.ctex"
+uid="uid://q40avyglkfx2"
+path="res://.godot/imported/413.png-afdd1771a09b5bb920a2e1602b954e59.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/creatures/wind/324.png"
-dest_files=["res://.godot/imported/324.png-8b35e556b564a00e76ca0a29d4849ba8.ctex"]
+source_file="res://assets/images/creatures/neutral/413.png"
+dest_files=["res://.godot/imported/413.png-afdd1771a09b5bb920a2e1602b954e59.ctex"]
 
 [params]
 

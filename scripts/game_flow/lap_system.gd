@@ -332,7 +332,7 @@ func _check_win_condition(player_id: int) -> bool:
 
 ## TEPを計算（チーム合算TEPに変更）
 func calculate_total_assets(player_id: int) -> int:
-	if team_system:
+	if team_system and team_system.has_teams():
 		return team_system.get_team_total_assets(player_id)
 	if not player_system:
 		return 0
