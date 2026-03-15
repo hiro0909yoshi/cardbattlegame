@@ -62,7 +62,9 @@ func reset_action_processing():
 # 遠隔配置モード（ベースタイル用）
 var remote_placement_tile: int = -1
 
-# コメント表示用
+# コメント表示用（キュー対応）
+var _pending_comments: Array[Dictionary] = []
+# 後方互換用（外部からの直接参照対応）
 var pending_comment: String = ""
 var pending_comment_player_id: int = -1
 var pending_comment_force_click: bool = true
@@ -420,6 +422,19 @@ func set_pending_comment(message: String, player_id: int = -1, force_click_wait:
 	pending_comment = message
 	pending_comment_player_id = player_id
 	pending_comment_force_click = force_click_wait
+	_pending_comments.append({
+		"message": message,
+		"player_id": player_id,
+		"force_click": force_click_wait
+	})
+
+## コメントをキューに追加（set_pending_commentの後に追加コメントを入れる場合）
+func add_pending_comment(message: String, player_id: int = -1, force_click_wait: bool = true):
+	_pending_comments.append({
+		"message": message,
+		"player_id": player_id,
+		"force_click": force_click_wait
+	})
 
 # アクション完了（内部用）
 func _complete_action():
@@ -430,9 +445,9 @@ func _complete_action():
 	_completion_id += 1
 	var my_completion_id = _completion_id
 
-	# コメント表示（awaitで遅延する可能性あり）
-	if not pending_comment.is_empty():
-		await _show_pending_comment()
+	# コメント表示（キューを順番に表示）
+	if not _pending_comments.is_empty():
+		await _show_pending_comments()
 
 	# awaitの間に新しいアクションが開始・完了した場合、古い完了をスキップ
 	if my_completion_id != _completion_id:
@@ -450,16 +465,21 @@ func _complete_action():
 
 	emit_signal("action_completed")
 
-func _show_pending_comment():
-	if pending_comment.is_empty():
-		return
+func _show_pending_comments():
+	while not _pending_comments.is_empty():
+		var entry: Dictionary = _pending_comments.pop_front()
+		var message: String = entry.get("message", "")
+		if message.is_empty():
+			continue
 
-	var player_id = pending_comment_player_id
-	if player_id < 0 and board_system:
-		player_id = board_system.current_player_index
+		var player_id: int = entry.get("player_id", -1)
+		if player_id < 0 and board_system:
+			player_id = board_system.current_player_index
 
-	if _message_service:
-		await _message_service.show_comment_and_wait(pending_comment, player_id, pending_comment_force_click)
+		var force_click: bool = entry.get("force_click", true)
+
+		if _message_service:
+			await _message_service.show_comment_and_wait(message, player_id, force_click)
 
 	pending_comment = ""
 	pending_comment_player_id = -1

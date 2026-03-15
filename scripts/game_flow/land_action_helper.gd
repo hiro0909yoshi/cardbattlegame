@@ -31,18 +31,21 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	
 	# レベルアップ実行
 	tile.level = target_level
-	
+
+	# 昇華刻印結果（後で通知表示に使用）
+	var growth_result: Dictionary = {}
+
 	# レベルアップイベント発火（永続バフ更新用）
 	if handler.board_system:
 		handler.board_system.level_up_completed.emit(handler.selected_tile_index, target_level)
-		
+
 		# 永続バフ更新（アースズピリット/デュータイタン）
 		if not tile.creature_data.is_empty():
 			_apply_level_up_buff(tile.creature_data)
-		
+
 		# 昇華刻印トリガー（ドミナントグロース）
-		_trigger_command_growth(handler, handler.selected_tile_index)
-	
+		growth_result = _get_command_growth_result(handler, handler.selected_tile_index)
+
 	# ダウン状態設定（奮闘チェック）
 	if tile.has_method("set_down_state"):
 		# BaseTileのcreature_dataプロパティを直接参照
@@ -51,7 +54,7 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 			tile.set_down_state(true)
 		else:
 			pass  # 奮闘スキル保持のためダウンしない
-	
+
 	# UI更新
 	if handler._player_info_service:
 		handler._player_info_service.update_panels()
@@ -59,15 +62,22 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		var player_name = _get_player_name(handler)
-		handler.board_system.set_pending_comment(
-			"%s がドミニオコマンド：レベルアップ" % player_name
-		)
-	
+		var comment = "%s がドミニオコマンド：レベルアップ" % player_name
+		handler.board_system.set_pending_comment(comment)
+
+		# 昇華刻印がトリガーされた場合は2つ目のコメントとして追加
+		if growth_result.get("triggered", false):
+			var creature_name = growth_result.get("creature_name", "クリーチャー")
+			var hp_bonus = growth_result.get("hp_bonus", 20)
+			var new_mhp = growth_result.get("new_mhp", 0)
+			var growth_comment = "【昇華】%s MHP+%d → MHP%d" % [creature_name, hp_bonus, new_mhp]
+			handler.board_system.tile_action_processor.add_pending_comment(growth_comment)
+
 	# アクション完了を通知（正しいターン終了フロー）
 	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.complete_action()
-	
+
 	return true
 
 ## レベルアップ実行
@@ -565,44 +575,17 @@ static func _apply_level_up_buff(creature_data: Dictionary):
 		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] レベルアップ MHP-10 (合計: %d)" % creature_data["base_up_hp"])
 
-## 昇華刻印をトリガー（ドミナントグロース）
-static func _trigger_command_growth(handler, tile_index: int) -> void:
+## 昇華刻印の効果を適用し結果を返す（通知は呼び出し元で制御）
+static func _get_command_growth_result(handler, tile_index: int) -> Dictionary:
 	if not handler.game_flow_manager:
-		return
-	
+		return {}
+
 	var spell_curse = handler.spell_curse
 	if not spell_curse:
-		return
-	
-	# 昇華刻印があればトリガー
-	var result = spell_curse.trigger_command_growth(tile_index)
-	
-	if result.get("triggered", false):
-		# 通知を表示
-		_show_command_growth_notification(handler, result)
+		return {}
 
-## 昇華の通知を表示
-static func _show_command_growth_notification(handler, result: Dictionary) -> void:
-	# SpellCastNotificationUIを取得
-	var notification_ui = handler.spell_cast_notification_ui
-	
-	if not notification_ui:
-		return
-	
-	var creature_name = result.get("creature_name", "クリーチャー")
-	var hp_bonus = result.get("hp_bonus", 20)
-	var old_mhp = result.get("old_mhp", 0)
-	var new_mhp = result.get("new_mhp", 0)
-	var old_hp = result.get("old_hp", 0)
-	var new_hp = result.get("new_hp", 0)
-	
-	var notification_text = "【昇華】\n%s MHP+%d\nMHP: %d → %d\nHP: %d → %d" % [
-		creature_name, hp_bonus, old_mhp, new_mhp, old_hp, new_hp
-	]
-	
-	# 通知表示（クリック待ち）
-	notification_ui.show_notification_and_wait(notification_text)
-	# Note: staticメソッドなのでawaitは使えない。通知はクリックで消える
+	# 昇華刻印があればトリガー
+	return spell_curse.trigger_command_growth(tile_index)
 
 ## 地形変化実行（属性選択後）
 static func execute_terrain_change_with_element(handler, new_element: String) -> bool:
@@ -662,8 +645,8 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	tile = handler.board_system.tile_nodes[tile_index]
 	
 	# 昇華刻印トリガー（ドミナントグロース）
-	_trigger_command_growth(handler, tile_index)
-	
+	var growth_result = _get_command_growth_result(handler, tile_index)
+
 	# ダウン状態設定（奮闘チェック）
 	if tile.has_method("set_down_state"):
 		var creature = tile.creature_data
@@ -671,7 +654,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 			tile.set_down_state(true)
 		elif not creature.is_empty():
 			pass  # 奮闘スキル保持のためダウンしない
-	
+
 	# UI更新
 	if handler._player_info_service:
 		handler._player_info_service.update_panels()
@@ -683,15 +666,21 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		var player_name = _get_player_name(handler)
-		handler.board_system.set_pending_comment(
-			"%s がドミニオコマンド：属性変更" % player_name
-		)
-	
+		var comment = "%s がドミニオコマンド：属性変更" % player_name
+		handler.board_system.set_pending_comment(comment)
+
+		# 昇華刻印がトリガーされた場合は2つ目のコメントとして追加
+		if growth_result.get("triggered", false):
+			var creature_name = growth_result.get("creature_name", "クリーチャー")
+			var hp_bonus = growth_result.get("hp_bonus", 20)
+			var new_mhp = growth_result.get("new_mhp", 0)
+			var growth_comment = "【昇華】%s MHP+%d → MHP%d" % [creature_name, hp_bonus, new_mhp]
+			handler.board_system.tile_action_processor.add_pending_comment(growth_comment)
+
 	# アクション完了を通知（レベルアップと同様）
-	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.complete_action()
-	
+
 	return true
 
 ## 地形変化実行（UI表示）
