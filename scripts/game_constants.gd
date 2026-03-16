@@ -105,7 +105,8 @@ const LAP_BONUS_LAP_RATE = 0.4        # 1周あたり追加40%
 # 初期EPと勝利条件のセット
 const RULE_PRESETS = {
 	"standard": {
-		"initial_magic": 1000,
+		"initial_magic": 300,
+		"max_turns": 0,
 		"win_conditions": {
 			"mode": "all",
 			"conditions": [
@@ -115,6 +116,7 @@ const RULE_PRESETS = {
 	},
 	"quick": {
 		"initial_magic": 2000,
+		"max_turns": 30,
 		"win_conditions": {
 			"mode": "all",
 			"conditions": [
@@ -124,6 +126,7 @@ const RULE_PRESETS = {
 	},
 	"elimination": {
 		"initial_magic": 1000,
+		"max_turns": 0,
 		"win_conditions": {
 			"mode": "any",
 			"conditions": [
@@ -133,6 +136,7 @@ const RULE_PRESETS = {
 	},
 	"territory": {
 		"initial_magic": 1000,
+		"max_turns": 50,
 		"win_conditions": {
 			"mode": "all",
 			"conditions": [

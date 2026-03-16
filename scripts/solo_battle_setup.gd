@@ -433,6 +433,7 @@ func _build_right_panel() -> Control:
 	_rule_preset_option.custom_minimum_size = Vector2(340, 80)
 	_rule_preset_option.add_theme_font_size_override("font_size", 54)
 	rule_left_grid.add_child(_rule_preset_option)
+	_rule_preset_option.get_popup().add_theme_font_size_override("font_size", 63)
 
 	_rule_preset_option.add_item("スタンダード", 0)
 	_rule_preset_option.add_item("クイック", 1)
@@ -452,10 +453,8 @@ func _build_right_panel() -> Control:
 	_max_turns_spin.max_value = 100
 	_max_turns_spin.step = 1
 	_max_turns_spin.value = 0
-	_max_turns_spin.custom_minimum_size = Vector2(280, 80)
-	_max_turns_spin.add_theme_font_size_override("font_size", 72)
-	_max_turns_spin.get_line_edit().add_theme_font_size_override("font_size", 72)
-	rule_left_grid.add_child(_max_turns_spin)
+	var turns_row = _create_spin_with_arrows(_max_turns_spin, 280, true)
+	rule_left_grid.add_child(turns_row)
 
 	# --- 右列：目標TEP + 初期EP(自分) + 初期EP(CPU) ---
 	var rule_right_grid = GridContainer.new()
@@ -476,11 +475,9 @@ func _build_right_panel() -> Control:
 	_target_tep_spin.max_value = 30000
 	_target_tep_spin.step = 1000
 	_target_tep_spin.value = 8000
-	_target_tep_spin.custom_minimum_size = Vector2(320, 80)
-	_target_tep_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_target_tep_spin.add_theme_font_size_override("font_size", 72)
-	_target_tep_spin.get_line_edit().add_theme_font_size_override("font_size", 72)
-	rule_right_grid.add_child(_target_tep_spin)
+	var tep_row = _create_spin_with_arrows(_target_tep_spin, 320)
+	tep_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule_right_grid.add_child(tep_row)
 
 	# 初期EP(自分)
 	var ep_player_label = Label.new()
@@ -493,11 +490,9 @@ func _build_right_panel() -> Control:
 	_initial_ep_player_spin.max_value = 10000
 	_initial_ep_player_spin.step = 100
 	_initial_ep_player_spin.value = 1000
-	_initial_ep_player_spin.custom_minimum_size = Vector2(320, 80)
-	_initial_ep_player_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_initial_ep_player_spin.add_theme_font_size_override("font_size", 72)
-	_initial_ep_player_spin.get_line_edit().add_theme_font_size_override("font_size", 72)
-	rule_right_grid.add_child(_initial_ep_player_spin)
+	var ep_player_row = _create_spin_with_arrows(_initial_ep_player_spin, 320)
+	ep_player_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule_right_grid.add_child(ep_player_row)
 
 	# 初期EP(CPU)
 	var ep_cpu_label = Label.new()
@@ -510,11 +505,9 @@ func _build_right_panel() -> Control:
 	_initial_ep_cpu_spin.max_value = 10000
 	_initial_ep_cpu_spin.step = 100
 	_initial_ep_cpu_spin.value = 1000
-	_initial_ep_cpu_spin.custom_minimum_size = Vector2(320, 80)
-	_initial_ep_cpu_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_initial_ep_cpu_spin.add_theme_font_size_override("font_size", 72)
-	_initial_ep_cpu_spin.get_line_edit().add_theme_font_size_override("font_size", 72)
-	rule_right_grid.add_child(_initial_ep_cpu_spin)
+	var ep_cpu_row = _create_spin_with_arrows(_initial_ep_cpu_spin, 320)
+	ep_cpu_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule_right_grid.add_child(ep_cpu_row)
 
 	return right_panel
 
@@ -529,6 +522,7 @@ func _build_bottom_area():
 	_battle_start_button.text = "【 対戦開始 】"
 	_battle_start_button.custom_minimum_size = Vector2(450, 100)
 	_battle_start_button.add_theme_font_size_override("font_size", 54)
+	_battle_start_button.add_theme_color_override("font_color", Color.YELLOW)
 	_battle_start_button.pressed.connect(_on_battle_start_pressed)
 	bottom_hbox.add_child(_battle_start_button)
 
@@ -705,6 +699,18 @@ func _on_rule_preset_changed(_index: int):
 	var initial_magic = GameConstants.get_initial_magic(_selected_rule_preset)
 	_initial_ep_player_spin.value = initial_magic
 	_initial_ep_cpu_spin.value = initial_magic
+
+	# プリセットから目標TEPを設定
+	var win_conditions = GameConstants.get_win_conditions(_selected_rule_preset)
+	var conditions = win_conditions.get("conditions", [])
+	for condition in conditions:
+		if condition.has("target"):
+			_target_tep_spin.value = condition.get("target", 8000)
+			break
+
+	# プリセットから最大ターンを設定
+	var preset = GameConstants.RULE_PRESETS.get(_selected_rule_preset, {})
+	_max_turns_spin.value = preset.get("max_turns", 0)
 
 	# elimination の場合、目標TEPを editable = false
 	if _selected_rule_preset == "elimination":
@@ -1079,6 +1085,66 @@ func _update_cpu_preview(cpu_index: int, model_path: String):
 
 	# フォールバック: IdleModelのアニメーションを再生
 	_play_animation_recursive(char_node)
+
+
+## SpinBoxを非表示にして、▲数値▼の横並びUIを作成
+## zero_as_infinity: trueの場合、値0を「∞」と表示
+func _create_spin_with_arrows(spin: SpinBox, min_width: float, zero_as_infinity: bool = false) -> HBoxContainer:
+	# SpinBox自体は非表示（値管理のみ使用）
+	spin.visible = false
+
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+	hbox.custom_minimum_size = Vector2(min_width, 80)
+
+	var btn_size := 70
+
+	# 値→表示テキスト変換
+	var _format_value = func(val: float) -> String:
+		if zero_as_infinity and int(val) == 0:
+			return "∞"
+		return str(int(val))
+
+	# ▲ボタン（増加・左）
+	var up_btn = Button.new()
+	up_btn.text = "▲"
+	up_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+	up_btn.add_theme_font_size_override("font_size", 40)
+	hbox.add_child(up_btn)
+
+	# 数値ラベル
+	var value_label = Label.new()
+	value_label.text = _format_value.call(spin.value)
+	value_label.add_theme_font_size_override("font_size", 72)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(value_label)
+
+	# ▼ボタン（減少・右）
+	var down_btn = Button.new()
+	down_btn.text = "▼"
+	down_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+	down_btn.add_theme_font_size_override("font_size", 40)
+	hbox.add_child(down_btn)
+
+	# SpinBoxを非表示で追加（値の管理用）
+	hbox.add_child(spin)
+
+	# ボタン押下でSpinBox値を変更 → ラベル更新
+	down_btn.pressed.connect(func():
+		spin.value = max(spin.value - spin.step, spin.min_value)
+		value_label.text = _format_value.call(spin.value)
+	)
+	up_btn.pressed.connect(func():
+		spin.value = min(spin.value + spin.step, spin.max_value)
+		value_label.text = _format_value.call(spin.value)
+	)
+	# SpinBox値が外部から変更された場合もラベル同期
+	spin.value_changed.connect(func(val: float):
+		value_label.text = _format_value.call(val)
+	)
+
+	return hbox
 
 
 ## 背景にCastleEnvironmentを3Dレンダリングして表示
