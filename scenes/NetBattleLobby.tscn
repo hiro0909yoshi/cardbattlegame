@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/net_battle_lobby.gd" id="1_lobby"]
+
+[node name="NetBattleLobby" type="Control"]
+layout_mode = 3
+anchors_and_offsets_preset = 15
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lobby")

@@ -28,6 +28,7 @@ var _map_preview_cache: Dictionary = {}
 var _is_host: bool = true  # ホストかゲストか
 var _max_players: int = 4  # 最大プレイヤー数
 var _local_ready: bool = false
+var _room_id: String = ""  # ルームID（フレンドマッチ用）
 
 # プレイヤーデータ（ネットワーク接続時に更新される）
 var _players: Array[Dictionary] = []  # [{id, name, is_ready}, ...]
@@ -56,6 +57,7 @@ func _ready():
 		var mode_data = GameData.get_meta("net_battle_mode")
 		_is_host = mode_data.get("is_host", true)
 		_max_players = mode_data.get("max_players", 4)
+		_room_id = mode_data.get("room_id", "")
 
 	# ルート VBox レイアウト
 	_main_vbox = VBoxContainer.new()
@@ -101,10 +103,20 @@ func _build_top_bar():
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	top_hbox.add_child(title_label)
 
-	# 右スペーサー
-	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(120, 0)
-	top_hbox.add_child(spacer)
+	# ルームID表示（フレンドマッチ用）
+	if _room_id != "":
+		var room_id_label = Label.new()
+		room_id_label.text = "ルームID: %s" % _room_id
+		room_id_label.add_theme_font_size_override("font_size", 54)
+		room_id_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+		room_id_label.custom_minimum_size = Vector2(360, 0)
+		room_id_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		top_hbox.add_child(room_id_label)
+	else:
+		# 右スペーサー（ルームIDなし時）
+		var spacer = Control.new()
+		spacer.custom_minimum_size = Vector2(120, 0)
+		top_hbox.add_child(spacer)
 
 
 func _build_content_area():
@@ -668,7 +680,7 @@ func _on_battle_start_pressed():
 
 func _on_back_pressed():
 	# TODO: ネットワーク切断処理
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/NetBattleLobby.tscn")
 
 
 # ===== プレイヤー表示 =====
