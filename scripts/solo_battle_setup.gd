@@ -28,14 +28,11 @@ var _selected_rule_preset: String = "standard"
 var _characters: Dictionary = {}  # キャラクターデータ
 var _maps: Array[Dictionary] = []  # マップリスト
 var _enemies: Array[Dictionary] = []  # 選択中のCPU敵
-var _char_id_by_option_index: Array[Dictionary] = []  # 各OptionButtonのindex→character_idマッピング
 var _map_preview_cache: Dictionary = {}  # マップID → ImageTexture キャッシュ
 
 # ===== 色定義 =====
-const BACKGROUND_COLOR = Color(0.1, 0.12, 0.15, 1.0)
 const PANEL_COLOR = Color(0.18, 0.18, 0.22, 0.55)
 const HIGHLIGHT_COLOR = Color(0.3, 0.5, 0.8, 0.8)
-const BUTTON_COLOR = Color(0.25, 0.25, 0.3, 1.0)
 
 # ===== パス定義 =====
 const MAPS_PATH = "res://data/master/maps/"
@@ -269,11 +266,10 @@ func _build_left_panel() -> Control:
 
 		char_option.item_selected.connect(_on_cpu_character_changed_from_signal.bind(cpu_index))
 
-		# デフォルト選択を実行
+		# デフォルト選択（プレビューはSubViewport作成後に実行）
 		if cpu_index == 0:
 			if char_option.item_count > 0:
 				char_option.select(0)
-				_on_cpu_character_changed(0)
 		else:
 			char_option.select(0)
 
@@ -327,6 +323,9 @@ func _build_left_panel() -> Control:
 		_cpu_preview_containers.append(svc)
 		_cpu_preview_viewports.append(sv)
 		_cpu_preview_char_nodes.append(null)
+
+	# CPU1のデフォルト選択をプレビュー含めて実行
+	_on_cpu_character_changed(0)
 
 	return left_panel
 
@@ -489,7 +488,7 @@ func _build_right_panel() -> Control:
 	_initial_ep_player_spin.min_value = 100
 	_initial_ep_player_spin.max_value = 10000
 	_initial_ep_player_spin.step = 100
-	_initial_ep_player_spin.value = 1000
+	_initial_ep_player_spin.value = GameConstants.get_initial_magic("standard")
 	var ep_player_row = _create_spin_with_arrows(_initial_ep_player_spin, 320)
 	ep_player_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule_right_grid.add_child(ep_player_row)
@@ -504,7 +503,7 @@ func _build_right_panel() -> Control:
 	_initial_ep_cpu_spin.min_value = 100
 	_initial_ep_cpu_spin.max_value = 10000
 	_initial_ep_cpu_spin.step = 100
-	_initial_ep_cpu_spin.value = 1000
+	_initial_ep_cpu_spin.value = GameConstants.get_initial_magic("standard")
 	var ep_cpu_row = _create_spin_with_arrows(_initial_ep_cpu_spin, 320)
 	ep_cpu_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule_right_grid.add_child(ep_cpu_row)
@@ -541,11 +540,15 @@ func _update_book_highlight():
 		if i == _selected_deck_index:
 			var style = StyleBoxFlat.new()
 			style.bg_color = HIGHLIGHT_COLOR
+			button.add_theme_stylebox_override("normal", style)
 			button.add_theme_stylebox_override("focus", style)
 			button.add_theme_stylebox_override("pressed", style)
+			button.add_theme_stylebox_override("hover", style)
 		else:
+			button.remove_theme_stylebox_override("normal")
 			button.remove_theme_stylebox_override("focus")
 			button.remove_theme_stylebox_override("pressed")
+			button.remove_theme_stylebox_override("hover")
 
 
 func _on_map_selected(map_id: String):
@@ -561,11 +564,15 @@ func _update_map_highlight():
 		if _maps[i].id == _selected_map_id:
 			var style = StyleBoxFlat.new()
 			style.bg_color = HIGHLIGHT_COLOR
+			button.add_theme_stylebox_override("normal", style)
 			button.add_theme_stylebox_override("focus", style)
 			button.add_theme_stylebox_override("pressed", style)
+			button.add_theme_stylebox_override("hover", style)
 		else:
+			button.remove_theme_stylebox_override("normal")
 			button.remove_theme_stylebox_override("focus")
 			button.remove_theme_stylebox_override("pressed")
+			button.remove_theme_stylebox_override("hover")
 
 
 ## deck_id ("cpu_deck_1"等) からCpuDeckDataのデッキ名を取得
@@ -581,9 +588,8 @@ func _get_deck_name(deck_id: String) -> String:
 func _get_selected_char_id(cpu_index: int) -> String:
 	var char_option = _cpu_character_options[cpu_index]
 	var selected_id = char_option.get_selected_id()
-	if cpu_index < _char_id_by_option_index.size():
-		return _char_id_by_option_index[cpu_index].get(selected_id, "")
-	return ""
+	var id_map = char_option.get_meta("id_map", {})
+	return id_map.get(selected_id, "")
 
 
 ## item_selected シグナルから呼ばれるラッパー（selected_index引数を無視）
@@ -600,11 +606,7 @@ func _on_cpu_character_changed(cpu_index: int):
 		_update_star_display(cpu_index, 0, 0)
 
 		# 敵配列から削除
-		var enemy_to_remove = null
-		for enemy in _enemies:
-			if enemy.get("cpu_index") == cpu_index:
-				enemy_to_remove = enemy
-				break
+		var enemy_to_remove = _find_enemy_by_cpu_index(cpu_index)
 		if enemy_to_remove:
 			_enemies.erase(enemy_to_remove)
 	else:
@@ -660,6 +662,14 @@ func _update_star_display(cpu_index: int, selected_level: int, max_level: int):
 			star_btn.visible = false
 
 
+## _enemies配列からcpu_indexに一致する敵を検索
+func _find_enemy_by_cpu_index(cpu_index: int):
+	for enemy in _enemies:
+		if enemy.get("cpu_index") == cpu_index:
+			return enemy
+	return null
+
+
 ## レベル選択を敵配列に反映
 func _apply_level_selection(cpu_index: int):
 	var char_id = _get_selected_char_id(cpu_index)
@@ -672,11 +682,7 @@ func _apply_level_selection(cpu_index: int):
 			var difficulty = difficulties[diff_index]
 
 			# 敵配列を更新
-			var existing_enemy = null
-			for enemy in _enemies:
-				if enemy.get("cpu_index") == cpu_index:
-					existing_enemy = enemy
-					break
+			var existing_enemy = _find_enemy_by_cpu_index(cpu_index)
 
 			var enemy_config = {
 				"cpu_index": cpu_index,
@@ -844,7 +850,7 @@ func _populate_character_option(option: OptionButton, include_none: bool):
 			id_map[index] = char_id
 			index += 1
 
-	_char_id_by_option_index.append(id_map)
+	option.set_meta("id_map", id_map)
 
 
 func _show_error_dialog(message: String):
@@ -1010,18 +1016,6 @@ func _get_tile_scene(tile_type: String) -> PackedScene:
 	return null
 
 
-## ノードツリー内のAnimationPlayerを再帰的に探してアニメーション再生
-func _play_animation_recursive(node: Node):
-	if node is AnimationPlayer:
-		var anim_player: AnimationPlayer = node
-		var anim_list = anim_player.get_animation_list()
-		if anim_list.size() > 0:
-			anim_player.play(anim_list[0])
-			return
-	for child in node.get_children():
-		_play_animation_recursive(child)
-
-
 ## ノードツリー内のAnimationPlayerを再帰的に探して返す
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
@@ -1081,10 +1075,6 @@ func _update_cpu_preview(cpu_index: int, model_path: String):
 				if anim:
 					anim.loop_mode = Animation.LOOP_LINEAR
 				walk_anim.play(anims[0])
-				return
-
-	# フォールバック: IdleModelのアニメーションを再生
-	_play_animation_recursive(char_node)
 
 
 ## SpinBoxを非表示にして、▲数値▼の横並びUIを作成
