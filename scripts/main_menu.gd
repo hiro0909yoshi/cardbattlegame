@@ -170,7 +170,9 @@ func _on_net_battle_pressed():
 	if not check.valid:
 		_show_invalid_deck_warning(check.invalid_cards)
 		return
-	print("NET対戦選択")
+	# フレンドマッチ準備画面へ遷移（ホストとして）
+	GameData.set_meta("net_battle_mode", {"is_host": true, "max_players": 4})
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/NetBattleSetup.tscn")
 
 
 func _on_tournament_pressed():
