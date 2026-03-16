@@ -82,7 +82,10 @@ func _ready():
 	
 	# ステージ固有の設定を適用
 	_apply_stage_settings()
-	
+
+	# ステージデータをGameResultHandlerに渡す（勝敗後の遷移先判定用）
+	system_manager.set_stage_data(stage_data)
+
 	# チュートリアルモード初期化
 	if is_tutorial_mode:
 		_setup_tutorial()
@@ -150,7 +153,39 @@ func _setup_3d_scene_before_init():
 	# StageLoaderでマップ生成
 	stage_loader.set_tiles_container(tiles_container)
 	stage_loader.generate_map()
-	
+
+	# 既存のGridMap背景を削除してCastleEnvironmentに置き換え
+	var old_bg = get_node_or_null("Background")
+	if old_bg:
+		old_bg.queue_free()
+
+	# WorldEnvironment（空と環境光）
+	var existing_world_env = get_node_or_null("WorldEnvironment")
+	if not existing_world_env:
+		var world_env = WorldEnvironment.new()
+		world_env.name = "WorldEnvironment"
+		var env = Environment.new()
+		var sky = Sky.new()
+		var sky_mat = ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = Color(0.30, 0.55, 0.80)
+		sky_mat.sky_horizon_color = Color(0.55, 0.68, 0.80)
+		sky_mat.ground_bottom_color = Color(0.45, 0.58, 0.72)
+		sky_mat.ground_horizon_color = Color(0.55, 0.68, 0.80)
+		sky.sky_material = sky_mat
+		env.sky = sky
+		env.background_mode = Environment.BG_SKY
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_energy = 0.4
+		world_env.environment = env
+		add_child(world_env)
+
+	# 城壁・地面を作成（タイル範囲から動的にサイズ決定、45度回転）
+	var castle_env = CastleEnvironment.new()
+	castle_env.name = "CastleEnvironment"
+	castle_env.rotation.y = deg_to_rad(45)
+	add_child(castle_env)
+	castle_env.setup_from_tiles(tiles_container)
+
 	# プレイヤーコンテナを確認・作成
 	var players_container = get_node_or_null("Players")
 	if not players_container:
@@ -355,8 +390,18 @@ func _apply_stage_settings():
 
 	# 勝利条件を設定
 	var win_condition = stage_loader.get_win_condition()
-	if win_condition.has("target") and system_manager.player_system:
-		var target = win_condition.get("target", 8000)
+	var target = 0
+	# 新形式: conditions配列から target を取得
+	if win_condition.has("conditions"):
+		for condition in win_condition.get("conditions", []):
+			if condition.has("target"):
+				target = condition.get("target", 8000)
+				break
+	# 旧形式: トップレベルの target
+	elif win_condition.has("target"):
+		target = win_condition.get("target", 8000)
+	# target_magicを全プレイヤーに設定
+	if target > 0 and system_manager.player_system:
 		for player in system_manager.player_system.players:
 			player.target_magic = target
 		print("[Game3D] 勝利条件: TEP %dEP以上" % target)

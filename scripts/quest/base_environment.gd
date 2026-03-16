@@ -48,6 +48,13 @@ func setup_from_tiles(tiles_container: Node3D) -> void:
 	_build()
 
 
+## 固定サイズで環境を構築（タイルなしで使用する場合）
+func setup_with_fixed_size(center: Vector3, half_size: float) -> void:
+	_map_center = center
+	_map_half_size = half_size
+	_build()
+
+
 ## サブクラスでオーバーライドする構築メソッド
 func _build() -> void:
 	pass

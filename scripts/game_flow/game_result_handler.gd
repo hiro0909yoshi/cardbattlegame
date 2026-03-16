@@ -170,10 +170,16 @@ func _start_defeat_result(reason: String = ""):
 func _process_victory_result():
 	var stage_id = current_stage_data.get("id", "")
 
-	# クエストモードでない場合は簡易表示
-	if stage_id.is_empty():
-		if _show_win_screen_cb.is_valid():
+	# クエストモードでない場合・ソロバトルの場合は簡易表示→遷移
+	if stage_id.is_empty() or stage_id == "solo_battle_custom":
+		if _show_win_screen_async_cb.is_valid():
+			await _show_win_screen_async_cb.call(0)
+		elif _show_win_screen_cb.is_valid():
 			_show_win_screen_cb.call(0)
+			var tree = _get_tree_ref()
+			if tree:
+				await tree.create_timer(3.0).timeout
+		_return_to_stage_select()
 		return
 
 	# ランク計算
@@ -235,6 +241,13 @@ func _process_victory_result():
 func _process_defeat_result(reason: String):
 	var stage_id = current_stage_data.get("id", "")
 
+	# ソロバトルの場合は簡易表示→遷移
+	if stage_id == "solo_battle_custom":
+		if _show_lose_screen_async_cb.is_valid():
+			await _show_lose_screen_async_cb.call(0)
+		_return_to_stage_select()
+		return
+
 	# 報酬計算（敗北は0G）
 	var rewards = RewardCalculator.calculate_defeat_rewards()
 
@@ -279,6 +292,10 @@ func _return_to_stage_select():
 	if stage_id == "stage_tutorial":
 		print("[GameResultHandler] チュートリアル終了、メインメニューへ遷移")
 		tree.change_scene_to_file("res://scenes/MainMenu.tscn")
+	# ソロバトルはソロバトル準備画面へ
+	elif stage_id == "solo_battle_custom":
+		print("[GameResultHandler] ソロバトル終了、準備画面へ遷移")
+		tree.change_scene_to_file("res://scenes/SoloBattleSetup.tscn")
 	# クエストモードならクエストセレクトへ
 	elif not current_stage_data.is_empty():
 		print("[GameResultHandler] クエストセレクトへ遷移")
