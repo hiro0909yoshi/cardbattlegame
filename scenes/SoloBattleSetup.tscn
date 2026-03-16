@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://dnqv76vrmn8ou"]
+
+[ext_resource type="Script" path="res://scripts/solo_battle_setup.gd" id="1_0s8ky"]
+
+[node name="SoloBattleSetup" type="Control"]
+layout_mode = 3
+anchors_and_offsets_preset = 15
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0s8ky")

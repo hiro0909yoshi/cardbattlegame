@@ -410,6 +410,16 @@ func load_deck(deck_id: String) -> Dictionary:
 	print("[StageLoader] デッキ読み込み完了: ", deck_id)
 	return parsed
 
+## Dictionary からステージデータを直接読み込み（ソロバトル準備画面用）
+func load_stage_from_data(data: Dictionary) -> Dictionary:
+	current_stage_data = data
+	var map_id = data.get("map_id", "")
+	if map_id:
+		_load_map(map_id)
+	stage_loaded.emit(current_stage_data)
+	return current_stage_data
+
+
 ## マップデータを取得（LapSystem設定等で使用）
 func get_map_data() -> Dictionary:
 	return current_map_data

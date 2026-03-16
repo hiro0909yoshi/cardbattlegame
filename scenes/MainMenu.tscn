@@ -7,10 +7,6 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 207.0
-offset_top = 108.0
-offset_right = 207.0
-offset_bottom = 108.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_yqorp")
@@ -24,25 +20,137 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch_mode = 6
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MainVBox" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 0
+theme_override_constants/separation = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+[node name="TopBar" type="PanelContainer" parent="MainVBox"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 70)
+size_flags_vertical = 0
+
+[node name="TopBarMargin" type="MarginContainer" parent="MainVBox/TopBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="TopBarHBox" type="HBoxContainer" parent="MainVBox/TopBar/TopBarMargin"]
+layout_mode = 2
+
+[node name="LeftIcons" type="HBoxContainer" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="StaminaIcon" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "⚡"
+
+[node name="StaminaLabel" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "50/50"
+
+[node name="StaminaPlusButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "＋"
+flat = true
+
+[node name="StaminaSpacer" type="Control" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+
+[node name="GoldIcon" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "💰"
+
+[node name="GoldLabel" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "0"
+
+[node name="GoldPlusButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "＋"
+flat = true
+
+[node name="GoldSpacer" type="Control" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+
+[node name="StoneIcon" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "💎"
+
+[node name="StoneLabel" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "0"
+
+[node name="StonePlusButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "＋"
+flat = true
+
+[node name="CenterSpacer" type="Control" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="RightIcons" type="HBoxContainer" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
+theme_override_constants/separation = 40
+
+[node name="DailyQuestButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/RightIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "📋"
+flat = true
+
+[node name="AnnouncementButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/RightIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "📢"
+flat = true
+
+[node name="MailButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/RightIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "📧"
+flat = true
+
+[node name="SettingsButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox/RightIcons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "⚙️"
+flat = true
+
+[node name="ContentArea" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
 alignment = 1
 
-[node name="LeftPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+[node name="LeftPanel" type="Control" parent="MainVBox/ContentArea"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 4.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MainVBox/ContentArea/LeftPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -51,96 +159,133 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="UserInfoPanel" type="PanelContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+[node name="UserInfoPanel" type="PanelContainer" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="VBox" type="VBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel"]
+[node name="VBox" type="VBoxContainer" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 5
 
-[node name="NameHBox" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel/VBox"]
+[node name="NameHBox" type="HBoxContainer" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="PlayerNameLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
+[node name="PlayerNameLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 56
+theme_override_font_sizes/font_size = 48
 text = "プレイヤー名"
 
-[node name="ResetGoldButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
+[node name="ResetGoldButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "💰リセット"
 
-[node name="GoldHBox" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel/VBox"]
+[node name="TitleLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.7, 0.7, 0.3, 1)
+text = "はじまりの一歩"
 
-[node name="GoldIcon" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel/VBox/GoldHBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "💰"
-
-[node name="GoldLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/UserInfoPanel/VBox/GoldHBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "0 G"
-
-[node name="CharacterContainer" type="CenterContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+[node name="CharacterContainer" type="CenterContainer" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CharacterRect" type="TextureRect" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/CharacterContainer"]
+[node name="CharacterRect" type="TextureRect" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer"]
 custom_minimum_size = Vector2(300, 400)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="RightPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+[node name="RightPanel" type="Control" parent="MainVBox/ContentArea"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 6.0
 
-[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/HBoxContainer/RightPanel"]
+[node name="RightVBox" type="VBoxContainer" parent="MainVBox/ContentArea/RightPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
 
-[node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer"]
+[node name="BattleContainer" type="VBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox"]
 layout_mode = 2
-theme_override_constants/h_separation = 100
-theme_override_constants/v_separation = 100
-columns = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 120
+alignment = 1
 
-[node name="QuestButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(400, 200)
+[node name="TopRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer"]
 layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 160
+
+[node name="QuestButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/TopRow"]
+custom_minimum_size = Vector2(700, 300)
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
 text = "クエスト"
 
-[node name="SoloBattleButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(400, 200)
+[node name="TournamentButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/TopRow"]
+custom_minimum_size = Vector2(700, 300)
 layout_mode = 2
-text = "ソロバトル"
+theme_override_font_sizes/font_size = 72
+text = "大 会"
 
-[node name="NetBattleButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(400, 200)
+[node name="BottomBattleRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer"]
 layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 160
+
+[node name="NetBattleButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/BottomBattleRow"]
+custom_minimum_size = Vector2(700, 300)
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
 text = "ネット対戦"
 
-[node name="DeckButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(400, 200)
+[node name="SoloBattleButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/BottomBattleRow"]
+custom_minimum_size = Vector2(700, 300)
 layout_mode = 2
+theme_override_font_sizes/font_size = 72
+text = "ソロバトル"
+
+[node name="MenuContainer" type="MarginContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_right = 40
+
+[node name="BottomRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 160
+
+[node name="DeckButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 22
 text = "アルバム"
 
-[node name="SettingsButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(400, 200)
+[node name="StorageButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
+custom_minimum_size = Vector2(140, 140)
 layout_mode = 2
-text = "設定"
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 22
+text = "倉庫"
 
-[node name="ShopButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(400, 200)
+[node name="FacilityButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
+custom_minimum_size = Vector2(140, 140)
 layout_mode = 2
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 22
+text = "施設"
+
+[node name="ShopButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
+custom_minimum_size = Vector2(320, 200)
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
 text = "ショップ"

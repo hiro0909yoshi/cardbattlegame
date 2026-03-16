@@ -29,6 +29,10 @@
 	  "model_path": "res://scenes/Characters/Necromancer.tscn",
 	  "portrait_path": "",
 	  "description": "最初の敵",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_1"},
+		{"level": 2, "label": "中級", "deck_id": "cpu_deck_2"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.0,
@@ -73,6 +77,10 @@
 	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
 	  "portrait_path": "",
 	  "description": "雑魚敵1",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_1"},
+		{"level": 2, "label": "中級", "deck_id": "cpu_deck_2"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.0,
@@ -102,6 +110,10 @@
 	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
 	  "portrait_path": "",
 	  "description": "雑魚敵2",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_1"},
+		{"level": 2, "label": "中級", "deck_id": "cpu_deck_2"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.4,
@@ -131,6 +143,9 @@
 	  "model_path": "res://scenes/Characters/Fighter.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-1の敵",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_4"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.1,
@@ -160,6 +175,9 @@
 	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-3の敵",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_5"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.0,
@@ -189,6 +207,9 @@
 	  "model_path": "res://scenes/Characters/Thief.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-5から登場する敵",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_6"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.0,
@@ -218,6 +239,9 @@
 	  "model_path": "res://scenes/Characters/Goblin.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド1-8のボス",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_3"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.3,
@@ -247,6 +271,9 @@
 	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-8から登場する好戦的な敵",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_7"}
+	  ],
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 0.0,

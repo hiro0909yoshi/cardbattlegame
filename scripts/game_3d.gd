@@ -44,9 +44,18 @@ func _ready():
 	stage_loader = StageLoader.new()
 	stage_loader.name = "StageLoader"
 	add_child(stage_loader)
-	
-	# ステージを読み込み
-	var stage_data = stage_loader.load_stage(stage_id)
+
+	# ソロバトル準備画面からの設定があればそちらを使用
+	var stage_data: Dictionary = {}
+	if GameData.has_meta("solo_battle_config"):
+		var config = GameData.get_meta("solo_battle_config")
+		GameData.remove_meta("solo_battle_config")
+		var built_stage = _build_stage_from_config(config)
+		stage_data = stage_loader.load_stage_from_data(built_stage)
+		print("[Game3D] ソロバトル準備画面からの設定を使用")
+	else:
+		stage_data = stage_loader.load_stage(stage_id)
+
 	if stage_data.is_empty():
 		push_error("[Game3D] ステージ読み込み失敗: " + stage_id)
 		return
@@ -359,32 +368,74 @@ func _apply_stage_settings():
 	# CPUのバトルポリシーを設定
 	_setup_cpu_battle_policies()
 
-## 全プレイヤーのデッキを設定（ソロバトル: 全員同じデッキ）
+## ソロバトル準備画面の設定からステージデータを構築
+func _build_stage_from_config(config: Dictionary) -> Dictionary:
+	var rule_preset = config.get("rule_preset", "standard")
+	var win_conditions = GameConstants.get_win_conditions(rule_preset).duplicate(true)
+
+	# target_magic のオーバーライド
+	var target_magic = config.get("target_magic", 0)
+	if target_magic > 0 and win_conditions.has("conditions"):
+		for condition in win_conditions.get("conditions", []):
+			if condition.has("target"):
+				condition["target"] = target_magic
+
+	return {
+		"id": "solo_battle_custom",
+		"name": "ソロバトル",
+		"map_id": config.get("map_id", "map_diamond_20"),
+		"rule_preset": rule_preset,
+		"max_turns": config.get("max_turns", 0),
+		"rule_overrides": {
+			"initial_magic": {
+				"player": config.get("initial_magic_player", 1000),
+				"cpu": config.get("initial_magic_cpu", 1000)
+			},
+			"win_conditions": win_conditions
+		},
+		"quest": {
+			"enemies": config.get("enemies", [])
+		}
+	}
+
+
+## 全プレイヤーのデッキを設定
 func _setup_all_decks():
 	print("[Game3D] _setup_all_decks called")
 	if not system_manager.card_system:
 		print("[Game3D] card_system is null, returning")
 		return
-	
-	# ソロバトルモード: 全プレイヤーがGameDataの選択デッキを使用
+
+	# プレイヤー0: GameDataの選択デッキを使用
 	var deck_info = GameData.get_current_deck()
 	var cards_dict = deck_info.get("cards", {})
-	
-	if cards_dict.is_empty():
-		print("[Game3D] デッキが空のため全員ランダム使用")
-		return
-	
-	# GameDataの形式 {card_id: count} を set_deck_for_player 形式に変換
-	var deck_data = {"cards": []}
-	for card_id in cards_dict.keys():
-		var count = cards_dict[card_id]
-		deck_data["cards"].append({"id": card_id, "count": count})
-	
-	# 全プレイヤーに同じデッキを設定
-	for player_id in range(player_count):
-		system_manager.card_system.set_deck_for_player(player_id, deck_data)
-		system_manager.card_system.deal_initial_hand_for_player(player_id)
-		print("[Game3D] Player %d: ブック%d 設定完了 (%d種類)" % [player_id, GameData.selected_deck_index + 1, cards_dict.size()])
+
+	if not cards_dict.is_empty():
+		var player_deck_data: Dictionary = {"cards": []}
+		for card_id in cards_dict.keys():
+			var count = cards_dict[card_id]
+			player_deck_data["cards"].append({"id": card_id, "count": count})
+		system_manager.card_system.set_deck_for_player(0, player_deck_data)
+		system_manager.card_system.deal_initial_hand_for_player(0)
+		print("[Game3D] Player 0: ブック%d 設定完了 (%d種類)" % [GameData.selected_deck_index + 1, cards_dict.size()])
+	else:
+		print("[Game3D] プレイヤーデッキが空のためランダム使用")
+		system_manager.card_system.deal_initial_hand_for_player(0)
+
+	# CPU敵: 各自のdeck_idを使用
+	var enemies = stage_loader.get_enemies()
+	for i in range(enemies.size()):
+		var deck_id = stage_loader.get_enemy_deck_id(i)
+		if deck_id and deck_id != "random":
+			var cpu_deck_data = stage_loader.load_deck(deck_id)
+			if not cpu_deck_data.is_empty():
+				system_manager.card_system.set_deck_for_player(i + 1, cpu_deck_data)
+				print("[Game3D] CPU %d: デッキ %s 設定完了" % [i + 1, deck_id])
+			else:
+				print("[Game3D] CPU %d: デッキ %s が空のためランダム使用" % [i + 1, deck_id])
+		else:
+			print("[Game3D] CPU %d: ランダムデッキ使用" % [i + 1])
+		system_manager.card_system.deal_initial_hand_for_player(i + 1)
 
 ## CPUのバトルポリシーを設定
 func _setup_cpu_battle_policies():

@@ -84,8 +84,8 @@ static func show_selection_marker(handler, tile_index: int, target_type: String 
 	actual_handler.selection_marker.set_meta("target_type", target_type)
 	actual_handler.selection_marker.set_meta("target_player_id", target_player_id)
 
-	# 選択タイル以外のカード・クリーチャーを半透明化
-	fade_non_target_objects(handler, tile_index, target_type, target_player_id)
+	# 選択タイル以外のカード・クリーチャーを半透明化（差分更新）
+	_fade_with_diff(handler, tile_index, target_type, target_player_id)
 
 
 ## 選択マーカーを非表示
@@ -101,6 +101,7 @@ static func hide_selection_marker(handler):
 
 	# 全カード・クリーチャーの透明度を復元
 	restore_all_creature_transparency(handler)
+	_clear_fade_cache()
 
 
 ## 選択マーカーをアニメーション（_process内で呼ぶ）
@@ -427,6 +428,83 @@ static func highlight_multiple_tiles(handler, tile_indices: Array):
 
 const OCCLUDER_ALPHA: float = 0.35  # 遮蔽物の半透明度
 
+# 差分更新用キャッシュ（前回のフェード状態を記憶）
+static var _last_fade_tile_index: int = -1
+static var _last_fade_target_type: String = ""
+static var _last_fade_player_id: int = -1
+
+## 差分更新キャッシュをクリア
+static func _clear_fade_cache() -> void:
+	_last_fade_tile_index = -1
+	_last_fade_target_type = ""
+	_last_fade_player_id = -1
+
+
+## 差分更新でフェード処理（前回と異なるタイルのみ更新）
+static func _fade_with_diff(handler, target_tile_index: int, target_type: String = "", target_player_id: int = -1) -> void:
+	# 前回と同じなら何もしない
+	if target_tile_index == _last_fade_tile_index and target_type == _last_fade_target_type and target_player_id == _last_fade_player_id:
+		return
+
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys:
+		return
+
+	var prev_tile: int = _last_fade_tile_index
+	var prev_type: String = _last_fade_target_type
+	var prev_pid: int = _last_fade_player_id
+
+	# 初回（キャッシュなし）は全体走査
+	if prev_tile < 0:
+		fade_non_target_objects(handler, target_tile_index, target_type, target_player_id)
+		_last_fade_tile_index = target_tile_index
+		_last_fade_target_type = target_type
+		_last_fade_player_id = target_player_id
+		return
+
+	# 差分更新: 前回の対象タイルを半透明に戻す
+	if board_sys.tile_nodes.has(prev_tile):
+		var old_tile = board_sys.tile_nodes[prev_tile]
+		if "creature_card_3d" in old_tile and old_tile.creature_card_3d:
+			if old_tile.creature_card_3d.has_method("set_transparency"):
+				old_tile.creature_card_3d.set_transparency(OCCLUDER_ALPHA)
+
+	# 差分更新: 新しい対象タイルを不透明にする
+	if board_sys.tile_nodes.has(target_tile_index):
+		var new_tile = board_sys.tile_nodes[target_tile_index]
+		if "creature_card_3d" in new_tile and new_tile.creature_card_3d:
+			if new_tile.creature_card_3d.has_method("set_transparency"):
+				var card_alpha: float = OCCLUDER_ALPHA if target_type == "player" else 1.0
+				new_tile.creature_card_3d.set_transparency(card_alpha)
+
+	# プレイヤーキャラの差分更新
+	if target_type == "player" or prev_type == "player":
+		# プレイヤーターゲットの場合は対象が変わるので該当プレイヤーだけ更新
+		if prev_type == "player" and prev_pid >= 0 and prev_pid < board_sys.player_nodes.size():
+			var old_node = board_sys.player_nodes[prev_pid]
+			if old_node:
+				_set_node_transparency(old_node, OCCLUDER_ALPHA)
+		if target_type == "player" and target_player_id >= 0 and target_player_id < board_sys.player_nodes.size():
+			var new_node = board_sys.player_nodes[target_player_id]
+			if new_node:
+				_set_node_transparency(new_node, 1.0)
+	else:
+		# クリーチャーターゲット: タイル上のプレイヤーだけ更新
+		# 前回の対象タイルにいたプレイヤーを半透明に
+		for player_id in range(board_sys.player_nodes.size()):
+			var player_tile: int = board_sys.get_player_tile(player_id)
+			if player_tile == prev_tile or player_tile == target_tile_index:
+				var player_node = board_sys.player_nodes[player_id]
+				if not player_node:
+					continue
+				var is_new_target: bool = (player_tile == target_tile_index)
+				var char_alpha: float = 1.0 if is_new_target and target_type != "creature" else OCCLUDER_ALPHA
+				_set_node_transparency(player_node, char_alpha)
+
+	_last_fade_tile_index = target_tile_index
+	_last_fade_target_type = target_type
+	_last_fade_player_id = target_player_id
+
 ## 選択タイル以外のオブジェクトを半透明にする
 ## target_type: "creature" → 選択タイルのカードは不透明、キャラは半透明
 ##              "player"   → 対象プレイヤーのキャラのみ不透明、他は全て半透明
@@ -544,6 +622,8 @@ static func restore_all_creature_transparency(handler) -> void:
 		if player_node:
 			_set_node_transparency(player_node, 1.0)
 
+	_clear_fade_cache()
+
 
 ## カメラドラッグ中は半透明を解除、戻ったら再適用
 static func _update_fade_for_camera(handler, marker: Node3D) -> void:
@@ -559,12 +639,17 @@ static func _update_fade_for_camera(handler, marker: Node3D) -> void:
 		restore_all_creature_transparency(handler)
 		marker.set_meta("was_camera_dragging", true)
 	elif not is_dragging and was_dragging:
-		# ドラッグ終了 → 半透明を再適用
+		# ドラッグ終了 → 半透明を再適用（全体走査が必要）
 		var parent_tile = marker.get_parent()
 		if parent_tile and "tile_index" in parent_tile:
 			var target_type: String = marker.get_meta("target_type", "")
 			var target_pid: int = marker.get_meta("target_player_id", -1)
+			# 復元直後なのでキャッシュをクリアして全体走査
+			_last_fade_tile_index = -1
 			fade_non_target_objects(handler, parent_tile.tile_index, target_type, target_pid)
+			_last_fade_tile_index = parent_tile.tile_index
+			_last_fade_target_type = target_type
+			_last_fade_player_id = target_pid
 		marker.set_meta("was_camera_dragging", false)
 
 
