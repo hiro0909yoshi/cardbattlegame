@@ -201,49 +201,87 @@ func create_card_button(card_data: Dictionary):
 	var owned_count = GameData.get_card_count(card_data.id)
 	var deck_count = current_deck.get(card_data.id, 0)
 	var rarity = card_data.get("rarity", "N")
-	
-	# ボタン（元のサイズに戻す）
+	var card_type = card_data.get("type", "")
+
+	# ボタン（テキストは空、子要素で構成）
 	var button = Button.new()
 	button.custom_minimum_size = Vector2(420, 700)
 	button.set_meta("card_id", card_data.id)
-	
-	# テキスト表示
+	button.clip_contents = true
+
+	# VBoxContainer で画像+テキストを縦並び
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.add_theme_constant_override("separation", 4)
+
+	# カード画像
+	var image_rect = TextureRect.new()
+	image_rect.custom_minimum_size = Vector2(300, 300)
+	image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var image_path = _get_card_image_path(card_data)
+	if ResourceLoader.exists(image_path):
+		image_rect.texture = load(image_path)
+	vbox.add_child(image_rect)
+
+	# テキスト情報
+	var label = Label.new()
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 30)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
 	var card_name = card_data.get("name", "???")
 	var dev_name = card_data.get("dev_name", "")
 	var element = card_data.get("element", "")
-	var card_type = card_data.get("type", "")
 
-	button.text = card_name
+	var text = card_name
 	if not dev_name.is_empty():
-		button.text += "\n" + dev_name
-	button.text += "\n[" + rarity + "]"
+		text += "\n" + dev_name
+	text += "\n[" + rarity + "]"
 	if not element.is_empty():
-		button.text += " " + element
-	button.text += "\n所持: " + str(owned_count) + "枚"
+		text += " " + element
+	text += "\n所持: " + str(owned_count) + "枚"
 	if deck_count > 0:
-		button.text += "\nデッキ: " + str(deck_count) + "枚"
-	
-	# クリーチャーならAP/HP表示
+		text += "\nデッキ: " + str(deck_count) + "枚"
 	if card_type == "creature":
 		var ap = card_data.get("ap", 0)
 		var hp = card_data.get("hp", 0)
-		button.text += "\nAP:%d / HP:%d" % [ap, hp]
-	
-	button.add_theme_font_size_override("font_size", 32)
-	
-	# レアリティで背景色
+		text += "\nAP:%d / HP:%d" % [ap, hp]
+
+	label.text = text
+	vbox.add_child(label)
+
+	button.add_child(vbox)
+
+	# レアリティでテキスト色（画像には影響させない）
 	match rarity:
 		"R":
-			button.modulate = Color(1.0, 0.9, 0.7)
+			label.modulate = Color(1.0, 0.9, 0.7)
 		"S":
-			button.modulate = Color(0.9, 0.85, 1.0)
+			label.modulate = Color(0.9, 0.85, 1.0)
 		"N":
-			button.modulate = Color(0.85, 0.9, 1.0)
+			label.modulate = Color(0.85, 0.9, 1.0)
 		"C":
-			button.modulate = Color(0.9, 0.9, 0.9)
-	
+			label.modulate = Color(0.9, 0.9, 0.9)
+
 	button.pressed.connect(_on_card_button_pressed.bind(card_data.id))
 	grid_container.add_child(button)
+
+
+## カードの画像パスを取得
+func _get_card_image_path(card_data: Dictionary) -> String:
+	var card_id = card_data.get("id", 0)
+	var card_type = card_data.get("type", "")
+	var element = card_data.get("element", "")
+
+	match card_type:
+		"creature":
+			return "res://assets/images/creatures/%s/%d.png" % [element, card_id]
+		"spell":
+			return "res://assets/images/spells/%d.png" % card_id
+		"item":
+			return "res://assets/images/items/%d.png" % card_id
+	return ""
 
 ## カードシーンをプリロード
 var CardScene = preload("res://scenes/Card.tscn")

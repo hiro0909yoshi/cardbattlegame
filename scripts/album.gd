@@ -1,12 +1,19 @@
 extends Control
 
+@onready var left_panel = $MarginContainer/HBoxContainer/LeftPanel
 @onready var left_vbox = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer
 @onready var right_panel = $MarginContainer/HBoxContainer/RightPanel
 @onready var scroll_container = $MarginContainer/HBoxContainer/RightPanel/ScrollContainer
 @onready var grid_container = $MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer
 
 # モード管理
-var is_battle_mode = false  # バトル用かデッキ編集用か
+var is_battle_mode: bool = false  # バトル用かデッキ編集用か
+
+# カード一覧用
+var _current_category: String = ""
+var _current_page: int = 0
+var _cards_per_page: int = 40
+var _filtered_cards: Array[Dictionary] = []
 
 func _ready():
 	# GameDataから起動モードを取得（メタデータを使用）
@@ -29,6 +36,9 @@ func _ready():
 	left_vbox.get_node("ResetCardsButton").pressed.connect(_on_reset_cards_pressed)
 	left_vbox.get_node("BackButton").pressed.connect(_on_back_pressed)
 	
+	# 星の背景を初期表示
+	_setup_category_background(Color(0.4, 0.4, 0.5))
+
 	# バトルモードならブック選択を表示
 	if is_battle_mode:
 		_show_book_selection()
@@ -106,7 +116,10 @@ func _show_collection_stats():
 	# GridContainerをクリア
 	for child in grid_container.get_children():
 		child.queue_free()
-	
+
+	# 星の背景を設定（白ベース）
+	_setup_category_background(Color(0.4, 0.4, 0.5))
+
 	# 統計データを収集
 	var stats = _calculate_collection_stats()
 	
@@ -155,15 +168,39 @@ func _create_stats_panel(title: String, data: Dictionary, category: String) -> C
 	var button = Button.new()
 	button.custom_minimum_size = Vector2(900, 400)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	
+
+	# 属性色のグラデーション背景
+	var element_color = _get_element_color_for_category(category)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(element_color.r * 0.5, element_color.g * 0.5, element_color.b * 0.5, 0.9)
+	style.border_color = Color(element_color.r * 0.8, element_color.g * 0.8, element_color.b * 0.8, 0.7)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 20
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	style.shadow_color = Color(element_color.r * 0.15, element_color.g * 0.15, element_color.b * 0.15, 0.5)
+	style.shadow_size = 6
+	button.add_theme_stylebox_override("normal", style)
+
+	# ホバー時は少し明るく
+	var hover_style = style.duplicate()
+	hover_style.bg_color = Color(element_color.r * 0.6, element_color.g * 0.6, element_color.b * 0.6, 0.95)
+	button.add_theme_stylebox_override("hover", hover_style)
+
+	# 押下時
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = Color(element_color.r * 0.7, element_color.g * 0.7, element_color.b * 0.7, 1.0)
+	button.add_theme_stylebox_override("pressed", pressed_style)
+
 	# ボタンテキストを構築
 	var text = title + "\n"
-	
+
 	var total_owned = data.get("total_owned", 0)
 	var total_cards = data.get("total_cards", 0)
 	var total_percent = 0.0 if total_cards == 0 else (float(total_owned) / total_cards * 100.0)
 	text += "合計: %d / %d (%.1f%%)\n" % [total_owned, total_cards, total_percent]
-	
+
 	# レアリティ別（C < N < S < R）
 	var rarities = ["C", "N", "S", "R"]
 	for rarity in rarities:
@@ -172,43 +209,25 @@ func _create_stats_panel(title: String, data: Dictionary, category: String) -> C
 		var total = rarity_data.get("total", 0)
 		var percent = 0.0 if total == 0 else (float(owned) / total * 100.0)
 		text += "  [%s] %d / %d (%.1f%%)\n" % [rarity, owned, total, percent]
-	
+
 	button.text = text
 	button.add_theme_font_size_override("font_size", 36)
-	
+
 	# クリックでカード一覧を表示
 	button.pressed.connect(_show_category_cards.bind(category))
-	
+
 	return button
 
 ## カテゴリ別のカード一覧を表示
 func _show_category_cards(category: String):
-	print("カテゴリ表示: ", category)
-	
-	# GridContainerをクリア
-	for child in grid_container.get_children():
-		child.queue_free()
-	
-	# 戻るボタン
-	var back_btn = Button.new()
-	back_btn.text = "← 戻る"
-	back_btn.custom_minimum_size = Vector2(200, 80)
-	back_btn.add_theme_font_size_override("font_size", 32)
-	back_btn.pressed.connect(_show_collection_stats)
-	grid_container.add_child(back_btn)
-	
-	# タイトル
-	var title_label = Label.new()
-	title_label.text = _category_names.get(category, category) + " のカード一覧"
-	title_label.add_theme_font_size_override("font_size", 48)
-	grid_container.add_child(title_label)
-	
-	# カードを取得
-	var cards_to_show = []
+	_current_category = category
+
+	# カードをフィルタリング
+	_filtered_cards.clear()
 	for card in CardLoader.all_cards:
 		var card_type = card.get("type", "")
 		var element = card.get("element", "")
-		
+
 		var card_category = ""
 		if card_type == "creature":
 			card_category = element
@@ -216,42 +235,358 @@ func _show_category_cards(category: String):
 			card_category = "item"
 		elif card_type == "spell":
 			card_category = "spell"
-		
-		if card_category == category:
-			cards_to_show.append(card)
-	
-	# カードボタンを作成
-	for card in cards_to_show:
-		var card_btn = _create_card_button(card)
-		grid_container.add_child(card_btn)
 
-## カードボタンを作成
-func _create_card_button(card: Dictionary) -> Button:
-	var button = Button.new()
-	button.custom_minimum_size = Vector2(280, 120)
-	
+		if card_category == category:
+			_filtered_cards.append(card)
+
+	_current_page = 0
+	_render_card_page()
+
+
+## 現在のページを描画
+func _render_card_page():
+	# 左パネルを非表示にしてフル幅使用
+	left_panel.visible = false
+
+	# 属性色のグラデーション背景を設定
+	var element_color = _get_element_color_for_category(_current_category)
+	_setup_category_background(element_color)
+
+	# GridContainerをクリア
+	for child in grid_container.get_children():
+		child.queue_free()
+
+	# グリッドを10列に変更（画像タイル用）
+	grid_container.columns = 10
+	grid_container.add_theme_constant_override("h_separation", 40)
+	grid_container.add_theme_constant_override("v_separation", 20)
+	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# スクロール位置をリセット
+	scroll_container.scroll_vertical = 0
+
+	var total_pages = max(1, int(ceil(float(_filtered_cards.size()) / _cards_per_page)))
+
+	# ヘッダー行（GridContainerの外にHBoxContainerで配置）
+	var header = HBoxContainer.new()
+	header.name = "CardListHeader"
+	header.custom_minimum_size = Vector2(0, 80)
+	header.add_theme_constant_override("separation", 20)
+	header.anchor_left = 0.0
+	header.anchor_right = 1.0
+	header.offset_left = 0
+	header.offset_right = 0
+
+	var back_btn = Button.new()
+	back_btn.text = "← 戻る"
+	back_btn.custom_minimum_size = Vector2(200, 80)
+	back_btn.add_theme_font_size_override("font_size", 36)
+	back_btn.pressed.connect(_on_card_list_back)
+	header.add_child(back_btn)
+
+	var left_spacer = Control.new()
+	left_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(left_spacer)
+
+	var prev_btn = Button.new()
+	prev_btn.text = "◀ 前"
+	prev_btn.custom_minimum_size = Vector2(160, 80)
+	prev_btn.add_theme_font_size_override("font_size", 36)
+	prev_btn.disabled = (_current_page == 0)
+	prev_btn.pressed.connect(_on_page_prev)
+	header.add_child(prev_btn)
+
+	var title_label = Label.new()
+	title_label.text = "%s (%d種)" % [_category_names.get(_current_category, _current_category), _filtered_cards.size()]
+	title_label.add_theme_font_size_override("font_size", 48)
+	title_label.add_theme_color_override("font_color", Color.WHITE)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.add_child(title_label)
+
+	var page_label = Label.new()
+	page_label.text = "%d / %d" % [_current_page + 1, total_pages]
+	page_label.add_theme_font_size_override("font_size", 42)
+	page_label.add_theme_color_override("font_color", Color.WHITE)
+	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.add_child(page_label)
+
+	var next_btn = Button.new()
+	next_btn.text = "次 ▶"
+	next_btn.custom_minimum_size = Vector2(160, 80)
+	next_btn.add_theme_font_size_override("font_size", 36)
+	next_btn.disabled = (_current_page >= total_pages - 1)
+	next_btn.pressed.connect(_on_page_next)
+	header.add_child(next_btn)
+
+	var right_spacer = Control.new()
+	right_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(right_spacer)
+
+	# ヘッダーをScrollContainerの上（RightPanel直下）に追加
+	var existing_header = right_panel.get_node_or_null("CardListHeader")
+	if existing_header:
+		existing_header.queue_free()
+	right_panel.add_child(header)
+
+	# ScrollContainerの位置調整（ヘッダー分 + 左右マージン）
+	scroll_container.offset_top = 90
+	scroll_container.offset_left = 30
+	scroll_container.offset_right = -30
+
+	# カードサムネイルを表示（現在ページ分）
+	var start_index = _current_page * _cards_per_page
+	var end_index = min(start_index + _cards_per_page, _filtered_cards.size())
+
+	for i in range(start_index, end_index):
+		var card_panel = _create_card_thumbnail(_filtered_cards[i])
+		grid_container.add_child(card_panel)
+
+
+## ページ操作
+func _on_page_prev():
+	if _current_page > 0:
+		_current_page -= 1
+		_render_card_page()
+
+
+func _on_page_next():
+	var total_pages = max(1, int(ceil(float(_filtered_cards.size()) / _cards_per_page)))
+	if _current_page < total_pages - 1:
+		_current_page += 1
+		_render_card_page()
+
+
+## カードサムネイルを作成（画像 + カード名 + 所持数）
+func _create_card_thumbnail(card: Dictionary) -> Control:
 	var card_id = card.get("id", 0)
 	var card_name = card.get("name", "???")
 	var rarity = card.get("rarity", "N")
+	var card_type = card.get("type", "")
+	var element = card.get("element", "")
 	var owned = UserCardDB.get_card_count(card_id)
-	
-	button.text = "%s\n[%s] %d枚" % [card_name, rarity, owned]
-	button.add_theme_font_size_override("font_size", 24)
-	
-	# 所持していない場合は暗くする
+
+	# 属性色のグラデーション背景付きパネル
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(300, 380)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var element_color = _get_element_color(element, card_type)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(element_color.r, element_color.g, element_color.b, 0.35)
+	style.border_color = Color(element_color.r, element_color.g, element_color.b, 0.5)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	# 上部から下部へ暗くなるスカート（疑似グラデーション）
+	style.shadow_color = Color(element_color.r * 0.3, element_color.g * 0.3, element_color.b * 0.3, 0.4)
+	style.shadow_size = 4
+	panel.add_theme_stylebox_override("panel", style)
+
+	# 未所持はパネル自体を暗く
 	if owned <= 0:
-		button.modulate = Color(0.5, 0.5, 0.5)
+		panel.modulate = Color(0.4, 0.4, 0.4, 0.8)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	# カード画像
+	var image_path = _get_card_image_path(card_id, card_type, element)
+	var tex_rect = TextureRect.new()
+	tex_rect.custom_minimum_size = Vector2(280, 280)
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+
+	if image_path != "" and ResourceLoader.exists(image_path):
+		tex_rect.texture = load(image_path)
+
+	vbox.add_child(tex_rect)
+
+	# カード名ラベル
+	var name_label = Label.new()
+	name_label.text = card_name
+	name_label.add_theme_font_size_override("font_size", 26)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+
+	# レアリティで色分け
+	if owned <= 0:
+		name_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 	else:
-		# レアリティで色分け
 		match rarity:
 			"R":
-				button.modulate = Color(1.0, 0.9, 0.7)
+				name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 			"S":
-				button.modulate = Color(0.9, 0.8, 1.0)
-			"N":
-				button.modulate = Color(0.8, 0.9, 1.0)
-	
-	return button
+				name_label.add_theme_color_override("font_color", Color(0.85, 0.7, 1.0))
+			_:
+				name_label.add_theme_color_override("font_color", Color.WHITE)
+
+	vbox.add_child(name_label)
+
+	# 所持数ラベル
+	var count_label = Label.new()
+	count_label.text = "[%s] %d枚" % [rarity, owned]
+	count_label.add_theme_font_size_override("font_size", 24)
+	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	count_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(count_label)
+
+	panel.add_child(vbox)
+	return panel
+
+
+## カテゴリから属性色を取得
+func _get_element_color_for_category(category: String) -> Color:
+	match category:
+		"fire":
+			return Color(0.9, 0.3, 0.1)
+		"water":
+			return Color(0.1, 0.4, 0.9)
+		"earth":
+			return Color(0.5, 0.35, 0.1)
+		"wind":
+			return Color(0.1, 0.7, 0.3)
+		"neutral":
+			return Color(0.6, 0.6, 0.6)
+		"item":
+			return Color(0.7, 0.6, 0.2)
+		"spell":
+			return Color(0.5, 0.2, 0.7)
+	return Color(0.4, 0.4, 0.4)
+
+
+## グラデーション背景を設定（暗い宇宙風 + 星 + 属性色のアクセント）
+func _setup_category_background(element_color: Color):
+	# 既存の背景があれば削除
+	_remove_category_background()
+
+	# コンテナ
+	var bg_container = Control.new()
+	bg_container.name = "CategoryBG"
+	bg_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# 暗い背景 + 属性色の薄いグラデーション
+	var bg = TextureRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(element_color.r * 0.12, element_color.g * 0.12, element_color.b * 0.12, 0.95))
+	gradient.set_color(1, Color(0.02, 0.02, 0.05, 0.98))
+
+	var grad_tex = GradientTexture2D.new()
+	grad_tex.gradient = gradient
+	grad_tex.fill_from = Vector2(0, 0)
+	grad_tex.fill_to = Vector2(0, 1)
+
+	bg.texture = grad_tex
+	bg_container.add_child(bg)
+
+	# 星を散りばめる
+	var viewport_size = get_viewport().get_visible_rect().size
+	var rng = RandomNumberGenerator.new()
+	rng.seed = _current_category.hash()  # カテゴリごとに同じ配置
+
+	for i in range(60):
+		var star = PanelContainer.new()
+		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var star_size = rng.randf_range(2.0, 6.0)
+		star.custom_minimum_size = Vector2(star_size, star_size)
+		star.position = Vector2(rng.randf_range(0, viewport_size.x), rng.randf_range(0, viewport_size.y))
+
+		var star_style = StyleBoxFlat.new()
+		var brightness = rng.randf_range(0.5, 1.0)
+		# 一部の星に属性色を混ぜる
+		var star_color: Color
+		if rng.randf() < 0.3:
+			star_color = Color(
+				lerpf(1.0, element_color.r, 0.5) * brightness,
+				lerpf(1.0, element_color.g, 0.5) * brightness,
+				lerpf(1.0, element_color.b, 0.5) * brightness,
+				brightness
+			)
+		else:
+			star_color = Color(brightness, brightness, brightness * 1.1, brightness)
+		star_style.bg_color = star_color
+		star_style.set_corner_radius_all(int(star_size))
+		star.add_theme_stylebox_override("panel", star_style)
+
+		bg_container.add_child(star)
+
+		# キラキラアニメーション（一部の星）
+		if rng.randf() < 0.4:
+			var tween = create_tween()
+			tween.set_loops()
+			var delay = rng.randf_range(0.0, 3.0)
+			var duration = rng.randf_range(1.5, 3.5)
+			tween.tween_interval(delay)
+			tween.tween_property(star, "modulate:a", rng.randf_range(0.2, 0.5), duration)
+			tween.tween_property(star, "modulate:a", 1.0, duration)
+
+	add_child(bg_container)
+	move_child(bg_container, 0)
+	right_panel.move_child(bg_container, 0)
+
+
+## 背景を削除
+func _remove_category_background():
+	var existing = get_node_or_null("CategoryBG")
+	if existing:
+		existing.queue_free()
+
+
+## 属性色を取得
+func _get_element_color(element: String, card_type: String) -> Color:
+	match element:
+		"fire":
+			return Color(0.9, 0.3, 0.1)
+		"water":
+			return Color(0.1, 0.4, 0.9)
+		"earth":
+			return Color(0.5, 0.35, 0.1)
+		"wind":
+			return Color(0.1, 0.7, 0.3)
+		"neutral":
+			return Color(0.6, 0.6, 0.6)
+	# アイテム・スペル
+	match card_type:
+		"item":
+			return Color(0.7, 0.6, 0.2)
+		"spell":
+			return Color(0.5, 0.2, 0.7)
+	return Color(0.4, 0.4, 0.4)
+
+
+## カード画像パスを取得
+func _get_card_image_path(card_id: int, card_type: String, element: String) -> String:
+	if card_type == "creature":
+		return "res://assets/images/creatures/%s/%d.png" % [element, card_id]
+	elif card_type == "spell":
+		return "res://assets/images/spells/%d.png" % card_id
+	elif card_type == "item":
+		return "res://assets/images/items/%d.png" % card_id
+	return ""
+
+
+## カード一覧から統計画面に戻る（グリッド設定を復元）
+func _on_card_list_back():
+	left_panel.visible = true
+	_remove_category_background()
+	# ヘッダー削除
+	var existing_header = right_panel.get_node_or_null("CardListHeader")
+	if existing_header:
+		existing_header.queue_free()
+	scroll_container.offset_top = 0
+	scroll_container.offset_left = 0
+	scroll_container.offset_right = 0
+	grid_container.size_flags_horizontal = Control.SIZE_FILL
+	grid_container.columns = 2
+	grid_container.add_theme_constant_override("h_separation", 100)
+	grid_container.add_theme_constant_override("v_separation", 20)
+	_show_collection_stats()
 
 ## 所持カード統計を計算
 func _calculate_collection_stats() -> Dictionary:
