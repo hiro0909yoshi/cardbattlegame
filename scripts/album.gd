@@ -25,10 +25,8 @@ func _ready():
 	# バトルモードなら最初からブック選択表示
 	if is_battle_mode:
 		scroll_container.visible = true
-		print("バトル用ブック選択モード")
 	else:
 		scroll_container.visible = false
-		print("通常アルバムモード")
 	
 	# 左側ボタン接続
 	left_vbox.get_node("DeckEditButton").pressed.connect(_on_deck_edit_pressed)
@@ -44,7 +42,6 @@ func _ready():
 		_show_book_selection()
 
 func _on_deck_edit_pressed():
-	print("ブック選択画面表示")
 	# 右側パネルを表示
 	scroll_container.visible = true
 	# ブック選択画面を表示
@@ -76,7 +73,6 @@ func _show_book_selection():
 		grid_container.add_child(book_button)
 
 func _on_book_selected(book_index: int):
-	print("ブック", book_index + 1, "選択")
 	# 選択したブックを保存
 	GameData.selected_deck_index = book_index
 	
@@ -84,25 +80,19 @@ func _on_book_selected(book_index: int):
 	if is_battle_mode:
 		# バトルモードの場合はフラグを消してバトル画面へ
 		GameData.remove_meta("is_selecting_for_battle")
-		print("→ バトル開始")
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
 	else:
 		# 通常モードの場合はデッキ編集画面へ
-		print("→ デッキ編集")
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/DeckEditor.tscn")
 
 func _on_card_list_pressed():
-	print("カード所持率表示")
 	scroll_container.visible = true
 	_show_collection_stats()
 
 func _on_reset_cards_pressed():
-	print("[DEBUG] カードリセット実行")
 	UserCardDB.reset_database()
 	UserCardDB.flush()
-	# 表示更新
 	_show_collection_stats()
-	print("[DEBUG] 全カードを0枚にリセットしました")
 
 func _on_back_pressed():
 	# バトルモードの場合はフラグをクリア
@@ -125,16 +115,7 @@ func _show_collection_stats():
 	
 	# 表示用パネルを作成
 	var categories = ["fire", "water", "earth", "wind", "neutral", "item", "spell"]
-	var category_names = {
-		"fire": "🔥 火",
-		"water": "💧 水", 
-		"earth": "🪨 地",
-		"wind": "🌪️ 風",
-		"neutral": "⚪ 無",
-		"item": "📦 アイテム",
-		"spell": "📜 スペル"
-	}
-	
+
 	# 戻るボタンを追加
 	var back_btn = Button.new()
 	back_btn.text = "← 戻る"
@@ -149,13 +130,12 @@ func _show_collection_stats():
 		if not stats.has(category):
 			continue
 		
-		var panel = _create_stats_panel(category_names[category], stats[category], category)
+		var panel = _create_stats_panel(_category_names[category], stats[category], category)
 		grid_container.add_child(panel)
 
-# カテゴリ名マップ（クラス変数として保持）
 var _category_names = {
 	"fire": "🔥 火",
-	"water": "💧 水", 
+	"water": "💧 水",
 	"earth": "🪨 地",
 	"wind": "🌪️ 風",
 	"neutral": "⚪ 無",
@@ -322,10 +302,8 @@ func _render_card_page():
 	right_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(right_spacer)
 
-	# ヘッダーをScrollContainerの上（RightPanel直下）に追加
-	var existing_header = right_panel.get_node_or_null("CardListHeader")
-	if existing_header:
-		existing_header.queue_free()
+	# 既存ヘッダーを全て削除してから追加
+	_remove_all_headers()
 	right_panel.add_child(header)
 
 	# ScrollContainerの位置調整（ヘッダー分 + 左右マージン）
@@ -528,7 +506,17 @@ func _setup_category_background(element_color: Color):
 
 	add_child(bg_container)
 	move_child(bg_container, 0)
-	right_panel.move_child(bg_container, 0)
+
+
+## right_panel内の全ヘッダーを削除
+func _remove_all_headers():
+	var to_remove: Array[Node] = []
+	for child in right_panel.get_children():
+		if child.name.begins_with("CardListHeader"):
+			to_remove.append(child)
+	for node in to_remove:
+		right_panel.remove_child(node)
+		node.queue_free()
 
 
 ## 背景を削除
@@ -575,10 +563,8 @@ func _get_card_image_path(card_id: int, card_type: String, element: String) -> S
 func _on_card_list_back():
 	left_panel.visible = true
 	_remove_category_background()
-	# ヘッダー削除
-	var existing_header = right_panel.get_node_or_null("CardListHeader")
-	if existing_header:
-		existing_header.queue_free()
+	# ヘッダー全削除
+	_remove_all_headers()
 	scroll_container.offset_top = 0
 	scroll_container.offset_left = 0
 	scroll_container.offset_right = 0

@@ -1,10 +1,10 @@
 extends Control
 
-var current_deck = {}  # 現在編集中のデッキ
-var current_filter = "all"  # フィルター状態
-var card_dialog = null
-var selected_card_id = 0
-var count_buttons = []  # 枚数選択ボタンの配列
+var _current_deck = {}  # 現在編集中のデッキ
+var _current_filter = "all"  # フィルター状態
+var _card_dialog = null
+var _selected_card_id = 0
+var _count_buttons: Array[Button] = []  # 枚数選択ボタンの配列
 
 # 正確なノードパス
 @onready var button_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer
@@ -16,14 +16,13 @@ var count_buttons = []  # 枚数選択ボタンの配列
 @onready var card_count_label = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardCountLabel
 @onready var save_button = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/SaveButton
 
-# リセットボタン（コードで生成）
-var reset_button: Button = null
+var _reset_button: Button = null
 
 # インフォパネル
-var CreatureInfoPanelScene = preload("res://scenes/ui/creature_info_panel.tscn")
-var ItemInfoPanelScene = preload("res://scenes/ui/item_info_panel.tscn")
-var SpellInfoPanelScene = preload("res://scenes/ui/spell_info_panel.tscn")
-var current_info_panel: Control = null
+var _creature_info_panel_scene = preload("res://scenes/ui/creature_info_panel.tscn")
+var _item_info_panel_scene = preload("res://scenes/ui/item_info_panel.tscn")
+var _spell_info_panel_scene = preload("res://scenes/ui/spell_info_panel.tscn")
+var _current_info_panel: Control = null
 
 func _ready():
 	# フィルターボタン接続（8個）
@@ -46,10 +45,10 @@ func _ready():
 	save_button.pressed.connect(_on_save_pressed)
 	
 	# リセットボタンを動的に作成
-	create_reset_button()
+	_create_reset_button()
 	
 	# 🔧 デバッグ: データリセットボタン（テスト用）
-	create_debug_reset_button()
+	_create_debug_reset_button()
 	
 	# もし戻るボタンが別の場所にあれば
 	if has_node("BackButton"):
@@ -64,27 +63,37 @@ func _ready():
 		$TitleLabel.text = "デッキ編集 - " + deck_name
 	
 	# ダイアログ作成
-	create_card_dialog()
+	_create_card_dialog()
 	
+	# 宇宙風背景を設定
+	_setup_space_background(Color(0.4, 0.4, 0.5))
+
 	# カード一覧を表示（最初はデッキ内のカードのみ）
 	display_cards("deck")
 
 func load_deck():
 	# GameDataから現在のブックを読み込み
-	current_deck = GameData.get_current_deck()["cards"].duplicate()
+	_current_deck = GameData.get_current_deck()["cards"].duplicate()
 	update_card_count()
 
-func create_card_dialog():
-	card_dialog = Popup.new()
-	card_dialog.size = Vector2(1183, 500)
-	
+func _create_card_dialog():
+	_card_dialog = Popup.new()
+	_card_dialog.size = Vector2(1183, 500)
+	_card_dialog.transparent_bg = true
+
+	# Popupのパネル背景を透明に
+	var popup_style = StyleBoxFlat.new()
+	popup_style.bg_color = Color(0, 0, 0, 0)
+	popup_style.set_border_width_all(0)
+	_card_dialog.add_theme_stylebox_override("panel", popup_style)
+
 	# シンプルなVBox
 	var vbox = VBoxContainer.new()
 	vbox.name = "DialogVBox"
 	vbox.position = Vector2(30, 30)
 	vbox.size = Vector2(1123, 440)
 	vbox.add_theme_constant_override("separation", 30)
-	card_dialog.add_child(vbox)
+	_card_dialog.add_child(vbox)
 	
 	# 所持枚数/デッキ内枚数ラベル
 	var info_label = Label.new()
@@ -98,7 +107,7 @@ func create_card_dialog():
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	hbox.add_theme_constant_override("separation", 30)
 	
-	count_buttons.clear()
+	_count_buttons.clear()
 	for i in range(5):
 		var btn = Button.new()
 		btn.text = str(i) + "枚"
@@ -107,7 +116,7 @@ func create_card_dialog():
 		btn.add_theme_font_size_override("font_size", 50)
 		btn.pressed.connect(_on_count_selected.bind(i))
 		hbox.add_child(btn)
-		count_buttons.append(btn)
+		_count_buttons.append(btn)
 	
 	vbox.add_child(hbox)
 	
@@ -125,29 +134,31 @@ func create_card_dialog():
 	vbox.add_child(close_btn)
 	
 	# ダイアログが非表示になったときの処理
-	card_dialog.popup_hide.connect(_on_dialog_closed)
+	_card_dialog.popup_hide.connect(_on_dialog_closed)
 	
-	add_child(card_dialog)
+	add_child(_card_dialog)
 
 ## ダイアログが閉じられたとき（インフォパネルも閉じる）
 func _on_dialog_closed():
-	card_dialog.hide()
+	_card_dialog.hide()
 	_close_info_panel()
 
 ## インフォパネルを閉じる
 func _close_info_panel():
-	if current_info_panel and is_instance_valid(current_info_panel):
-		current_info_panel.queue_free()
-		current_info_panel = null
+	if _current_info_panel and is_instance_valid(_current_info_panel):
+		_current_info_panel.queue_free()
+		_current_info_panel = null
 
 func _on_filter_pressed(filter_type: String):
-	current_filter = filter_type
+	_current_filter = filter_type
+	# フィルターに応じた属性色で背景更新
+	_setup_space_background(_get_filter_color(filter_type))
 	display_cards(filter_type)
 
 func display_cards(filter: String):
 	clear_card_list()
 	
-	var cards_to_show = []
+	var cards_to_show: Array[Dictionary] = []
 	
 	# 属性フィルターのマッピング（日本語 → 英語）
 	var element_map = {
@@ -161,7 +172,7 @@ func display_cards(filter: String):
 	# フィルターに応じてカードを取得
 	if filter == "deck":
 		# デッキに入っているカードだけ
-		for card_id in current_deck.keys():
+		for card_id in _current_deck.keys():
 			var card = CardLoader.get_card_by_id(card_id)
 			if not card.is_empty():
 				cards_to_show.append(card)
@@ -199,7 +210,7 @@ func clear_card_list():
 func create_card_button(card_data: Dictionary):
 	# 所持枚数を取得（DB連携）
 	var owned_count = GameData.get_card_count(card_data.id)
-	var deck_count = current_deck.get(card_data.id, 0)
+	var deck_count = _current_deck.get(card_data.id, 0)
 	var rarity = card_data.get("rarity", "N")
 	var card_type = card_data.get("type", "")
 
@@ -283,11 +294,8 @@ func _get_card_image_path(card_data: Dictionary) -> String:
 			return "res://assets/images/items/%d.png" % card_id
 	return ""
 
-## カードシーンをプリロード
-var CardScene = preload("res://scenes/Card.tscn")
-
 func _on_card_button_pressed(card_id: int):
-	selected_card_id = card_id
+	_selected_card_id = card_id
 	var card = CardLoader.get_card_by_id(card_id)
 	var card_type = card.get("type", "")
 	
@@ -297,9 +305,9 @@ func _on_card_button_pressed(card_id: int):
 ## カードタイプに応じたインフォパネルを表示
 func _show_info_panel(card: Dictionary, card_type: String):
 	# 既存のインフォパネルを削除
-	if current_info_panel and is_instance_valid(current_info_panel):
-		current_info_panel.queue_free()
-		current_info_panel = null
+	if _current_info_panel and is_instance_valid(_current_info_panel):
+		_current_info_panel.queue_free()
+		_current_info_panel = null
 	
 	# インフォパネルの紙部分を右側パネルに表示
 	_show_info_in_right_panel(card, card_type)
@@ -310,127 +318,116 @@ func _show_info_panel(card: Dictionary, card_type: String):
 ## InfoPanelContainerにインフォパネルを表示
 func _show_info_in_right_panel(card: Dictionary, card_type: String):
 	# 既存のプレビューを削除
-	if current_info_panel and is_instance_valid(current_info_panel):
-		current_info_panel.queue_free()
-		current_info_panel = null
+	if _current_info_panel and is_instance_valid(_current_info_panel):
+		_current_info_panel.queue_free()
+		_current_info_panel = null
 	
 	# タイプに応じたパネルをインスタンス化
 	match card_type:
 		"creature":
-			current_info_panel = CreatureInfoPanelScene.instantiate()
+			_current_info_panel = _creature_info_panel_scene.instantiate()
 		"item":
-			current_info_panel = ItemInfoPanelScene.instantiate()
+			_current_info_panel = _item_info_panel_scene.instantiate()
 		"spell":
-			current_info_panel = SpellInfoPanelScene.instantiate()
+			_current_info_panel = _spell_info_panel_scene.instantiate()
 	
-	if not current_info_panel:
+	if not _current_info_panel:
 		return
 	
 	# InfoPanelContainerに追加
-	info_panel_container.add_child(current_info_panel)
+	info_panel_container.add_child(_current_info_panel)
+
+	# マウスイベントを透過させてスクロールを妨げない
+	_set_mouse_filter_ignore(_current_info_panel)
 	
 	# アンカーをリセット（左上基準に）
-	current_info_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	current_info_panel.anchor_left = 0
-	current_info_panel.anchor_top = 0
-	current_info_panel.anchor_right = 0
-	current_info_panel.anchor_bottom = 0
+	_current_info_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_current_info_panel.anchor_left = 0
+	_current_info_panel.anchor_top = 0
+	_current_info_panel.anchor_right = 0
+	_current_info_panel.anchor_bottom = 0
 	
 	# データを読み込む
 	match card_type:
 		"creature":
-			current_info_panel.show_view_mode(card, -1, false)
+			_current_info_panel.show_view_mode(card, -1, false)
 		"item":
-			current_info_panel.show_item_info(card)
+			_current_info_panel.show_item_info(card)
 		"spell":
-			current_info_panel.show_spell_info(card)
+			_current_info_panel.show_spell_info(card)
 	
 	await get_tree().process_frame
 	
-	# デバッグ出力
 	if not info_panel_container or not is_instance_valid(info_panel_container):
 		return
-	var container_size = info_panel_container.size
-	var panel_size = current_info_panel.size
-	print("Container size: ", container_size)
-	print("Panel size: ", panel_size)
-	
+
 	# スケール調整
 	var scale_factor = 0.95
-	current_info_panel.scale = Vector2(scale_factor, scale_factor)
-	
-	# 位置を調整
-	current_info_panel.position = Vector2(0, 0)
-	
-	# 中のMainContainerの位置を調整（左に265、上に210）
-	var main_container = current_info_panel.get_node_or_null("MainContainer")
-	if main_container:
-		main_container.position.x -= 265
-		main_container.position.y -= 210
-	
-	print("Applied scale: ", current_info_panel.scale)
-	print("Panel position: ", current_info_panel.position)
+	_current_info_panel.scale = Vector2(scale_factor, scale_factor)
 
-## インフォパネルが閉じられたとき
-func _on_info_panel_closed():
-	if current_info_panel and is_instance_valid(current_info_panel):
-		current_info_panel.queue_free()
-		current_info_panel = null
+	# 位置を調整
+	_current_info_panel.position = Vector2(0, 0)
+
+	# 中のMainContainerの位置を調整
+	var main_container = _current_info_panel.get_node_or_null("MainContainer")
+	if main_container:
+		main_container.position.x -= 225
+		main_container.position.y -= 290
 
 ## 枚数選択ダイアログを表示
 func _show_count_dialog():
-	var owned = GameData.get_card_count(selected_card_id)
-	var in_deck = current_deck.get(selected_card_id, 0)
+	var owned = GameData.get_card_count(_selected_card_id)
+	var in_deck = _current_deck.get(_selected_card_id, 0)
 	
 	# 情報ラベルを更新
-	var info_label = card_dialog.get_node_or_null("DialogVBox/InfoLabel")
+	var info_label = _card_dialog.get_node_or_null("DialogVBox/InfoLabel")
 	if info_label:
 		info_label.text = "所持: %d枚 / デッキ内: %d枚" % [owned, in_deck]
 	
 	# ボタンの有効/無効を設定
 	var max_count = min(4, owned)
-	for i in range(count_buttons.size()):
+	for i in range(_count_buttons.size()):
 		if i > max_count:
-			count_buttons[i].disabled = true
-			count_buttons[i].modulate = Color(0.5, 0.5, 0.5)
+			_count_buttons[i].disabled = true
+			_count_buttons[i].modulate = Color(0.5, 0.5, 0.5)
 		else:
-			count_buttons[i].disabled = false
-			count_buttons[i].modulate = Color(1, 1, 1)
+			_count_buttons[i].disabled = false
+			_count_buttons[i].modulate = Color(1, 1, 1)
 	
 	# インフォパネルの下に配置
 	await get_tree().process_frame
 	var info_rect = info_panel_container.get_global_rect()
-	card_dialog.position = Vector2(info_rect.position.x, info_rect.end.y + 10)
-	card_dialog.popup()
+	_card_dialog.position = Vector2(info_rect.position.x, info_rect.end.y + 10)
+	_card_dialog.popup()
 
 func _on_count_selected(count: int):
-	var owned = GameData.get_card_count(selected_card_id)
+	var owned = GameData.get_card_count(_selected_card_id)
 	var max_count = min(4, owned)
 	
 	if count > max_count:
-		print("所持数を超えています")
+		push_warning("所持数を超えています")
 		return
 	
 	# デッキに設定
 	if count == 0:
-		current_deck.erase(selected_card_id)
+		_current_deck.erase(_selected_card_id)
 	else:
-		current_deck[selected_card_id] = count
+		_current_deck[_selected_card_id] = count
 	
 	update_card_count()
 	
 	# 該当カードのボタンだけ更新
-	if current_filter == "deck":
-		display_cards(current_filter)
+	if _current_filter == "deck":
+		display_cards(_current_filter)
 	else:
-		update_single_card_button(selected_card_id)
+		update_single_card_button(_selected_card_id)
 	
-	card_dialog.hide()
+	_card_dialog.hide()
 
 func update_single_card_button(card_id: int):
 	var card = CardLoader.get_card_by_id(card_id)
 	var owned_count = GameData.get_card_count(card_id)
-	var deck_count = current_deck.get(card_id, 0)
+	var deck_count = _current_deck.get(card_id, 0)
 	
 	# 既存のボタンを探して更新
 	for button in grid_container.get_children():
@@ -460,8 +457,8 @@ func update_card_count():
 	var item_count = 0
 	var spell_count = 0
 	
-	for card_id in current_deck.keys():
-		var count = current_deck[card_id]
+	for card_id in _current_deck.keys():
+		var count = _current_deck[card_id]
 		total += count
 		var card = CardLoader.get_card_by_id(card_id)
 		if card.is_empty():
@@ -501,14 +498,13 @@ func update_card_count():
 		save_button.modulate = Color(0.5, 0.5, 0.5)
 
 func _on_save_pressed():
-	GameData.save_deck(GameData.selected_deck_index, current_deck)
-	print("デッキ保存完了")
+	GameData.save_deck(GameData.selected_deck_index, _current_deck)
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Album.tscn")
 
 ## 🔧 デバッグ用：全データをリセット（開発用）
-func create_debug_reset_button():
+func _create_debug_reset_button():
 	var debug_button = Button.new()
 	debug_button.text = "🔧 全データリセット"
 	debug_button.custom_minimum_size = Vector2(280, 200)
@@ -536,9 +532,7 @@ func _on_debug_reset_pressed():
 	confirm.popup_centered()
 
 func _on_debug_reset_confirmed():
-	print("🔧 [デバッグ] 全データリセット実行")
 	GameData.reset_save()
-	print("✅ リセット完了 - ゲームを再起動してください")
 	
 	# 確認ダイアログ
 	var info = AcceptDialog.new()
@@ -550,20 +544,20 @@ func _on_debug_reset_confirmed():
 	info.popup_centered()
 
 ## リセットボタンを作成（保存ボタンの下に配置）
-func create_reset_button():
-	reset_button = Button.new()
-	reset_button.text = "リセット"
-	reset_button.custom_minimum_size = Vector2(280, 200)
-	reset_button.add_theme_font_size_override("font_size", 36)
+func _create_reset_button():
+	_reset_button = Button.new()
+	_reset_button.text = "リセット"
+	_reset_button.custom_minimum_size = Vector2(280, 200)
+	_reset_button.add_theme_font_size_override("font_size", 36)
 	
 	# 警告色（赤っぽく）
-	reset_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	_reset_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 	
 	# 保存ボタンと同じ親に追加
-	right_vbox.add_child(reset_button)
+	right_vbox.add_child(_reset_button)
 	
 	# ボタン押下時の処理を接続
-	reset_button.pressed.connect(_on_reset_pressed)
+	_reset_button.pressed.connect(_on_reset_pressed)
 
 ## リセットボタン押下時の処理
 func _on_reset_pressed():
@@ -571,9 +565,9 @@ func _on_reset_pressed():
 	var confirm_dialog = ConfirmationDialog.new()
 	
 	# 現在編集中のブック名を取得
-	var current_deck_name = GameData.player_data.decks[GameData.selected_deck_index]["name"]
-	
-	confirm_dialog.dialog_text = "「" + current_deck_name + "」を空デッキ（0枚）にリセットしますか？\n\n現在の内容は失われます。\n他のブックは影響を受けません。"
+	var deck_name = GameData.player_data.decks[GameData.selected_deck_index]["name"]
+
+	confirm_dialog.dialog_text = "「" + deck_name + "」を空デッキ（0枚）にリセットしますか？\n\n現在の内容は失われます。\n他のブックは影響を受けません。"
 	confirm_dialog.title = "ブックリセット確認"
 	confirm_dialog.ok_button_text = "リセットする"
 	confirm_dialog.cancel_button_text = "キャンセル"
@@ -590,19 +584,117 @@ func _on_reset_pressed():
 
 ## リセット確認後の実際の処理
 func _on_reset_confirmed():
-	print("【ブックリセット】ブック", GameData.selected_deck_index, "をリセットします")
-	
 	# 空デッキ（0枚）
 	var empty_deck = {}
 	
 	# 現在のデッキを上書き
-	current_deck = empty_deck.duplicate()
+	_current_deck = empty_deck.duplicate()
 	
 	# GameDataにも保存
-	GameData.save_deck(GameData.selected_deck_index, current_deck)
-	
-	print("【ブックリセット】完了 - 空デッキ（0枚）")
-	
+	GameData.save_deck(GameData.selected_deck_index, _current_deck)
+
 	# 表示を更新
 	update_card_count()
-	display_cards(current_filter)
+	display_cards(_current_filter)
+
+
+## フィルターに応じた属性色を返す
+func _get_filter_color(filter_type: String) -> Color:
+	match filter_type:
+		"火":
+			return Color(0.9, 0.3, 0.1)
+		"水":
+			return Color(0.1, 0.4, 0.9)
+		"地":
+			return Color(0.5, 0.35, 0.1)
+		"風":
+			return Color(0.1, 0.7, 0.3)
+		"無":
+			return Color(0.6, 0.6, 0.6)
+		"item":
+			return Color(0.7, 0.6, 0.2)
+		"spell":
+			return Color(0.5, 0.2, 0.7)
+	# deck / all はニュートラル
+	return Color(0.4, 0.4, 0.5)
+
+
+## 宇宙風背景（暗いグラデーション + 星エフェクト）
+func _setup_space_background(element_color: Color):
+	# 既存の背景を削除
+	var existing = get_node_or_null("SpaceBG")
+	if existing:
+		existing.queue_free()
+
+	var bg_container = Control.new()
+	bg_container.name = "SpaceBG"
+	bg_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# グラデーション背景（属性色 → 暗闇）
+	var bg = TextureRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(element_color.r * 0.12, element_color.g * 0.12, element_color.b * 0.12, 0.95))
+	gradient.set_color(1, Color(0.02, 0.02, 0.05, 0.98))
+
+	var grad_tex = GradientTexture2D.new()
+	grad_tex.gradient = gradient
+	grad_tex.fill_from = Vector2(0, 0)
+	grad_tex.fill_to = Vector2(0, 1)
+
+	bg.texture = grad_tex
+	bg_container.add_child(bg)
+
+	# 星を散りばめる（60個）
+	var viewport_size = get_viewport().get_visible_rect().size
+	var rng = RandomNumberGenerator.new()
+	rng.seed = _current_filter.hash()
+
+	for i in range(60):
+		var star = PanelContainer.new()
+		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var star_size = rng.randf_range(2.0, 6.0)
+		star.custom_minimum_size = Vector2(star_size, star_size)
+		star.position = Vector2(rng.randf_range(0, viewport_size.x), rng.randf_range(0, viewport_size.y))
+
+		var star_style = StyleBoxFlat.new()
+		var brightness = rng.randf_range(0.5, 1.0)
+		var star_color: Color
+		if rng.randf() < 0.3:
+			star_color = Color(
+				lerpf(1.0, element_color.r, 0.5) * brightness,
+				lerpf(1.0, element_color.g, 0.5) * brightness,
+				lerpf(1.0, element_color.b, 0.5) * brightness,
+				brightness
+			)
+		else:
+			star_color = Color(brightness, brightness, brightness * 1.1, brightness)
+		star_style.bg_color = star_color
+		star_style.set_corner_radius_all(int(star_size))
+		star.add_theme_stylebox_override("panel", star_style)
+
+		bg_container.add_child(star)
+
+		# キラキラアニメーション（40%の星）
+		if rng.randf() < 0.4:
+			var tween = create_tween()
+			tween.set_loops()
+			var delay = rng.randf_range(0.0, 3.0)
+			var duration = rng.randf_range(1.5, 3.5)
+			tween.tween_interval(delay)
+			tween.tween_property(star, "modulate:a", rng.randf_range(0.2, 0.5), duration)
+			tween.tween_property(star, "modulate:a", 1.0, duration)
+
+	add_child(bg_container)
+	move_child(bg_container, 0)
+
+
+## 子ノード全体のmouse_filterをIGNOREに設定（スクロール透過用）
+func _set_mouse_filter_ignore(node: Control):
+	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		if child is Control:
+			_set_mouse_filter_ignore(child)
