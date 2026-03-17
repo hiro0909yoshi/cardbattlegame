@@ -28,7 +28,11 @@ func _ready():
 	else:
 		scroll_container.visible = false
 	
-	# 左側ボタン接続
+	# 左側ボタン接続・スタイル設定
+	var btn_names = ["DeckEditButton", "CardListButton", "ResetCardsButton", "BackButton"]
+	for btn_name in btn_names:
+		_apply_left_button_style(left_vbox.get_node(btn_name))
+
 	left_vbox.get_node("DeckEditButton").pressed.connect(_on_deck_edit_pressed)
 	left_vbox.get_node("CardListButton").pressed.connect(_on_card_list_pressed)
 	left_vbox.get_node("ResetCardsButton").pressed.connect(_on_reset_cards_pressed)
@@ -85,6 +89,27 @@ func _on_book_selected(book_index: int):
 		# 通常モードの場合はデッキ編集画面へ
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/DeckEditor.tscn")
 
+## 左パネルボタンにスタイルを適用
+func _apply_left_button_style(btn: Button):
+	btn.add_theme_font_size_override("font_size", 42)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.15, 0.15, 0.85)
+	style.border_color = Color(0.4, 0.4, 0.4, 0.6)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover = style.duplicate()
+	hover.bg_color = Color(0.25, 0.25, 0.25, 0.95)
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed = style.duplicate()
+	pressed.bg_color = Color(0.3, 0.3, 0.3, 1.0)
+	btn.add_theme_stylebox_override("pressed", pressed)
+
 func _on_card_list_pressed():
 	scroll_container.visible = true
 	_show_collection_stats()
@@ -116,6 +141,11 @@ func _show_collection_stats():
 	# 表示用パネルを作成
 	var categories = ["fire", "water", "earth", "wind", "neutral", "item", "spell"]
 
+	# GridContainerをコンテナ幅に合わせて配置
+	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid_container.add_theme_constant_override("h_separation", 60)
+	grid_container.add_theme_constant_override("v_separation", 60)
+
 	# 戻るボタンを追加
 	var back_btn = Button.new()
 	back_btn.text = "← 戻る"
@@ -139,14 +169,14 @@ var _category_names = {
 	"earth": "🪨 地",
 	"wind": "🌪️ 風",
 	"neutral": "⚪ 無",
-	"item": "📦 アイテム",
+	"item": "👝 アイテム",
 	"spell": "📜 スペル"
 }
 
 ## カテゴリ別の統計パネルを作成（ボタンとして）
 func _create_stats_panel(title: String, data: Dictionary, category: String) -> Control:
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(900, 400)
+	button.custom_minimum_size = Vector2(1350, 350)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 	# 属性色のグラデーション背景
@@ -173,25 +203,26 @@ func _create_stats_panel(title: String, data: Dictionary, category: String) -> C
 	pressed_style.bg_color = Color(element_color.r * 0.7, element_color.g * 0.7, element_color.b * 0.7, 1.0)
 	button.add_theme_stylebox_override("pressed", pressed_style)
 
-	# ボタンテキストを構築
-	var text = title + "\n"
-
+	# ボタンテキストを構築（3行: タイトル+合計 / C+N / S+R）
 	var total_owned = data.get("total_owned", 0)
 	var total_cards = data.get("total_cards", 0)
 	var total_percent = 0.0 if total_cards == 0 else (float(total_owned) / total_cards * 100.0)
-	text += "合計: %d / %d (%.1f%%)\n" % [total_owned, total_cards, total_percent]
 
-	# レアリティ別（C < N < S < R）
-	var rarities = ["C", "N", "S", "R"]
-	for rarity in rarities:
+	var text = "%s　　合計: %d / %d (%.1f%%)\n" % [title, total_owned, total_cards, total_percent]
+
+	var rarity_texts: Array[String] = []
+	for rarity in ["C", "N", "S", "R"]:
 		var rarity_data = data.get(rarity, {"owned": 0, "total": 0})
 		var owned = rarity_data.get("owned", 0)
 		var total = rarity_data.get("total", 0)
 		var percent = 0.0 if total == 0 else (float(owned) / total * 100.0)
-		text += "  [%s] %d / %d (%.1f%%)\n" % [rarity, owned, total, percent]
+		rarity_texts.append("[%s] %d / %d (%.1f%%)" % [rarity, owned, total, percent])
+
+	text += "%s　　%s\n" % [rarity_texts[0], rarity_texts[1]]
+	text += "%s　　%s" % [rarity_texts[2], rarity_texts[3]]
 
 	button.text = text
-	button.add_theme_font_size_override("font_size", 36)
+	button.add_theme_font_size_override("font_size", 60)
 
 	# クリックでカード一覧を表示
 	button.pressed.connect(_show_category_cards.bind(category))
@@ -565,13 +596,12 @@ func _on_card_list_back():
 	_remove_category_background()
 	# ヘッダー全削除
 	_remove_all_headers()
-	scroll_container.offset_top = 0
-	scroll_container.offset_left = 0
-	scroll_container.offset_right = 0
+	scroll_container.offset_top = 60
+	scroll_container.offset_left = 60
+	scroll_container.offset_right = -60
+	scroll_container.offset_bottom = -60
 	grid_container.size_flags_horizontal = Control.SIZE_FILL
 	grid_container.columns = 2
-	grid_container.add_theme_constant_override("h_separation", 100)
-	grid_container.add_theme_constant_override("v_separation", 20)
 	_show_collection_stats()
 
 ## 所持カード統計を計算
