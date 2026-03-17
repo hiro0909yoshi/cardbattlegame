@@ -315,8 +315,9 @@ Album.tscn (ブック選択)
 
 ### DeckEditor概要
 
-- **左パネル**: 属性別フィルター、カード一覧（画像300×300付き）
-- **右パネル**: インフォパネル、枚数選択ダイアログ
+- **左パネル**: 属性別フィルター、カード一覧（画像300×300付き）、宇宙風背景（属性色変化）
+- **インフォパネル**: LeftPanel内にアンカー固定配置（anchor_left=0.55, anchor_top=0.075）
+- **枚数選択UI**: InfoPanelContainer内にVBoxContainerで配置（Popup不使用、スクロールブロック防止）
 - **枚数上限**: 各カード最大4枚、デッキ合計50枚
 
 ### フィルターボタン
@@ -348,28 +349,43 @@ Album.tscn (ブック選択)
 
 ### インフォパネル
 
-タップで右パネル下部に表示。シーン（creature_info_panel.tscn等）をインスタンス化。
+カードタップでInfoPanelContainer内に表示。シーン（creature_info_panel.tscn等）をインスタンス化。
 
 - Creature: creature_info_panel.tscn
 - Item: item_info_panel.tscn
 - Spell: spell_info_panel.tscn
 
-### 枚数選択ダイアログ
+**InfoPanelContainer配置**（LeftPanel直下、アンカー固定）:
+```
+anchor_left = 0.55, anchor_top = 0.075
+anchor_right = 1.0, anchor_bottom = 1.0
+offset_left = 300, offset_right = -25
+clip_contents = true
+```
 
-カードボタンタップ時にポップアップ表示。
+**MainContainer位置調整**（コード内）:
+```gdscript
+main_container.position = Vector2(-120, -140)
+```
+
+### 枚数選択UI
+
+InfoPanelContainer内にVBoxContainerとして配置（Popup不使用）。
+Popupを使うとスクロールがブロックされるため、通常のControlノードを使用。
 
 ```
 所持: 5枚 / デッキ内: 2枚
 
 [0枚] [1枚] [2枚] [3枚] [4枚]
 
-   [閉じる]
+         [閉じる]
 ```
 
 **ボタン仕様**:
-- custom_minimum_size = Vector2(180, 100)
-- font_size = 50
+- custom_minimum_size = Vector2(140, 120)
+- font_size = 40
 - 所持数を超える枚数は disabled = true（グレイアウト）
+- コンテナ下部に配置（position.y = container_h - dialog_h - 10）
 
 ### デッキカウント表示
 

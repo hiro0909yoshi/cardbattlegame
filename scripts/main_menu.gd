@@ -55,6 +55,14 @@ func _ready():
 	# ユーザー情報を表示
 	_update_user_info()
 
+	# スタミナ表示の定期更新（1秒ごと）
+	var timer = Timer.new()
+	timer.name = "StaminaTimer"
+	timer.wait_time = 1.0
+	timer.autostart = true
+	timer.timeout.connect(_update_stamina_display)
+	add_child(timer)
+
 	# デバッグ用：ゴールドリセットボタン（後で削除）
 	if _reset_gold_button:
 		_reset_gold_button.pressed.connect(_on_reset_gold)
@@ -85,9 +93,16 @@ func _update_user_info():
 		_gold_label.text = str(GameData.player_data.profile.gold)
 	if _stone_label:
 		_stone_label.text = "0"  # 課金石（将来実装）
-	if _stamina_label:
-		_stamina_label.text = "50/50"  # スタミナ（将来実装）
+	_update_stamina_display()
 
+
+## スタミナ表示を更新
+func _update_stamina_display():
+	if not _stamina_label:
+		return
+	var current = GameData.get_stamina()
+	var max_val = GameData.get_stamina_max()
+	_stamina_label.text = "%d/%d" % [current, max_val]
 
 # デバッグ用：ゴールドを100000にリセット（後で削除）
 func _on_reset_gold():
@@ -182,7 +197,7 @@ func _on_tournament_pressed():
 
 
 func _on_storage_pressed():
-	print("倉庫（未実装）")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/Storage.tscn")
 
 
 func _on_facility_pressed():
@@ -215,7 +230,54 @@ func _on_mail_pressed():
 
 
 func _on_stamina_plus_pressed():
-	print("スタミナ回復（未実装）")
+	var count = GameData.get_inventory_item_count(2)  # スタミナ回復薬（大）
+	if count <= 0:
+		_show_no_stamina_item_dialog()
+	else:
+		_show_use_stamina_item_dialog(count)
+
+
+func _show_no_stamina_item_dialog():
+	var dialog = AcceptDialog.new()
+	dialog.title = "スタミナ回復"
+	dialog.ok_button_text = "OK"
+	dialog.exclusive = true
+	var label = Label.new()
+	label.text = "スタミナ回復薬を所持していません"
+	label.add_theme_font_size_override("font_size", 72)
+	dialog.add_child(label)
+	var ok_btn = dialog.get_ok_button()
+	ok_btn.custom_minimum_size = Vector2(500, 120)
+	ok_btn.add_theme_font_size_override("font_size", 56)
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _show_use_stamina_item_dialog(count: int):
+	var dialog = ConfirmationDialog.new()
+	dialog.title = "スタミナ回復"
+	dialog.ok_button_text = "使う"
+	dialog.cancel_button_text = "キャンセル"
+	dialog.exclusive = true
+	var label = Label.new()
+	label.text = "スタミナ回復薬（大）を使いますか？\n所持数: %d" % count
+	label.add_theme_font_size_override("font_size", 72)
+	dialog.add_child(label)
+	var ok_btn = dialog.get_ok_button()
+	ok_btn.custom_minimum_size = Vector2(500, 120)
+	ok_btn.add_theme_font_size_override("font_size", 56)
+	var cancel_btn = dialog.get_cancel_button()
+	cancel_btn.custom_minimum_size = Vector2(500, 120)
+	cancel_btn.add_theme_font_size_override("font_size", 56)
+	dialog.confirmed.connect(_on_stamina_recover_confirmed)
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _on_stamina_recover_confirmed():
+	if GameData.use_inventory_item(2):
+		_update_stamina_display()
+		_update_user_info()
 
 
 func _on_gold_plus_pressed():

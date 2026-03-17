@@ -331,6 +331,10 @@ func _on_start_pressed():
 		return
 	
 	if _is_book_selection_mode:
+		# スタミナチェック
+		if not GameData.consume_stamina():
+			_show_stamina_shortage_dialog()
+			return
 		# ブック選択モード → クエスト開始
 		GameData.selected_stage_id = selected_stage_id
 		GameData.selected_deck_index = _selected_deck_index
@@ -339,6 +343,25 @@ func _on_start_pressed():
 		# ステージ選択モード → ブック選択に切り替え
 		GameData.selected_stage_id = selected_stage_id
 		_show_book_selection()
+
+## スタミナ不足ダイアログ
+func _show_stamina_shortage_dialog():
+	var dialog = AcceptDialog.new()
+	dialog.title = "スタミナ不足"
+	dialog.ok_button_text = "OK"
+
+	var label = Label.new()
+	label.add_theme_font_size_override("font_size", 36)
+	var current = GameData.get_stamina()
+	label.text = "スタミナが足りません。\n必要: %d / 現在: %d" % [GameData.STAMINA_COST_QUEST, current]
+	dialog.add_child(label)
+
+	var ok_button = dialog.get_ok_button()
+	ok_button.custom_minimum_size = Vector2(240, 60)
+	ok_button.add_theme_font_size_override("font_size", 32)
+
+	add_child(dialog)
+	dialog.popup_centered()
 
 func _on_back_pressed():
 	if _is_book_selection_mode:

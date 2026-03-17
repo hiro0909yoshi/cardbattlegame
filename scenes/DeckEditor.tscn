@@ -129,19 +129,24 @@ theme_override_constants/separation = 20
 [node name="DeckScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
 horizontal_scroll_mode = 0
 
 [node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer"]
 layout_mode = 2
 columns = 5
 
-[node name="InfoPanelContainer" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox"]
+[node name="InfoPanelContainer" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel"]
 clip_contents = true
-custom_minimum_size = Vector2(500, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 2.0
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.55
+anchor_top = 0.075
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 300.0
+offset_top = 0.0
+offset_right = -25.0
+offset_bottom = 0.0
 
 [node name="RightPanel" type="Control" parent="MarginContainer/HBoxContainer"]
 layout_mode = 2

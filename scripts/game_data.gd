@@ -53,6 +53,16 @@ var player_data = {
 		"cards_obtained": 0      # 入手したカード総数
 	},
 	
+	# === スタミナ ===
+	"stamina": {
+		"current": 50,
+		"max": 50,
+		"updated_at": ""
+	},
+
+	# === インベントリ（倉庫アイテム） ===
+	"inventory": {},  # {アイテムID(int): 所持数(int)}
+
 	# === 設定 ===
 	"settings": {
 		"master_volume": 1.0,
@@ -191,6 +201,14 @@ func _convert_collection_keys():
 				new_cards[int_key] = int_value
 			deck["cards"] = new_cards
 
+	# inventoryの値を整数に変換
+	if player_data.has("inventory"):
+		var new_inv = {}
+		for key in player_data.inventory.keys():
+			var str_key = str(key)
+			new_inv[str_key] = int(player_data.inventory[key])
+		player_data.inventory = new_inv
+
 	# profileのgold, level, expも整数に変換
 	if player_data.has("profile"):
 		if player_data.profile.has("gold"):
@@ -220,6 +238,14 @@ func _validate_save_data():
 			"gacha_count": 0,
 			"cards_obtained": 0
 		}
+	if not player_data.has("stamina"):
+		player_data["stamina"] = {
+			"current": 50,
+			"max": 50,
+			"updated_at": ""
+		}
+	if not player_data.has("inventory"):
+		player_data["inventory"] = {}
 
 # ==========================================
 # デッキ操作
@@ -402,6 +428,175 @@ func add_play_time(seconds: int):
 
 func record_gacha():
 	player_data.stats.gacha_count += 1
+
+# ==========================================
+# スタミナ管理
+# ==========================================
+
+const STAMINA_RECOVERY_SECONDS: int = 300  # 5分で1回復
+const STAMINA_COST_QUEST: int = 10
+
+## 時間経過によるスタミナ回復を計算・適用
+func update_stamina_by_time():
+	var stamina = player_data.stamina
+	var current = int(stamina.get("current", 50))
+	var max_val = int(stamina.get("max", 50))
+
+	# 最大値以上なら時間回復しない
+	if current >= max_val:
+		stamina.updated_at = Time.get_datetime_string_from_system()
+		return
+
+	var last_updated = stamina.get("updated_at", "")
+	if last_updated.is_empty():
+		stamina.updated_at = Time.get_datetime_string_from_system()
+		return
+
+	var now = Time.get_unix_time_from_system()
+	var last_time = Time.get_unix_time_from_datetime_string(last_updated)
+	var elapsed = int(now - last_time)
+
+	if elapsed <= 0:
+		return
+
+	var recovery = elapsed / STAMINA_RECOVERY_SECONDS
+	if recovery > 0:
+		stamina.current = mini(current + recovery, max_val)
+		# 余りの秒数を考慮して更新時刻を調整
+		var used_seconds = recovery * STAMINA_RECOVERY_SECONDS
+		var new_time = last_time + used_seconds
+		stamina.updated_at = Time.get_datetime_string_from_unix_time(int(new_time))
+	# recoveryが0の場合はupdated_atを変更しない
+
+## スタミナを消費する（不足時はfalseを返す）
+func consume_stamina(amount: int = STAMINA_COST_QUEST) -> bool:
+	update_stamina_by_time()
+	var current = int(player_data.stamina.get("current", 0))
+	if current < amount:
+		return false
+
+	player_data.stamina.current = current - amount
+	player_data.stamina.updated_at = Time.get_datetime_string_from_system()
+	save_to_file()
+	return true
+
+## スタミナを回復する（最大値を超えてOK）
+func recover_stamina(amount: int):
+	update_stamina_by_time()
+	var current = int(player_data.stamina.get("current", 0))
+	player_data.stamina.current = current + amount
+	player_data.stamina.updated_at = Time.get_datetime_string_from_system()
+	save_to_file()
+
+## スタミナを全回復する（最大値まで）
+func recover_stamina_full():
+	var max_val = int(player_data.stamina.get("max", 50))
+	player_data.stamina.current = max_val
+	player_data.stamina.updated_at = Time.get_datetime_string_from_system()
+	save_to_file()
+
+## 現在のスタミナを取得（時間回復適用済み）
+func get_stamina() -> int:
+	update_stamina_by_time()
+	return int(player_data.stamina.get("current", 50))
+
+## 最大スタミナを取得
+func get_stamina_max() -> int:
+	return int(player_data.stamina.get("max", 50))
+
+## 次の回復までの残り秒数を取得
+func get_stamina_recovery_remaining_seconds() -> int:
+	var current = int(player_data.stamina.get("current", 50))
+	var max_val = int(player_data.stamina.get("max", 50))
+	if current >= max_val:
+		return 0
+
+	var last_updated = player_data.stamina.get("updated_at", "")
+	if last_updated.is_empty():
+		return STAMINA_RECOVERY_SECONDS
+
+	var now = Time.get_unix_time_from_system()
+	var last_time = Time.get_unix_time_from_datetime_string(last_updated)
+	var elapsed = int(now - last_time)
+	var remaining = STAMINA_RECOVERY_SECONDS - (elapsed % STAMINA_RECOVERY_SECONDS)
+	return remaining
+
+# ==========================================
+# インベントリ（倉庫アイテム）管理
+# ==========================================
+
+const INVENTORY_ITEMS_PATH = "res://data/inventory_items.json"
+var _inventory_item_defs: Array[Dictionary] = []
+
+## アイテム定義を読み込む
+func _load_inventory_item_defs():
+	if not _inventory_item_defs.is_empty():
+		return
+	var file = FileAccess.open(INVENTORY_ITEMS_PATH, FileAccess.READ)
+	if file:
+		var json = JSON.new()
+		if json.parse(file.get_as_text()) == OK:
+			for item in json.data:
+				_inventory_item_defs.append(item)
+		file.close()
+
+## アイテム定義を取得
+func get_inventory_item_def(item_id: int) -> Dictionary:
+	_load_inventory_item_defs()
+	for item in _inventory_item_defs:
+		if int(item.get("id", 0)) == item_id:
+			return item
+	return {}
+
+## 全アイテム定義を取得
+func get_all_inventory_item_defs() -> Array[Dictionary]:
+	_load_inventory_item_defs()
+	return _inventory_item_defs
+
+## アイテムを追加
+func add_inventory_item(item_id: int, count: int = 1):
+	var key = str(item_id)
+	var current = int(player_data.inventory.get(key, 0))
+	var item_def = get_inventory_item_def(item_id)
+	var max_stack = int(item_def.get("max_stack", 99))
+	player_data.inventory[key] = mini(current + count, max_stack)
+	save_to_file()
+
+## アイテムの所持数を取得
+func get_inventory_item_count(item_id: int) -> int:
+	var key = str(item_id)
+	return int(player_data.inventory.get(key, 0))
+
+## アイテムを使用する（成功時true）
+func use_inventory_item(item_id: int) -> bool:
+	var count = get_inventory_item_count(item_id)
+	if count <= 0:
+		return false
+
+	var item_def = get_inventory_item_def(item_id)
+	if item_def.is_empty():
+		return false
+
+	# 効果を適用
+	var effect_type = item_def.get("effect_type", "")
+	var value = int(item_def.get("value", 0))
+
+	match effect_type:
+		"stamina_recover":
+			recover_stamina(value)
+		"stamina_recover_full":
+			recover_stamina_full()
+		_:
+			print("[GameData] 未知のeffect_type: ", effect_type)
+			return false
+
+	# 消費
+	var key = str(item_id)
+	player_data.inventory[key] = count - 1
+	if player_data.inventory[key] <= 0:
+		player_data.inventory.erase(key)
+	save_to_file()
+	return true
 
 # ==========================================
 # 課金機能（将来実装）

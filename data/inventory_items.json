@@ -1,0 +1,20 @@
+[
+	{
+		"id": 1,
+		"name": "スタミナ回復薬（小）",
+		"description": "スタミナを20回復する",
+		"effect_type": "stamina_recover",
+		"value": 20,
+		"rarity": "N",
+		"max_stack": 99
+	},
+	{
+		"id": 2,
+		"name": "スタミナ回復薬（大）",
+		"description": "スタミナを全回復する",
+		"effect_type": "stamina_recover_full",
+		"value": 0,
+		"rarity": "S",
+		"max_stack": 99
+	}
+]
