@@ -291,9 +291,13 @@ func _update_frame_glow():
 		frame_material = StandardMaterial3D.new()
 	
 	if owner_id == -1:
-		# 未所有: 元のマテリアルに戻す、点滅停止
+		# 未所有: 黒色マテリアルを明示設定（環境光反射による青色化を防止）
 		_stop_frame_blink()
-		frame_mesh_instance.material_override = null
+		frame_material.emission_enabled = false
+		frame_material.albedo_color = Color(0.02, 0.02, 0.02)
+		frame_material.metallic = 0.0
+		frame_material.roughness = 1.0
+		frame_mesh_instance.material_override = frame_material
 	else:
 		# 所有者あり
 		var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]

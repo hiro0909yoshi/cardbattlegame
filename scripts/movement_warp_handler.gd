@@ -64,6 +64,7 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 	if controller.tile_nodes.has(to_tile):
 		var target_pos = controller.tile_nodes[to_tile].global_position
 		target_pos.y += MovementController3D.MOVE_HEIGHT
+		target_pos += MovementController3D.TILE_OFFSET
 		player_node.global_position = target_pos
 
 		# カメラも瞬間移動（タイル位置基準）

@@ -723,6 +723,26 @@ CREATE TABLE tournament_entries (
 - `scripts/net_battle_setup.gd` — 準備画面（ホスト/ゲスト切替、マップ・ルール設定、プレイヤーリスト、3Dキャラプレビュー）
 - ネットワーク公開メソッド: `on_player_joined()`, `on_player_left()`, `on_player_ready_changed()`, `on_config_received()`
 
+### GameClock（時刻管理 - 実装済み）
+
+**ファイル**: `scripts/autoload/game_clock.gd`（Autoload）
+
+サーバー時刻とローカル時刻を抽象化するレイヤー。全スクリプトは `GameClock` 経由で時刻を取得しており、`Time.get_unix_time_from_system()` を直接呼ばない。
+
+| メソッド | 説明 |
+|---------|------|
+| `get_now() -> int` | 現在のUnix時刻（サーバー同期済みならサーバー時刻） |
+| `get_today() -> String` | 今日の日付（YYYY-MM-DD） |
+| `sync_with_server(server_unix)` | サーバー時刻との差分を計算・保存 |
+| `is_synced() -> bool` | サーバー同期済みか |
+
+**サーバー移行時の対応**:
+1. ログインAPIのレスポンスにサーバーUnix時刻を含める
+2. クライアント側で `GameClock.sync_with_server(response.server_time)` を呼ぶ
+3. 以降、スタミナ回復・ログインボーナス・日付判定等が全てサーバー時刻基準になる
+
+**使用箇所**: `game_data.gd`（スタミナ・ログインボーナス・セーブ時刻）、`main_menu.gd`、`stage_record_manager.gd`
+
 ### 必要な追加実装
 
 | 実装 | Phase | 説明 |

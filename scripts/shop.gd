@@ -16,8 +16,17 @@ const GACHA_NAMES = {
 	2: "Rガチャ"          # GachaType.R_GACHA
 }
 
+# アイテムショップ価格（課金石）
+const ITEM_SHOP_PRICES: Array[Dictionary] = [
+	{"item_id": 1, "name": "スタミナ回復薬（小）", "stone_cost": 10, "description": "スタミナを20回復"},
+	{"item_id": 2, "name": "スタミナ回復薬（大）", "stone_cost": 50, "description": "スタミナを最大値分回復"},
+]
+
 @onready var gold_label = $VBoxContainer/Header/GoldLabel
+@onready var stone_label = $VBoxContainer/Header/StoneLabel
 @onready var purchase_button = $VBoxContainer/ModeButtons/PurchaseButton
+@onready var item_shop_button = $VBoxContainer/ModeButtons/ItemShopButton
+@onready var stone_purchase_button = $VBoxContainer/ModeButtons/StonePurchaseButton
 @onready var sell_button = $VBoxContainer/ModeButtons/SellButton
 
 # ガチャセクション
@@ -27,6 +36,16 @@ const GACHA_NAMES = {
 @onready var multi_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/MultiGachaButton
 @onready var result_label = $VBoxContainer/ContentPanel/GachaSection/ResultSection/ResultLabel
 @onready var result_grid = $VBoxContainer/ContentPanel/GachaSection/ResultSection/ScrollContainer/ResultGrid
+
+# 課金石購入セクション
+@onready var stone_purchase_section = $VBoxContainer/ContentPanel/StonePurchaseSection
+@onready var stone_purchase_grid = $VBoxContainer/ContentPanel/StonePurchaseSection/StonePurchaseScroll/StonePurchaseGrid
+@onready var stone_purchase_result_label = $VBoxContainer/ContentPanel/StonePurchaseSection/StonePurchaseResultLabel
+
+# アイテムショップセクション
+@onready var item_shop_section = $VBoxContainer/ContentPanel/ItemShopSection
+@onready var item_shop_grid = $VBoxContainer/ContentPanel/ItemShopSection/ItemShopGrid
+@onready var item_shop_result_label = $VBoxContainer/ContentPanel/ItemShopSection/ItemShopResultLabel
 
 # 売却セクション
 @onready var sell_section = $VBoxContainer/ContentPanel/SellSection
@@ -40,14 +59,18 @@ const GACHA_NAMES = {
 
 var gacha_system: Node
 var gacha_type_buttons: Array = []
+var _purchase_manager: PurchaseManager = null
 
 func _ready():
-	# ガチャシステムを初期化
+	# システム初期化
 	gacha_system = preload("res://scripts/gacha_system.gd").new()
 	add_child(gacha_system)
-	
+	_purchase_manager = PurchaseManager.new()
+
 	# モードボタン接続
 	purchase_button.pressed.connect(_on_purchase_mode)
+	item_shop_button.pressed.connect(_on_item_shop_mode)
+	stone_purchase_button.pressed.connect(_on_stone_purchase_mode)
 	sell_button.pressed.connect(_on_sell_mode)
 	
 	# ガチャボタン接続
@@ -63,6 +86,12 @@ func _ready():
 	# ガチャタイプボタンを生成
 	_create_gacha_type_buttons()
 	
+	# 課金石非公開時はアイテムショップタブ・課金石購入タブ・課金石表示を隠す
+	if not DebugSettings.show_premium_stone:
+		item_shop_button.visible = false
+		stone_purchase_button.visible = false
+		stone_label.visible = false
+
 	# 初期状態：購入モード
 	_on_purchase_mode()
 	_update_gold_display()
@@ -126,19 +155,40 @@ func _on_gacha_type_selected(type_id: int):
 
 func _update_gold_display():
 	gold_label.text = "💰 " + str(GameData.player_data.profile.gold) + " G"
+	stone_label.text = "💎 " + str(GameData.get_stone())
 
 # ==================== モード切替 ====================
 
-func _on_purchase_mode():
-	gacha_section.visible = true
+func _hide_all_sections():
+	gacha_section.visible = false
+	item_shop_section.visible = false
+	stone_purchase_section.visible = false
 	sell_section.visible = false
-	purchase_button.disabled = true
+	purchase_button.disabled = false
+	item_shop_button.disabled = false
+	stone_purchase_button.disabled = false
 	sell_button.disabled = false
 
+func _on_purchase_mode():
+	_hide_all_sections()
+	gacha_section.visible = true
+	purchase_button.disabled = true
+
+func _on_item_shop_mode():
+	_hide_all_sections()
+	item_shop_section.visible = true
+	item_shop_button.disabled = true
+	_display_item_shop()
+
+func _on_stone_purchase_mode():
+	_hide_all_sections()
+	stone_purchase_section.visible = true
+	stone_purchase_button.disabled = true
+	_display_stone_packages()
+
 func _on_sell_mode():
-	gacha_section.visible = false
+	_hide_all_sections()
 	sell_section.visible = true
-	purchase_button.disabled = false
 	sell_button.disabled = true
 	manual_sell_panel.visible = false
 	sell_result_label.text = ""
@@ -331,6 +381,219 @@ func _on_auto_sell():
 		sell_result_label.text = "売却対象のカードがありません（デッキ使用分+4枚以下）"
 	
 	_update_gold_display()
+
+# ==================== 課金石購入 ====================
+
+func _display_stone_packages():
+	for child in stone_purchase_grid.get_children():
+		child.queue_free()
+
+	var packages = _purchase_manager.get_all_packages()
+	for pkg in packages:
+		var panel = _create_stone_package_panel(pkg)
+		stone_purchase_grid.add_child(panel)
+
+	stone_purchase_result_label.text = ""
+
+
+func _create_stone_package_panel(pkg: Dictionary) -> PanelContainer:
+	var pkg_id = pkg.get("id", "")
+	var pkg_name = pkg.get("name", "???")
+	var stone_amount = int(pkg.get("stone_amount", 0))
+	var bonus = int(pkg.get("bonus_amount", 0))
+	var price_label_text = pkg.get("price_label", "")
+	var description = pkg.get("description", "")
+	var badge = pkg.get("badge", "")
+	var icon_path = pkg.get("icon", "")
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(400, 350)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.18, 0.95)
+	style.border_color = Color(0.4, 0.4, 0.7)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(16)
+	style.content_margin_left = 24
+	style.content_margin_right = 24
+	style.content_margin_top = 20
+	style.content_margin_bottom = 20
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+
+	# バッジ（お得、人気など）
+	if not badge.is_empty():
+		var badge_label = Label.new()
+		badge_label.text = badge
+		badge_label.add_theme_font_size_override("font_size", 22)
+		badge_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(badge_label)
+
+	# アイコン（画像がある場合）
+	if not icon_path.is_empty() and ResourceLoader.exists(icon_path):
+		var icon_rect = TextureRect.new()
+		icon_rect.texture = load(icon_path)
+		icon_rect.custom_minimum_size = Vector2(80, 80)
+		icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		vbox.add_child(icon_rect)
+
+	# パック名
+	var name_label = Label.new()
+	name_label.text = pkg_name
+	name_label.add_theme_font_size_override("font_size", 32)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(name_label)
+
+	# 課金石数
+	var amount_label = Label.new()
+	if bonus > 0:
+		amount_label.text = "💎 %d + %d" % [stone_amount, bonus]
+	else:
+		amount_label.text = "💎 %d" % stone_amount
+	amount_label.add_theme_font_size_override("font_size", 36)
+	amount_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
+	amount_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(amount_label)
+
+	# 説明
+	if not description.is_empty():
+		var desc_label = Label.new()
+		desc_label.text = description
+		desc_label.add_theme_font_size_override("font_size", 22)
+		desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(desc_label)
+
+	# 購入ボタン
+	var buy_button = Button.new()
+	buy_button.text = price_label_text
+	buy_button.custom_minimum_size = Vector2(200, 70)
+	buy_button.add_theme_font_size_override("font_size", 30)
+	buy_button.pressed.connect(_on_stone_purchase.bind(pkg_id))
+
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.15, 0.4, 0.15, 0.9)
+	btn_style.set_corner_radius_all(10)
+	buy_button.add_theme_stylebox_override("normal", btn_style)
+
+	var btn_hover = btn_style.duplicate()
+	btn_hover.bg_color = Color(0.2, 0.5, 0.2, 0.95)
+	buy_button.add_theme_stylebox_override("hover", btn_hover)
+
+	var btn_pressed = btn_style.duplicate()
+	btn_pressed.bg_color = Color(0.25, 0.6, 0.25, 1.0)
+	buy_button.add_theme_stylebox_override("pressed", btn_pressed)
+
+	vbox.add_child(buy_button)
+	panel.add_child(vbox)
+	return panel
+
+
+func _on_stone_purchase(package_id: String):
+	var result = _purchase_manager.purchase(package_id)
+	if result.get("success", false):
+		var total = int(result.get("total", 0))
+		var bonus = int(result.get("bonus_amount", 0))
+		if bonus > 0:
+			stone_purchase_result_label.text = "💎 %d個（+ボーナス%d個）を獲得しました！" % [total - bonus, bonus]
+		else:
+			stone_purchase_result_label.text = "💎 %d個を獲得しました！" % total
+		_update_gold_display()
+	else:
+		stone_purchase_result_label.text = result.get("error", "購入に失敗しました")
+
+
+# ==================== アイテムショップ ====================
+
+func _display_item_shop():
+	for child in item_shop_grid.get_children():
+		child.queue_free()
+
+	for shop_item in ITEM_SHOP_PRICES:
+		var panel = _create_item_shop_panel(shop_item)
+		item_shop_grid.add_child(panel)
+
+	item_shop_result_label.text = ""
+
+
+func _create_item_shop_panel(shop_item: Dictionary) -> PanelContainer:
+	var item_id = int(shop_item.get("item_id", 0))
+	var item_name = shop_item.get("name", "???")
+	var stone_cost = int(shop_item.get("stone_cost", 0))
+	var description = shop_item.get("description", "")
+	var owned = GameData.get_inventory_item_count(item_id)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(500, 250)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.15, 0.15, 0.9)
+	style.border_color = Color(0.4, 0.5, 0.7)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 24
+	style.content_margin_right = 24
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+
+	var name_label = Label.new()
+	name_label.text = item_name
+	name_label.add_theme_font_size_override("font_size", 36)
+	vbox.add_child(name_label)
+
+	var desc_label = Label.new()
+	desc_label.text = description
+	desc_label.add_theme_font_size_override("font_size", 24)
+	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(desc_label)
+
+	var owned_label = Label.new()
+	owned_label.text = "所持数: %d" % owned
+	owned_label.add_theme_font_size_override("font_size", 24)
+	vbox.add_child(owned_label)
+
+	var buy_button = Button.new()
+	buy_button.text = "💎 %d で購入" % stone_cost
+	buy_button.custom_minimum_size = Vector2(200, 70)
+	buy_button.add_theme_font_size_override("font_size", 28)
+	buy_button.pressed.connect(_on_buy_item.bind(item_id, item_name, stone_cost))
+
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.2, 0.3, 0.5, 0.9)
+	btn_style.set_corner_radius_all(8)
+	buy_button.add_theme_stylebox_override("normal", btn_style)
+
+	var btn_hover = btn_style.duplicate()
+	btn_hover.bg_color = Color(0.25, 0.35, 0.6, 0.95)
+	buy_button.add_theme_stylebox_override("hover", btn_hover)
+
+	var btn_pressed = btn_style.duplicate()
+	btn_pressed.bg_color = Color(0.3, 0.4, 0.7, 1.0)
+	buy_button.add_theme_stylebox_override("pressed", btn_pressed)
+
+	vbox.add_child(buy_button)
+	panel.add_child(vbox)
+	return panel
+
+
+func _on_buy_item(item_id: int, item_name: String, stone_cost: int):
+	if not GameData.spend_stone(stone_cost):
+		item_shop_result_label.text = "課金石が不足しています"
+		return
+
+	GameData.add_inventory_item(item_id, 1)
+	item_shop_result_label.text = "%s を購入しました！" % item_name
+	_update_gold_display()
+	_display_item_shop()
+
 
 func _on_back():
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")

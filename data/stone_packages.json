@@ -1,0 +1,49 @@
+[
+	{
+		"id": "stone_100",
+		"name": "お試しパック",
+		"stone_amount": 100,
+		"price": 120,
+		"price_label": "¥120",
+		"description": "まずはお試し",
+		"icon": "res://assets/images/ui/stone_pack_small.png",
+		"badge": "",
+		"sort_order": 1
+	},
+	{
+		"id": "stone_600",
+		"name": "お得パック",
+		"stone_amount": 600,
+		"bonus_amount": 60,
+		"price": 610,
+		"price_label": "¥610",
+		"description": "10%ボーナス付き",
+		"icon": "res://assets/images/ui/stone_pack_medium.png",
+		"badge": "お得",
+		"sort_order": 2
+	},
+	{
+		"id": "stone_1500",
+		"name": "大量パック",
+		"stone_amount": 1500,
+		"bonus_amount": 250,
+		"price": 1220,
+		"price_label": "¥1,220",
+		"description": "16%ボーナス付き",
+		"icon": "res://assets/images/ui/stone_pack_large.png",
+		"badge": "人気",
+		"sort_order": 3
+	},
+	{
+		"id": "stone_5000",
+		"name": "超大量パック",
+		"stone_amount": 5000,
+		"bonus_amount": 1500,
+		"price": 3060,
+		"price_label": "¥3,060",
+		"description": "30%ボーナス付き",
+		"icon": "res://assets/images/ui/stone_pack_xl.png",
+		"badge": "最もお得",
+		"sort_order": 4
+	}
+]

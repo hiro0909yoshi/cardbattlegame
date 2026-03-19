@@ -63,7 +63,7 @@ static func update_record(stage_id: String, rank: String, turn_count: int) -> Di
 	if is_first:
 		# 初回クリア
 		record["cleared"] = true
-		record["first_clear_date"] = Time.get_datetime_string_from_system()
+		record["first_clear_date"] = Time.get_datetime_string_from_unix_time(GameClock.get_now())
 		record["clear_count"] = 1
 		record["best_rank"] = rank
 		record["best_turn"] = turn_count

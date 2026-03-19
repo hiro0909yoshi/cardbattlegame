@@ -43,6 +43,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "💰 0 G"
 
+[node name="StoneLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "💎 0"
+
 [node name="ModeButtons" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 50
@@ -53,6 +58,18 @@ custom_minimum_size = Vector2(300, 100)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "購入（ガチャ）"
+
+[node name="ItemShopButton" type="Button" parent="VBoxContainer/ModeButtons"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "アイテム購入"
+
+[node name="StonePurchaseButton" type="Button" parent="VBoxContainer/ModeButtons"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "課金石購入"
 
 [node name="SellButton" type="Button" parent="VBoxContainer/ModeButtons"]
 custom_minimum_size = Vector2(300, 100)
@@ -116,6 +133,54 @@ layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 10
+
+[node name="StonePurchaseSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="StonePurchaseTitleLabel" type="Label" parent="VBoxContainer/ContentPanel/StonePurchaseSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "課金石購入"
+
+[node name="StonePurchaseScroll" type="ScrollContainer" parent="VBoxContainer/ContentPanel/StonePurchaseSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="StonePurchaseGrid" type="GridContainer" parent="VBoxContainer/ContentPanel/StonePurchaseSection/StonePurchaseScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 40
+columns = 4
+
+[node name="StonePurchaseResultLabel" type="Label" parent="VBoxContainer/ContentPanel/StonePurchaseSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = ""
+
+[node name="ItemShopSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="ItemShopTitleLabel" type="Label" parent="VBoxContainer/ContentPanel/ItemShopSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "アイテム購入（課金石）"
+
+[node name="ItemShopGrid" type="GridContainer" parent="VBoxContainer/ContentPanel/ItemShopSection"]
+layout_mode = 2
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 40
+columns = 3
+
+[node name="ItemShopResultLabel" type="Label" parent="VBoxContainer/ContentPanel/ItemShopSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = ""
 
 [node name="SellSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel"]
 visible = false

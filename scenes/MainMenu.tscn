@@ -181,6 +181,16 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "💰リセット"
 
+[node name="ResetStaminaButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "⚡リセット"
+
+[node name="ResetStoneButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "💎リセット"
+
 [node name="TitleLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24

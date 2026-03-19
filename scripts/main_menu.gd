@@ -4,6 +4,7 @@ extends Control
 @onready var _top_bar: PanelContainer = $MainVBox/TopBar
 @onready var _stamina_label: Label = $MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons/StaminaLabel
 @onready var _gold_label: Label = $MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons/GoldLabel
+@onready var _stone_icon: Label = $MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons/StoneIcon
 @onready var _stone_label: Label = $MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons/StoneLabel
 @onready var _stamina_plus_button: Button = $MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons/StaminaPlusButton
 @onready var _gold_plus_button: Button = $MainVBox/TopBar/TopBarMargin/TopBarHBox/LeftIcons/GoldPlusButton
@@ -24,6 +25,8 @@ extends Control
 
 # デバッグ用（後で削除）
 @onready var _reset_gold_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/ResetGoldButton
+@onready var _reset_stamina_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/ResetStaminaButton
+@onready var _reset_stone_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/ResetStoneButton
 
 
 func _ready():
@@ -63,9 +66,66 @@ func _ready():
 	timer.timeout.connect(_update_stamina_display)
 	add_child(timer)
 
-	# デバッグ用：ゴールドリセットボタン（後で削除）
+	# ログインボーナスチェック
+	_check_login_bonus()
+
+	# デバッグ用：リセットボタン（後で削除）
 	if _reset_gold_button:
 		_reset_gold_button.pressed.connect(_on_reset_gold)
+	if _reset_stamina_button:
+		_reset_stamina_button.pressed.connect(_on_reset_stamina)
+	if _reset_stone_button:
+		_reset_stone_button.visible = DebugSettings.show_premium_stone
+		_reset_stone_button.pressed.connect(_on_reset_stone)
+
+
+## ログインボーナスをチェックして表示
+func _check_login_bonus():
+	var rewards = GameData.check_login_bonus()
+	if rewards.is_empty():
+		return
+
+	# 報酬があれば表示を更新してダイアログ表示
+	_update_user_info()
+
+	var dialog = AcceptDialog.new()
+	dialog.title = "ログインボーナス"
+	dialog.ok_button_text = "OK"
+	dialog.exclusive = true
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 20)
+
+	for reward in rewards:
+		var label = Label.new()
+		label.add_theme_font_size_override("font_size", 52)
+
+		var text = reward.get("label", "ボーナス") + "\n"
+		var gold = int(reward.get("gold", 0))
+		var stone = int(reward.get("stone", 0))
+		if gold > 0:
+			text += "  💰 %d ゴールド" % gold
+		if stone > 0 and DebugSettings.show_premium_stone:
+			if gold > 0:
+				text += "\n"
+			text += "  💎 %d 課金石" % stone
+
+		label.text = text
+		vbox.add_child(label)
+
+		# キャンペーンとデイリーの間にセパレーター
+		if reward != rewards.back():
+			var sep = HSeparator.new()
+			vbox.add_child(sep)
+
+	dialog.add_child(vbox)
+
+	var ok_btn = dialog.get_ok_button()
+	ok_btn.custom_minimum_size = Vector2(500, 120)
+	ok_btn.add_theme_font_size_override("font_size", 56)
+
+	add_child(dialog)
+	dialog.popup_centered()
 
 
 ## 上部バーのスタイル設定
@@ -91,8 +151,13 @@ func _update_user_info():
 	# 上部バー
 	if _gold_label:
 		_gold_label.text = str(GameData.player_data.profile.gold)
+	if _stone_icon:
+		_stone_icon.visible = DebugSettings.show_premium_stone
 	if _stone_label:
-		_stone_label.text = "0"  # 課金石（将来実装）
+		_stone_label.visible = DebugSettings.show_premium_stone
+		_stone_label.text = str(GameData.get_stone())
+	if _stone_plus_button:
+		_stone_plus_button.visible = DebugSettings.show_premium_stone
 	_update_stamina_display()
 
 
@@ -110,6 +175,23 @@ func _on_reset_gold():
 	GameData.save_to_file()
 	_update_user_info()
 	print("[DEBUG] ゴールドを100000にリセットしました")
+
+
+# デバッグ用：スタミナを50にリセット（後で削除）
+func _on_reset_stamina():
+	GameData.player_data.stamina.current = 50
+	GameData.player_data.stamina.updated_at = GameClock.get_now()
+	GameData.save_to_file()
+	_update_stamina_display()
+	print("[DEBUG] スタミナを50にリセットしました")
+
+
+# デバッグ用：課金石を100000にリセット（後で削除）
+func _on_reset_stone():
+	GameData.player_data.profile.stone = 100000
+	GameData.save_to_file()
+	_update_user_info()
+	print("[DEBUG] 課金石を100000にリセットしました")
 
 
 # ========== デッキ検証 ==========

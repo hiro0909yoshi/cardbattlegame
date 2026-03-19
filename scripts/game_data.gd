@@ -19,6 +19,7 @@ var player_data = {
 		"level": 1,
 		"exp": 0,
 		"gold": 100000,
+		"stone": 0,
 		"created_at": "",
 		"last_played": ""
 	},
@@ -63,6 +64,15 @@ var player_data = {
 	# === インベントリ（倉庫アイテム） ===
 	"inventory": {},  # {アイテムID(int): 所持数(int)}
 
+	# === ログインボーナス ===
+	"login_bonus": {
+		"claimed_campaigns": [],      # 受取済みキャンペーンID
+		"last_daily_date": "",        # 最後にデイリーボーナスを受け取った日付
+		"login_streak": 0,            # 連続ログイン日数
+		"last_login_date": "",        # 最後のログイン日付（連続判定用）
+		"total_login_days": 0         # 累計ログイン日数
+	},
+
 	# === 設定 ===
 	"settings": {
 		"master_volume": 1.0,
@@ -85,7 +95,7 @@ func _ready():
 
 func save_to_file() -> bool:
 	# 最終プレイ時刻を更新
-	player_data.profile.last_played = Time.get_datetime_string_from_system()
+	player_data.profile.last_played = Time.get_datetime_string_from_unix_time(GameClock.get_now())
 	
 	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -146,7 +156,7 @@ func load_from_file():
 
 func _initialize_new_save():
 	# 作成日時を設定
-	player_data.profile.created_at = Time.get_datetime_string_from_system()
+	player_data.profile.created_at = Time.get_datetime_string_from_unix_time(GameClock.get_now())
 	player_data.profile.last_played = player_data.profile.created_at
 	
 	# 6個の空ブックを作成
@@ -217,6 +227,10 @@ func _convert_collection_keys():
 			player_data.profile.level = int(player_data.profile.level)
 		if player_data.profile.has("exp"):
 			player_data.profile.exp = int(player_data.profile.exp)
+		if player_data.profile.has("stone"):
+			player_data.profile.stone = int(player_data.profile.stone)
+		if not player_data.profile.has("stone"):
+			player_data.profile["stone"] = 0
 
 func _validate_save_data():
 	# 古いバージョンとの互換性チェック
@@ -246,6 +260,14 @@ func _validate_save_data():
 		}
 	if not player_data.has("inventory"):
 		player_data["inventory"] = {}
+	if not player_data.has("login_bonus"):
+		player_data["login_bonus"] = {
+			"claimed_campaigns": [],
+			"last_daily_date": "",
+			"login_streak": 0,
+			"last_login_date": "",
+			"total_login_days": 0
+		}
 
 # ==========================================
 # デッキ操作
@@ -391,7 +413,9 @@ func add_exp(amount: int):
 		player_data.profile.exp -= level_up_exp
 		player_data.profile.level += 1
 		print("🎉 レベルアップ！ Lv.", player_data.profile.level)
-	
+		# レベルアップ時スタミナ全回復（最大値分加算）
+		recover_stamina_full()
+
 	save_to_file()
 
 func add_gold(amount: int):
@@ -403,11 +427,32 @@ func spend_gold(amount: int) -> bool:
 	if player_data.profile.gold < amount:
 		print("❌ ゴールド不足")
 		return false
-	
+
 	player_data.profile.gold -= amount
 	save_to_file()
 	print("💸 ゴールド -", amount, " (残り: ", player_data.profile.gold, ")")
 	return true
+
+
+func add_stone(amount: int):
+	player_data.profile.stone += amount
+	save_to_file()
+	print("💎 課金石 +", amount, " (合計: ", player_data.profile.stone, ")")
+
+
+func spend_stone(amount: int) -> bool:
+	if player_data.profile.stone < amount:
+		print("❌ 課金石不足")
+		return false
+
+	player_data.profile.stone -= amount
+	save_to_file()
+	print("💎 課金石 -", amount, " (残り: ", player_data.profile.stone, ")")
+	return true
+
+
+func get_stone() -> int:
+	return int(player_data.profile.get("stone", 0))
 
 # ==========================================
 # 統計情報
@@ -430,31 +475,144 @@ func record_gacha():
 	player_data.stats.gacha_count += 1
 
 # ==========================================
+# ログインボーナス
+# ==========================================
+
+# キャンペーンボーナス定義（後で削除・変更可能）
+const LOGIN_CAMPAIGNS: Array[Dictionary] = [
+	{"id": "launch_202603", "gold": 100000, "stone": 3000, "label": "リリース記念ボーナス"},
+]
+
+# 連続ログインボーナス定義（日数: 報酬）
+const STREAK_REWARDS: Array[Dictionary] = [
+	{"day": 1, "gold": 500, "stone": 0, "label": "1日目"},
+	{"day": 2, "gold": 500, "stone": 0, "label": "2日目"},
+	{"day": 3, "gold": 1000, "stone": 0, "label": "3日目"},
+	{"day": 4, "gold": 500, "stone": 0, "label": "4日目"},
+	{"day": 5, "gold": 1000, "stone": 100, "label": "5日目"},
+	{"day": 6, "gold": 500, "stone": 0, "label": "6日目"},
+	{"day": 7, "gold": 2000, "stone": 200, "label": "7日目ボーナス"},
+]
+
+
+## ログインボーナスをチェックして付与（戻り値: 付与された報酬の配列）
+func check_login_bonus() -> Array[Dictionary]:
+	var rewards: Array[Dictionary] = []
+	var today = GameClock.get_today()
+	var login_bonus = player_data.login_bonus
+
+	# === キャンペーンボーナス ===
+	var claimed = login_bonus.get("claimed_campaigns", [])
+	for campaign in LOGIN_CAMPAIGNS:
+		if campaign.id not in claimed:
+			player_data.profile.gold += int(campaign.get("gold", 0))
+			player_data.profile.stone += int(campaign.get("stone", 0))
+			claimed.append(campaign.id)
+			rewards.append({
+				"type": "campaign",
+				"label": campaign.get("label", "キャンペーン"),
+				"gold": int(campaign.get("gold", 0)),
+				"stone": int(campaign.get("stone", 0)),
+			})
+	login_bonus.claimed_campaigns = claimed
+
+	# === デイリー＆連続ログインボーナス ===
+	var last_daily = login_bonus.get("last_daily_date", "")
+	if last_daily == today:
+		# 今日はもう受け取り済み
+		if not rewards.is_empty():
+			save_to_file()
+		return rewards
+
+	# 連続ログイン判定
+	var last_login = login_bonus.get("last_login_date", "")
+	var streak = int(login_bonus.get("login_streak", 0))
+
+	if _is_yesterday(last_login, today):
+		streak += 1
+	else:
+		streak = 1  # 連続途切れ or 初回
+
+	login_bonus.login_streak = streak
+	login_bonus.last_login_date = today
+	login_bonus.last_daily_date = today
+	login_bonus.total_login_days = int(login_bonus.get("total_login_days", 0)) + 1
+
+	# 連続ログイン報酬を決定（7日サイクル）
+	var cycle_day = ((streak - 1) % STREAK_REWARDS.size()) + 1
+	var streak_reward = null
+	for r in STREAK_REWARDS:
+		if int(r.day) == cycle_day:
+			streak_reward = r
+			break
+
+	if streak_reward:
+		var gold = int(streak_reward.get("gold", 0))
+		var stone = int(streak_reward.get("stone", 0))
+		player_data.profile.gold += gold
+		player_data.profile.stone += stone
+		rewards.append({
+			"type": "daily",
+			"label": "連続ログイン %d日目" % streak,
+			"gold": gold,
+			"stone": stone,
+			"streak": streak,
+		})
+
+	save_to_file()
+	return rewards
+
+
+## 昨日かどうかを判定
+func _is_yesterday(last_date: String, today: String) -> bool:
+	if last_date.is_empty():
+		return false
+	# 日付文字列をUnix時間に変換して比較
+	var last_dict = Time.get_datetime_dict_from_datetime_string(last_date + "T00:00:00", false)
+	var today_dict = Time.get_datetime_dict_from_datetime_string(today + "T00:00:00", false)
+	var last_unix = Time.get_unix_time_from_datetime_dict(last_dict)
+	var today_unix = Time.get_unix_time_from_datetime_dict(today_dict)
+	var diff = today_unix - last_unix
+	return diff >= 86400 and diff < 172800  # 1日以上2日未満
+
+
+# ==========================================
 # スタミナ管理
 # ==========================================
 
 const STAMINA_RECOVERY_SECONDS: int = 300  # 5分で1回復
 const STAMINA_COST_QUEST: int = 10
 
+## updated_atからUnix時間を取得（文字列・数値両対応）
+func _get_stamina_updated_unix() -> int:
+	var updated_at = player_data.stamina.get("updated_at", "")
+	if updated_at is int or updated_at is float:
+		return int(updated_at)
+	if updated_at is String and not updated_at.is_empty():
+		# 旧形式の日時文字列からの変換を試みる
+		var unix = Time.get_unix_time_from_datetime_string(updated_at)
+		if unix > 0:
+			return int(unix)
+	return 0
+
 ## 時間経過によるスタミナ回復を計算・適用
 func update_stamina_by_time():
 	var stamina = player_data.stamina
 	var current = int(stamina.get("current", 50))
 	var max_val = int(stamina.get("max", 50))
+	var now = GameClock.get_now()
 
 	# 最大値以上なら時間回復しない
 	if current >= max_val:
-		stamina.updated_at = Time.get_datetime_string_from_system()
+		stamina.updated_at = now
 		return
 
-	var last_updated = stamina.get("updated_at", "")
-	if last_updated.is_empty():
-		stamina.updated_at = Time.get_datetime_string_from_system()
+	var last_time = _get_stamina_updated_unix()
+	if last_time <= 0:
+		stamina.updated_at = now
 		return
 
-	var now = Time.get_unix_time_from_system()
-	var last_time = Time.get_unix_time_from_datetime_string(last_updated)
-	var elapsed = int(now - last_time)
+	var elapsed = now - last_time
 
 	if elapsed <= 0:
 		return
@@ -464,8 +622,7 @@ func update_stamina_by_time():
 		stamina.current = mini(current + recovery, max_val)
 		# 余りの秒数を考慮して更新時刻を調整
 		var used_seconds = recovery * STAMINA_RECOVERY_SECONDS
-		var new_time = last_time + used_seconds
-		stamina.updated_at = Time.get_datetime_string_from_unix_time(int(new_time))
+		stamina.updated_at = last_time + used_seconds
 	# recoveryが0の場合はupdated_atを変更しない
 
 ## スタミナを消費する（不足時はfalseを返す）
@@ -476,7 +633,7 @@ func consume_stamina(amount: int = STAMINA_COST_QUEST) -> bool:
 		return false
 
 	player_data.stamina.current = current - amount
-	player_data.stamina.updated_at = Time.get_datetime_string_from_system()
+	# 消費時はupdated_atを変更しない（回復カウントを継続）
 	save_to_file()
 	return true
 
@@ -485,14 +642,16 @@ func recover_stamina(amount: int):
 	update_stamina_by_time()
 	var current = int(player_data.stamina.get("current", 0))
 	player_data.stamina.current = current + amount
-	player_data.stamina.updated_at = Time.get_datetime_string_from_system()
+	player_data.stamina.updated_at = GameClock.get_now()
 	save_to_file()
 
-## スタミナを全回復する（最大値まで）
+## スタミナを全回復する（最大値分を加算、超過OK）
 func recover_stamina_full():
+	update_stamina_by_time()
+	var current = int(player_data.stamina.get("current", 0))
 	var max_val = int(player_data.stamina.get("max", 50))
-	player_data.stamina.current = max_val
-	player_data.stamina.updated_at = Time.get_datetime_string_from_system()
+	player_data.stamina.current = current + max_val
+	player_data.stamina.updated_at = GameClock.get_now()
 	save_to_file()
 
 ## 現在のスタミナを取得（時間回復適用済み）
@@ -511,13 +670,12 @@ func get_stamina_recovery_remaining_seconds() -> int:
 	if current >= max_val:
 		return 0
 
-	var last_updated = player_data.stamina.get("updated_at", "")
-	if last_updated.is_empty():
+	var last_time = _get_stamina_updated_unix()
+	if last_time <= 0:
 		return STAMINA_RECOVERY_SECONDS
 
-	var now = Time.get_unix_time_from_system()
-	var last_time = Time.get_unix_time_from_datetime_string(last_updated)
-	var elapsed = int(now - last_time)
+	var now = GameClock.get_now()
+	var elapsed = now - last_time
 	var remaining = STAMINA_RECOVERY_SECONDS - (elapsed % STAMINA_RECOVERY_SECONDS)
 	return remaining
 

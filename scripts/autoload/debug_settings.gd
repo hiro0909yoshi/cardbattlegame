@@ -30,6 +30,9 @@ var ui_debug_mode: bool = false
 ## シグナルレジストリのデバッグログ表示
 var signal_registry_debug: bool = true
 
+## 課金石を表示する（false=非表示、公開時にtrueに変更）
+var show_premium_stone: bool = true
+
 func _ready():
 	# デフォルト値を設定（必要に応じて環境変数やコマンドライン引数から読み込み可能）
 	pass
