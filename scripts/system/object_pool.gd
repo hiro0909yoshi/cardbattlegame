@@ -28,7 +28,7 @@ func _init(object_class: Script, initial_size: int = 3) -> void:
 ## プール内のオブジェクトを新規作成
 func _create_instance():
 	if not _object_class:
-		push_error("[ObjectPool] object_class が設定されていません")
+		GameLogger.error("System", "ObjectPool: object_class が設定されていません")
 		return null
 
 	var instance = _object_class.new()
@@ -46,7 +46,7 @@ func get_instance():
 		# プール枯渇時は動的に生成
 		obj = _create_instance()
 		if obj:
-			push_warning("[ObjectPool] プール枯渇。新規作成しました (current size: %d)" % _in_use_objects.size())
+			GameLogger.warn("System", "ObjectPool: プール枯渇。新規作成しました (current_size=%d)" % _in_use_objects.size())
 
 	if obj:
 		_in_use_objects.append(obj)
@@ -57,13 +57,13 @@ func get_instance():
 ## オブジェクトをプールに返却
 func return_instance(obj) -> void:
 	if not obj:
-		push_error("[ObjectPool] null のオブジェクトは返却できません")
+		GameLogger.error("System", "ObjectPool: null のオブジェクトは返却できません")
 		return
 
 	# 使用中リストから削除
 	var index = _in_use_objects.find(obj)
 	if index == -1:
-		push_warning("[ObjectPool] このオブジェクトはプール内にありません")
+		GameLogger.warn("System", "ObjectPool: このオブジェクトはプール内にありません (in_use=%d)" % _in_use_objects.size())
 		return
 
 	_in_use_objects.remove_at(index)

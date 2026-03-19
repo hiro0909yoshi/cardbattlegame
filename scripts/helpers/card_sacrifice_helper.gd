@@ -37,7 +37,7 @@ func show_hand_selection(player_id: int, filter: String = "", _message: String =
 	_selected_index = -1
 
 	if not card_system_ref:
-		push_error("[CardSacrificeHelper] card_system_ref が未設定")
+		GameLogger.error("Card", "CardSacrificeHelper: card_system_ref が未設定 (player=%d filter=%s)" % [player_id, filter])
 		return {}
 
 	var hand = card_system_ref.get_all_cards_for_player(player_id)
@@ -86,17 +86,17 @@ func get_selected_index() -> int:
 ## 手札からカードを破棄（犠牲にする）
 func consume_card(player_id: int, card: Dictionary) -> bool:
 	if not card_system_ref:
-		push_error("[CardSacrificeHelper] card_system_ref が未設定")
+		GameLogger.error("Card", "CardSacrificeHelper: card_system_ref が未設定 (player=%d)" % player_id)
 		return false
-	
+
 	if card.is_empty():
-		push_error("[CardSacrificeHelper] 破棄するカードが空です")
+		GameLogger.error("Card", "CardSacrificeHelper: 破棄するカードが空です (player=%d)" % player_id)
 		return false
 	
 	var hand = card_system_ref.get_all_cards_for_player(player_id)
 	var card_id = card.get("id", -1)
 	var card_name = card.get("name", "不明")
-	
+
 	# カードを探して削除
 	for i in range(hand.size()):
 		if hand[i].get("id") == card_id:
@@ -109,7 +109,7 @@ func consume_card(player_id: int, card: Dictionary) -> bool:
 			
 			return true
 	
-	push_error("[CardSacrificeHelper] カード %s が手札に見つかりません" % card_name)
+	GameLogger.error("Card", "CardSacrificeHelper: カード %s が手札に見つかりません (player=%d)" % [card_name, player_id])
 	return false
 
 

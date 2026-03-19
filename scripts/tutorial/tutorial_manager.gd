@@ -102,16 +102,16 @@ func set_tutorial_path(path: String):
 func _load_tutorial_data():
 	var file = FileAccess.open(tutorial_data_path, FileAccess.READ)
 	if not file:
-		push_error("[TutorialManager] チュートリアルデータを読み込めません: %s" % tutorial_data_path)
+		GameLogger.error("Tutorial", "チュートリアルデータを読み込めません: %s" % tutorial_data_path)
 		return
-	
+
 	var json_text = file.get_as_text()
 	file.close()
-	
+
 	var json = JSON.new()
 	var error = json.parse(json_text)
 	if error != OK:
-		push_error("[TutorialManager] JSONパースエラー: %s" % json.get_error_message())
+		GameLogger.error("Tutorial", "JSONパースエラー: %s" % json.get_error_message())
 		return
 	
 	var data = json.data

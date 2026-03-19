@@ -984,7 +984,7 @@ func connect_camera_signals():
 func on_creature_updated(tile_index: int, creature_data: Dictionary):
 	# null チェック
 	if not board_system_ref:
-		push_error("[UIManager] board_system_ref が null")
+		GameLogger.error("UI", "board_system_ref が null（creature_updated ハンドラー）")
 		return
 
 	# UI の creature 関連要素を自動更新

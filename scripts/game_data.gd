@@ -305,7 +305,7 @@ func _validate_decks():
 	
 	if modified:
 		save_to_file()
-		push_warning("[GameData] デッキ検証完了：修正あり")
+		GameLogger.warn("Data", "デッキ検証完了：修正あり（validate_all_decks）")
 
 ## カードが全デッキで使用されている合計枚数を取得
 func get_card_usage_in_decks(card_id: int) -> int:

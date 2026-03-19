@@ -39,13 +39,13 @@ func setup(
 
 	# 初期化検証
 	if not cpu_spell_ai:
-		push_error("[CPUSpellAIContainer] cpu_spell_ai が null です")
+		GameLogger.error("CPU", "CPUSpellAIContainer: cpu_spell_ai が null です")
 	if not cpu_mystic_arts_ai:
-		push_error("[CPUSpellAIContainer] cpu_mystic_arts_ai が null です")
+		GameLogger.error("CPU", "CPUSpellAIContainer: cpu_mystic_arts_ai が null です")
 	if not cpu_hand_utils:
-		push_error("[CPUSpellAIContainer] cpu_hand_utils が null です")
+		GameLogger.error("CPU", "CPUSpellAIContainer: cpu_hand_utils が null です")
 	if not cpu_movement_evaluator:
-		push_error("[CPUSpellAIContainer] cpu_movement_evaluator が null です")
+		GameLogger.error("CPU", "CPUSpellAIContainer: cpu_movement_evaluator が null です")
 
 
 # === 検証メソッド ===

@@ -57,7 +57,7 @@ func _ready():
 		stage_data = stage_loader.load_stage(stage_id)
 
 	if stage_data.is_empty():
-		push_error("[Game3D] ステージ読み込み失敗: " + stage_id)
+		GameLogger.error("Quest", "ステージ読み込み失敗: %s（_ready）" % stage_id)
 		return
 	
 	# 設定を取得

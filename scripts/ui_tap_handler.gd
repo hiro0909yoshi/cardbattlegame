@@ -21,12 +21,12 @@ func _init(p_ui_manager: UIManager) -> void:
 ## CameraControllerのシグナルを接続
 func connect_camera_signals():
 	if not _get_camera_controller_cb.is_valid():
-		push_warning("[UITapHandler] _get_camera_controller_cb が未設定")
+		GameLogger.warn("UI", "_get_camera_controller_cb が未設定")
 		return
 
 	var cam_ctrl = _get_camera_controller_cb.call()
 	if not cam_ctrl:
-		push_warning("[UITapHandler] camera_controller がない")
+		GameLogger.warn("UI", "camera_controller がない")
 		return
 
 	if cam_ctrl.creature_tapped.is_connected(_on_creature_tapped):

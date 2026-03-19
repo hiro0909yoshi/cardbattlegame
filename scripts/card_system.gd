@@ -133,7 +133,7 @@ func draw_card_data_v2(player_id: int) -> Dictionary:
 	
 	# 通常モード: player_decks/player_discards を使用
 	if not player_decks.has(player_id):
-		push_error("Invalid player_id: " + str(player_id))
+		GameLogger.error("Card", "CardSystem: Invalid player_id: %d (player_decks keys=%d)" % [player_id, player_decks.size()])
 		return {}
 	
 	if player_decks[player_id].is_empty():
@@ -272,7 +272,7 @@ func set_deck_for_player(player_id: int, deck_data: Dictionary):
 		# カードデータを取得
 		var card_data = CardLoader.get_card_by_id(card_id)
 		if card_data.is_empty():
-			push_warning("[CardSystem] カードID %d が見つかりません" % card_id)
+			GameLogger.warn("Card", "CardSystem: カードID %d が見つかりません" % card_id)
 			continue
 		
 		# 指定枚数分デッキプールに追加
@@ -280,7 +280,7 @@ func set_deck_for_player(player_id: int, deck_data: Dictionary):
 			deck_pool.append(card_data.duplicate())
 	
 	if deck_pool.is_empty():
-		push_error("[CardSystem] デッキが空です")
+		GameLogger.error("Card", "CardSystem: デッキが空です (player=%d)" % player_id)
 		return
 	
 	# デッキプールをシャッフル
@@ -470,7 +470,7 @@ func discard_excess_cards_auto(player_id: int, max_cards: int = 6) -> int:
 # カードを手札に戻す(バトル失敗時の処理)
 func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	if not player_hands.has(player_id):
-		push_error("return_card_to_hand: 不正なplayer_id " + str(player_id))
+		GameLogger.error("Card", "CardSystem: return_card_to_hand - 不正なplayer_id %d (player_hands keys=%d)" % [player_id, player_hands.size()])
 		return false
 	
 	# 捨て札から該当カードを削除

@@ -33,7 +33,7 @@ func _ready():
 	# ステージを読み込み
 	var stage_data = stage_loader.load_stage(stage_id)
 	if stage_data.is_empty():
-		push_error("[QuestGame] ステージ読み込み失敗: " + stage_id)
+		GameLogger.error("Quest", "QuestGame: ステージ読み込み失敗: %s" % stage_id)
 		return
 
 	# 設定を取得
@@ -368,7 +368,7 @@ func _apply_stage_settings():
 ## 全プレイヤーのデッキを設定（プレイヤー0 + CPU）
 func _setup_all_decks():
 	if not system_manager.card_system:
-		push_error("[QuestGame] card_system is null, returning")
+		GameLogger.error("Quest", "QuestGame: card_system is null (stage=%s)" % stage_id)
 		return
 	
 	# プレイヤー0: GameDataから選択中のブックを設定
@@ -414,13 +414,13 @@ func _setup_player_deck():
 ## CPUのバトルポリシーを設定
 func _setup_cpu_battle_policies():
 	if not system_manager or not system_manager.board_system_3d:
-		push_error("[QuestGame] system_manager または board_system_3d が null")
+		GameLogger.error("Quest", "QuestGame: system_manager または board_system_3d が null (stage=%s)" % stage_id)
 		return
 
 	# board_system_3d.cpu_ai_handler を直接参照（確実に存在する）
 	var cpu_ai_handler = system_manager.board_system_3d.cpu_ai_handler
 	if not cpu_ai_handler:
-		push_error("[QuestGame] board_system_3d.cpu_ai_handler が見つかりません")
+		GameLogger.error("Quest", "QuestGame: board_system_3d.cpu_ai_handler が見つかりません (stage=%s)" % stage_id)
 		return
 
 	# CPU敵のポリシーを設定

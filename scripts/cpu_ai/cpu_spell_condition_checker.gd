@@ -163,7 +163,7 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 			return _check_nearest_checkpoint_unvisited(context)
 		
 		_:
-			push_warning("CPUSpellConditionChecker: Unknown condition: " + condition)
+			GameLogger.warn("CPU", "Unknown condition: %s（CPUSpellConditionChecker）" % condition)
 			return false
 
 # =============================================================================

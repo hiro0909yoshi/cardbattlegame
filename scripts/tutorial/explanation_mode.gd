@@ -57,12 +57,14 @@ func _create_ui():
 		popup_layer.layer = 200
 		popup_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(popup_layer)
-		
+
 		popup = TutorialPopupClass.new()
 		popup.name = "ExplanationPopup"
 		popup.process_mode = Node.PROCESS_MODE_ALWAYS
 		popup_layer.add_child(popup)
-	
+	else:
+		GameLogger.warn("Tutorial", "ExplanationMode: TutorialPopupClassの読み込みに失敗しました")
+
 	# オーバーレイ
 	var TutorialOverlayClass = load("res://scripts/tutorial/tutorial_overlay.gd")
 	if TutorialOverlayClass:
@@ -71,14 +73,16 @@ func _create_ui():
 		overlay_layer.layer = 99
 		overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(overlay_layer)
-		
+
 		_overlay = TutorialOverlayClass.new()
 		_overlay.name = "ExplanationOverlay"
 		overlay_layer.add_child(_overlay)
-		
+
 		# GlobalActionButtonsへの参照を設定
 		if _ui_manager and _ui_manager.global_action_buttons:
 			_overlay.set_global_action_buttons(_ui_manager.global_action_buttons)
+	else:
+		GameLogger.warn("Tutorial", "ExplanationMode: TutorialOverlayClassの読み込みに失敗しました")
 
 ## シグナル接続
 func _connect_signals():
@@ -193,10 +197,10 @@ func exit():
 ## ボタンコールバックを設定（説明モード用）
 func _setup_button_callbacks(allowed_buttons: Array):
 	if not _ui_manager:
-		push_warning("[ExplanationMode] _ui_manager is null")
+		GameLogger.warn("Tutorial", "ExplanationMode: _ui_manager is null")
 		return
 	if not _ui_manager.global_action_buttons:
-		push_warning("[ExplanationMode] global_action_buttons is null")
+		GameLogger.warn("Tutorial", "ExplanationMode: global_action_buttons is null")
 		return
 	
 	var gab = _ui_manager.global_action_buttons
@@ -425,12 +429,12 @@ func _highlight_player_info_panel(player_id: int):
 	
 	var player_info_panel = _ui_manager.player_info_panel
 	if not player_info_panel:
-		push_warning("[ExplanationMode] player_info_panel is null")
+		GameLogger.warn("Tutorial", "ExplanationMode: player_info_panel is null")
 		return
 	
 	# パネル配列から指定プレイヤーのパネルを取得
 	if player_id < 0 or player_id >= player_info_panel.panels.size():
-		push_warning("[ExplanationMode] Invalid player_id: %d" % player_id)
+		GameLogger.warn("Tutorial", "ExplanationMode: Invalid player_id: %d (total_panels=%d)" % [player_id, player_info_panel.panels.size()])
 		return
 	
 	var panel = player_info_panel.panels[player_id]

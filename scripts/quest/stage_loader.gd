@@ -72,7 +72,7 @@ func load_stage(stage_id: String) -> Dictionary:
 	var path = STAGES_PATH + stage_id + ".json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[StageLoader] ステージファイルが見つかりません: " + path)
+		GameLogger.error("Quest", "ステージファイルが見つかりません: %s" % path)
 		return {}
 	
 	var json_text = file.get_as_text()
@@ -80,7 +80,7 @@ func load_stage(stage_id: String) -> Dictionary:
 	
 	var parsed = JSON.parse_string(json_text)
 	if not parsed:
-		push_error("[StageLoader] JSONパースエラー: " + path)
+		GameLogger.error("Quest", "JSONパースエラー: %s" % path)
 		return {}
 	
 	current_stage_data = parsed
@@ -99,7 +99,7 @@ func _load_map(map_id: String) -> Dictionary:
 	var path = MAPS_PATH + map_id + ".json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[StageLoader] マップファイルが見つかりません: " + path)
+		GameLogger.error("Quest", "マップファイルが見つかりません: %s" % path)
 		return {}
 	
 	var json_text = file.get_as_text()
@@ -107,7 +107,7 @@ func _load_map(map_id: String) -> Dictionary:
 	
 	var parsed = JSON.parse_string(json_text)
 	if not parsed:
-		push_error("[StageLoader] JSONパースエラー: " + path)
+		GameLogger.error("Quest", "JSONパースエラー: %s" % path)
 		return {}
 	
 	current_map_data = parsed
@@ -119,7 +119,7 @@ func load_ai_profile(profile_id: String) -> Dictionary:
 	var path = AI_PROFILES_PATH + profile_id + ".json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[StageLoader] AIプロファイルが見つかりません: " + path)
+		GameLogger.error("Quest", "AIプロファイルが見つかりません: %s" % path)
 		return {}
 	
 	var json_text = file.get_as_text()
@@ -127,7 +127,7 @@ func load_ai_profile(profile_id: String) -> Dictionary:
 	
 	var parsed = JSON.parse_string(json_text)
 	if not parsed:
-		push_error("[StageLoader] JSONパースエラー: " + path)
+		GameLogger.error("Quest", "JSONパースエラー: %s" % path)
 		return {}
 	
 	print("[StageLoader] AIプロファイル読み込み完了: ", profile_id)
@@ -142,11 +142,11 @@ func set_tiles_container(container: Node3D):
 ## マップを動的に生成
 func generate_map() -> Dictionary:
 	if not tiles_container:
-		push_error("[StageLoader] tiles_containerが設定されていません")
+		GameLogger.error("Quest", "tiles_containerが設定されていません")
 		return {}
 	
 	if current_map_data.is_empty():
-		push_error("[StageLoader] マップデータがありません")
+		GameLogger.error("Quest", "マップデータがありません")
 		return {}
 	
 	# 既存のタイルをクリア
@@ -189,7 +189,7 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 	var tile_type = tile_data.get("type", "Neutral")
 	
 	if not TILE_SCENES.has(tile_type):
-		push_error("[StageLoader] 不明なタイルタイプ: " + tile_type)
+		GameLogger.error("Quest", "不明なタイルタイプ: %s" % tile_type)
 		return null
 	
 	var tile_scene = TILE_SCENES[tile_type]
@@ -404,7 +404,7 @@ func load_deck(deck_id: String) -> Dictionary:
 	
 	var parsed = JSON.parse_string(json_text)
 	if not parsed:
-		push_error("[StageLoader] JSONパースエラー: " + path)
+		GameLogger.error("Quest", "JSONパースエラー: %s" % path)
 		return {}
 	
 	print("[StageLoader] デッキ読み込み完了: ", deck_id)

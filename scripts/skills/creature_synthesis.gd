@@ -162,7 +162,7 @@ func _apply_transform(creature_data: Dictionary, sacrifice_card: Dictionary, syn
 			])
 			return result
 		else:
-			push_error("[CreatureSynthesis] 犠牲カードがクリーチャーではありません")
+			GameLogger.error("Skill", "犠牲カードがクリーチャーではありません (type=%s)" % sacrifice_card.get("type", "unknown"))
 			return creature_data
 	
 	# 特定のクリーチャーIDに変身（JSONからはfloatで来る場合がある）
@@ -181,6 +181,6 @@ func _apply_transform(creature_data: Dictionary, sacrifice_card: Dictionary, syn
 			])
 			return result
 		else:
-			push_error("[CreatureSynthesis] 変身先クリーチャーID %d が見つかりません" % transform_target)
+			GameLogger.error("Skill", "変身先クリーチャーID %d が見つかりません (from=%s)" % [transform_target, creature_data.get("name", "unknown")])
 	
 	return creature_data

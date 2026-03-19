@@ -387,7 +387,7 @@ func _on_count_selected(count: int):
 	var max_count = min(4, owned)
 	
 	if count > max_count:
-		push_warning("所持数を超えています")
+		GameLogger.warn("Data", "所持数を超えています（デッキに追加：%d 枚、最大: %d 枚）" % [count, max_count])
 		return
 	
 	# デッキに設定

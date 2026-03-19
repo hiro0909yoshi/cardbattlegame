@@ -104,7 +104,7 @@ func _ensure_checkpoint_distances_calculated():
 ## チェックポイント距離を計算（マップロード後に呼び出し）
 func calculate_checkpoint_distances():
 	if not movement_controller or not movement_controller.tile_nodes:
-		push_warning("[CPUMovement] movement_controller未設定 - CP距離計算スキップ")
+		GameLogger.warn("CPU", "movement_controller 未設定のため CP 距離計算をスキップ（calculate_checkpoint_distances）")
 		return
 	
 	# ワープペアを取得

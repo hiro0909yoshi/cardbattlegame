@@ -44,15 +44,15 @@ func _process(_delta):
 ## ホストとしてサーバーを起動
 func start_host(port: int = DEFAULT_PORT) -> bool:
 	if current_state != State.DISCONNECTED:
-		push_warning("[Network] Already connected")
+		GameLogger.warn("Network", "既に接続されています (current_state=%s)" % str(current_state))
 		return false
-	
+
 	server_port = port
 	tcp_server = TCPServer.new()
-	
+
 	var err = tcp_server.listen(port)
 	if err != OK:
-		push_error("[Network] Failed to start server on port %d: %s" % [port, error_string(err)])
+		GameLogger.error("Network", "ホスト起動失敗: ポート%dでのリッスンに失敗 (%s)" % [port, error_string(err)])
 		return false
 	
 	current_mode = Mode.HOST
@@ -142,18 +142,18 @@ func _wait_for_websocket_handshake(peer_id: int, ws: WebSocketPeer):
 ## クライアントとしてサーバーに接続
 func start_client(ip: String, port: int = DEFAULT_PORT) -> bool:
 	if current_state != State.DISCONNECTED:
-		push_warning("[Network] Already connected")
+		GameLogger.warn("Network", "既に接続されています (current_state=%s)" % str(current_state))
 		return false
-	
+
 	server_ip = ip
 	server_port = port
-	
+
 	client_websocket = WebSocketPeer.new()
 	var url = "ws://%s:%d" % [ip, port]
-	
+
 	var err = client_websocket.connect_to_url(url)
 	if err != OK:
-		push_error("[Network] Failed to connect to %s: %s" % [url, error_string(err)])
+		GameLogger.error("Network", "サーバー接続失敗: %s (%s)" % [url, error_string(err)])
 		return false
 	
 	current_mode = Mode.CLIENT
@@ -206,7 +206,7 @@ func _handle_packet(from_peer_id: int, packet: PackedByteArray):
 	var err = json.parse(json_string)
 	
 	if err != OK:
-		push_warning("[Network] Invalid JSON received")
+		GameLogger.warn("Network", "Invalid JSON received from packet")
 		return
 	
 	var data = json.get_data()

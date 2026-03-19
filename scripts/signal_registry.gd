@@ -32,7 +32,7 @@ static func connect_safe(
 ) -> bool:
 	
 	if not instance:
-		push_error("SignalRegistry not initialized")
+		GameLogger.error("System", "SignalRegistry is not initialized（connect_safe）")
 		return false
 	
 	# ユニークキーを生成

@@ -18,7 +18,7 @@ func show_panel(current_magic: int, land_value: int) -> void:
 	hide_panel()
 
 	if not _ui_layer:
-		push_error("[BankruptcyInfoPanelUI] ui_layer が設定されていません")
+		GameLogger.error("UI", "ui_layer が設定されていません（show_panel）")
 		return
 
 	_panel = Panel.new()

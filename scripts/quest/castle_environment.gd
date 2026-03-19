@@ -583,7 +583,7 @@ func _create_arch_frame_mesh(inner_radius: float, frame_w: float, depth: float, 
 func _create_brick_material() -> ShaderMaterial:
 	var shader = load(BRICK_SHADER_PATH) as Shader
 	if not shader:
-		push_error("[CastleEnvironment] brick_wall.gdshader not found")
+		GameLogger.error("Quest", "brick_wall.gdshader が見つかりません（パス: %s）" % BRICK_SHADER_PATH)
 		return null
 	var mat: ShaderMaterial = ShaderMaterial.new()
 	mat.shader = shader

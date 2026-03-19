@@ -40,7 +40,7 @@ func calculate_all_distances():
 	_find_all_checkpoints()
 
 	if checkpoints.is_empty():
-		push_warning("[CPUMovement] チェックポイント未検出 - 距離計算スキップ")
+		GameLogger.warn("CPU", "チェックポイント未検出のため距離計算をスキップ（calculate_all_distances）")
 		return
 	
 	# 2. 分岐タイルを検出

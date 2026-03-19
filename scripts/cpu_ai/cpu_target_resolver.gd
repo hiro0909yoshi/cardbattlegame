@@ -179,7 +179,7 @@ func _check_target_condition_internal(target_condition: String, context: Diction
 			return _get_own_without_land_bonus(context)
 		
 		_:
-			push_warning("CPUTargetResolver: Unknown target_condition: " + target_condition)
+			GameLogger.warn("CPU", "Unknown target_condition: %s（CPUTargetResolver）" % target_condition)
 			return []
 
 # =============================================================================

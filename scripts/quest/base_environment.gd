@@ -36,7 +36,7 @@ func setup_from_tiles(tiles_container: Node3D) -> void:
 			tile_count += 1
 
 	if tile_count == 0:
-		push_error("[%s] タイルが見つかりません" % name)
+		GameLogger.error("Quest", "タイルが見つかりません in %s" % name)
 		return
 
 	_map_center = Vector3((min_pos.x + max_pos.x) / 2.0, 0.0, (min_pos.z + max_pos.z) / 2.0)
@@ -69,7 +69,7 @@ func _get_environment_margin() -> float:
 func _create_ground(extra_margin: float = 0.0) -> void:
 	var floor_scene: PackedScene = load(FLOOR_MODEL_PATH) as PackedScene
 	if not floor_scene:
-		push_error("[%s] floor3.glb not found, falling back to simple ground" % name)
+		GameLogger.error("Quest", "floor3.glb not found, falling back to simple ground in %s" % name)
 		_create_ground_fallback(extra_margin)
 		return
 

@@ -287,10 +287,10 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 			var board_system = context.get("board_system", null)
 			var creature_manager = context.get("creature_manager", null)
 			var required_count = condition.get("count", 4)
-			
+
 			if player_id == -1 or not board_system or not creature_manager:
 				return false
-			
+
 			var mismatched_count = 0
 			for i in board_system.tile_nodes.keys():
 				var tile = board_system.get_tile_data(i)
@@ -299,15 +299,15 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 						var creature_data = creature_manager.get_data(i)
 						var creature_element = creature_data.get("element", "")
 						var land_element = tile.tile_type
-						
+
 						# 属性が異なる、または無属性の場合も不一致とする
 						if creature_element != land_element or creature_element == "neutral":
 							mismatched_count += 1
-			
+
 			return mismatched_count >= required_count
-			
+
 		_:
-			push_warning("未実装の条件タイプ: " + cond_type)
+			GameLogger.warn("Skill", "未実装の条件タイプ: %s（ConditionChecker）" % cond_type)
 			return false
 
 # 複数条件の組み合わせ評価（OR条件）

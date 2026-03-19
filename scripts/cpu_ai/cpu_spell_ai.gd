@@ -413,7 +413,7 @@ func _check_profit_condition(condition: String, context: Dictionary, cost: int) 
 		"lap_behind_enemy":
 			return spell_utils.calculate_lap_diff(context) > 0
 		_:
-			push_warning("Unknown profit_condition: " + condition)
+			GameLogger.warn("CPU", "Unknown profit_condition: %s（CPUSpellAI）" % condition)
 			return false
 
 ## 最高価値の自ドミニオを取得

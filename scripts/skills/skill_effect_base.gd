@@ -194,7 +194,7 @@ func _check_single_condition(condition: Dictionary, context: Dictionary) -> bool
 			return player_lands.get(cond_element, 0) >= count
 		_:
 			# 未実装の条件はtrueとして扱う（後で実装）
-			push_warning("未実装の条件タイプ: " + cond_type)
+			GameLogger.warn("Skill", "未実装の条件タイプ: %s" % cond_type)
 			return true
 
 # 値の計算（固定値またはformula）
@@ -223,20 +223,20 @@ func _evaluate_formula(formula_str: String, context: Dictionary) -> int:
 	# 式をパース
 	var error = expr.parse(formula_str, variable_names)
 	if error != OK:
-		push_error("計算式パースエラー: " + formula_str)
+		GameLogger.error("Skill", "計算式パースエラー: %s" % formula_str)
 		return 0
-		
+
 	# 実行
 	var result = expr.execute(variable_values, null, true)
 	if expr.has_execute_failed():
-		push_error("計算式実行エラー: " + formula_str)
+		GameLogger.error("Skill", "計算式実行エラー: %s" % formula_str)
 		return 0
 		
 	return int(result)
 
 # 効果を適用（派生クラスで実装）
 func apply_effect(_target_node, _context: Dictionary) -> void:
-	push_error("apply_effect()は派生クラスで実装してください")
+	push_error("apply_effect()は派生クラスで実装してください")  # This is the abstract method exception - do not convert
 	pass
 
 # デバッグ用文字列

@@ -34,15 +34,15 @@ func _setup_dev_mode():
 func _initialize_database() -> bool:
 	if _is_web:
 		return _initialize_web()
-	
+
 	if not ClassDB.class_exists("SQLite"):
-		push_error("[UserCardDB] SQLiteクラスが見つかりません（GDExtension未読み込み）")
+		GameLogger.error("Data", "UserCardDB: SQLiteクラスが見つかりません（GDExtension未読み込み）")
 		return false
 	db = ClassDB.instantiate("SQLite")
 	db.path = db_path
-	
+
 	if not db.open_db():
-		push_error("[UserCardDB] データベースを開けませんでした: " + db_path)
+		GameLogger.error("Data", "UserCardDB: データベースを開けませんでした: " + db_path)
 		return false
 	
 	# テーブル作成
@@ -59,7 +59,7 @@ func _initialize_database() -> bool:
 	"""
 	
 	if not db.query(create_table_query):
-		push_error("[UserCardDB] テーブル作成に失敗しました")
+		GameLogger.error("Data", "UserCardDB: テーブル作成に失敗しました (user_cards)")
 		return false
 	
 	print("[UserCardDB] データベース初期化完了（SQLite）: " + db_path)
@@ -78,7 +78,7 @@ func _initialize_web() -> bool:
 				_web_data = json.data
 				print("[UserCardDB] Web版データ読み込み完了: %d件" % _web_data.size())
 			else:
-				push_warning("[UserCardDB] Web版JSONパースエラー、空データで開始")
+				GameLogger.warn("Data", "UserCardDB: Web版JSONパースエラー、空データで開始")
 	else:
 		print("[UserCardDB] Web版データファイルなし、新規作成します")
 	
