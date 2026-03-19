@@ -213,6 +213,9 @@ func use_spell(spell_card: Dictionary):
 				# スペル選択UIを再表示
 				if _player_system and _card_system:
 					var current_player = _player_system.get_current_player()
+					if not current_player:
+						GameLogger.error("Spell", "current_player が null (player_id=%d)" % _spell_state.current_player_id)
+						return
 					var hand_data = _card_system.get_all_cards_for_player(_spell_state.current_player_id)
 					_show_spell_selection_ui(hand_data, current_player.magic_power)
 				return

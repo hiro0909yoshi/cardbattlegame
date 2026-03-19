@@ -27,14 +27,16 @@ func set_spell_container(container: SpellSystemContainer) -> void:
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	var handler = spell_phase_handler
 	if not handler:
-		GameLogger.error("Spell", "handler が未設定")
+		GameLogger.error("Spell", "execute_spell_effect: handler が未設定 (spell=%s)" % spell_card.get("name", "?"))
 		return
 
 	# 状態を EXECUTING_EFFECT に遷移（spell_state経由）
 	if handler.spell_state:
 		handler.spell_state.transition_to(SpellStateHandler.State.EXECUTING_EFFECT)
 	else:
-		GameLogger.error("Spell", "spell_state が未設定")
+		GameLogger.error("Spell", "execute_spell_effect: spell_state が未設定 (spell=%s)" % spell_card.get("name", "?"))
+		handler.spell_used.emit(spell_card)
+		handler.complete_spell_phase()
 		return
 
 	# 復帰[ブック]フラグをリセット（spell_state経由）
@@ -271,14 +273,16 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
 	var handler = spell_phase_handler
 	if not handler:
-		GameLogger.error("Spell", "handler が未設定")
+		GameLogger.error("Spell", "execute_spell_on_all_creatures: handler が未設定 (spell=%s)" % spell_card.get("name", "?"))
 		return
 
 	# 状態を EXECUTING_EFFECT に遷移（spell_state経由）
 	if handler.spell_state:
 		handler.spell_state.transition_to(SpellStateHandler.State.EXECUTING_EFFECT)
 	else:
-		GameLogger.error("Spell", "spell_state が未設定")
+		GameLogger.error("Spell", "execute_spell_on_all_creatures: spell_state が未設定 (spell=%s)" % spell_card.get("name", "?"))
+		handler.spell_used.emit(spell_card)
+		handler.complete_spell_phase()
 		return
 
 	# カメラをロック（効果適用中はドラッグ不可）
