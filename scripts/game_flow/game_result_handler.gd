@@ -284,7 +284,7 @@ func _return_to_stage_select():
 
 	var tree = _get_tree_ref()
 	if not tree:
-		push_error("[GameResultHandler] SceneTree が取得できません")
+		GameLogger.error("GFM", "SceneTree が取得できません（_return_to_stage_select）")
 		return
 
 	# チュートリアルはメインメニューへ

@@ -56,9 +56,9 @@ func setup(
 	_card_system = card_system
 
 	if not _spell_phase_handler:
-		push_error("[SpellUIManager] spell_phase_handler が null です")
+		GameLogger.error("Spell", "SpellUIManager: spell_phase_handler が null です")
 	if not _ui_manager:
-		push_error("[SpellUIManager] ui_manager が null です")
+		GameLogger.error("Spell", "SpellUIManager: ui_manager が null です")
 
 ## GFM依存のCallable一括注入（Phase A-3a）
 func inject_callbacks(
@@ -218,12 +218,12 @@ func initialize_spell_phase_ui() -> void:
 ## スペルフェーズUIの更新
 func update_spell_phase_ui() -> void:
 	if not _ui_manager or not _card_system:
-		push_error("[SpellUIManager] ui_manager または card_system が初期化されていません")
+		GameLogger.error("Spell", "SpellUIManager: ui_manager または card_system が初期化されていません")
 		return
 
 	var current_player = _player_system.get_current_player() if _player_system else null
 	if not current_player:
-		push_error("[SpellUIManager] current_player が取得できません")
+		GameLogger.error("Spell", "SpellUIManager: current_player が取得できません (player_system=%s)" % ["OK" if _player_system else "NULL"])
 		return
 
 	var hand_data = _card_system.get_all_cards_for_player(current_player.id)
@@ -383,7 +383,7 @@ func _on_spell_cast_notification_requested(caster_name: String, target_data: Dic
 ## SpellPhaseHandler の UI Signal を接続
 func connect_spell_phase_handler_signals(sph) -> void:
 	if not sph:
-		push_error("[SpellUIManager] spell_phase_handler が null です")
+		GameLogger.error("Spell", "SpellUIManager: spell_phase_handler が null です (connect_spell_phase_handler_signals)")
 		return
 
 	if not sph.human_spell_phase_started.is_connected(_on_human_spell_phase_started):
@@ -396,7 +396,7 @@ func connect_spell_phase_handler_signals(sph) -> void:
 ## SpellFlowHandler の UI Signal を接続
 func connect_spell_flow_signals(spell_flow_handler) -> void:
 	if not spell_flow_handler:
-		push_error("[SpellUIManager] spell_flow_handler が null です")
+		GameLogger.error("Spell", "SpellUIManager: spell_flow_handler が null です (connect_spell_flow_signals)")
 		return
 
 	var sfh = spell_flow_handler
@@ -426,7 +426,7 @@ func connect_spell_flow_signals(spell_flow_handler) -> void:
 
 func connect_mystic_arts_signals(mystic_arts_handler) -> void:
 	if not mystic_arts_handler:
-		push_error("[SpellUIManager] mystic_arts_handler が null です")
+		GameLogger.error("Spell", "SpellUIManager: mystic_arts_handler が null です (connect_mystic_arts_signals)")
 		return
 
 	var mah = mystic_arts_handler

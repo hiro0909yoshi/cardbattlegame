@@ -100,7 +100,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 		_navigation_service.disable_navigation()
 
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return false
 
 	# 有効な対象を取得（ヘルパー使用）
@@ -139,13 +139,13 @@ func _cpu_select_target(targets: Array, _target_type: String, _target_info: Dict
 		return false
 
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return false
 
 	# CPUSpellPhaseHandlerで最適な対象を選択
 	var cpu_spell_phase_handler = _spell_phase_handler.cpu_spell_phase_handler
 	if not cpu_spell_phase_handler:
-		push_error("[STSH] cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
+		GameLogger.error("Spell", "cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
 		return false
 
 	var best_target: Dictionary = cpu_spell_phase_handler.select_best_target(
@@ -162,7 +162,7 @@ func _cpu_select_target(targets: Array, _target_type: String, _target_info: Dict
 	if _spell_phase_handler and _spell_phase_handler.spell_flow:
 		_spell_phase_handler.spell_flow._start_confirmation_phase(best_target.get("type", ""), target_info_for_confirm, best_target)
 	else:
-		push_error("[STSH] spell_flow が初期化されていません")
+		GameLogger.error("Spell", "spell_flow が初期化されていません")
 	return true
 
 ## 対象をログ用にフォーマット
@@ -266,7 +266,7 @@ func _confirm_target_selection() -> void:
 		return
 
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return
 
 	var selected_target: Dictionary = _available_targets[_current_target_index]
@@ -303,14 +303,14 @@ func _confirm_target_selection() -> void:
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			await _spell_phase_handler.spell_flow.execute_spell_effect(_spell_phase_handler.spell_state.selected_spell_card, selected_target)
 		else:
-			push_error("[STSH] spell_flow が初期化されていません")
+			GameLogger.error("Spell", "spell_flow が初期化されていません")
 
 	_is_selecting = false
 
 ## 対象選択をキャンセル
 func _cancel_target_selection() -> void:
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return
 
 	# TapTargetManagerの選択を終了
@@ -331,7 +331,7 @@ func _cancel_target_selection() -> void:
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.cancel_spell()
 		else:
-			push_error("[STSH] spell_flow が初期化されていません")
+			GameLogger.error("Spell", "spell_flow が初期化されていません")
 		_is_selecting = false
 		return
 
@@ -345,20 +345,20 @@ func _cancel_target_selection() -> void:
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.return_to_spell_selection()
 		else:
-			push_error("[STSH] spell_flow が初期化されていません")
+			GameLogger.error("Spell", "spell_flow が初期化されていません")
 	else:
 		# スペルキャンセル
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.cancel_spell()
 		else:
-			push_error("[STSH] spell_flow が初期化されていません")
+			GameLogger.error("Spell", "spell_flow が初期化されていません")
 
 	_is_selecting = false
 
 ## 対象選択フェーズを抜けるときの共通処理
 func _exit_target_selection_phase() -> void:
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return
 
 	# 選択マーカーをクリア
@@ -371,7 +371,7 @@ func _exit_target_selection_phase() -> void:
 	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
 		_spell_phase_handler.spell_ui_manager.return_camera_to_player()
 	else:
-		push_error("[STSH] spell_ui_manager が初期化されていません")
+		GameLogger.error("Spell", "spell_ui_manager が初期化されていません")
 
 	# アクション指示パネルを閉じる
 	if _message_service:
@@ -394,7 +394,7 @@ func _start_spell_tap_target_selection(targets: Array, target_type: String) -> v
 
 	var ttm = _tap_target_manager
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return
 
 	ttm.set_current_player(_spell_phase_handler.spell_state.current_player_id)
@@ -467,7 +467,7 @@ func _check_tutorial_player_target_allowed(player_id: int) -> bool:
 ## タップでターゲットが選択された時
 func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary) -> void:
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return
 
 	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
@@ -490,7 +490,7 @@ func _start_mystic_tap_target_selection(targets: Array) -> void:
 		return
 
 	if not _spell_phase_handler:
-		push_error("[STSH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "SpellPhaseHandler が初期化されていません")
 		return
 
 	var ttm = _tap_target_manager

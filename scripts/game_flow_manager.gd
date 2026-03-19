@@ -258,7 +258,7 @@ func start_turn():
 			if not drawn.is_empty() and current_player.id == 0:
 				await get_tree().create_timer(0.1).timeout
 		else:
-			push_error("[GFM] spell_draw が初期化されていません")
+			GameLogger.error("GFM", "ターン開始: spell_draw が初期化されていません (P%d)" % (current_player.id + 1))
 	
 	# 破産チェック（敵スペル等でEPマイナスの場合）
 	await check_and_handle_bankruptcy()
@@ -314,11 +314,11 @@ func _setup_dice_phase_navigation():
 # サイコロを振る
 func roll_dice():
 	if not dice_phase_handler:
-		push_error("[GFM] dice_phase_handler が初期化されていません")
+		GameLogger.error("GFM", "roll_dice: dice_phase_handler が初期化されていません")
 		return
 
 	if not spell_phase_handler:
-		push_error("[GFM] spell_phase_handler が初期化されていません")
+		GameLogger.error("GFM", "roll_dice: spell_phase_handler が初期化されていません")
 		return
 
 	await dice_phase_handler.roll_dice(current_phase, spell_phase_handler)
@@ -471,13 +471,13 @@ func end_turn():
 	if discard_handler and discard_handler.has_method("check_and_discard_excess_cards"):
 		await discard_handler.check_and_discard_excess_cards(current_player.id)
 	elif discard_handler:
-		push_error("[GFM] discard_handler.check_and_discard_excess_cards が利用不可")
+		GameLogger.error("GFM", "end_turn: discard_handler.check_and_discard_excess_cards が利用不可 (P%d)" % (current_player.id + 1))
 
 	# 敵地判定・通行料支払い実行
 	if toll_payment_handler and toll_payment_handler.has_method("check_and_pay_toll_on_enemy_land"):
 		await toll_payment_handler.check_and_pay_toll_on_enemy_land()
 	elif toll_payment_handler:
-		push_error("[GFM] toll_payment_handler.check_and_pay_toll_on_enemy_land が利用不可")
+		GameLogger.error("GFM", "end_turn: toll_payment_handler.check_and_pay_toll_on_enemy_land が利用不可 (P%d)" % (current_player.id + 1))
 
 	# 破産チェック（通行料支払い後）
 	await check_and_handle_bankruptcy()
@@ -491,7 +491,7 @@ func end_turn():
 	if spell_container and spell_container.spell_curse:
 		spell_container.spell_curse.update_player_curse(player_system.current_player_index)
 	else:
-		push_error("[GFM] spell_curse が初期化されていません")
+		GameLogger.error("GFM", "end_turn: spell_curse が初期化されていません (P%d)" % (current_player.id + 1))
 	
 	# プレイヤー切り替え処理（3D専用）
 	if board_system_3d:
@@ -517,7 +517,7 @@ func end_turn():
 			if spell_container and spell_container.spell_world_curse:
 				spell_container.spell_world_curse.on_round_start()
 			else:
-				push_error("[GFM] spell_world_curse が初期化されていません")
+				GameLogger.error("GFM", "ラウンド%d開始: spell_world_curse が初期化されていません" % current_turn_number)
 		
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		

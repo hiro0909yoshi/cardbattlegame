@@ -27,14 +27,14 @@ func set_spell_container(container: SpellSystemContainer) -> void:
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	var handler = spell_phase_handler
 	if not handler:
-		push_error("[SpellEffectExecutor] handler が未設定")
+		GameLogger.error("Spell", "handler が未設定")
 		return
 
 	# 状態を EXECUTING_EFFECT に遷移（spell_state経由）
 	if handler.spell_state:
 		handler.spell_state.transition_to(SpellStateHandler.State.EXECUTING_EFFECT)
 	else:
-		push_error("[SpellEffectExecutor] spell_state が未設定")
+		GameLogger.error("Spell", "spell_state が未設定")
 		return
 
 	# 復帰[ブック]フラグをリセット（spell_state経由）
@@ -155,11 +155,11 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 
 	# ★ NEW: spell_container のバリデーション
 	if not spell_container:
-		push_error("[SpellEffectExecutor] spell_container が初期化されていません")
+		GameLogger.error("Spell", "spell_container が初期化されていません")
 		return
 
 	if not spell_container.is_valid():
-		push_error("[SpellEffectExecutor] spell_container が完全に初期化されていません")
+		GameLogger.error("Spell", "spell_container が完全に初期化されていません")
 		spell_container.debug_print_status()
 		return
 
@@ -171,7 +171,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 
 		# ★ NEW: strategy 作成失敗の詳細ログ
 		if not strategy:
-			push_error("[SpellEffectExecutor] Strategy インスタンス作成失敗: effect_type=%s" % effect_type)
+			GameLogger.error("Spell", "Strategy インスタンス作成失敗: effect_type=%s" % effect_type)
 			return
 
 		# Strategy のコンテキストを構築（直接参照を含める）
@@ -188,7 +188,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			validation_errors.append("spell_curse_stat is null")
 
 		if validation_errors.size() > 0:
-			push_error("[SpellEffectExecutor] spell_container システム初期化不完全: %s" % validation_errors)
+			GameLogger.error("Spell", "spell_container システム初期化不完全: %s" % validation_errors)
 			return
 
 		var context = {
@@ -234,7 +234,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			context_errors.append("board_system is null")
 
 		if context_errors.size() > 0:
-			push_error("[SpellEffectExecutor] context 初期化不完全（effect_type=%s）: %s" % [effect_type, context_errors])
+			GameLogger.error("Spell", "context 初期化不完全（effect_type=%s）: %s" % [effect_type, context_errors])
 			return
 
 		# バリデーション
@@ -251,7 +251,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			return
 		else:
 			# ★ MODIFIED: バリデーション失敗時の詳細ログ
-			push_error("[SpellEffectExecutor] Strategy バリデーション失敗（effect_type=%s）: %s" % [effect_type, context.keys()])
+			GameLogger.error("Spell", "Strategy バリデーション失敗（effect_type=%s）: %s" % [effect_type, context.keys()])
 			# Context の内容をダンプ（デバッグ用）
 			for key in context.keys():
 				var val = context[key]
@@ -265,20 +265,20 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		# ========================================
 		# フォールバック: 未実装の effect_type
 		# ========================================
-		push_error("[SpellEffectExecutor] 未実装の effect_type: %s" % effect_type)
+		GameLogger.error("Spell", "未実装の effect_type: %s" % effect_type)
 
 ## 全クリーチャー対象スペルを実行
 func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
 	var handler = spell_phase_handler
 	if not handler:
-		push_error("[SpellEffectExecutor] handler が未設定")
+		GameLogger.error("Spell", "handler が未設定")
 		return
 
 	# 状態を EXECUTING_EFFECT に遷移（spell_state経由）
 	if handler.spell_state:
 		handler.spell_state.transition_to(SpellStateHandler.State.EXECUTING_EFFECT)
 	else:
-		push_error("[SpellEffectExecutor] spell_state が未設定")
+		GameLogger.error("Spell", "spell_state が未設定")
 		return
 
 	# カメラをロック（効果適用中はドラッグ不可）

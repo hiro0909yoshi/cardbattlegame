@@ -113,11 +113,11 @@ func set_game_stats(p_game_stats) -> void:
 func set_spell_effect_executor_container(container: SpellSystemContainer) -> void:
 	# ★ NEW: null チェック
 	if not container:
-		push_error("[SPH] set_spell_effect_executor_container: container が null です")
+		GameLogger.error("Spell", "set_spell_effect_executor_container: container が null です")
 		return
 
 	if not spell_effect_executor:
-		push_error("[SPH] set_spell_effect_executor_container: spell_effect_executor が null です")
+		GameLogger.error("Spell", "set_spell_effect_executor_container: spell_effect_executor が null です")
 		return
 
 	spell_effect_executor.set_spell_container(container)
@@ -127,10 +127,10 @@ func set_spell_effect_executor_container(container: SpellSystemContainer) -> voi
 		if spell_effect_executor.spell_container.is_valid():
 			pass
 		else:
-			push_warning("[SPH] spell_effect_executor.spell_container は不完全です")
+			GameLogger.warn("Spell", "spell_effect_executor.spell_container は不完全です")
 			spell_effect_executor.spell_container.debug_print_status()
 	else:
-		push_error("[SPH] spell_effect_executor.spell_container が null のままです")
+		GameLogger.error("Spell", "spell_effect_executor.spell_container が null のままです")
 
 ## game_3d参照を設定（TutorialManager取得用）
 func set_game_3d_ref(p_game_3d) -> void:
@@ -145,7 +145,7 @@ func set_battle_status_overlay(overlay) -> void:
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
 	if not spell_state:
-		push_error("[SPH] spell_state が見つかりません")
+		GameLogger.error("Spell", "spell_state が見つかりません")
 		return
 
 	# フェーズ状態をリセット
@@ -177,7 +177,7 @@ func start_spell_phase(player_id: int):
 func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	"""CPU スペルターンを委譲（CPU固有ロジック削除）"""
 	if not cpu_spell_phase_handler:
-		push_error("[SPH] cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
+		GameLogger.error("Spell", "cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
 		return
 
 	await cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
@@ -218,7 +218,7 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 ## 外部スペルを実行（SpellFlowHandler に委譲）
 func execute_external_spell(spell_card: Dictionary, player_id: int, from_magic_tile: bool = false) -> Dictionary:
 	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
+		GameLogger.error("Spell", "spell_flow が初期化されていません")
 		return {"status": "error", "warped": false}
 
 	return await spell_flow.execute_external_spell(spell_card, player_id, from_magic_tile)
@@ -229,7 +229,7 @@ func complete_spell_phase():
 	GameLogger.info("Spell", "スペルフェーズ完了: P%d" % [_player_id_for_log + 1])
 
 	if not spell_state:
-		push_error("[SPH] spell_state が見つかりません")
+		GameLogger.error("Spell", "spell_state が見つかりません")
 		return
 
 	# SpellFlowHandler経由で完了処理（UI整理含む）
@@ -251,7 +251,7 @@ func _is_cpu_player(player_id: int) -> bool:
 ## スペルを使用（SpellFlowHandler に委譲）
 func use_spell(spell_card: Dictionary):
 	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
+		GameLogger.error("Spell", "spell_flow が初期化されていません")
 		return
 	await spell_flow.use_spell(spell_card)
 
@@ -376,7 +376,7 @@ func _get_cpu_battle_policy():
 ## 人間プレイヤー向けスペルフェーズUI初期化（Signal駆動）
 func _initialize_human_player_ui() -> void:
 	if not spell_state:
-		push_error("[SPH] spell_state が見つかりません")
+		GameLogger.error("Spell", "spell_state が見つかりません")
 		return
 
 	# カメラを手動モードに設定（ドラッグ移動・タップ選択を有効化）

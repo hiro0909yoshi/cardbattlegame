@@ -248,7 +248,7 @@ func process_bankruptcy(player_id: int, is_cpu: bool) -> bool:
 		return false
 	
 	if _is_processing:
-		push_warning("[破産処理] 既に処理中です")
+		GameLogger.warn("GFM", "破産処理が既に進行中（check_bankruptcy）")
 		return false
 	
 	_is_processing = true

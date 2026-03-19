@@ -47,7 +47,11 @@ func initialize_spell_mystic_arts() -> void:
 		return  # 既に初期化済み
 
 	if not _board_system or not _player_system or not _card_system:
-		push_error("[MAH] 必要なシステム参照が設定されていません")
+		GameLogger.error("Spell", "MysticArtsHandler: 必要なシステム参照が設定されていません (board=%s player=%s card=%s)" % [
+			"OK" if _board_system else "NULL",
+			"OK" if _player_system else "NULL",
+			"OK" if _card_system else "NULL"
+		])
 		return
 
 	_spell_mystic_arts = SpellMysticArts.new(
@@ -94,14 +98,14 @@ func start_mystic_arts_phase():
 ## CPUがアルカナアーツを実行
 func _execute_cpu_mystic_arts(decision: Dictionary):
 	if not _spell_phase_handler:
-		push_error("[MAH] SpellPhaseHandler が初期化されていません")
+		GameLogger.error("Spell", "MysticArtsHandler: SpellPhaseHandler が初期化されていません")
 		return
 
 	# cpu_spell_phase_handler は GameSystemManager で初期化済み
 	if not _cpu_spell_phase_handler:
 		_cpu_spell_phase_handler = _spell_phase_handler.cpu_spell_phase_handler
 		if not _cpu_spell_phase_handler:
-			push_error("[MAH] cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
+			GameLogger.error("Spell", "MysticArtsHandler: cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
 			return
 
 	var prep = _cpu_spell_phase_handler.prepare_mystic_execution(decision, _spell_phase_handler.spell_state.current_player_id)
@@ -109,7 +113,7 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.pass_spell(false)
 		else:
-			push_error("[MysticArtsHandler] spell_flow が初期化されていません")
+			GameLogger.error("Spell", "MysticArtsHandler: spell_flow が初期化されていません (P%d)" % (_spell_phase_handler.spell_state.current_player_id + 1 if _spell_phase_handler and _spell_phase_handler.spell_state else -1))
 		return
 
 	var mystic = prep.get("mystic", {})
@@ -185,7 +189,7 @@ func _on_mystic_phase_completed():
 	if _spell_phase_handler.spell_flow:
 		_spell_phase_handler.spell_flow.return_to_spell_selection()
 	else:
-		push_error("[MysticArtsHandler] spell_flow が初期化されていません")
+		GameLogger.error("Spell", "MysticArtsHandler: spell_flow が初期化されていません (_on_mystic_phase_completed)")
 
 ## アルカナアーツターゲット選択要求時
 func _on_mystic_target_selection_requested(targets: Array) -> void:
@@ -209,7 +213,7 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
 		_spell_phase_handler.spell_ui_manager._setup_target_selection_navigation()
 	else:
-		push_error("[MAH] spell_ui_manager が初期化されていません")
+		GameLogger.error("Spell", "MysticArtsHandler: spell_ui_manager が初期化されていません (targets=%d)" % targets.size())
 
 	# ターゲット選択画面を表示（削除前の処理を復活）
 	if _spell_phase_handler and _spell_phase_handler.spell_target_selection_handler:

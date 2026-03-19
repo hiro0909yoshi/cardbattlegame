@@ -114,7 +114,7 @@ func initialize_all(p_node: Node, p_count: int, p_is_cpu: Array, debug_mode: boo
 # ゲーム開始
 func start_game() -> void:
 	if not is_initialized:
-		push_error("[GameSystemManager] 初期化されていません")
+		GameLogger.error("Init", "start_game() 呼び出し時に GameSystemManager が初期化されていません")
 		return
 	
 	if game_flow_manager:
@@ -201,7 +201,7 @@ func phase_1_create_systems() -> void:
 # Phase 2: 3D ノード収集
 func phase_2_collect_3d_nodes() -> void:
 	if not parent_node:
-		push_error("[GameSystemManager] parent_node が設定されていません")
+		GameLogger.error("Init", "phase_2_collect_3d_nodes: parent_node が設定されていません")
 		return
 	
 	tiles_container = parent_node.get_node_or_null("Tiles")
@@ -214,13 +214,13 @@ func phase_2_collect_3d_nodes() -> void:
 	if all_found:
 		pass
 	else:
-		push_warning("[GameSystemManager] WARNING: 一部の3Dノードが見つかりません")
+		GameLogger.warn("Init", "phase_2_collect_3d_nodes: 一部の3Dノードが見つかりません")
 		if not tiles_container:
-			push_error("[GameSystemManager] Tiles が見つかりません")
+			GameLogger.error("Init", "phase_2_collect_3d_nodes: Tiles ノードが見つかりません")
 		if not players_container:
-			push_error("[GameSystemManager] Players が見つかりません")
+			GameLogger.error("Init", "phase_2_collect_3d_nodes: Players ノードが見つかりません")
 		if not camera_3d:
-			push_error("[GameSystemManager] Camera3D が見つかりません")
+			GameLogger.error("Init", "phase_2_collect_3d_nodes: Camera3D ノードが見つかりません")
 
 # Phase 3: システム基本設定
 func phase_3_setup_basic_config() -> void:
@@ -590,27 +590,27 @@ func _setup_phase_4_creature_signals() -> void:
 		if not creature_manager.creature_changed.is_connected(board_system_3d._on_creature_changed):
 			creature_manager.creature_changed.connect(board_system_3d._on_creature_changed)
 		else:
-			push_warning("[GameSystemManager] creature_changed は既に接続済み")
+			GameLogger.warn("Init", "phase_5: creature_changed → BoardSystem3D は既に接続済み")
 	else:
-		push_error("[GameSystemManager] creature_manager または board_system_3d が null")
+		GameLogger.error("Init", "phase_5: CreatureManager または BoardSystem3D が null です。board_system_3d=%s" % [board_system_3d != null])
 
 	# Day 3 追加: BoardSystem3D → GameFlowManager
 	if board_system_3d and game_flow_manager:
 		if not board_system_3d.creature_updated.is_connected(game_flow_manager._on_creature_updated_from_board):
 			board_system_3d.creature_updated.connect(game_flow_manager._on_creature_updated_from_board)
 		else:
-			push_warning("[GameSystemManager] creature_updated → GFM は既に接続済み")
+			GameLogger.warn("Init", "phase_5: creature_updated → GameFlowManager は既に接続済み")
 	else:
-		push_error("[GameSystemManager] board_system_3d または game_flow_manager が null")
+		GameLogger.error("Init", "phase_5: BoardSystem3D または GameFlowManager が null です。board_system_3d=%s, game_flow_manager=%s" % [board_system_3d != null, game_flow_manager != null])
 
 	# Day 3 追加: GameFlowManager → UIManager
 	if game_flow_manager and ui_manager:
 		if not game_flow_manager.creature_updated_relay.is_connected(ui_manager.on_creature_updated):
 			game_flow_manager.creature_updated_relay.connect(ui_manager.on_creature_updated)
 		else:
-			push_warning("[GameSystemManager] creature_updated_relay → UI は既に接続済み")
+			GameLogger.warn("Init", "phase_5: creature_updated_relay → UIManager は既に接続済み")
 	else:
-		push_error("[GameSystemManager] game_flow_manager または ui_manager が null")
+		GameLogger.error("Init", "phase_5: GameFlowManager または UIManager が null です。game_flow_manager=%s, ui_manager=%s" % [game_flow_manager != null, ui_manager != null])
 
 ## LapSystem初期化
 func _setup_lap_system() -> void:
@@ -645,7 +645,7 @@ func _setup_lap_system() -> void:
 ## スペルシステム初期化
 func _setup_spell_systems() -> void:
 	if not card_system or not player_system:
-		push_error("[GameSystemManager] CardSystem/PlayerSystemが初期化されていません")
+		GameLogger.error("Init", "_setup_spell_systems: CardSystem または PlayerSystem が初期化されていません。card_system=%s, player_system=%s" % [card_system != null, player_system != null])
 		return
 
 	# === Step 1: SpellSystemContainer を作成 ===
@@ -666,7 +666,7 @@ func _setup_spell_systems() -> void:
 	# CreatureManager取得
 	var creature_manager = board_system_3d.get_node_or_null("CreatureManager") if board_system_3d else null
 	if not creature_manager:
-		push_error("[GameSystemManager] CreatureManagerが見つかりません")
+		GameLogger.error("Init", "_setup_spell_systems: CreatureManager が BoardSystem3D 内に見つかりません")
 		return
 
 	# SpellLand
@@ -723,7 +723,7 @@ func _setup_spell_systems() -> void:
 
 	# ★ NEW: 初期化検証
 	if not spell_container.is_valid():
-		push_error("[GameSystemManager] spell_container が完全に初期化されていません")
+		GameLogger.error("Init", "_setup_spell_systems: SpellSystemContainer が完全に初期化されていません")
 		spell_container.debug_print_status()
 		return
 	else:
@@ -1007,23 +1007,23 @@ func _initialize_phase1a_handlers() -> void:
 
 	# ★ NEW: スペルシステム初期化検証
 	if not game_flow_manager or not game_flow_manager.spell_container:
-		push_error("[GameSystemManager] game_flow_manager または spell_container が null です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: GameFlowManager または SpellSystemContainer が null です。game_flow_manager=%s, spell_container=%s" % [game_flow_manager != null, (game_flow_manager.spell_container if game_flow_manager else null) != null])
 		return
 	if not game_flow_manager.spell_container.is_valid():
-		push_error("[GameSystemManager] spell_container: コアシステムが不完全です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: SpellSystemContainer のコアシステムが不完全です")
 		game_flow_manager.spell_container.debug_print_status()
 		return
 
 	if not spell_phase_handler or not spell_phase_handler.spell_effect_executor:
-		push_error("[GameSystemManager] spell_phase_handler.spell_effect_executor が未設定です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: SpellPhaseHandler または spell_effect_executor が未設定です。spell_phase_handler=%s, executor=%s" % [spell_phase_handler != null, (spell_phase_handler.spell_effect_executor if spell_phase_handler else null) != null])
 		return
 
 	if not spell_phase_handler.spell_effect_executor.spell_container:
-		push_error("[GameSystemManager] spell_effect_executor.spell_container が null です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: spell_effect_executor の SpellSystemContainer が null です")
 		return
 
 	if not spell_phase_handler.spell_effect_executor.spell_container.is_valid():
-		push_error("[GameSystemManager] spell_effect_executor.spell_container: 無効です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: spell_effect_executor の SpellSystemContainer が無効です")
 		return
 
 
@@ -1040,11 +1040,11 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	- CPU AI context
 	"""
 	if not spell_phase_handler or not p_game_flow_manager:
-		push_error("[GameSystemManager] spell_phase_handler または p_game_flow_manager が null です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: SpellPhaseHandler または GameFlowManager が null です。spell_phase_handler=%s, game_flow_manager=%s" % [spell_phase_handler != null, p_game_flow_manager != null])
 		return
 
 	if not board_system_3d:
-		push_error("[GameSystemManager] board_system_3d が null です")
+		GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: BoardSystem3D が null です")
 		return
 
 	# === SpellPhaseHandler 子システムを直接初期化 ===
@@ -1059,7 +1059,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if spell_phase_handler.board_system:
 		spell_phase_handler.creature_manager = spell_phase_handler.board_system.get_node_or_null("CreatureManager")
 		if not spell_phase_handler.creature_manager:
-			push_error("[GameSystemManager] CreatureManager が見つかりません")
+			GameLogger.error("Init", "_inject_spell_container_into_phase_handlers: CreatureManager が BoardSystem3D 内に見つかりません")
 
 	if p_game_flow_manager and p_game_flow_manager.target_selection_helper:
 		spell_phase_handler.target_selection_helper = p_game_flow_manager.target_selection_helper
@@ -1291,7 +1291,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 ## CPUSpellPhaseHandler 初期化
 func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
 	if not spell_phase_handler:
-		push_error("[GameSystemManager] spell_phase_handler が null です")
+		GameLogger.error("Init", "_initialize_cpu_spell_phase_handler: spell_phase_handler が null です")
 		return
 
 	if not cpu_spell_phase_handler:
@@ -1481,7 +1481,7 @@ func _initialize_cpu_spell_ai_container() -> void:
 		if cpu_spell_ai_container.is_valid():
 			systems["CPUSpellAIContainer"] = cpu_spell_ai_container
 		else:
-			push_error("[CPUSpellAIContainer] 初期化失敗")
+			GameLogger.error("Init", "phase_1_create_systems: CPUSpellAIContainer の初期化に失敗しました")
 
 ## CPU バトルポリシー取得
 func _get_cpu_battle_policy():
@@ -1505,7 +1505,7 @@ func _get_cpu_battle_policy():
 ## Phase 6-B: DicePhaseHandler UI Signal接続
 func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
 	if not dice_handler or not p_ui_manager:
-		push_error("[GSM] DicePhaseHandler または UIManager が null です")
+		GameLogger.error("Init", "_connect_dice_phase_signals: DicePhaseHandler または UIManager が null です。dice_handler=%s, ui_manager=%s" % [dice_handler != null, p_ui_manager != null])
 		return
 
 	if not dice_handler.dice_ui_big_result_requested.is_connected(p_ui_manager.show_big_dice_result):
@@ -1532,7 +1532,7 @@ func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
 ## Phase 6-C: TollPaymentHandler UI Signal接続
 func _connect_toll_payment_signals(toll_handler, p_ui_manager) -> void:
 	if not toll_handler or not p_ui_manager:
-		push_error("[GSM] TollPaymentHandler または UIManager が null です")
+		GameLogger.error("Init", "_connect_toll_payment_signals: TollPaymentHandler または UIManager が null です。toll_handler=%s, ui_manager=%s" % [toll_handler != null, p_ui_manager != null])
 		return
 
 	toll_handler.toll_ui_comment_and_wait_requested.connect(
@@ -1545,7 +1545,7 @@ func _connect_toll_payment_signals(toll_handler, p_ui_manager) -> void:
 ## Phase 6-C: DiscardHandler UI Signal接続
 func _connect_discard_signals(discard_handler, p_ui_manager, p_player_system) -> void:
 	if not discard_handler or not p_ui_manager:
-		push_error("[GSM] DiscardHandler または UIManager が null です")
+		GameLogger.error("Init", "_connect_discard_signals: DiscardHandler または UIManager が null です。discard_handler=%s, ui_manager=%s" % [discard_handler != null, p_ui_manager != null])
 		return
 
 	discard_handler.discard_ui_prompt_requested.connect(
@@ -1566,7 +1566,7 @@ func _connect_discard_signals(discard_handler, p_ui_manager, p_player_system) ->
 ## Phase 6-C: BankruptcyHandler UI Signal接続 + Phase 8-C: パネル分離
 func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 	if not bankruptcy_handler_ref or not p_ui_manager:
-		push_error("[GSM] BankruptcyHandler または UIManager が null です")
+		GameLogger.error("Init", "_connect_bankruptcy_signals: BankruptcyHandler または UIManager が null です。bankruptcy_handler=%s, ui_manager=%s" % [bankruptcy_handler_ref != null, p_ui_manager != null])
 		return
 
 	bankruptcy_handler_ref.bankruptcy_ui_comment_and_wait_requested.connect(
@@ -1595,12 +1595,12 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 		if not bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.is_connected(bankruptcy_info_panel_ui.hide_panel):
 			bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.connect(bankruptcy_info_panel_ui.hide_panel)
 	else:
-		push_warning("[GSM] ui_layer が利用できません - BankruptcyInfoPanelUI を作成できません")
+		GameLogger.warn("Init", "_connect_bankruptcy_signals: ui_layer が利用できません - BankruptcyInfoPanelUI を作成できません")
 
 ## Phase 8-A: ItemPhaseHandler UI Signal接続
 func _connect_item_phase_signals(item_handler, p_ui_manager) -> void:
 	if not item_handler or not p_ui_manager:
-		push_error("[GSM] ItemPhaseHandler または UIManager が null です")
+		GameLogger.error("Init", "_connect_item_phase_signals: ItemPhaseHandler または UIManager が null です。item_handler=%s, ui_manager=%s" % [item_handler != null, p_ui_manager != null])
 		return
 
 	# フィルター設定 → UIManager のフィルター変数を設定
@@ -1766,7 +1766,7 @@ func _on_hand_card_tapped(card_index: int) -> void:
 ## UIManager経由アクセスを除去し、各消費者に直接参照を注入
 func _inject_tap_target_manager() -> void:
 	if not ui_manager or not ui_manager.tap_target_manager:
-		push_warning("[GameSystemManager] TapTargetManager が初期化されていません")
+		GameLogger.warn("Init", "_inject_tap_target_manager: TapTargetManager が初期化されていません。ui_manager=%s, tap_target_manager=%s" % [ui_manager != null, (ui_manager.tap_target_manager if ui_manager else null) != null])
 		return
 
 	var ttm = ui_manager.tap_target_manager

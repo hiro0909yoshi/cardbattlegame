@@ -638,7 +638,7 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> 
 		return await _spell_target_selection_handler.show_target_selection_ui(target_type, target_info)
 
 	# フォールバック（ハンドラーがない場合）
-	push_error("[SpellFlowHandler] spell_target_selection_handler が初期化されていません")
+	GameLogger.error("Spell", "SpellFlowHandler: spell_target_selection_handler が初期化されていません (target_type=%s)" % target_type)
 	return false
 
 ## 対象選択フェーズを抜けるときの共通処理
@@ -646,35 +646,35 @@ func _exit_target_selection_phase():
 	if _spell_target_selection_handler:
 		_spell_target_selection_handler._exit_target_selection_phase()
 	else:
-		push_error("[SpellFlowHandler] spell_target_selection_handler が初期化されていません")
+		GameLogger.error("Spell", "SpellFlowHandler: spell_target_selection_handler が初期化されていません (_exit_target_selection_phase)")
 
 ## スペルフェーズUIを更新
 func _update_spell_phase_ui():
 	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
 		_spell_phase_handler.spell_ui_manager.update_spell_phase_ui()
 	else:
-		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
+		GameLogger.error("Spell", "SpellFlowHandler: spell_ui_manager が初期化されていません (_update_spell_phase_ui)")
 
 ## スペル選択UIを表示
 func _show_spell_selection_ui(_hand_data: Array, _available_magic: int):
 	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
 		_spell_phase_handler.spell_ui_manager.show_spell_selection_ui(_hand_data, _available_magic)
 	else:
-		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
+		GameLogger.error("Spell", "SpellFlowHandler: spell_ui_manager が初期化されていません (_show_spell_selection_ui hand=%d magic=%d)" % [_hand_data.size(), _available_magic])
 
 ## スペルフェーズ開始時にボタンを表示
 func _show_spell_phase_buttons():
 	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
 		_spell_phase_handler.spell_ui_manager.show_spell_phase_buttons()
 	else:
-		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
+		GameLogger.error("Spell", "SpellFlowHandler: spell_ui_manager が初期化されていません (_show_spell_phase_buttons)")
 
 ## スペルフェーズ終了時にボタンを非表示
 func _hide_spell_phase_buttons():
 	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
 		_spell_phase_handler.spell_ui_manager.hide_spell_phase_buttons()
 	else:
-		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
+		GameLogger.error("Spell", "SpellFlowHandler: spell_ui_manager が初期化されていません (_hide_spell_phase_buttons)")
 
 ## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
 func _setup_spell_selection_navigation():

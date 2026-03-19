@@ -45,7 +45,8 @@ func inject_callbacks(
 	change_phase_cb: Callable,
 ) -> void:
 	_change_phase_cb = change_phase_cb
-	assert(_change_phase_cb.is_valid(), "[DPH] change_phase_cb must be valid")
+	if not _change_phase_cb.is_valid():
+		GameLogger.error("Spell", "change_phase_cb is not valid in DicePhaseHandler.inject_callbacks")
 
 # メインメソッド（GFMのroll_dice()の中身をそのまま移動）
 # spell_phase_handler: SpellPhaseHandler型（スペルフェーズ処理用）
@@ -59,7 +60,7 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 			spell_phase_handler.spell_flow.pass_spell(false)  # auto_roll=false（ここで既にroll_dice中なので）
 			# フェーズ完了を待つ必要はない（pass_spellが即座に完了する）
 		else:
-			push_error("[DicePhaseHandler] spell_flow が初期化されていません")
+			GameLogger.error("Spell", "DicePhaseHandler: spell_flow が初期化されていません")
 
 	if current_phase != GamePhase.DICE_ROLL:
 		return
