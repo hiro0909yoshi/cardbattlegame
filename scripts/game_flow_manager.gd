@@ -237,7 +237,6 @@ func start_game():
 	# 全プレイヤーに方向選択権を付与（ゲームスタート時）
 	for player in player_system.players:
 		player.buffs["direction_choice_pending"] = true
-		print("[GameFlowManager] プレイヤー%d: スタート時方向選択権付与" % (player.id + 1))
 
 	change_phase(GamePhase.DICE_ROLL)
 	start_turn()
