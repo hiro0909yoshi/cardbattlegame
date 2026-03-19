@@ -44,7 +44,14 @@
 - ✅ 6コミットに機能単位で分割
 - 📋 詳細: `docs/progress/push_error_migration.md`
 
+#### null参照ガード強化（着手）
+- ✅ スペル系の調査完了: 49箇所のリスク特定（Critical 31 + Moderate 18）
+- ✅ spell_effect_executor: 早期return時の完了シグナル保証（spell_used + complete_spell_phase）
+- ✅ spell_flow_handler: current_player null チェック追加
+- 🔄 残り: スペル系 Critical ~28箇所 → アルカナアーツ → ドミニオ → バトル → 召喚
+
 ### 📋 次のステップ
 
-- null参照ガード強化（落ちずにゲーム続行 + GameLogger.error()）
+- null参照ガード: スペル系の残り Critical 箇所（spell_land, spell_mystic_arts, spell_target_selection_handler 等）
+- null参照ガード: async関数の完了シグナル保証パターンの横展開
 - 自動テスト（GUT フレームワーク導入）
