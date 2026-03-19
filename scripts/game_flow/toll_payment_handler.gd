@@ -55,6 +55,9 @@ func check_and_pay_toll_on_enemy_land() -> void:
 	if receiver_id >= 0 and receiver_id < player_system.players.size():
 		player_system.pay_toll(current_player_index, receiver_id, main_toll)
 		print("[敵地支払い] 通行料 ", main_toll, "EP を支払いました (受取: プレイヤー", receiver_id + 1, ")")
+		var remaining_ep = player_system.players[current_player_index].magic_power if current_player_index < player_system.players.size() else 0
+		var tile_level = tile_info.get("level", 1)
+		GameLogger.info("Toll", "通行料: P%d → P%d %dEP (タイル%d Lv%d 残EP:%d)" % [current_player_index + 1, receiver_id + 1, main_toll, current_tile_index, tile_level, remaining_ep])
 
 		# 通行料支払いコメント表示
 		if main_toll > 0:

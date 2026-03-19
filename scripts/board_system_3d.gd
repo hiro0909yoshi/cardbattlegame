@@ -595,6 +595,8 @@ func _on_invasion_completed(success: bool, tile_index: int):
 	invasion_completed.emit(success, tile_index)
 
 func _on_movement_completed(player_id: int, final_tile: int):
+	GameLogger.info("Move", "移動完了: P%d → タイル%d" % [player_id + 1, final_tile])
+
 	# リレー emit（Phase 2: GameFlowManager へ通知）
 	movement_completed.emit(player_id, final_tile)
 

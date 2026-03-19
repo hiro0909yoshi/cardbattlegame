@@ -22,7 +22,7 @@ func _init():
 func initialize(phase_enum) -> void:
 	game_phase_enum = phase_enum
 	current_state = phase_enum.SETUP
-	print("[StateMachine] Initialized with SETUP state")
+	GameLogger.info("SM", "StateMachine 初期化完了")
 
 ## Setup the valid transition whitelist
 func _setup_transition_whitelist() -> void:
@@ -63,6 +63,7 @@ func _setup_transition_whitelist() -> void:
 ## Attempt transition to new state
 func transition_to(new_state) -> bool:
 	if game_phase_enum == null:
+		GameLogger.error("SM", "フェーズ遷移: game_phase_enum 未初期化")
 		push_error("[StateMachine] game_phase_enum not initialized")
 		return false
 
@@ -71,12 +72,13 @@ func transition_to(new_state) -> bool:
 
 	# Check if transition is valid
 	if not _is_valid_transition(current_state, new_state):
+		GameLogger.error("SM", "不正遷移: %s -> %s" % [current_state_name, new_state_name])
 		push_error("[StateMachine] Invalid transition: %s -> %s" % [current_state_name, new_state_name])
 		return false
 
 	# Perform transition
 	current_state = new_state
-	print("[StateMachine] Transition: %s -> %s" % [current_state_name, new_state_name])
+	GameLogger.info("SM", "フェーズ遷移: %s -> %s" % [current_state_name, new_state_name])
 	emit_signal("state_changed", new_state)
 	return true
 

@@ -32,10 +32,17 @@ func _ready() -> void:
 ## バトルを開始
 func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_data = null):
 	if _is_battle_active:
+		GameLogger.warn("BattleUI", "重複検出: バトルが既にアクティブです")
 		push_warning("BattleScreenManager: バトルが既にアクティブです")
 		return
 	
 	_is_battle_active = true
+
+	var atk_name = attacker_data.get("name", "?")
+	var atk_id = attacker_data.get("id", -1)
+	var def_name = defender_data.get("name", "?")
+	var def_id = defender_data.get("id", -1)
+	GameLogger.info("BattleUI", "開始: %s(id:%d) vs %s(id:%d)" % [atk_name, atk_id, def_name, def_id])
 
 	# トランジション（フェードアウト）
 	await _transition_layer.fade_out(true)
@@ -43,6 +50,7 @@ func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_da
 	# Object Pool からバトル画面を取得
 	_battle_screen = _battle_screen_pool.get_instance()
 	if not _battle_screen:
+		GameLogger.error("BattleUI", "BattleScreen取得失敗: pool empty")
 		push_error("[BattleScreenManager] BattleScreen インスタンスが取得できません")
 		_is_battle_active = false
 		return
@@ -180,7 +188,8 @@ func close_battle_screen():
 
 	# トランジション（フェードイン）
 	await _transition_layer.quick_fade_in()
-	
+
+	GameLogger.info("BattleUI", "終了")
 	_is_battle_active = false
 	battle_screen_closed.emit()
 

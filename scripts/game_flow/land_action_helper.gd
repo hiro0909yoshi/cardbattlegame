@@ -359,7 +359,11 @@ static func confirm_move(handler, dest_tile_index: int):
 	
 	# 2. 移動先の状況を確認
 	var dest_owner = dest_tile.owner_id
-	
+
+	# 敵地への移動侵略ログ
+	if dest_owner != -1 and dest_owner != current_player_index:
+		GameLogger.info("Dominio", "移動侵略: P%d タイル%d → タイル%d %s(id:%d)" % [current_player_index + 1, handler.move_source_tile, dest_tile_index, creature_data.get("name", "?"), creature_data.get("id", -1)])
+
 	if dest_owner == -1:
 		# 空き地の場合: 土地を獲得してクリーチャー配置
 		

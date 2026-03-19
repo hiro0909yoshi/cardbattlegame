@@ -152,6 +152,14 @@ func start_spell_phase(player_id: int):
 	spell_state.reset_turn_state()
 	spell_state.set_current_player_id(player_id)
 
+	var spell_count := 0
+	if card_system:
+		var hand = card_system.get_all_cards_for_player(player_id)
+		for c in hand:
+			if c.get("type", "") == "spell":
+				spell_count += 1
+	GameLogger.info("Spell", "スペルフェーズ開始: P%d 手札スペル%d枚" % [player_id + 1, spell_count])
+
 	# スペルフェーズの初期状態に遷移（reset_turn_state() は INACTIVE に設定するため）
 	spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
 
@@ -217,6 +225,9 @@ func execute_external_spell(spell_card: Dictionary, player_id: int, from_magic_t
 
 ## スペルフェーズ完了
 func complete_spell_phase():
+	var _player_id_for_log = spell_state.current_player_id if spell_state else -1
+	GameLogger.info("Spell", "スペルフェーズ完了: P%d" % [_player_id_for_log + 1])
+
 	if not spell_state:
 		push_error("[SPH] spell_state が見つかりません")
 		return

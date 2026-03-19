@@ -72,6 +72,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	# 配置可能タイルかチェック
 	if tile and not tile.can_place_creature():
 		print("[TileSummonExecutor] このタイルには配置できません: %s" % tile.tile_type)
+		GameLogger.warn("Summon", "召喚失敗: P%d %s(id:%d) → 配置不可 (タイル%d)" % [current_player_index + 1, card_data.get("name", "?"), card_data.get("id", -1), target_tile])
 		if _message_service:
 			_message_service.show_toast("このタイルには配置できません")
 		complete_callback.call()
@@ -83,6 +84,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		var tile_info = board_system.get_tile_info(target_tile)
 		if tile_info["owner"] != -1:
 			print("[TileSummonExecutor] 堅守クリーチャーは空き地にのみ召喚できます")
+			GameLogger.warn("Summon", "召喚失敗: P%d %s(id:%d) → 堅守は空き地のみ (タイル%d)" % [current_player_index + 1, card_data.get("name", "?"), card_data.get("id", -1), target_tile])
 			if _message_service:
 				_message_service.show_toast("堅守は空き地にのみ召喚可能です")
 			complete_callback.call()
@@ -93,6 +95,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		var check_result = SummonConditionChecker.check_lands_required(card_data, current_player_index, board_system)
 		if not check_result.passed:
 			print("[TileSummonExecutor] 土地条件未達: %s" % check_result.message)
+			GameLogger.warn("Summon", "召喚失敗: P%d %s(id:%d) → 土地条件未達 (タイル%d)" % [current_player_index + 1, card_data.get("name", "?"), card_data.get("id", -1), target_tile])
 			if _message_service:
 				_message_service.show_toast(check_result.message)
 			complete_callback.call()
@@ -104,6 +107,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		var cannot_result = SummonConditionChecker.check_cannot_summon(card_data, tile_element_for_check)
 		if not cannot_result.passed:
 			print("[TileSummonExecutor] 配置制限: %s" % cannot_result.message)
+			GameLogger.warn("Summon", "召喚失敗: P%d %s(id:%d) → 配置制限 (タイル%d)" % [current_player_index + 1, card_data.get("name", "?"), card_data.get("id", -1), target_tile])
 			if _message_service:
 				_message_service.show_toast(cannot_result.message)
 			complete_callback.call()
@@ -169,6 +173,10 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 			print("遠隔召喚成功！タイル%dを取得しました" % target_tile)
 		else:
 			print("召喚成功！土地を取得しました")
+		var creature_name = card_data.get("name", "?")
+		var creature_id = card_data.get("id", -1)
+		var element = tile.tile_type if tile and "tile_type" in tile else "?"
+		GameLogger.info("Summon", "召喚: P%d %s(id:%d) → タイル%d (%s) コスト:%dEP" % [current_player_index + 1, creature_name, creature_id, target_tile, element, cost])
 
 		# UI更新
 		if _card_selection_service:
@@ -178,6 +186,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		complete_callback.call()
 	else:
 		print("EP不足で召喚できません")
+		GameLogger.warn("Summon", "召喚失敗: P%d %s(id:%d) → EP不足 (タイル%d, 必要:%dEP)" % [current_player_index + 1, card_data.get("name", "?"), card_data.get("id", -1), target_tile, cost])
 		if _message_service:
 			_message_service.show_toast("EPが足りません（必要: %dEP）" % cost)
 		show_summon_ui_callback.call()

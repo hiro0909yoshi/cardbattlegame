@@ -232,6 +232,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	if player_system:
 		player_system.add_magic(player_id, checkpoint_bonus)
 		print("[シグナル取得] プレイヤー%d: %s EP+%d" % [player_id + 1, checkpoint_type, checkpoint_bonus])
+		GameLogger.info("Lap", "チェックポイント通過: P%d %s EP+%d" % [player_id + 1, checkpoint_type, checkpoint_bonus])
 	
 	# シグナル発行
 	checkpoint_signal_obtained.emit(player_id, checkpoint_type)
@@ -325,6 +326,7 @@ func _check_win_condition(player_id: int) -> bool:
 	
 	if total_assets >= target_magic:
 		print("🎉 プレイヤー%d 勝利条件達成！ TEP: %d / %d 🎉" % [player_id + 1, total_assets, target_magic])
+		GameLogger.info("Game", "勝利: P%d TEP:%d (目標:%d)" % [player_id + 1, total_assets, target_magic])
 		player_system.emit_signal("player_won", player_id)
 		return true
 	
@@ -349,6 +351,7 @@ func complete_lap(player_id: int):
 	# 周回数をインクリメント
 	player_lap_state[player_id]["lap_count"] += 1
 	print("[周回完了] プレイヤー%d 周回数: %d → %d" % [player_id + 1, current_lap, player_lap_state[player_id]["lap_count"]])
+	GameLogger.info("Lap", "周回完了: P%d %d周目 ダウン全解除+HP回復" % [player_id + 1, current_lap])
 	
 	# フラグをリセット
 	for checkpoint in required_checkpoints:

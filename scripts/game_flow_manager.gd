@@ -226,6 +226,7 @@ func _on_state_changed(new_phase: int) -> void:
 # ゲーム開始
 func start_game():
 	print("=== ゲーム開始 ===")
+	GameLogger.info("Game", "ゲーム開始: %d人" % player_system.players.size())
 
 	# State Machineの初期化（ゲーム開始時に実施）
 	_init_state_machine()
@@ -244,6 +245,7 @@ func start_game():
 # ターン開始
 func start_turn():
 	var current_player = player_system.get_current_player()
+	GameLogger.info("GFM", "ターン開始: P%d, ラウンド%d" % [current_player.id + 1, current_turn_number])
 
 	# ターン開始時に順番アイコンを即座に更新（最初に呼ぶ）
 	emit_signal("turn_started", current_player.id)
@@ -463,6 +465,7 @@ func end_turn():
 	
 	var current_player = player_system.get_current_player()
 	print("ターン終了: プレイヤー", current_player.id + 1)
+	GameLogger.info("GFM", "ターン終了: P%d, ラウンド%d" % [current_player.id + 1, current_turn_number])
 
 	# 手札調整が必要かチェック
 	if discard_handler and discard_handler.has_method("check_and_discard_excess_cards"):
@@ -581,7 +584,11 @@ func check_and_handle_bankruptcy():
 	
 	# CPUかどうか判定
 	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index]
-	
+
+	# Logger埋め込み
+	var player_ep = player_system.players[current_player_index].magic_power if current_player_index < player_system.players.size() else 0
+	GameLogger.warn("Game", "破産: P%d EP:%d" % [current_player_index + 1, player_ep])
+
 	# 破産処理実行
 	await bankruptcy_handler.process_bankruptcy(current_player_index, is_cpu)
 

@@ -55,6 +55,11 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 		caster_name = handler.player_system.players[current_player_id].name
 	await handler.show_spell_cast_notification(caster_name, target_data, spell_card, false)
 
+	var spell_name = spell_card.get("name", "?")
+	var spell_id = spell_card.get("id", -1)
+	var current_player_id_log = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
+	GameLogger.info("Spell", "効果実行開始: P%d %s(id:%d)" % [current_player_id_log + 1, spell_name, spell_id])
+
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
@@ -92,6 +97,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 		pass
 	elif is_external_mode:
 		pass
+
+	GameLogger.info("Spell", "効果完了: P%d %s(id:%d) result=%s" % [current_player_id_log + 1, spell_name, spell_id, "success"])
 
 	# 効果発動完了
 	handler.spell_used.emit(spell_card)

@@ -105,6 +105,8 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	# バフによるダイス変更を適用
 	var modified_dice = player_buff_system.modify_dice_roll(total_dice, player_system.current_player_index)
 
+	GameLogger.info("Dice", "ダイス: P%d 出目%d (修正後:%d)" % [player_system.current_player_index + 1, total_dice, modified_dice])
+
 	# ダイス結果を大きく表示（1.5秒）
 	dice_ui_big_result_requested.emit(modified_dice, 1.5)
 

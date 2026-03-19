@@ -121,6 +121,11 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 	# 注意: コストはspell_mystic_arts.execute_mystic_art()内で支払われる
 	# ここで先に支払うと、can_cast_mystic_artで失敗した場合にコストが戻らない
 
+	var arts_name = mystic_data.get("name", "?")
+	var arts_id = mystic_data.get("id", -1)
+	var _cpu_player_id = _spell_phase_handler.spell_state.current_player_id if _spell_phase_handler and _spell_phase_handler.spell_state else -1
+	GameLogger.info("Spell", "アーツ効果実行: CPU P%d %s(id:%d)" % [_cpu_player_id + 1, arts_name, arts_id])
+
 	# 発動通知表示
 	if _spell_phase_handler.spell_cast_notification_ui:
 		var caster_name = creature_info.get("creature_data", {}).get("name", "クリーチャー")
