@@ -55,8 +55,14 @@ func _write_log(level: LogLevel, tag: String, message: String) -> void:
 	var level_str := _LEVEL_LABELS[level]
 	var line := "[%s] [%-5s] [%-10s] %s" % [timestamp, level_str, tag, message]
 
-	# コンソール出力
-	print(line)
+	# コンソール出力（レベル別: ERROR/WARN は Godot Errors タブにも表示）
+	match level:
+		LogLevel.ERROR:
+			push_error(line)
+		LogLevel.WARN:
+			push_warning(line)
+		_:
+			print(line)
 
 	# ファイル出力
 	if _log_file:
