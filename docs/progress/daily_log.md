@@ -35,8 +35,16 @@
 - ✅ `movement_warp_handler.gd` 1箇所: 通過型ワープログ（STEP 1で追加済み）
 - ✅ 動作確認済み: ワープ発動時にログ正常出力（停止型ワープ + ワープアニメーション）
 
+#### push_error/push_warning → GameLogger 変換（STEP 2）
+- ✅ `logger.gd` 改修: error→push_error, warn→push_warning でエディタErrors タブ連携
+- ✅ 67ファイル271箇所を GameLogger.error() / GameLogger.warn() に変換
+  - 全件カテゴリ付き（Init, Spell, Battle, Board, Card, CPU 等15カテゴリ）
+  - ERROR は状況付き必須ルール（player_id, tile_idx, spell_id 等）
+- ✅ 抽象メソッド3件は push_error 維持（spell_strategy.gd, skill_effect_base.gd）
+- ✅ 6コミットに機能単位で分割
+- 📋 詳細: `docs/progress/push_error_migration.md`
+
 ### 📋 次のステップ
 
-- push_error/push_warning → GameLogger 変換（286件、カテゴリ別にケースバイケース）
 - null参照ガード強化（落ちずにゲーム続行 + GameLogger.error()）
 - 自動テスト（GUT フレームワーク導入）
