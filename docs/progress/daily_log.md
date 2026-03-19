@@ -12,39 +12,24 @@
 
 ---
 
-## 2026年3月17日（Session: ソロバトル準備画面完成 + バトル背景統一）
+## 2026年3月19日（Session: GameLoggerシステム導入）
 
 ### 完了した作業
 
-#### ソロバトル準備画面 背景・UI微調整
-- ✅ CastleEnvironment 3Dレンダリング背景を追加（SubViewport経由）
-- ✅ パネル半透明化、ライト強化、オーバーレイ調整で背景の視認性向上
-- ✅ SpinBoxの上下ボタンを横並び正方形▲▼ボタンに置き換え
-- ✅ 最大ターン 0 の場合「∞」マーク表示
-- ✅ プリセット変更時に目標TEP・最大ターンも連動更新
-- ✅ プリセットのドロップダウン・対戦開始ボタンのフォント調整
-
-#### バトル画面 背景統一
-- ✅ Main.tscn の GridMap 背景を CastleEnvironment + 空（Sky）に置き換え
-- ✅ クエストモードと同じ城壁環境をバトル画面でも使用
-
-#### 勝利条件・画面遷移修正
-- ✅ `win_conditions.conditions[]` 配列から target を正しく取得するよう修正
-- ✅ `game_3d.gd` で `set_stage_data()` 呼び出し追加（遷移先判定用）
-- ✅ ソロバトル終了後に SoloBattleSetup.tscn へ戻る遷移を追加
-- ✅ 敗北時もソロバトル準備画面へ戻る対応
-
-#### コーディング規約準拠
-- ✅ `BaseEnvironment` に `setup_with_fixed_size()` 公開メソッド追加（private アクセス解消）
-
-#### プリセット値更新
-- ✅ standard: 初期EP 300, 最大ターン ∞, 目標TEP 8000
-- ✅ quick: 初期EP 2000, 最大ターン 30, 目標TEP 4000
-- ✅ elimination: 初期EP 1000, 最大ターン ∞
-- ✅ territory: 初期EP 1000, 最大ターン 50, 目標TEP 10
+#### GameLogger Autoload 導入（STEP 1）
+- ✅ `scripts/autoload/logger.gd` 作成（ファイル書き込み + コンソール出力、毎行flush）
+- ✅ `project.godot` に GameLogger Autoload 登録（`Logger` は Godot 4.5 組み込みクラス名と衝突するため `GameLogger` に変更）
+- ✅ 13ファイル31箇所にログ埋め込み
+  - フェーズ遷移（SM）、ターン開始/終了（GFM）、ダイス結果（Dice）
+  - 移動完了（Move）、スペルフェーズ開始/完了（Spell）、効果実行（Spell）
+  - アーツ実行（Spell）、バトルUI開始/終了/異常（BattleUI）
+  - 召喚成功/失敗（Summon）、ドミニオコマンド/移動侵略（Dominio）
+  - 通行料（Toll）、チェックポイント/周回完了/勝利（Lap/Game）、破産（Game）
+- ✅ 設計ドキュメント `docs/design/logger_system.md` 更新（GameLogger名前変更反映）
+- ✅ 動作確認済み: ログファイル `user://logs/game_YYYYMMDD_HHMMSS.log` に正常出力
 
 ### 📋 次のステップ
 
-- ブックプレビュー実装（プレースホルダーボックスは作成済み）
-- クリア状況によるキャラクター・マップの解放管理（後日対応）
-- itch.io に web_build.zip をアップロード
+- push_error/push_warning → GameLogger 変換（286件、カテゴリ別にケースバイケース）
+- null参照ガード強化（落ちずにゲーム続行 + GameLogger.error()）
+- 自動テスト（GUT フレームワーク導入）
