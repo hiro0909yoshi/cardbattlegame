@@ -176,12 +176,12 @@ func handle_checkpoint_tile(player_id: int):
 func handle_warp_stop_tile(tile_index: int, player_id: int):
 	var warp_pair = get_warp_pair(tile_index)
 	if warp_pair == -1 or warp_pair == tile_index:
-		print("停止型ワープ: ワープ先なし")
+		GameLogger.info("Move", "停止型ワープ: タイル%d ワープ先なし" % tile_index)
 		# 共通UI設定
 		_show_special_tile_landing_ui(player_id)
 		return
 	
-	print("停止型ワープ発動！ タイル%d → タイル%d" % [tile_index, warp_pair])
+	GameLogger.info("Move", "停止型ワープ: P%d タイル%d → タイル%d" % [player_id + 1, tile_index, warp_pair])
 	
 	# movement_controllerでワープ実行
 	if board_system:
@@ -405,7 +405,7 @@ func is_neutral_tile(tile_type: String) -> bool:
 ## CPU用遠隔召喚処理
 ## tile_action_processorの既存処理を使用
 func _cpu_remote_summon(player_id: int, target_tile: int):
-	print("[SpecialTile] CPU遠隔召喚開始 - Player%d → タイル%d" % [player_id + 1, target_tile])
+	GameLogger.info("Summon", "CPU遠隔召喚: P%d → タイル%d" % [player_id + 1, target_tile])
 	
 	# 手札からクリーチャーを取得
 	if not card_system:

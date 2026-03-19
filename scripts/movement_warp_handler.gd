@@ -87,6 +87,7 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 	tween2.tween_property(player_node, "scale", Vector3.ONE, 0.2)
 	await tween2.finished
 
+	GameLogger.info("Move", "ワープ: P%d タイル%d → タイル%d" % [player_id + 1, from_tile, to_tile])
 	controller.warp_executed.emit(player_id, from_tile, to_tile)
 
 

@@ -28,6 +28,13 @@
 - ✅ 設計ドキュメント `docs/design/logger_system.md` 更新（GameLogger名前変更反映）
 - ✅ 動作確認済み: ログファイル `user://logs/game_YYYYMMDD_HHMMSS.log` に正常出力
 
+#### 移動詳細ログ追加（STEP 1.5）
+- ✅ `movement_controller.gd` 2箇所: 強制停止ログ（理由付き）
+- ✅ `special_tile_system.gd` 2箇所: 停止型ワープログ（発動/ペアなし）
+- ✅ `special_tile_system.gd` 1箇所: CPU遠隔召喚ログ
+- ✅ `movement_warp_handler.gd` 1箇所: 通過型ワープログ（STEP 1で追加済み）
+- ✅ 動作確認済み: ワープ発動時にログ正常出力（停止型ワープ + ワープアニメーション）
+
 ### 📋 次のステップ
 
 - push_error/push_warning → GameLogger 変換（286件、カテゴリ別にケースバイケース）

@@ -224,6 +224,7 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 		# 拘束チェック
 		var stop_result = warp_handler.check_forced_stop_at_tile(current_tile, player_id)
 		if stop_result["stopped"]:
+			GameLogger.info("Move", "強制停止: P%d タイル%d 理由=%s" % [player_id + 1, current_tile, stop_result.get("reason", "不明")])
 			emit_signal("movement_step_completed", player_id, current_tile)
 			break
 
@@ -451,6 +452,7 @@ func move_along_path(player_id: int, path: Array) -> void:
 		# 拘束判定
 		var stop_result = warp_handler.check_forced_stop_at_tile(tile_index, player_id)
 		if stop_result["stopped"]:
+			GameLogger.info("Move", "強制停止: P%d タイル%d 理由=%s" % [player_id + 1, tile_index, stop_result.get("reason", "不明")])
 			emit_signal("movement_step_completed", player_id, tile_index)
 			break
 
