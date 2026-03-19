@@ -160,7 +160,7 @@ func add_magic(player_id: int, amount: int) -> void:
 	  amount: 増加量
 	"""
 	if not player_system_ref:
-		push_error("SpellMagic: PlayerSystemが設定されていません")
+		GameLogger.error("Spell", "PlayerSystemが設定されていません")
 		return
 	
 	if amount <= 0:
@@ -168,12 +168,12 @@ func add_magic(player_id: int, amount: int) -> void:
 		return
 	
 	if player_id < 0 or player_id >= player_system_ref.players.size():
-		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		GameLogger.error("Spell", "無効なプレイヤーID: %d" % player_id)
 		return
 	
 	var player = player_system_ref.players[player_id]
 	if not player:
-		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		GameLogger.error("Spell", "無効なプレイヤーID: %d" % player_id)
 		return
 	
 	player.magic_power += amount
@@ -189,7 +189,7 @@ func reduce_magic(player_id: int, amount: int) -> void:
 	  amount: 減少量
 	"""
 	if not player_system_ref:
-		push_error("SpellMagic: PlayerSystemが設定されていません")
+		GameLogger.error("Spell", "PlayerSystemが設定されていません")
 		return
 	
 	if amount <= 0:
@@ -197,12 +197,12 @@ func reduce_magic(player_id: int, amount: int) -> void:
 		return
 	
 	if player_id < 0 or player_id >= player_system_ref.players.size():
-		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		GameLogger.error("Spell", "無効なプレイヤーID: %d" % player_id)
 		return
 	
 	var player = player_system_ref.players[player_id]
 	if not player:
-		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		GameLogger.error("Spell", "無効なプレイヤーID: %d" % player_id)
 		return
 	
 	# 0未満にならないようにする
@@ -224,7 +224,7 @@ func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
 	  実際に奪った量（相手のEPが足りない場合は少なくなる）
 	"""
 	if not player_system_ref:
-		push_error("SpellMagic: PlayerSystemが設定されていません")
+		GameLogger.error("Spell", "PlayerSystemが設定されていません")
 		return 0
 	
 	if amount <= 0:
@@ -232,11 +232,11 @@ func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
 		return 0
 	
 	if from_player_id < 0 or from_player_id >= player_system_ref.players.size():
-		push_error("SpellMagic: 無効なプレイヤーID: ", from_player_id)
+		GameLogger.error("Spell", "無効なプレイヤーID: %d" % from_player_id)
 		return 0
 	
 	if to_player_id < 0 or to_player_id >= player_system_ref.players.size():
-		push_error("SpellMagic: 無効なプレイヤーID: ", to_player_id)
+		GameLogger.error("Spell", "無効なプレイヤーID: %d" % to_player_id)
 		return 0
 	
 	var from_player = player_system_ref.players[from_player_id]
@@ -268,7 +268,7 @@ func drain_magic_from_effect(effect: Dictionary, from_player_id: int, to_player_
 	  実際に奪った量
 	"""
 	if not player_system_ref:
-		push_error("SpellMagic: PlayerSystemが設定されていません")
+		GameLogger.error("Spell", "PlayerSystemが設定されていません")
 		return 0
 	
 	var value = effect.get("value", 0)

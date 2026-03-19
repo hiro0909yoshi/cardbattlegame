@@ -86,7 +86,7 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				)
 				result["async"] = true
 			else:
-				push_error("[DestroyHandler] destroy_selected_card: 条件不成立 - target_player_id=%d, card_selection_handler=%s" % [target_player_id, str(card_selection_handler)])
+				GameLogger.error("Card", "破壊ハンドラー: destroy_selected_cardの条件不成立 (player_id=%d, handler=%s)" % [target_player_id, str(card_selection_handler)])
 
 		"destroy_and_draw":
 			var target_player_id = context.get("target_player_id", -1)
@@ -137,7 +137,7 @@ func is_curse_card(card: Dictionary) -> bool:
 ## 全プレイヤーの手札から刻印カードを破壊
 func destroy_curse_cards() -> Dictionary:
 	if not card_system_ref:
-		push_error("DestroyHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "DestroyHandler: CardSystemが設定されていません (destroy_curse_cards)")
 		return {"total_destroyed": 0, "by_player": []}
 	
 	var total_destroyed = 0
@@ -168,7 +168,7 @@ func destroy_curse_cards() -> Dictionary:
 ## 全プレイヤーの手札から高コストカードを破壊
 func destroy_expensive_cards(cost_threshold: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("DestroyHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "DestroyHandler: CardSystemが設定されていません (cost_threshold=%d)" % cost_threshold)
 		return {"total_destroyed": 0, "by_player": []}
 	
 	var total_destroyed = 0
@@ -206,7 +206,7 @@ func destroy_expensive_cards(cost_threshold: int) -> Dictionary:
 ## 対象プレイヤーの手札から重複カードを破壊
 func destroy_duplicate_cards(target_player_id: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("DestroyHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "DestroyHandler: CardSystemが設定されていません (target_player=%d)" % target_player_id)
 		return {"total_destroyed": 0, "duplicates": []}
 	
 	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
@@ -246,7 +246,7 @@ func destroy_duplicate_cards(target_player_id: int) -> Dictionary:
 ## 全プレイヤーの重複カードを破壊（エロージョン合成用）
 func destroy_duplicate_cards_all_players() -> Dictionary:
 	if not player_system_ref:
-		push_error("DestroyHandler: PlayerSystemが設定されていません")
+		GameLogger.error("Card", "DestroyHandler: PlayerSystemが設定されていません")
 		return {"total_destroyed": 0, "by_player": []}
 	
 	var total_destroyed = 0
@@ -272,7 +272,7 @@ func destroy_duplicate_cards_all_players() -> Dictionary:
 ## 指定インデックスのカードを破壊
 func destroy_card_at_index(target_player_id: int, card_index: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("DestroyHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "DestroyHandler: CardSystemが設定されていません (player=%d, index=%d)" % [target_player_id, card_index])
 		return {"destroyed": false, "card_name": "", "card_data": {}}
 	
 	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
@@ -297,7 +297,7 @@ func destroy_card_at_index(target_player_id: int, card_index: int) -> Dictionary
 ## デッキ上部の指定インデックスのカードを破壊
 func destroy_deck_card_at_index(player_id: int, card_index: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("DestroyHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "DestroyHandler: CardSystemが設定されていません (player=%d, deck_index=%d)" % [player_id, card_index])
 		return {"destroyed": false, "card_name": "", "card_data": {}}
 	
 	var deck = card_system_ref.player_decks.get(player_id, [])

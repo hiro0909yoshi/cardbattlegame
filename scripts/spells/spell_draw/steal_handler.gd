@@ -103,7 +103,7 @@ func can_handle(effect_type: String) -> bool:
 ## 指定インデックスのカードを奪取
 func steal_card_at_index(from_player_id: int, to_player_id: int, card_index: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("StealHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "StealHandler: CardSystemが設定されていません (from_player=%d to_player=%d index=%d)" % [from_player_id, to_player_id, card_index])
 		return {"stolen": false, "card_name": "", "card_data": {}}
 	
 	var hand = card_system_ref.get_all_cards_for_player(from_player_id)
@@ -182,16 +182,16 @@ func has_cards_matching_filter(target_player_id: int, filter_mode: String) -> bo
 ## キャスタークリーチャーを土地から敵手札へ移動（レムレース用）
 func move_caster_to_enemy_hand(tile_index: int, target_player_id: int) -> void:
 	if not board_system_ref:
-		push_error("StealHandler: board_system_refが未設定")
+		GameLogger.error("Card", "StealHandler: board_system_ref が未設定 (tile=%d target_player=%d)" % [tile_index, target_player_id])
 		return
-	
+
 	if not board_system_ref.tile_nodes.has(tile_index):
-		push_error("StealHandler: タイル %d が見つかりません" % tile_index)
+		GameLogger.error("Card", "StealHandler: タイル %d が見つかりません (target_player=%d)" % [tile_index, target_player_id])
 		return
-	
+
 	var tile = board_system_ref.tile_nodes[tile_index]
 	if not tile or tile.creature_data.is_empty():
-		push_error("StealHandler: タイル %d にクリーチャーがいません" % tile_index)
+		GameLogger.error("Card", "StealHandler: タイル %d にクリーチャーがいません (target_player=%d)" % [tile_index, target_player_id])
 		return
 	
 	var creature_data = tile.creature_data.duplicate(true)

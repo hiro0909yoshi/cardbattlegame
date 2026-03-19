@@ -45,12 +45,12 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 ## 効果を適用（effect_typeに応じて分岐）
 func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id: int) -> Dictionary:
 	var effect_type = effect.get("effect_type", "")
-	
+
 	match effect_type:
 		"transform":
 			return _apply_transform(effect, target_data, caster_player_id)
 		_:
-			push_error("[SpellTransform] 未対応のeffect_type: %s" % effect_type)
+			GameLogger.error("Spell", "SpellTransform: 未対応のeffect_type: %s (caster_id=%d)" % [effect_type, caster_player_id])
 			return {"success": false, "reason": "unknown_effect_type"}
 
 
@@ -105,7 +105,7 @@ func _apply_transform(effect: Dictionary, target_data: Dictionary, _caster_playe
 				# ゴブリンに変身（ディスコード）
 				new_creature_id = GOBLIN_ID
 			_:
-				push_error("[SpellTransform] 未対応のtransform_type: %s" % transform_type)
+				GameLogger.error("Spell", "SpellTransform: 未対応のtransform_type: %s (tile=%d)" % [transform_type, transform_tile_index])
 				return {"success": false, "reason": "unknown_transform_type"}
 	else:
 		return {"success": false, "reason": "no_transform_target_specified"}
@@ -116,7 +116,7 @@ func _apply_transform(effect: Dictionary, target_data: Dictionary, _caster_playe
 	# 変身先のクリーチャーデータを取得
 	var new_creature = CardLoader.get_card_by_id(new_creature_id)
 	if not new_creature:
-		push_error("[SpellTransform] クリーチャーが見つかりません: ID %d" % new_creature_id)
+		GameLogger.error("Spell", "SpellTransform: クリーチャーが見つかりません: ID %d (tile_index=%d)" % [new_creature_id, transform_tile_index])
 		return {"success": false, "reason": "creature_not_found"}
 	
 	var new_name = new_creature.get("name", "不明")
@@ -206,7 +206,7 @@ func _get_same_element_defensive_id(element: String) -> int:
 	if DEFENSIVE_CREATURES.has(element):
 		return DEFENSIVE_CREATURES[element]
 	
-	push_warning("[SpellTransform] 属性 %s の堅守クリーチャーが定義されていません" % element)
+	GameLogger.warn("Spell", "SpellTransform: 属性 %s の堅守クリーチャーが定義されていません" % element)
 	return -1
 
 

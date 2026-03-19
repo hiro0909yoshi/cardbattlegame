@@ -108,7 +108,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 		"destroy_and_move":
 			result = _apply_destroy_and_move(target_data)
 		_:
-			push_error("[SpellCreatureMove] 未対応のeffect_type: %s" % effect_type)
+			GameLogger.error("Spell", "未対応のeffect_type: %s" % effect_type)
 			return {"success": false, "reason": "unknown_effect_type"}
 	
 	# 戦闘トリガーがある場合は戦闘を実行
@@ -128,7 +128,7 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 		return
 	
 	if not game_flow_manager_ref or not game_flow_manager_ref.battle_system:
-		push_error("[SpellCreatureMove] battle_systemが見つかりません")
+		GameLogger.error("Spell", "battle_systemが見つかりません (from_tile=%d, to_tile=%d)" % [from_tile, to_tile])
 		return
 	
 	var attacker_creature = result.get("creature_data", {})

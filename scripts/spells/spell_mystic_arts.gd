@@ -579,8 +579,8 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		if spell_phase_handler_ref.spell_ui_manager:
 			spell_phase_handler_ref.spell_ui_manager.return_camera_to_player()
 		else:
-			push_error("[SpellMysticArts] spell_ui_manager が初期化されていません")
-	
+			GameLogger.error("Spell", "spell_ui_manager が初期化されていません")
+
 	# 非同期効果の場合はCardSelectionHandler完了後に終了
 	if is_async and spell_phase_handler_ref and spell_phase_handler_ref.card_selection_handler:
 		if spell_phase_handler_ref.card_selection_handler.is_selecting():
@@ -673,7 +673,7 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 		if spell_phase_handler_ref.spell_ui_manager:
 			spell_phase_handler_ref.spell_ui_manager.return_camera_to_player()
 		else:
-			push_error("[SpellMysticArts] spell_ui_manager が初期化されていません")
+			GameLogger.error("Spell", "spell_ui_manager が初期化されていません")
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
 	
 	end_mystic_phase()
@@ -1024,9 +1024,9 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 	
 	# TargetSelectionHelperを直接呼び出してターゲット取得
 	if not spell_phase_handler_ref:
-		push_error("[SpellMysticArts] spell_phase_handler_ref が無効です")
+		GameLogger.error("Spell", "spell_phase_handler_ref が無効です")
 		return false
-	
+
 	var valid_targets = TargetSelectionHelper.get_valid_targets(spell_phase_handler_ref, target_type, target_info)
 	return valid_targets.size() > 0
 
@@ -1039,7 +1039,7 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 	print("[SpellMysticArts] apply_mystic_art_effect: spell_phase_handler=%s, mystic_art=%s" % ["valid" if spell_phase_handler else "NULL", mystic_art.get("name", "?")])
 
 	if not spell_phase_handler:
-		push_error("[SpellMysticArts] apply_mystic_art_effect: spell_phase_handler が null です")
+		GameLogger.error("Spell", "apply_mystic_art_effect: spell_phase_handler が null です")
 		return false
 
 	if mystic_art.is_empty():
@@ -1072,20 +1072,20 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 	print("[SpellMysticArts] _apply_spell_effect: spell_phase_handler=%s" % ("valid" if spell_phase_handler else "NULL"))
 
 	if not spell_phase_handler:
-		push_error("[SpellMysticArts] _apply_spell_effect: spell_phase_handler が null です")
+		GameLogger.error("Spell", "_apply_spell_effect: spell_phase_handler が null です")
 		return false
 
 	# CardLoaderからスペルデータを取得
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if spell_data.is_empty():
-		push_error("[SpellMysticArts] spell_id=%d のスペルが見つかりません" % spell_id)
+		GameLogger.error("Spell", "spell_id=%d のスペルが見つかりません" % spell_id)
 		return false
 
 	var effect_parsed = spell_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
 
 	if effects.is_empty():
-		push_error("[SpellMysticArts] spell_id=%d のeffectsが空です" % spell_id)
+		GameLogger.error("Spell", "spell_id=%d のeffectsが空です" % spell_id)
 		return false
 
 	# spell_phase_handler に効果適用を委譲
@@ -1108,7 +1108,7 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 			print("[SpellMysticArts] _apply_spell_effect: spell_executor.apply_single_effect() 呼び出し")
 			await spell_executor.apply_single_effect(applied_effect, extended_target_data)
 		else:
-			push_error("[SpellMysticArts] spell_executor が無効です (has_method check failed)")
+			GameLogger.error("Spell", "spell_executor が無効です (has_method check failed)")
 			return false
 
 	return true
@@ -1122,14 +1122,14 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary, context: D
 	# spell_phase_handler（Node ツリー参照）を確認
 	if not spell_phase_handler:
 		print("[SpellMysticArts] apply_single_effect: spell_phase_handler が null です")
-		push_error("[SpellMysticArts] spell_phase_handler が初期化されていません")
+		GameLogger.error("Spell", "spell_phase_handler が初期化されていません")
 		return false
 
 	# spell_effect_executor への直接参照化
 	var spell_effect_executor = spell_phase_handler.spell_effect_executor if spell_phase_handler else null
 	if not spell_effect_executor:
 		print("[SpellMysticArts] apply_single_effect: spell_effect_executor が null です")
-		push_error("[SpellMysticArts] spell_effect_executor が初期化されていません")
+		GameLogger.error("Spell", "spell_effect_executor が初期化されていません")
 		return false
 
 	# target_dataにtile_indexがない場合のみcontextから追加

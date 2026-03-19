@@ -323,9 +323,9 @@ func get_final_direction(player_id: int, chosen_direction: int) -> int:
 func calculate_tile_distance(from_tile: int, to_tile: int) -> int:
 	if from_tile == to_tile:
 		return 0
-	
+
 	if not tile_neighbor_system:
-		push_error("[SpellPlayerMove] tile_neighbor_systemが未設定")
+		GameLogger.error("Spell", "tile_neighbor_systemが未設定 (from_tile=%d, to_tile=%d)" % [from_tile, to_tile])
 		return -1
 	
 	var visited = {}
@@ -352,29 +352,29 @@ func calculate_tile_distance(from_tile: int, to_tile: int) -> int:
 ## 条件に合致する最寄りタイルを検索（BFS）
 func find_nearest_tile(from_tile: int, condition: Callable) -> int:
 	if not tile_neighbor_system:
-		push_error("[SpellPlayerMove] tile_neighbor_systemが未設定")
+		GameLogger.error("Spell", "tile_neighbor_systemが未設定 (from_tile=%d)" % from_tile)
 		return -1
-	
+
 	var visited = {}
 	var queue = [from_tile]
 	visited[from_tile] = true
-	
+
 	while not queue.is_empty():
 		var current = queue.pop_front()
-		
+
 		# 隣接タイルを取得
 		var neighbors = tile_neighbor_system.get_sequential_neighbors(current)
-		
+
 		for neighbor in neighbors:
 			if not visited.has(neighbor):
 				visited[neighbor] = true
-				
+
 				# 条件チェック
 				if condition.call(neighbor):
 					return neighbor
-				
+
 				queue.append(neighbor)
-	
+
 	return -1  # 見つからない
 
 # ========================================

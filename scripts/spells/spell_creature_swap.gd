@@ -53,7 +53,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 			# リリーフ: 盤面上の2体のクリーチャーを交換
 			return await _apply_swap_board_creatures(target_data, caster_player_id)
 		_:
-			push_error("[SpellCreatureSwap] 未対応のeffect_type: %s" % effect_type)
+			GameLogger.error("Spell", "未対応のeffect_type: %s" % effect_type)
 			return {"success": false, "reason": "unknown_effect_type"}
 
 
@@ -303,7 +303,7 @@ func _execute_swap_board(tile_index_1: int, tile_index_2: int) -> void:
 	var tile_2 = board_system_ref.tile_nodes.get(tile_index_2)
 	
 	if not tile_1 or not tile_2:
-		push_error("[SpellCreatureSwap] 交換対象のタイルが無効です")
+		GameLogger.error("Spell", "交換対象のタイルが無効です (tile_1=%d, tile_2=%d)" % [tile_index_1, tile_index_2])
 		return
 	
 	# クリーチャーデータを保存

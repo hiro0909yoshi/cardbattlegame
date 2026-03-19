@@ -20,11 +20,11 @@ func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, playe
 	card_system_ref = card_system
 	
 	if not board_system_ref:
-		push_error("SpellLand: BoardSystem3Dが設定されていません")
+		GameLogger.error("Spell", "SpellLand.setup: BoardSystem3Dが設定されていません")
 	if not creature_manager_ref:
-		push_error("SpellLand: CreatureManagerが設定されていません")
+		GameLogger.error("Spell", "SpellLand.setup: CreatureManagerが設定されていません")
 	if not player_system_ref:
-		push_error("SpellLand: PlayerSystemが設定されていません")
+		GameLogger.error("Spell", "SpellLand.setup: PlayerSystemが設定されていません")
 
 ## spell_world_curse参照を設定
 func set_spell_world_curse(swc) -> void:
@@ -41,7 +41,7 @@ func is_land_change_blocked() -> bool:
 func change_element(tile_index: int, new_element: String) -> bool:
 	
 	if not board_system_ref:
-		push_error("SpellLand.change_element: BoardSystem3Dが未設定")
+		GameLogger.error("Spell", "SpellLand.change_element: BoardSystem3Dが未設定")
 		return false
 	
 	# インペリアルガードチェック（ポップアップ付き）
@@ -58,7 +58,7 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		return false
 	
 	if not _validate_element(new_element):
-		push_error("SpellLand: 無効な属性 '%s'" % new_element)
+		GameLogger.error("Spell", "SpellLand.change_element: 無効な属性 '%s' at tile_index %d" % [new_element, tile_index])
 		return false
 	
 	# BoardSystem3Dのchange_tile_terrainメソッドを使用
@@ -73,7 +73,7 @@ func change_element_bidirectional(tile_index: int, element_a: String, element_b:
 		return false
 	
 	if not _validate_element(element_a) or not _validate_element(element_b):
-		push_error("SpellLand: 無効な属性 '%s' または '%s'" % [element_a, element_b])
+		GameLogger.error("Spell", "SpellLand.change_element_bidirectional: 無効な属性 '%s' または '%s' at tile_index %d" % [element_a, element_b, tile_index])
 		return false
 	
 	var tile = board_system_ref.tile_nodes[tile_index]
@@ -108,7 +108,7 @@ func change_level(tile_index: int, delta: int) -> bool:
 	
 	# BoardSystem3DのtilesはNodeの配列なので、tile_nodesを使う
 	if not board_system_ref.tile_nodes.has(tile_index):
-		push_error("SpellLand: タイル%dが見つかりません" % tile_index)
+		GameLogger.error("Spell", "SpellLand.change_level: タイル%d が見つかりません (delta=%d)" % [tile_index, delta])
 		return false
 	
 	var tile = board_system_ref.tile_nodes[tile_index]
@@ -172,7 +172,7 @@ func abandon_land(tile_index: int, return_rate: float = 0.7) -> int:
 	var player_id = tile.owner_id
 	
 	if player_id < 0:
-		push_error("SpellLand: タイル%dは誰も所有していません" % tile_index)
+		GameLogger.error("Spell", "SpellLand.abandon_land: タイル%d は誰も所有していません (player_id=%d)" % [tile_index, player_id])
 		return 0
 	
 	var base_value = 100
@@ -355,7 +355,7 @@ func align_lands_to_creature_elements(tile_indices: Array) -> int:
 ## スペルカードをデッキに戻す（復帰[ブック]）
 func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 	if not card_system_ref:
-		push_error("SpellLand: CardSystemの参照が設定されていません")
+		GameLogger.error("Spell", "SpellLand.return_spell_to_deck: CardSystemの参照が設定されていません (player_id=%d)" % player_id)
 		return false
 	
 	var card_id = spell_card.get("id", -1)
@@ -381,7 +381,7 @@ func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 	
 	# デッキのランダムな位置に戻す（item_returnスキルと同じ方式）
 	if not card_system_ref.player_decks.has(player_id):
-		push_error("SpellLand: プレイヤー%dのデッキが存在しません" % player_id)
+		GameLogger.error("Spell", "SpellLand.return_spell_to_deck: プレイヤー%d のデッキが存在しません (card_id=%d)" % [player_id, card_id])
 		return false
 	
 	var deck = card_system_ref.player_decks[player_id]
@@ -399,7 +399,7 @@ func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 ## 検証：タイルインデックス
 func _validate_tile_index(tile_index: int) -> bool:
 	if not board_system_ref or not board_system_ref.tile_nodes.has(tile_index):
-		push_error("SpellLand: 無効なタイルインデックス %d" % tile_index)
+		GameLogger.error("Spell", "SpellLand._validate_tile_index: 無効なタイルインデックス %d" % tile_index)
 		return false
 	return true
 
@@ -459,7 +459,7 @@ func apply_land_effect(effect: Dictionary, target_data: Dictionary, player_id: i
 			return _apply_effect_change_caster_tile_element(effect, land_target_data)
 		
 		_:
-			push_error("SpellLand.apply_land_effect: 未対応のeffect_type '%s'" % effect_type)
+			GameLogger.error("Spell", "SpellLand.apply_land_effect: 未対応のeffect_type '%s' (player_id=%d)" % [effect_type, player_id])
 			return false
 
 ## ========================================
@@ -571,7 +571,7 @@ func _apply_effect_conditional_level_change(effect: Dictionary, _target_data: Di
 	var player_id = _target_data.get("player_id", -1)
 	
 	if player_id < 0:
-		push_error("SpellLand: conditional_level_changeにplayer_idが必要です")
+		GameLogger.error("Spell", "SpellLand._apply_effect_conditional_level_change: player_id が必要です (required_level=%d, required_count=%d)" % [required_level, required_count])
 		return false
 	
 	var condition = {"required_level": required_level}
@@ -598,7 +598,7 @@ func _apply_effect_align_mismatched_lands(effect: Dictionary, _target_data: Dict
 	var player_id = _target_data.get("player_id", -1)
 	
 	if player_id < 0:
-		push_error("SpellLand: align_mismatched_landsにplayer_idが必要です")
+		GameLogger.error("Spell", "SpellLand._apply_effect_align_mismatched_lands: player_id が必要です (required_count=%d)" % required_count)
 		return false
 	
 	var mismatched_tiles = find_mismatched_element_lands(player_id)
@@ -672,14 +672,14 @@ func _has_land_cost_modifier(tile_index: int) -> bool:
 func _apply_effect_change_caster_tile_element(effect: Dictionary, target_data: Dictionary) -> bool:
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
 	if caster_tile_index < 0:
-		push_error("SpellLand._apply_effect_change_caster_tile_element: caster_tile_indexが未設定")
+		GameLogger.error("Spell", "SpellLand._apply_effect_change_caster_tile_element: caster_tile_index が未設定")
 		return false
-	
+
 	var new_element = effect.get("element", "")
 	if new_element.is_empty():
-		push_error("SpellLand._apply_effect_change_caster_tile_element: elementが未設定")
+		GameLogger.error("Spell", "SpellLand._apply_effect_change_caster_tile_element: element が未設定 (caster_tile_index=%d)" % caster_tile_index)
 		return false
-	
+
 	return change_element(caster_tile_index, new_element)
 
 
@@ -688,11 +688,11 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 	# アルカナアーツを使用したクリーチャーのタイルを取得
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
 	if caster_tile_index < 0:
-		push_error("SpellLand._apply_effect_self_destruct: caster_tile_indexが未設定")
+		GameLogger.error("Spell", "SpellLand._apply_effect_self_destruct: caster_tile_index が未設定")
 		return false
-	
+
 	if not board_system_ref or not board_system_ref.tile_nodes.has(caster_tile_index):
-		push_error("SpellLand._apply_effect_self_destruct: タイルが見つかりません")
+		GameLogger.error("Spell", "SpellLand._apply_effect_self_destruct: タイル%d が見つかりません" % caster_tile_index)
 		return false
 	
 	var tile = board_system_ref.tile_nodes[caster_tile_index]

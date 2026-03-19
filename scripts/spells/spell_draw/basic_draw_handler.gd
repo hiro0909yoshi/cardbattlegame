@@ -109,7 +109,7 @@ func can_handle(effect_type: String) -> bool:
 ## 1枚ドロー（ターン開始用）
 func draw_one(player_id: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return {}
 	
 	var card = card_system_ref.draw_card_for_player(player_id)
@@ -125,7 +125,7 @@ func draw_one(player_id: int) -> Dictionary:
 ## 固定枚数ドロー
 func draw_cards(player_id: int, count: int) -> Array:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return []
 	
 	if count <= 0:
@@ -141,7 +141,7 @@ func draw_cards(player_id: int, count: int) -> Array:
 ## 上限までドロー
 func draw_until(player_id: int, target_hand_size: int) -> Array:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return []
 	
 	var current_hand_size = card_system_ref.get_hand_size_for_player(player_id)
@@ -162,7 +162,7 @@ func draw_until(player_id: int, target_hand_size: int) -> Array:
 ## 順位に応じたドロー（ギフト用）
 func draw_by_rank(player_id: int, rank: int) -> Array:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return []
 	
 	if rank <= 0:
@@ -177,7 +177,7 @@ func draw_by_rank(player_id: int, rank: int) -> Array:
 ## タイプ指定ドロー（プロフェシー用）
 func draw_card_by_type(player_id: int, card_type: String) -> Dictionary:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return {"drawn": false, "card_name": "", "card_data": {}}
 	
 	var deck = card_system_ref.player_decks.get(player_id, [])
@@ -199,7 +199,7 @@ func draw_card_by_type(player_id: int, card_type: String) -> Dictionary:
 ## 手札全捨て+元枚数ドロー（リンカネーション用）
 func discard_and_draw_plus(player_id: int) -> Array:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return []
 	
 	var hand_size = card_system_ref.get_hand_size_for_player(player_id)
@@ -216,7 +216,7 @@ func discard_and_draw_plus(player_id: int) -> Array:
 ## 手札全交換
 func exchange_all_hand(player_id: int) -> Array:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません")
 		return []
 	
 	var hand_size = card_system_ref.get_hand_size_for_player(player_id)
@@ -239,12 +239,12 @@ func exchange_all_hand(player_id: int) -> Array:
 ## 特定カードを手札に生成（ハイプクイーン用）
 func add_specific_card_to_hand(player_id: int, card_id: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("BasicDrawHandler: card_system_refが未設定")
+		GameLogger.error("Card", "card_system_refが未設定")
 		return {"success": false, "card_name": ""}
 	
 	var card_data = CardLoader.get_card_by_id(card_id)
 	if card_data.is_empty():
-		push_error("BasicDrawHandler: カードID %d が見つかりません" % card_id)
+		GameLogger.error("Card", "カードID %d が見つかりません" % card_id)
 		return {"success": false, "card_name": ""}
 	
 	card_system_ref.return_card_to_hand(player_id, card_data.duplicate(true))
@@ -264,7 +264,7 @@ func add_specific_card_to_hand(player_id: int, card_id: int) -> Dictionary:
 ## タイプ選択ドロー開始（callback方式・プロフェシー用）
 func _start_type_selection_draw(player_id: int) -> void:
 	if not _spell_and_mystic_ui:
-		push_error("BasicDrawHandler: SpellAndMysticUIが設定されていません")
+		GameLogger.error("Card", "SpellAndMysticUIが設定されていません")
 		return
 
 	if _message_service:

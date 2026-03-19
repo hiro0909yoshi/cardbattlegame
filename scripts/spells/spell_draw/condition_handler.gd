@@ -159,12 +159,12 @@ func _has_synthesis_card_in_hand(player_id: int) -> bool:
 ## 同名カードを全て特定カードに変換（メタモルフォシス用）
 func transform_cards_to_specific(target_player_id: int, selected_card_name: String, selected_card_id: int, transform_to_id: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("ConditionHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません (player_id=%d, card_name=%s)" % [target_player_id, selected_card_name])
 		return {"transformed_count": 0, "hand_count": 0, "deck_count": 0, "original_name": "", "new_name": ""}
-	
+
 	var new_card_data = CardLoader.get_card_by_id(transform_to_id)
 	if new_card_data.is_empty():
-		push_error("ConditionHandler: 変換先カードID %d が見つかりません" % transform_to_id)
+		GameLogger.error("Card", "変換先カードID %d が見つかりません (player_id=%d)" % [transform_to_id, target_player_id])
 		return {"transformed_count": 0, "hand_count": 0, "deck_count": 0, "original_name": selected_card_name, "new_name": ""}
 	
 	var new_card_name = new_card_data.get("name", "?")

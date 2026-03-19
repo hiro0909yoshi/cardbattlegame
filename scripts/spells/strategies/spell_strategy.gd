@@ -75,4 +75,4 @@ func _log(message: String) -> void:
 
 ## エラーログ出力（ファイル名を自動付与）
 func _log_error(message: String) -> void:
-	push_error("[%s] %s" % [get_class(), message])
+	GameLogger.error("Spell", "[%s] %s" % [get_class(), message])

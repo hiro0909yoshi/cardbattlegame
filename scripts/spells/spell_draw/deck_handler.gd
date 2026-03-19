@@ -112,7 +112,7 @@ func get_top_cards_from_deck(player_id: int, count: int) -> Array:
 ## デッキ上部の指定インデックスのカードを手札に加える（フォーサイト用）
 func draw_from_deck_at_index(player_id: int, card_index: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("DeckHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません (player_id=%d, card_index=%d)" % [player_id, card_index])
 		return {"drawn": false, "card_name": "", "card_data": {}}
 	
 	var deck = card_system_ref.player_decks.get(player_id, [])
@@ -141,7 +141,7 @@ func draw_from_deck_at_index(player_id: int, card_index: int) -> Dictionary:
 ## デッキを元の構成で再構築（リバイバル用）
 func reset_deck_to_original(target_player_id: int) -> Dictionary:
 	if not card_system_ref:
-		push_error("DeckHandler: CardSystemが設定されていません")
+		GameLogger.error("Card", "CardSystemが設定されていません (player_id=%d)" % target_player_id)
 		return {"success": false, "new_deck_size": 0, "player_name": ""}
 	
 	var player_name = "プレイヤー%d" % (target_player_id + 1)
