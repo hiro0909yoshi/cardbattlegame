@@ -32,8 +32,7 @@ func _ready() -> void:
 ## バトルを開始
 func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_data = null):
 	if _is_battle_active:
-		GameLogger.warn("BattleUI", "重複検出: バトルが既にアクティブです")
-		push_warning("BattleScreenManager: バトルが既にアクティブです")
+		GameLogger.warn("BattleUI", "重複検出: バトルが既にアクティブです (%s vs %s)" % [attacker_data.get("name", "?"), defender_data.get("name", "?")])
 		return
 	
 	_is_battle_active = true
@@ -50,8 +49,7 @@ func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_da
 	# Object Pool からバトル画面を取得
 	_battle_screen = _battle_screen_pool.get_instance()
 	if not _battle_screen:
-		GameLogger.error("BattleUI", "BattleScreen取得失敗: pool empty")
-		push_error("[BattleScreenManager] BattleScreen インスタンスが取得できません")
+		GameLogger.error("BattleUI", "BattleScreen インスタンスが取得できません (pool empty)")
 		_is_battle_active = false
 		return
 

@@ -571,7 +571,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 							result["draw_cards_activated"] = false
 						result["draw_cards_activated"] = drawn_cards.size() > 0
 					else:
-						push_error("SpellDrawの参照が設定されていません")
+						GameLogger.error("Battle", "SpellDrawの参照が設定されていません (player_id=%d)" % defeated.player_id)
 				
 				"legacy_magic":  # ゴールドグース（形見）
 					if spell_magic_ref:
@@ -591,7 +591,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						result["legacy_magic_activated"] = true
 						result["legacy_ep_amount"] = amount
 					else:
-						push_error("SpellMagicの参照が設定されていません")
+						GameLogger.error("Battle", "SpellMagicの参照が設定されていません (player_id=%d)" % defeated.player_id)
 				
 				"revenge_mhp_damage":  # 報復
 					# 相手が生存している場合のみ発動
@@ -1074,7 +1074,7 @@ func check_and_apply_annihilate(winner: BattleParticipant, loser: BattleParticip
 ## 指定プレイヤーの手札とデッキから同名カードを全削除
 func _annihilate_cards(player_id: int, card_name: String) -> int:
 	if not card_system_ref:
-		push_error("BattleSpecialEffects._annihilate_cards: card_system_ref未設定")
+		GameLogger.error("Battle", "card_system_ref未設定 (player_id=%d, card_name=%s)" % [player_id, card_name])
 		return 0
 	
 	var deleted_count = 0

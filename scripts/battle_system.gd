@@ -110,12 +110,12 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 
 	# 追加の検証（spell_draw, spell_magic）
 	if not spell_draw:
-		push_error("[BS] spell_draw が初期化されていません")
+		GameLogger.error("Battle", "spell_draw が初期化されていません (tile=%d)" % tile_info.get("index", 0))
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 
 	if not spell_magic:
-		push_error("[BS] spell_magic が初期化されていません")
+		GameLogger.error("Battle", "spell_magic が初期化されていません (tile=%d)" % tile_info.get("index", 0))
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 
@@ -286,7 +286,7 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 	print("侵略成功！土地を奪取")
 
 	if not board_system_ref:
-		push_error("[BS] board_system_ref が初期化されていません")
+		GameLogger.error("Battle", "board_system_ref が初期化されていません (tile=%d)" % tile_info.get("index", 0))
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 

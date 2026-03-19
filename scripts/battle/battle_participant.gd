@@ -208,7 +208,7 @@ func check_mhp_condition(operator: String, threshold: int) -> bool:
 		"==":
 			return mhp == threshold
 		_:
-			push_error("BattleParticipant.check_mhp_condition: 未知の演算子 '%s'" % operator)
+			GameLogger.error("Battle", "未知の演算子 '%s'（BattleParticipant.check_mhp_condition）" % operator)
 			return false
 
 # MHP以下かチェック（簡易版）

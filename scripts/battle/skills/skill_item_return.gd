@@ -152,12 +152,12 @@ static func _get_return_effects(participant: BattleParticipant, used_items: Arra
 ## @param player_id: int - プレイヤーID（新システム用）
 static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 	if not card_system_ref:
-		push_error("SkillItemReturn: CardSystemの参照が設定されていません")
+		GameLogger.error("Battle", "CardSystemの参照が設定されていません (player_id=%d)" % player_id)
 		return false
-	
+
 	var card_id = item_data.get("id", -1)
 	if card_id < 0:
-		push_error("SkillItemReturn: 無効なカードID")
+		GameLogger.error("Battle", "無効なカードID (card_id=%d, player_id=%d)" % [card_id, player_id])
 		return false
 	
 	# 新システム: プレイヤーの捨て札から削除
@@ -179,7 +179,7 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 ## アイテムを手札に戻す
 static func _return_to_hand(player_id: int, item_data: Dictionary) -> bool:
 	if not card_system_ref:
-		push_error("SkillItemReturn: CardSystemの参照が設定されていません")
+		GameLogger.error("Battle", "CardSystemの参照が設定されていません (player_id=%d)" % player_id)
 		return false
 	
 	# CardSystemのreturn_card_to_hand()を使用

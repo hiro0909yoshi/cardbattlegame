@@ -87,7 +87,7 @@ func _create_card_instance(data: Dictionary) -> void:
 		_card_instance = null
 	
 	if not _card_scene:
-		push_error("BattleCreatureDisplay: Card.tscn が読み込めません")
+		GameLogger.error("BattleUI", "Card.tscn が読み込めません（BattleCreatureDisplay._setup_ui）")
 		return
 	
 	# カードをインスタンス化
