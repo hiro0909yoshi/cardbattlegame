@@ -233,7 +233,7 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 ## 方向変更選択UI表示
 func _show_direction_change_selection() -> Dictionary:
 	if not _message_service and not _navigation_service:
-		push_error("[BranchTile] サービスがありません")
+		GameLogger.error("Board", "MessageService と NavigationService が両方未設定（分岐タイル）")
 		return {"success": false, "changed": false}
 	
 	# 現在の方向を表示

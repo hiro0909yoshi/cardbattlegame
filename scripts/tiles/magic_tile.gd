@@ -88,7 +88,7 @@ func _get_cpu_special_tile_ai():
 ## スペル選択UI表示
 func _show_magic_selection(player_id: int) -> Dictionary:
 	if not _message_service or not _ui_layer:
-		push_error("[MagicTile] MessageServiceまたはui_layerがありません")
+		GameLogger.error("Board", "MessageServiceまたはui_layerがありません（魔法タイル処理）")
 		return {"success": false, "spell_used": false}
 	
 	# 全スペルからランダム3枚を取得（選択ループ中は同じカードを使い続ける）

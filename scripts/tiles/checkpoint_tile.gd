@@ -23,7 +23,7 @@ func _load_sp_tile_model() -> void:
 	var path = SP_TILE_PATH_TEMPLATE % tile_number
 	var scene = load(path)
 	if not scene:
-		push_warning("SPタイルモデルが見つかりません: %s" % path)
+		GameLogger.warn("Board", "SPタイルモデルが見つかりません: %s（パス: %s）" % [path, path])
 		return
 	var sp_node = scene.instantiate()
 	sp_node.name = "sp_tile%d" % tile_number

@@ -83,7 +83,7 @@ func _get_cpu_special_tile_ai():
 ## カード購入UI表示
 func _show_card_buy_selection(player_id: int) -> Dictionary:
 	if not _message_service or not _ui_layer:
-		push_error("[CardBuyTile] MessageServiceまたはui_layerがありません")
+		GameLogger.error("Board", "MessageServiceまたはui_layerがありません（カード購入タイル）")
 		return {"success": false, "card_bought": false}
 	
 	# スペル・アイテムからランダム3枚を取得

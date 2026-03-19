@@ -84,7 +84,7 @@ func _get_cpu_special_tile_ai():
 ## カード譲渡UI表示
 func _show_card_give_selection(player_id: int) -> Dictionary:
 	if not _message_service or not _ui_layer:
-		push_error("[CardGiveTile] MessageServiceまたはui_layerがありません")
+		GameLogger.error("Board", "MessageServiceまたはui_layerがありません（カード譲渡タイル）")
 		return {"success": false, "card_received": false}
 	
 	# UIがなければ作成

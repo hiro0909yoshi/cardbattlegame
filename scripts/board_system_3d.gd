@@ -411,7 +411,7 @@ func get_player_owned_tiles(player_id: int) -> Array:
 ## タイルインスタンスを生成
 func create_tile_instance(element: String, tile_index: int) -> BaseTile:
 	if not TILE_SCENES.has(element):
-		push_error("[BoardSystem3D] 不明な属性: " + element)
+		GameLogger.error("Board", "BoardSystem3D: 不明な属性: %s (tile_index=%d)" % [element, tile_index])
 		return null
 	
 	var tile_scene = TILE_SCENES[element]
@@ -445,7 +445,7 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 	# 新しいタイル生成
 	var new_tile = create_tile_instance(new_element, tile_index)
 	if not new_tile:
-		push_error("[BoardSystem3D] タイル生成失敗")
+		GameLogger.error("Board", "BoardSystem3D: タイル生成失敗 (tile_index=%d, new_element=%s)" % [tile_index, new_element])
 		return false
 	
 	# 先に新しいタイルをツリーに追加
@@ -646,18 +646,18 @@ func _on_warp_executed(player_id: int, from_tile: int, to_tile: int):
 func _on_creature_changed(tile_index: int, old_data: Dictionary, new_data: Dictionary) -> void:
 	# ステップ1: tile_index 妥当性チェック
 	if not tile_nodes.has(tile_index):
-		push_error("[BoardSystem3D] Invalid tile_index: %d" % tile_index)
+		GameLogger.error("Board", "BoardSystem3D: Invalid tile_index: %d" % tile_index)
 		return
 
 	# ステップ2: タイル取得
 	var tile = tile_nodes[tile_index]
 	if not tile:
-		push_error("[BoardSystem3D] Tile not found: %d" % tile_index)
+		GameLogger.error("Board", "BoardSystem3D: Tile not found: %d" % tile_index)
 		return
 
-	# ステップ3: 状態判定（push_error のみ残す）
+	# ステップ3: 状態判定（GameLoggerで対応）
 	if old_data.is_empty() and new_data.is_empty():
-		push_error("[BoardSystem3D] 矛盾したデータ: tile=%d" % tile_index)
+		GameLogger.error("Board", "BoardSystem3D: 矛盾したデータ: tile=%d (old_empty=%s new_empty=%s)" % [tile_index, true, true])
 
 	# Day 3 追加: creature_updated シグナルをリレー
 	creature_updated.emit(tile_index, new_data)

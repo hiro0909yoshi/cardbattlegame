@@ -102,7 +102,7 @@ func _get_element_name(element: String) -> String:
 ## 魔法石ショップUI表示
 func _show_magic_stone_shop(player_id: int) -> Dictionary:
 	if not _message_service or not _ui_layer:
-		push_error("[MagicStoneTile] MessageServiceまたはui_layerがありません")
+		GameLogger.error("Board", "MessageServiceまたはui_layerがありません (player_id=%d)" % player_id)
 		return {"success": false, "transaction_done": false}
 	
 	# MagicStoneSystemを取得
@@ -111,7 +111,7 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 		stone_system = _game_flow_manager.magic_stone_system
 	
 	if not stone_system:
-		push_error("[MagicStoneTile] MagicStoneSystemが初期化されていません")
+		GameLogger.error("Board", "MagicStoneSystemが初期化されていません (player_id=%d)" % player_id)
 		if _message_service:
 			await _message_service.show_comment_and_wait("魔法石ショップは準備中です", player_id, true)
 		return {"success": true, "transaction_done": false}
@@ -127,7 +127,7 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 				magic_stone_ui.setup_ui()
 	
 	if not magic_stone_ui:
-		push_error("[MagicStoneTile] MagicStoneUIの作成に失敗")
+		GameLogger.error("Board", "MagicStoneUIの作成に失敗 (player_id=%d)" % player_id)
 		return {"success": false, "transaction_done": false}
 	
 	# プレイヤー情報を取得

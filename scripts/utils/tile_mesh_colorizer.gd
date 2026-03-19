@@ -9,7 +9,7 @@ class_name TileMeshColorizer
 static func colorize_by_height(mesh_instance: MeshInstance3D, high_color: Color, low_color: Color, threshold: float = 0.3) -> void:
 	var mesh: Mesh = mesh_instance.mesh
 	if not mesh:
-		push_error("[TileMeshColorizer] MeshInstance3Dにメッシュがありません")
+		GameLogger.error("Board", "MeshInstance3Dにメッシュがありません")
 		return
 
 	var array_mesh := ArrayMesh.new()

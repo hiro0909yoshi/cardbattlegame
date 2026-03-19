@@ -26,13 +26,13 @@ var creature_data: Dictionary:
 		if creature_manager:
 			return creature_manager.get_data_ref(tile_index)
 		else:
-			push_error("[BaseTile] CreatureManager が初期化されていません！")
+			GameLogger.error("Board", "CreatureManager が初期化されていません (tile_index=%d)" % tile_index)
 			return {}
 	set(value):
 		if creature_manager:
 			creature_manager.set_data(tile_index, value)
 		else:
-			push_error("[BaseTile] CreatureManager が初期化されていません！")
+			GameLogger.error("Board", "CreatureManager が初期化されていません (tile_index=%d)" % tile_index)
 		# 3Dカードの同期
 		_sync_creature_card_3d(value)
 
