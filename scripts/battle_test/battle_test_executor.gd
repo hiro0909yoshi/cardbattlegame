@@ -11,7 +11,11 @@ class MockCardSystem extends CardSystem:
 		for pid in [0, 1]:
 			player_decks[pid] = []
 			player_discards[pid] = []
-			player_hands[pid] = {"data": []}
+			# 手札5枚（手札数依存アイテム用）
+			var hand_data: Array = []
+			for i in range(5):
+				hand_data.append({"id": i, "name": "dummy_%d" % i})
+			player_hands[pid] = {"data": hand_data}
 
 class MockPlayerSystem extends PlayerSystem:
 	func _init():
@@ -554,6 +558,8 @@ func _diff_skill_state(before: Dictionary, participant: BattleParticipant) -> Ar
 	var granted: Array = []
 
 	if participant.has_item_first_strike and not before.get("has_item_first_strike", false):
+		granted.append("先制攻撃")
+	elif participant.has_first_strike and not before.get("has_first_strike", false):
 		granted.append("先制攻撃")
 
 	if participant.has_last_strike and not before.get("has_last_strike", false):

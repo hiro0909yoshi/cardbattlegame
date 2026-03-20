@@ -208,6 +208,20 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			result["transform_result"]["defender_original"] = item_transform_result["defender_original"]
 	
 	# ============================================================
+	# 【Phase 0-T2b】変身後の巻物AP再適用
+	# ============================================================
+	# 変身でcreature_dataが置き換わると、アイテム巻物で設定したAP・術攻撃キーワードが消える
+	# 変身が発生した参加者に対してアイテムの巻物効果を再適用する
+	if item_transform_result.get("attacker_transformed", false):
+		if _reapply_scroll_after_transform(attacker) and battle_screen_manager:
+			var display_data = _create_display_data(attacker)
+			await battle_screen_manager.update_creature("attacker", display_data)
+	if item_transform_result.get("defender_transformed", false):
+		if _reapply_scroll_after_transform(defender) and battle_screen_manager:
+			var display_data = _create_display_data(defender)
+			await battle_screen_manager.update_creature("defender", display_data)
+
+	# ============================================================
 	# 【Phase 0-A】クリック後に適用する効果
 	# ============================================================
 	var attacker_before: Dictionary
@@ -1141,3 +1155,54 @@ func apply_skills_for_simulation(participants: Dictionary, tile_info: Dictionary
 	# 術攻撃による土地ボーナス無効化
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		defender.land_bonus_hp = 0
+
+
+## 変身後にアイテム巻物のAP・術攻撃キーワードを再適用する
+##
+## 変身でcreature_dataが丸ごと置き換わるため、
+## アイテムのscroll_attack効果（AP設定・術攻撃キーワード・is_using_scroll）が消える。
+## アイテムのeffect_parsedからscroll_attack情報を取得し再適用する。
+func _reapply_scroll_after_transform(participant: BattleParticipant) -> bool:
+	var items = participant.creature_data.get("items", [])
+	if items.is_empty():
+		return false
+
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		for effect in effects:
+			if effect.get("effect_type") != "scroll_attack":
+				continue
+
+			# 術攻撃キーワードを再追加
+			if not participant.creature_data.has("ability_parsed"):
+				participant.creature_data["ability_parsed"] = {}
+			if not participant.creature_data["ability_parsed"].has("keywords"):
+				participant.creature_data["ability_parsed"]["keywords"] = []
+			if not participant.creature_data["ability_parsed"].has("keyword_conditions"):
+				participant.creature_data["ability_parsed"]["keyword_conditions"] = {}
+
+			if not "術攻撃" in participant.creature_data["ability_parsed"]["keywords"]:
+				participant.creature_data["ability_parsed"]["keywords"].append("術攻撃")
+
+			# AP再設定
+			var scroll_type = effect.get("scroll_type", "base_ap")
+			var scroll_config = {"scroll_type": scroll_type}
+
+			match scroll_type:
+				"fixed_ap":
+					var value = effect.get("value", 0)
+					scroll_config["value"] = value
+					participant.current_ap = value
+				"base_ap":
+					participant.current_ap = participant.creature_data.get("ap", 0)
+				_:
+					participant.current_ap = participant.creature_data.get("ap", 0)
+
+			participant.is_using_scroll = true
+			participant.creature_data["ability_parsed"]["keyword_conditions"]["術攻撃"] = scroll_config
+
+			if not silent:
+				print("【変身後巻物再適用】%s AP=%d" % [participant.creature_data.get("name", "?"), participant.current_ap])
+			return true
+	return false

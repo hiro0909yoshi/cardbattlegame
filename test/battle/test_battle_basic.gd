@@ -344,6 +344,18 @@ func test_1064_gaia_flail_defender():
 	await _assert_defender_item(1064, "ガイアフレイル", 40, -25, 75, 20, "defender", ["強化"])
 
 # ========================================
+# 連鎖数依存（chain_count）
+# ========================================
+
+func test_1034_link_sword_attacker():
+	## 戦闘地(タイル4=火)の連鎖数: pid=0の火タイル=2(タイル1,2) → AP+40
+	await _assert_attacker_item(1034, "リンクソード", 80, 50, 40, -20, "attacker", [])
+
+func test_1034_link_sword_defender():
+	## 戦闘地(タイル4=火)の連鎖数: pid=1の火タイル=2(タイル3,4) → AP+40
+	await _assert_defender_item(1034, "リンクソード", 40, -30, 80, 20, "defender", [])
+
+# ========================================
 # 巻物系（scroll land_count）
 # ========================================
 
@@ -362,3 +374,106 @@ func test_1049_volcano_rod_attacker():
 func test_1049_volcano_rod_defender():
 	## 術攻撃: player_id=0の火+地配置数×10=20, 敵=水→強化術成立→AP30, land_count巻物は反撃を受ける
 	await _assert_defender_item(1049, "ヴォルケーノロッド", 40, 20, 30, 20, "attacker_survived", ["術攻撃", "強化術"])
+
+
+# ========================================
+# 先制付与系
+# ========================================
+
+func test_1000_quick_charm_attacker():
+	## AP+10, 先制 → 攻AP50先制→防HP60-50=10, 防→攻HP50-40=10
+	await _assert_attacker_item(1000, "クイックチャーム", 50, 10, 40, 10, "attacker_survived", ["先制攻撃"])
+
+func test_1000_quick_charm_defender():
+	## 防AP50先制→攻HP50-50=0 撃破、反撃なし
+	await _assert_defender_item(1000, "クイックチャーム", 40, 0, 50, 50, "defender", ["先制攻撃"])
+
+func test_1003_wind_edge_attacker():
+	## AP+30, 先制 → 攻AP70先制→防HP60-70=-10 撃破
+	await _assert_attacker_item(1003, "ウィンドエッジ", 70, 50, 40, -10, "attacker", ["先制攻撃"])
+
+func test_1003_wind_edge_defender():
+	## 防AP70先制→攻HP50-70=-20 撃破、反撃なし
+	await _assert_defender_item(1003, "ウィンドエッジ", 40, -20, 70, 50, "defender", ["先制攻撃"])
+
+func test_1013_vampire_ring_attacker():
+	## APドレイン(on_attack_success)+先制 → 攻AP40先制→防HP60-40=20, 防AP→0(ドレイン)→攻HP50
+	await _assert_attacker_item(1013, "ヴァンパイアリング", 40, 50, 0, 20, "attacker_survived", ["先制攻撃"])
+
+func test_1013_vampire_ring_defender():
+	## 防AP40先制→攻HP50-40=10, 攻AP→0(ドレイン)→防HP50
+	await _assert_defender_item(1013, "ヴァンパイアリング", 0, 10, 40, 50, "attacker_survived", ["先制攻撃"])
+
+func test_1028_hand_crossbow_attacker():
+	## AP+10, HP+10, 先制 → 攻AP50先制→防HP60-50=10, 防→攻item10消費,HP50-30=20
+	await _assert_attacker_item(1028, "ハンドクロスボウ", 50, 20, 40, 10, "attacker_survived", ["先制攻撃"])
+
+func test_1028_hand_crossbow_defender():
+	## 防AP50先制→攻HP50-50=0 撃破、反撃なし
+	await _assert_defender_item(1028, "ハンドクロスボウ", 40, 0, 50, 50, "defender", ["先制攻撃"])
+
+
+# ========================================
+# 手札数依存
+# ========================================
+
+func test_1055_knowledge_ring_attacker():
+	## HP+手札5枚×10=50 → item_bonus_hp=50, 防AP40→item50消費, HP50残
+	await _assert_attacker_item(1055, "ナレッジリング", 40, 50, 40, 20, "attacker_survived", [])
+
+func test_1055_knowledge_ring_defender():
+	## HP+手札5枚×10=50 → item_bonus_hp=50, 攻AP40→land10+item30消費, HP50残
+	await _assert_defender_item(1055, "ナレッジリング", 40, 10, 40, 50, "attacker_survived", [])
+
+# ========================================
+# 条件付きスキル付与（条件判定検証済み）
+# ========================================
+
+func test_1022_tidal_spear_attacker():
+	## AP+20, 水風使用時強化 → 攻=水→条件成立 → (40+20)×1.5=90
+	await _assert_attacker_item(1022, "タイダルスピア", 90, 50, 40, -30, "attacker", ["強化"])
+
+func test_1022_tidal_spear_defender():
+	## 防=火→条件不成立 → AP=40+20=60（強化キーワードは付くが効果未発動）
+	await _assert_defender_item(1022, "タイダルスピア", 40, -10, 60, 20, "defender", ["強化"])
+
+func test_1015_phantom_blaze_attacker():
+	## 術攻撃AP40, 同クリーチャー2体以上で強化術 → タイダルオーガ2体(タイル6,7)→成立 → 40×1.5=60
+	await _assert_attacker_item(1015, "ファントムブレイズ", 60, 50, 40, -10, "attacker", ["術攻撃", "強化術"])
+
+func test_1015_phantom_blaze_defender():
+	## レッドオーガ2体(タイル3,4)→成立 → 40×1.5=60
+	await _assert_defender_item(1015, "ファントムブレイズ", 40, -10, 60, 20, "defender", ["術攻撃", "強化術"])
+
+# ========================================
+# 変身アイテム
+# ========================================
+
+func test_1047_ghoul_blast_attacker():
+	## グールブラスト: 術攻撃AP50+スケルトン変身 → 変身後も巻物AP50維持
+	## スケルトンAP50(術攻撃)→土地ボーナス無効化 vs 防HP50=0、攻撃側勝利
+	var r = await _battle_attacker_item(1047)
+	assert_eq(r.attacker_name, "スケルトン", "グールブラスト(攻): 変身確認")
+	assert_eq(r.attacker_final_ap, 50, "グールブラスト(攻): 攻AP")
+	assert_eq(r.attacker_final_hp, 40, "グールブラスト(攻): 攻HP")
+	assert_eq(r.defender_final_hp, 0, "グールブラスト(攻): 防HP")
+	assert_eq(r.winner, "attacker", "グールブラスト(攻): 勝者")
+
+func test_1047_ghoul_blast_defender():
+	## 防御側スケルトン変身: AP50(術攻撃) → 攻AP40 vs 防スケルトンHP40=0、攻撃側先攻で勝利
+	var r = await _battle_defender_item(1047)
+	assert_eq(r.defender_name, "スケルトン", "グールブラスト(防): 変身確認")
+	assert_eq(r.defender_final_ap, 50, "グールブラスト(防): 防AP")
+	assert_eq(r.defender_final_hp, 0, "グールブラスト(防): 防HP")
+	assert_eq(r.attacker_final_hp, 50, "グールブラスト(防): 攻HP")
+	assert_eq(r.winner, "attacker", "グールブラスト(防): 勝者")
+
+func test_1041_dragon_soul_both():
+	## ドラゴンソウル: 両者装備 → 両方ランダムドラゴンに変身することを確認
+	var config = _create_config()
+	config.attacker_items = [1041]
+	config.defender_items = [1041]
+	var results = await _executor.execute_all_battles(config)
+	var r = results[0]
+	assert_ne(r.attacker_name, "タイダルオーガ", "ドラゴンソウル: 攻撃側変身確認")
+	assert_ne(r.defender_name, "レッドオーガ", "ドラゴンソウル: 防御側変身確認")
