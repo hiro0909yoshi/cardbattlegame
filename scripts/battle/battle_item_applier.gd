@@ -533,15 +533,27 @@ func _apply_chain_count_bonus(participant: BattleParticipant, effect: Dictionary
 ## スキル付与処理
 func _apply_grant_skill(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
 	var skill_name = effect.get("skill", "")
-	
+
 	# 付与条件をチェック（付与条件がある場合のみ）
 	var condition = effect.get("condition", {})
-	
+
 	if not condition.is_empty():
 		if not _check_skill_grant_condition(participant, condition, context):
 			_log("  [スキル付与] %s - 付与条件を満たさないため付与しません" % skill_name)
 			return
-	
+
+	# skill_conditions内の付与時条件をチェック（user_rarity等）
+	var skill_conditions: Array = effect.get("skill_conditions", [])
+	if not skill_conditions.is_empty():
+		var checker = ConditionChecker.new()
+		for cond in skill_conditions:
+			var cond_type = cond.get("condition_type", "")
+			# 付与時にチェックすべき条件のみ（他は発動時にBattleSkillGranterで処理）
+			if cond_type == "user_rarity":
+				if not checker.evaluate_single_condition(cond, context):
+					_log("  [スキル付与] %s - %s条件未達のため付与しません" % [skill_name, cond_type])
+					return
+
 	# 付与条件が満たされた場合、スキルを付与
 	_grant_skill_to_participant(participant, skill_name, effect)
 

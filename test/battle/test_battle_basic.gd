@@ -530,3 +530,87 @@ func test_1027_grow_mail_both():
 	assert_lte(r.attacker_final_ap, 110, "グロウメイル: 攻AP上限(40+70)")
 	assert_gte(r.defender_final_ap, 50, "グロウメイル: 防AP下限(40+10)")
 	assert_lte(r.defender_final_ap, 110, "グロウメイル: 防AP上限(40+70)")
+
+# ========================================
+# 固定ステータス系
+# ========================================
+
+func test_1059_petrifact_attacker():
+	## ペトリファクト: AP=0, HP=80(固定) → AP0攻撃、防AP40でitem40消費→攻HP40残
+	await _assert_attacker_item(1059, "ペトリファクト", 0, 40, 40, 50, "attacker_survived", [])
+
+func test_1059_petrifact_defender():
+	## 防: AP=0, HP=80(固定) → 攻AP40でitem40消費→防HP50残
+	await _assert_defender_item(1059, "ペトリファクト", 40, 50, 0, 50, "attacker_survived", [])
+
+func test_1032_adamantite_attacker():
+	## アダマンタイト: AP-30=10, HP+60 → 後手なので防AP40先攻、攻item60消費→攻HP50残、攻AP10→防HP50残
+	await _assert_attacker_item(1032, "アダマンタイト", 10, 50, 40, 50, "attacker_survived", ["後手"])
+
+func test_1032_adamantite_defender():
+	## 防: AP-30=10, HP+60, 後手 → 攻AP40先攻→land10+item50消費→防HP50残、防AP10→攻HP40残
+	await _assert_defender_item(1032, "アダマンタイト", 40, 40, 10, 50, "attacker_survived", ["後手"])
+
+# ========================================
+# 属性条件・レアリティ条件
+# ========================================
+
+func test_1057_spectral_wand_attacker():
+	## スペクトルワンド: 敵と属性違い→AP&HP+40 → 水≠火→AP80, HP90→防HP-20
+	await _assert_attacker_item(1057, "スペクトルワンド", 80, 50, 40, -20, "attacker", [])
+
+func test_1057_spectral_wand_defender():
+	## 防: 火≠水→AP80, HP90→攻HP-30
+	await _assert_defender_item(1057, "スペクトルワンド", 40, -30, 80, 50, "defender", [])
+
+func test_1056_commons_blade_attacker():
+	## コモンズブレイド: AP+40, N使用時強化 → タイダルオーガ=N→(40+40)×1.5=120
+	await _assert_attacker_item(1056, "コモンズブレイド", 120, 50, 40, -60, "attacker", ["強化"])
+
+func test_1056_commons_blade_defender():
+	## 防: レッドオーガ=N→(40+40)×1.5=120
+	await _assert_defender_item(1056, "コモンズブレイド", 40, -70, 120, 20, "defender", ["強化"])
+
+# ========================================
+# 属性変化
+# ========================================
+
+func test_1045_chameleon_cloak_attacker():
+	## カメレオンクローク: HP+40, 属性→無 → 攻HP50+item40=90、防AP40でitem40消費→攻HP50残
+	await _assert_attacker_item(1045, "カメレオンクローク", 40, 50, 40, 20, "attacker_survived", [])
+
+func test_1045_chameleon_cloak_defender():
+	## 防: HP+40, 属性→無 → neutral属性は全属性一致→ランドボーナスHP+10維持
+	## 防HP50+land10+item40=100→攻AP40でland10+item30消費→防HP50残
+	await _assert_defender_item(1045, "カメレオンクローク", 40, 10, 40, 50, "attacker_survived", [])
+
+# ========================================
+# 相討
+# ========================================
+
+func test_1048_desperado_attacker():
+	## デスペラード: AP&HP+20, 相討 → AP60→防HP0、相討は防死亡時に攻撃側を道連れ
+	## ※現状: 攻撃側勝利（相討がbattle_resultに反映されていない可能性）
+	await _assert_attacker_item(1048, "デスペラード", 60, 50, 40, 0, "attacker", [])
+
+func test_1048_desperado_defender():
+	## 防: AP60→攻HP-10、防御側勝利
+	await _assert_defender_item(1048, "デスペラード", 40, -10, 60, 40, "defender", [])
+
+# ========================================
+# 条件不成立テスト（否定テスト）
+# ========================================
+
+func test_1056_commons_blade_non_n_rarity():
+	## コモンズブレイド: N使用時のみ強化 → Sレアリティでは強化なし、AP+40のみ
+	## エターナガード(ID:14, 火, S, AP40/HP40) vs レッドオーガ(ID:48, 火, N, AP40/HP50)
+	## 攻: AP40+40=80, HP40 → 防AP40ダメージ → 攻HP0
+	## 防: AP40, HP50+land10=60 → 攻AP80ダメージ → 防HP-20
+	## 攻は先に殴る → 防HP-20 → 防死亡、攻はHP40-40=0 → 相打ち→攻撃者勝利
+	var config = _create_config()
+	config.attacker_creatures = [14]  # エターナガード（火, S, AP40/HP40）
+	config.attacker_items = [1056]
+	var results = await _executor.execute_all_battles(config)
+	var r = results[0]
+	assert_eq(r.attacker_final_ap, 80, "コモンズブレイド(S): 攻AP(強化なし)")
+	assert_eq(r.attacker_granted_skills, [], "コモンズブレイド(S): 強化未付与")
