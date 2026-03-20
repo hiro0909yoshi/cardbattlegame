@@ -268,6 +268,9 @@ func _execute_single_battle(
 	var att_skills_before = _snapshot_skill_state(attacker)
 	var def_skills_before = _snapshot_skill_state(defender)
 
+	# ========== EPスナップショット（蓄魔はpre_battle_skills内で発動するため、その前に記録） ==========
+	var ep_snapshot = _snapshot_battle_state(attacker, defender, mock_player)
+
 	# ========== apply_pre_battle_skills（実ゲームと同一のPhase処理） ==========
 	# Phase 0-C: 刻印適用（creature_data["curse"]から）
 	# Phase 0-N: 沈黙チェック（ウォーロックディスク等）
@@ -306,10 +309,16 @@ func _execute_single_battle(
 	await battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
 
 	# ========== バトル中に発動した効果を検出（状態差分） ==========
-	var battle_effects = _diff_battle_state(pre_battle_snapshot, attacker, defender, mock_player)
+	# EP差分はpre_battle_skills前のスナップショットを使用（蓄魔はpre_battle内で発動）
+	# その他（刻印・変質・APドレイン）はexecute_attack_sequence中に発動するためpre_battle後スナップショット使用
+	var battle_effects = _diff_battle_state(pre_battle_snapshot, attacker, defender, mock_player, ep_snapshot)
 
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
+
+	# ========== 再生処理（バトル後、生存者のHP全回復） ==========
+	await battle_system.battle_special_effects.apply_regeneration(attacker)
+	await battle_system.battle_special_effects.apply_regeneration(defender)
 
 	# ========== 帰還処理（バトル後） ==========
 	var attacker_return_result = SkillItemReturn.check_and_apply_item_return(attacker, attacker.creature_data.get("items", []), 0)
@@ -643,17 +652,21 @@ func _snapshot_battle_state(attacker: BattleParticipant, defender: BattlePartici
 	}
 
 ## バトル実行後の状態差分から実際に発動した効果を検出
-func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defender: BattleParticipant, mock_player: PlayerSystem) -> Dictionary:
+## ep_before: EP比較用の早期スナップショット（蓄魔はpre_battle_skills内で発動するため）
+func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defender: BattleParticipant, mock_player: PlayerSystem, ep_before: Dictionary = {}) -> Dictionary:
 	var att_effects: Array[String] = []
 	var def_effects: Array[String] = []
+
+	# EP比較元: ep_beforeがあればそちらを使用（蓄魔対応）、なければbeforeを使用
+	var ep_ref = ep_before if not ep_before.is_empty() else before
 
 	# --- 攻撃側が発動した効果 ---
 	# 蓄魔: 攻撃側のEPが増えた
 	var att_ep_after = 0
 	if attacker.player_id >= 0 and attacker.player_id < mock_player.players.size():
 		att_ep_after = mock_player.players[attacker.player_id].magic_power
-	if att_ep_after > before["attacker_ep"]:
-		att_effects.append("蓄魔[%dEP]" % (att_ep_after - before["attacker_ep"]))
+	if att_ep_after > ep_ref["attacker_ep"]:
+		att_effects.append("蓄魔[%dEP]" % (att_ep_after - ep_ref["attacker_ep"]))
 
 	# 刻印付与: 防御側のcurseが変化した
 	var def_curse_after = defender.creature_data.get("curse", {})
@@ -675,8 +688,8 @@ func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defende
 	var def_ep_after = 0
 	if defender.player_id >= 0 and defender.player_id < mock_player.players.size():
 		def_ep_after = mock_player.players[defender.player_id].magic_power
-	if def_ep_after > before["defender_ep"]:
-		def_effects.append("蓄魔[%dEP]" % (def_ep_after - before["defender_ep"]))
+	if def_ep_after > ep_ref["defender_ep"]:
+		def_effects.append("蓄魔[%dEP]" % (def_ep_after - ep_ref["defender_ep"]))
 
 	# 刻印付与: 攻撃側のcurseが変化した
 	var att_curse_after = attacker.creature_data.get("curse", {})
@@ -721,7 +734,24 @@ func _setup_mock_board(tile_data_mgr: TileDataManager, mock_board: BoardSystem3D
 			if card_data:
 				tile.creature_data = card_data.duplicate(true)
 
-	# 3. TileNeighborSystemを作成して隣接キャッシュを構築
+	# 3. 鼓舞持ちクリーチャーをskill_indexに登録
+	for entry in config.board_layout:
+		var idx = entry.get("tile_index", -1)
+		if idx < 0 or idx >= 20:
+			continue
+		var tile = tile_data_mgr.tile_nodes[idx]
+		if tile.creature_data.is_empty():
+			continue
+		var keywords = tile.creature_data.get("ability_parsed", {}).get("keywords", [])
+		if "鼓舞" in keywords:
+			mock_board.skill_index["support"][idx] = {
+				"creature_data": tile.creature_data,
+				"player_id": tile.owner_id,
+				"tile_index": idx,
+				"support_data": {}
+			}
+
+	# 4. TileNeighborSystemを作成して隣接キャッシュを構築
 	var neighbor_system = TileNeighborSystem.new()
 	neighbor_system.name = "TileNeighborSystem"
 	mock_board.add_child(neighbor_system)
