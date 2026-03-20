@@ -15,6 +15,16 @@ var attacker_owned_lands: Dictionary = {     # 保有土地数
 var attacker_battle_land: String = "neutral"    # バトル発生土地の属性
 var attacker_battle_land_level: int = 1      # バトル発生土地のレベル (1-5)
 var attacker_has_adjacent: bool = false      # 隣接味方ドミニオあり
+## ボード上のタイル配置（board_tilesが空ならowned_landsにフォールバック）
+## 形式: [{"tile_element": "fire", "creature_id": 48}, ...]
+var attacker_board_tiles: Array = []
+
+## ボード再現型配置（board_layoutが空でなければ優先使用）
+## 形式: [{"tile_index": 3, "owner_id": 1, "creature_id": 48, "level": 2}, ...]
+var board_layout: Array = []
+
+## バトル発生タイルのインデックス（board_layout使用時）
+var battle_tile_index: int = -1
 
 ## 防御側設定
 var defender_creatures: Array = []  # (int配列)
@@ -29,6 +39,7 @@ var defender_owned_lands: Dictionary = {
 var defender_battle_land: String = "neutral"
 var defender_battle_land_level: int = 1      # バトル発生土地のレベル (1-5)
 var defender_has_adjacent: bool = false
+var defender_board_tiles: Array = []
 
 ## バリデーション
 func validate() -> bool:
@@ -76,6 +87,20 @@ func swap_attacker_defender():
 	var temp_adjacent = attacker_has_adjacent
 	attacker_has_adjacent = defender_has_adjacent
 	defender_has_adjacent = temp_adjacent
+
+	# ボード配置入れ替え
+	var temp_board_tiles = attacker_board_tiles.duplicate(true)
+	attacker_board_tiles = defender_board_tiles.duplicate(true)
+	defender_board_tiles = temp_board_tiles
+
+	# board_layout: owner_idの0/1を入れ替え
+	if not board_layout.is_empty():
+		for entry in board_layout:
+			var oid = entry.get("owner_id", -1)
+			if oid == 0:
+				entry["owner_id"] = 1
+			elif oid == 1:
+				entry["owner_id"] = 0
 
 	# ========== 新規追加: 刻印スペル入れ替え ==========
 	var temp_curse_spell = attacker_curse_spell_id

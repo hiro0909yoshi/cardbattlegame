@@ -24,6 +24,40 @@ class MockPlayerSystem extends PlayerSystem:
 		p1.name = "テスト防御側"
 		players = [p0, p1]
 
+class MockTile extends RefCounted:
+	var owner_id: int = -1
+	var tile_type: String = "neutral"
+	var level: int = 1
+	var creature_data: Dictionary = {}
+	var tile_index: int = 0
+	var global_position: Vector3 = Vector3.ZERO
+	var connections = []
+
+	func set_level(new_level: int):
+		level = new_level
+
+	func level_up() -> bool:
+		if level < 5:
+			level += 1
+			return true
+		return false
+
+## ダイアモンドボード（20タイル）のデフォルト属性
+const DEFAULT_TILE_TYPES = [
+	"checkpoint", "fire", "fire", "fire", "fire", "neutral",
+	"water", "water", "water", "water", "checkpoint",
+	"wind", "wind", "wind", "wind", "neutral",
+	"earth", "earth", "earth", "earth"
+]
+
+## ダイアモンドボード（20タイル）の座標（XZ平面、距離4.0）
+static var TILE_POSITIONS = [
+	Vector3(0, 0, 0), Vector3(4, 0, 0), Vector3(8, 0, 0), Vector3(12, 0, 0), Vector3(16, 0, 0),
+	Vector3(20, 0, 0), Vector3(20, 0, 4), Vector3(20, 0, 8), Vector3(20, 0, 12), Vector3(20, 0, 16),
+	Vector3(20, 0, 20), Vector3(16, 0, 20), Vector3(12, 0, 20), Vector3(8, 0, 20), Vector3(4, 0, 20),
+	Vector3(0, 0, 20), Vector3(0, 0, 16), Vector3(0, 0, 12), Vector3(0, 0, 8), Vector3(0, 0, 4)
+]
+
 ## バトル実行
 func execute_all_battles(config: BattleTestConfig) -> Array:
 	var results: Array = []
@@ -125,10 +159,11 @@ func _execute_single_battle(
 
 	# 防御側（土地ボーナスあり）
 	# ダミータイル情報を先に作成（土地ボーナス計算に必要）
+	var _battle_tile_idx = config.battle_tile_index if config.battle_tile_index >= 0 else 0
 	var tile_info = {
 		"element": config.defender_battle_land,
 		"level": config.defender_battle_land_level,
-		"index": 0,
+		"index": _battle_tile_idx,
 		"owner": 1,
 		"creature": def_card_data
 	}
@@ -186,8 +221,18 @@ func _execute_single_battle(
 	mock_board.tile_data_manager = tile_data_mgr
 	tile_data_mgr.tile_nodes = {}
 
-	_setup_mock_lands_for_battle(tile_data_mgr, 0, config.attacker_owned_lands)
-	_setup_mock_lands_for_battle(tile_data_mgr, 1, config.defender_owned_lands)
+	# board_layout優先 → 旧形式にフォールバック
+	if not config.board_layout.is_empty():
+		_setup_mock_board(tile_data_mgr, mock_board, config)
+	else:
+		if not config.attacker_board_tiles.is_empty():
+			_setup_mock_board_tiles(tile_data_mgr, 0, config.attacker_board_tiles)
+		else:
+			_setup_mock_lands_for_battle(tile_data_mgr, 0, config.attacker_owned_lands)
+		if not config.defender_board_tiles.is_empty():
+			_setup_mock_board_tiles(tile_data_mgr, 1, config.defender_board_tiles)
+		else:
+			_setup_mock_lands_for_battle(tile_data_mgr, 1, config.defender_owned_lands)
 
 	var mock_card = MockCardSystem.new()
 	var mock_player = MockPlayerSystem.new()
@@ -524,16 +569,67 @@ func _diff_skill_state(before: Dictionary, participant: BattleParticipant) -> Ar
 
 	return granted
 
-## テスト用：TileDataManagerに土地データを設定
-## lands = {"fire": 3, "water": 2, ...} の形式
-func _setup_mock_lands_for_battle(_tile_data_mgr: TileDataManager, _player_id: int, _lands: Dictionary):
-	# TileDataManagerはtile_nodesがないとget_owner_element_counts()で失敗するため
-	# ダミーのタイルオブジェクトを作成して登録する必要はなく、
-	# tile_nodesが空でもget_owner_element_counts()は安全に実行される
-	# ここでは、土地情報がなくても戦闘システムが正常に動作することを想定
+## テスト用：board_layoutから20タイルのダイアモンドボードを再現
+func _setup_mock_board(tile_data_mgr: TileDataManager, mock_board: BoardSystem3D, config: BattleTestConfig):
+	# 1. 20タイルをデフォルト属性・座標で作成
+	for i in range(20):
+		var mock_tile = MockTile.new()
+		mock_tile.tile_index = i
+		mock_tile.tile_type = DEFAULT_TILE_TYPES[i]
+		mock_tile.global_position = TILE_POSITIONS[i]
+		# サイクルグラフ: index±1 (mod 20)
+		mock_tile.connections = [((i - 1) + 20) % 20, (i + 1) % 20]
+		tile_data_mgr.tile_nodes[i] = mock_tile
 
-	# 注意: ゲーム内では実際のTileノードがtile_nodesに登録されるため、
-	# get_owner_element_countsは実際の土地情報を返す
-	# テスト環境ではtile_nodesが空なので、get_owner_element_countsは全て0を返す
-	# これは鼓舞スキルの条件判定には影響しない（鼓舞スキルは別の方法で検索）
-	pass
+	# 2. board_layoutでオーバーライド
+	for entry in config.board_layout:
+		var idx = entry.get("tile_index", -1)
+		if idx < 0 or idx >= 20:
+			continue
+		var tile = tile_data_mgr.tile_nodes[idx]
+		tile.owner_id = entry.get("owner_id", -1)
+		tile.level = entry.get("level", 1)
+		var creature_id = entry.get("creature_id", -1)
+		if creature_id >= 0:
+			var card_data = CardLoader.get_card_by_id(creature_id)
+			if card_data:
+				tile.creature_data = card_data.duplicate(true)
+
+	# 3. TileNeighborSystemを作成して隣接キャッシュを構築
+	var neighbor_system = TileNeighborSystem.new()
+	neighbor_system.name = "TileNeighborSystem"
+	mock_board.add_child(neighbor_system)
+	neighbor_system.setup(tile_data_mgr.tile_nodes)
+	mock_board.tile_neighbor_system = neighbor_system
+
+## テスト用：board_tilesからTileDataManagerにタイル配置を設定
+## board_tiles = [{"tile_element": "fire", "creature_id": 48}, ...] の形式
+func _setup_mock_board_tiles(tile_data_mgr: TileDataManager, player_id: int, board_tiles: Array):
+	var index_offset = player_id * 10
+	for i in range(board_tiles.size()):
+		var entry = board_tiles[i]
+		var mock_tile = MockTile.new()
+		mock_tile.owner_id = player_id
+		mock_tile.tile_type = entry.get("tile_element", "neutral")
+		var creature_id = entry.get("creature_id", -1)
+		if creature_id >= 0:
+			var card_data = CardLoader.get_card_by_id(creature_id)
+			if card_data:
+				mock_tile.creature_data = card_data.duplicate(true)
+			else:
+				mock_tile.creature_data = {"element": mock_tile.tile_type, "name": "unknown"}
+		tile_data_mgr.tile_nodes[index_offset + i] = mock_tile
+
+## テスト用：owned_landsからTileDataManagerにタイル配置を設定（後方互換）
+## lands = {"fire": 3, "water": 2, ...} の形式
+func _setup_mock_lands_for_battle(tile_data_mgr: TileDataManager, player_id: int, lands: Dictionary):
+	var index_offset = player_id * 10
+	var idx = index_offset
+	for element in lands:
+		for i in range(lands[element]):
+			var mock_tile = MockTile.new()
+			mock_tile.owner_id = player_id
+			mock_tile.tile_type = element
+			mock_tile.creature_data = {"element": element, "name": "mock_%s" % element}
+			tile_data_mgr.tile_nodes[idx] = mock_tile
+			idx += 1

@@ -1,0 +1,7 @@
+{
+  "dirs": ["res://test/unit", "res://test/battle"],
+  "prefix": "test_",
+  "suffix": ".gd",
+  "should_exit": true,
+  "log_level": 1
+}

@@ -76,9 +76,11 @@ func change_element_bidirectional(tile_index: int, element_a: String, element_b:
 		GameLogger.error("Spell", "SpellLand.change_element_bidirectional: 無効な属性 '%s' または '%s' at tile_index %d" % [element_a, element_b, tile_index])
 		return false
 	
+	if not _validate_tile_index(tile_index):
+		return false
 	var tile = board_system_ref.tile_nodes[tile_index]
 	var current_element = tile.tile_type
-	
+
 	# 相互変換の判定
 	if current_element == element_a:
 		# element_a → element_b
