@@ -57,6 +57,14 @@ var attacker_item_return_type: String = ""  # "hand" or "deck" or ""
 var defender_item_returned: bool = false    # 防御側アイテムが復帰したか
 var defender_item_return_type: String = ""  # "hand" or "deck" or ""
 
+## 刻印情報（バトル後のcreature_data["curse"]）
+var attacker_curse: Dictionary = {}  # {"curse_type": "...", "name": "..."} or {}
+var defender_curse: Dictionary = {}  # {"curse_type": "...", "name": "..."} or {}
+
+## バトル中に実際に発動した効果（状態差分から検出）
+var attacker_battle_effects: Array = []  # 例: ["蓄魔", "変質", "刻印[消沈]"]
+var defender_battle_effects: Array = []
+
 ## CSV/JSON出力用
 func to_dict() -> Dictionary:
 	return {

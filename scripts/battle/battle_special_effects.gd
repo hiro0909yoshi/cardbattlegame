@@ -314,13 +314,21 @@ func _check_instant_death_condition(condition: Dictionary, attacker: BattleParti
 			# 敵が特定タイプ
 			var required_type = condition.get("type", "")
 			var defender_type = defender.creature_data.get("creature_type", "")
-			
+
 			if defender_type == required_type:
 				print("【即死条件】敵が", required_type, "型 → 条件満たす")
 				return true
-			else:
-				print("【即死条件】敵が", defender_type, "型（要求:", required_type, "）→ 条件不成立")
-				return false
+
+			# 刻印による堅守付与チェック（重結界等のdefensive_form）
+			if required_type == "defensive":
+				var curse = defender.creature_data.get("curse", {})
+				var params = curse.get("params", {})
+				if params.get("defensive_form", false):
+					print("【即死条件】敵が刻印により堅守化 → 条件満たす")
+					return true
+
+			print("【即死条件】敵が", defender_type, "型（要求:", required_type, "）→ 条件不成立")
+			return false
 		
 		"defender_ap_check":
 			# 防御側のAPが一定以上（基本APで判定）

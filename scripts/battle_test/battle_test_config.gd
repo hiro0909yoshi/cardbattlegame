@@ -113,6 +113,11 @@ func swap_attacker_defender():
 var attacker_curse_spell_id: int = 0
 var defender_curse_spell_id: int = 0
 
+## 事前刻印（直接設定用、spell_idより優先）
+## 例: {"curse_type": "creature_toll_disable", "name": "免罪"}
+var attacker_pre_curse: Dictionary = {}
+var defender_pre_curse: Dictionary = {}
+
 ## ========== 新規追加: バフ設定 ==========
 
 ## 攻撃側バフ設定

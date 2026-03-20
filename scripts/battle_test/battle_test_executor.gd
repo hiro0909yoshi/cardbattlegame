@@ -131,9 +131,13 @@ func _execute_single_battle(
 	apply_buff_to_creature_data(att_card_data, config.attacker_buff_config)
 	apply_buff_to_creature_data(def_card_data, config.defender_buff_config)
 
-	if config.attacker_curse_spell_id > 0:
+	if not config.attacker_pre_curse.is_empty():
+		att_card_data["curse"] = config.attacker_pre_curse.duplicate(true)
+	elif config.attacker_curse_spell_id > 0:
 		set_curse_on_creature_data(att_card_data, config.attacker_curse_spell_id)
-	if config.defender_curse_spell_id > 0:
+	if not config.defender_pre_curse.is_empty():
+		def_card_data["curse"] = config.defender_pre_curse.duplicate(true)
+	elif config.defender_curse_spell_id > 0:
 		set_curse_on_creature_data(def_card_data, config.defender_curse_spell_id)
 
 	# ========== BattleSystem作成 ==========
@@ -294,8 +298,14 @@ func _execute_single_battle(
 	# ========== 攻撃順を決定（pre-battle後 = アイテムによる先制付与が反映済み） ==========
 	var attack_order = battle_system.battle_execution.determine_attack_order(attacker, defender)
 
+	# ========== バトル実行前スナップショット（実際の発動効果検出用） ==========
+	var pre_battle_snapshot = _snapshot_battle_state(attacker, defender, mock_player)
+
 	# 攻撃シーケンス実行
 	await battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
+
+	# ========== バトル中に発動した効果を検出（状態差分） ==========
+	var battle_effects = _diff_battle_state(pre_battle_snapshot, attacker, defender, mock_player)
 
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
@@ -352,6 +362,14 @@ func _execute_single_battle(
 
 	test_result.winner = winner_str
 	test_result.battle_duration_ms = Time.get_ticks_msec() - start_time
+
+	# 刻印情報（バトル後）
+	test_result.attacker_curse = attacker.creature_data.get("curse", {}).duplicate()
+	test_result.defender_curse = defender.creature_data.get("curse", {}).duplicate()
+
+	# バトル中に実際に発動した効果
+	test_result.attacker_battle_effects = battle_effects.get("attacker", [])
+	test_result.defender_battle_effects = battle_effects.get("defender", [])
 
 	# 帰還結果
 	test_result.attacker_item_returned = attacker_return_result.get("returned", false)
@@ -557,13 +575,16 @@ func _apply_extra_buff(participant: BattleParticipant, buff_config: Dictionary) 
 ## スキル状態のスナップショットを取得
 func _snapshot_skill_state(participant: BattleParticipant) -> Dictionary:
 	var keywords: Array = []
+	var effects: Array = []
 	if participant.creature_data.has("ability_parsed"):
 		keywords = participant.creature_data.ability_parsed.get("keywords", []).duplicate()
+		effects = participant.creature_data.ability_parsed.get("effects", []).duplicate(true)
 	return {
 		"has_first_strike": participant.has_first_strike,
 		"has_item_first_strike": participant.has_item_first_strike,
 		"has_last_strike": participant.has_last_strike,
-		"keywords": keywords
+		"keywords": keywords,
+		"effects": effects
 	}
 
 ## スキル状態の差分からアイテム/スキルによって付与されたスキルを抽出
@@ -586,7 +607,91 @@ func _diff_skill_state(before: Dictionary, participant: BattleParticipant) -> Ar
 			if keyword not in before_keywords and keyword not in granted:
 				granted.append(keyword)
 
+		# 新しく追加された攻撃成功時能力を検出（変身等）
+		# ability_parsed.effects の差分
+		var before_effects = before.get("effects", [])
+		var current_effects = participant.creature_data.ability_parsed.get("effects", [])
+		for effect in current_effects:
+			if effect not in before_effects:
+				var trigger = effect.get("trigger", "")
+				if trigger == "on_attack_success":
+					var effect_type = effect.get("effect_type", "")
+					if effect_type == "transform":
+						granted.append("変質")
+
 	return granted
+
+## バトル実行前の状態スナップショット（実際に発動した効果を検出するため）
+func _snapshot_battle_state(attacker: BattleParticipant, defender: BattleParticipant, mock_player: PlayerSystem) -> Dictionary:
+	var att_ep = 0
+	var def_ep = 0
+	if attacker.player_id >= 0 and attacker.player_id < mock_player.players.size():
+		att_ep = mock_player.players[attacker.player_id].magic_power
+	if defender.player_id >= 0 and defender.player_id < mock_player.players.size():
+		def_ep = mock_player.players[defender.player_id].magic_power
+	return {
+		"attacker_curse": attacker.creature_data.get("curse", {}).duplicate(),
+		"defender_curse": defender.creature_data.get("curse", {}).duplicate(),
+		"attacker_creature_id": attacker.creature_data.get("id", -1),
+		"defender_creature_id": defender.creature_data.get("id", -1),
+		"attacker_ep": att_ep,
+		"defender_ep": def_ep,
+		"defender_ap": defender.current_ap,
+		"attacker_ap": attacker.current_ap,
+	}
+
+## バトル実行後の状態差分から実際に発動した効果を検出
+func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defender: BattleParticipant, mock_player: PlayerSystem) -> Dictionary:
+	var att_effects: Array = []
+	var def_effects: Array = []
+
+	# --- 攻撃側が発動した効果 ---
+	# 蓄魔: 攻撃側のEPが増えた
+	var att_ep_after = 0
+	if attacker.player_id >= 0 and attacker.player_id < mock_player.players.size():
+		att_ep_after = mock_player.players[attacker.player_id].magic_power
+	if att_ep_after > before["attacker_ep"]:
+		att_effects.append("蓄魔[%dEP]" % (att_ep_after - before["attacker_ep"]))
+
+	# 刻印付与: 防御側のcurseが変化した
+	var def_curse_after = defender.creature_data.get("curse", {})
+	var def_curse_before = before["defender_curse"]
+	if not def_curse_after.is_empty() and def_curse_after != def_curse_before:
+		var curse_name = def_curse_after.get("name", "刻印")
+		att_effects.append("刻印[%s]" % curse_name)
+
+	# 変質: 防御側のcreature_idが変わった
+	if defender.creature_data.get("id", -1) != before["defender_creature_id"]:
+		att_effects.append("変質")
+
+	# APドレイン: 防御側のAPが0になった（元は0以外）
+	if defender.current_ap == 0 and before["defender_ap"] > 0:
+		att_effects.append("APドレイン")
+
+	# --- 防御側が発動した効果 ---
+	# 蓄魔: 防御側のEPが増えた
+	var def_ep_after = 0
+	if defender.player_id >= 0 and defender.player_id < mock_player.players.size():
+		def_ep_after = mock_player.players[defender.player_id].magic_power
+	if def_ep_after > before["defender_ep"]:
+		def_effects.append("蓄魔[%dEP]" % (def_ep_after - before["defender_ep"]))
+
+	# 刻印付与: 攻撃側のcurseが変化した
+	var att_curse_after = attacker.creature_data.get("curse", {})
+	var att_curse_before = before["attacker_curse"]
+	if not att_curse_after.is_empty() and att_curse_after != att_curse_before:
+		var curse_name = att_curse_after.get("name", "刻印")
+		def_effects.append("刻印[%s]" % curse_name)
+
+	# 変質: 攻撃側のcreature_idが変わった
+	if attacker.creature_data.get("id", -1) != before["attacker_creature_id"]:
+		def_effects.append("変質")
+
+	# APドレイン: 攻撃側のAPが0になった（元は0以外）
+	if attacker.current_ap == 0 and before["attacker_ap"] > 0:
+		def_effects.append("APドレイン")
+
+	return {"attacker": att_effects, "defender": def_effects}
 
 ## テスト用：board_layoutから20タイルのダイアモンドボードを再現
 func _setup_mock_board(tile_data_mgr: TileDataManager, mock_board: BoardSystem3D, config: BattleTestConfig):
