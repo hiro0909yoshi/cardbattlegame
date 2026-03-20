@@ -468,7 +468,7 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	}
 
 
-## 指定マス数移動（チャリオット、スレイプニールアルカナアーツ）
+## 指定マス数移動（チャリオット、ゲイルスタリオンアルカナアーツ）
 func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _caster_player_id: int) -> Dictionary:
 	var from_tile_index = target_data.get("tile_index", -1)
 	if from_tile_index == -1:
@@ -484,7 +484,7 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 		# ちょうどNマス先のみ（チャリオット用）
 		destinations = _get_tiles_at_exact_steps(from_tile_index, steps)
 	else:
-		# Nマス以内（スレイプニール用）
+		# Nマス以内（ゲイルスタリオン用）
 		destinations = _get_tiles_within_steps(from_tile_index, steps)
 	
 	if destinations.is_empty():

@@ -12,7 +12,7 @@ class MockCardSystem extends CardSystem:
 			player_decks[pid] = []
 			player_discards[pid] = []
 			# 手札5枚（手札数依存アイテム用）
-			var hand_data: Array = []
+			var hand_data: Array[Dictionary] = []
 			for i in range(5):
 				hand_data.append({"id": i, "name": "dummy_%d" % i})
 			player_hands[pid] = {"data": hand_data}
@@ -63,8 +63,8 @@ static var TILE_POSITIONS = [
 ]
 
 ## バトル実行
-func execute_all_battles(config: BattleTestConfig) -> Array:
-	var results: Array = []
+func execute_all_battles(config: BattleTestConfig) -> Array[BattleTestResult]:
+	var results: Array[BattleTestResult] = []
 	var battle_id = 0
 
 	print("[BattleTestExecutor] バトル実行開始")
@@ -297,6 +297,7 @@ func _execute_single_battle(
 
 	# ========== 攻撃順を決定（pre-battle後 = アイテムによる先制付与が反映済み） ==========
 	var attack_order = battle_system.battle_execution.determine_attack_order(attacker, defender)
+	var first_strike_occurred = attacker.has_first_strike or attacker.has_item_first_strike or defender.has_first_strike or defender.has_item_first_strike
 
 	# ========== バトル実行前スナップショット（実際の発動効果検出用） ==========
 	var pre_battle_snapshot = _snapshot_battle_state(attacker, defender, mock_player)
@@ -361,6 +362,7 @@ func _execute_single_battle(
 			winner_str = "both_defeated"
 
 	test_result.winner = winner_str
+	test_result.first_strike_occurred = first_strike_occurred
 	test_result.battle_duration_ms = Time.get_ticks_msec() - start_time
 
 	# 刻印情報（バトル後）
@@ -414,8 +416,8 @@ func _get_spell_name(spell_id: int) -> String:
 	return spell.name
 
 ## 発動したスキルを取得
-func _get_triggered_skills(participant: BattleParticipant) -> Array:
-	var skills: Array = []
+func _get_triggered_skills(participant: BattleParticipant) -> Array[String]:
+	var skills: Array[String] = []
 
 	# クリーチャーの基本スキルをチェック
 	if participant.creature_data.has("ability_parsed"):
@@ -588,8 +590,8 @@ func _snapshot_skill_state(participant: BattleParticipant) -> Dictionary:
 	}
 
 ## スキル状態の差分からアイテム/スキルによって付与されたスキルを抽出
-func _diff_skill_state(before: Dictionary, participant: BattleParticipant) -> Array:
-	var granted: Array = []
+func _diff_skill_state(before: Dictionary, participant: BattleParticipant) -> Array[String]:
+	var granted: Array[String] = []
 
 	if participant.has_item_first_strike and not before.get("has_item_first_strike", false):
 		granted.append("先制攻撃")
@@ -642,8 +644,8 @@ func _snapshot_battle_state(attacker: BattleParticipant, defender: BattlePartici
 
 ## バトル実行後の状態差分から実際に発動した効果を検出
 func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defender: BattleParticipant, mock_player: PlayerSystem) -> Dictionary:
-	var att_effects: Array = []
-	var def_effects: Array = []
+	var att_effects: Array[String] = []
+	var def_effects: Array[String] = []
 
 	# --- 攻撃側が発動した効果 ---
 	# 蓄魔: 攻撃側のEPが増えた

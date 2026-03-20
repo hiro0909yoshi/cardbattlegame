@@ -2,9 +2,9 @@
 
 **プロジェクト**: カルドセプト風カードバトルゲーム
 **作成日**: 2026年3月20日
-**最終更新**: 2026年3月20日
+**最終更新**: 2026年3月21日
 **対象ユーザー**: 開発者
-**ステータス**: Phase 2 実装中（55アイテム確定済み、MockBoard基盤完成、復帰・変身・先制・条件判定・否定テスト済み）
+**ステータス**: Phase 2 完了（187アイテムテスト）、Phase 3 実装中（クリーチャースキルテスト）
 
 ---
 
@@ -182,7 +182,7 @@ land_bonus → resonance → temporary → spell → item → current_hp
 | 1033 | ハーフプレート | HP+30 | HP40,防HP20,survived | 攻HP10,HP50,survived | なし |
 | 1001 | グレートヘルム | AP-10,HP+40 | AP30,HP50,防HP30,survived | AP30,攻HP20,HP50,survived | なし |
 | 1008 | ガーディアンブレイド | AP+30,HP+30 | AP70,HP50,防HP-10,attacker | AP70,攻HP-20,HP50,defender | なし |
-| 1040 | トライデント | AP+40,HP+20 | AP80,HP50,防HP-20,attacker | AP80,攻HP-30,HP40,defender | なし |
+| 1040 | ガントレットソード | AP+40,HP+20 | AP80,HP50,防HP-20,attacker | AP80,攻HP-30,HP40,defender | なし |
 | 1020 | コロッサルソード | AP+60,HP-30 | AP100,HP50,防HP-40,attacker | AP100,攻HP-50,防HP20,defender | なし |
 
 #### ステータス + 非戦闘効果（5アイテム）

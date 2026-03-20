@@ -157,7 +157,7 @@
 		},
 		{
 			"id": 305,
-			"name": "エンチャントレス",
+			"name": "インスクライバー",
 			"dev_name": "エンチャントレス",
 			"rarity": "S",
 			"type": "creature",
@@ -263,7 +263,7 @@
 		},
 		{
 			"id": 308,
-			"name": "キリン",
+			"name": "ゼフィロス",
 			"dev_name": "キリン",
 			"rarity": "S",
 			"type": "creature",
@@ -394,7 +394,7 @@
 		},
 		{
 			"id": 313,
-			"name": "グレムリン",
+			"name": "デビルアイ",
 			"dev_name": "グレムリン",
 			"rarity": "S",
 			"type": "creature",
@@ -701,7 +701,7 @@
 		},
 		{
 			"id": 322,
-			"name": "スレイプニール",
+			"name": "ゲイルスタリオン",
 			"dev_name": "スレイプニール",
 			"rarity": "S",
 			"type": "creature",

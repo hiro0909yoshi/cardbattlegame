@@ -286,13 +286,13 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 ```
 攻撃側: ファイアービーク（AP:30、刺突[水属性]）
 防御側A: オドントティラヌス（水属性、HP:40 + 土地20）
-防御側B: グレムリン（火属性、HP:30 + 土地20）
+防御側B: デビルアイ（火属性、HP:30 + 土地20）
 
 オドントティラヌスへの攻撃:
 - 水属性なので刺突発動
 - 総HP = 40（土地ボーナス無効）
 
-グレムリンへの攻撃:
+デビルアイへの攻撃:
 - 火属性なので刺突不発
 - 総HP = 50（土地ボーナス有効）
 ```
@@ -302,13 +302,13 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 ```
 攻撃側: ピュトン（基本AP:40、刺突[敵AP≥40]）
 防御側A: バハムート（AP:50）
-防御側B: グレムリン（AP:30）
+防御側B: デビルアイ（AP:30）
 
 対バハムート:
 - 敵AP = 50
 - 敵AP≥40なので刺突発動！
 
-対グレムリン:
+対デビルアイ:
 - 敵AP = 30
 - 敵AP<40なので刺突不発
 ```

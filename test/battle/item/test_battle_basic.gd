@@ -148,10 +148,10 @@ func test_1008_guardian_blade_defender():
 	await _assert_defender_item(1008, "ガーディアンブレイド", 40, -20, 70, 50, "defender", [])
 
 func test_1040_trident_attacker():
-	await _assert_attacker_item(1040, "トライデント", 80, 50, 40, -20, "attacker", [])
+	await _assert_attacker_item(1040, "ガントレットソード", 80, 50, 40, -20, "attacker", [])
 
 func test_1040_trident_defender():
-	await _assert_defender_item(1040, "トライデント", 40, -30, 80, 40, "defender", [])
+	await _assert_defender_item(1040, "ガントレットソード", 40, -30, 80, 40, "defender", [])
 
 func test_1020_colossal_sword_attacker():
 	await _assert_attacker_item(1020, "コロッサルソード", 100, 50, 40, -40, "attacker", [])

@@ -339,7 +339,7 @@
 			"ap": 0,
 			"hp": 30,
 			"ability": "堅守・課税・蘇生",
-			"ability_detail": "堅守；課税[EP0]；蘇生[ティラノサウルス]",
+			"ability_detail": "堅守；課税[EP0]；蘇生[ドラゴンゾンビ]",
 			"ability_parsed": {
 				"keywords": [
 					"堅守",
@@ -747,7 +747,7 @@
 		},
 		{
 			"id": 425,
-			"name": "ティラノサウルス",
+			"name": "ドラゴンゾンビ",
 			"dev_name": "ティラノサウルス",
 			"rarity": "N",
 			"type": "creature",

@@ -185,7 +185,7 @@ static func apply_land_effect_grant(creature_data: Dictionary, grant_elements: A
 ## クリーチャーが追加で地形効果を得られる属性リストを取得
 ## 224 スプラウトリング: ["fire"]
 ## 316 サーペントフライ: ["water"]
-## 430 ハーフリング: ["fire", "water", "earth", "wind"]
+## 430 テラリウス: ["fire", "water", "earth", "wind"]
 static func get_extra_land_elements(creature_data: Dictionary) -> Array:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var extra_elements = ability_parsed.get("extra_land_elements", [])

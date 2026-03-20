@@ -174,7 +174,7 @@ static func _execute_destroy_item(actor, target, effect: Dictionary) -> bool:
 	var target_name = target.creature_data.get("name", "?")
 	var item_name = target_item.get("name", "???")
 	
-	# レア度チェック（グレムリンアイ等）
+	# レア度チェック（イビルアイ等）
 	var rarity_exclude = effect.get("rarity_exclude", [])
 	if not rarity_exclude.is_empty():
 		var item_rarity = target_item.get("rarity", "N")

@@ -1,5 +1,5 @@
 {
-  "dirs": ["res://test/unit", "res://test/battle"],
+  "dirs": ["res://test/unit/", "res://test/battle/item/", "res://test/battle/creature/"],
   "prefix": "test_",
   "suffix": ".gd",
   "should_exit": true,

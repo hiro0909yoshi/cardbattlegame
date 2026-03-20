@@ -64,7 +64,7 @@ static func apply(participant, silent: bool = false) -> Array:
 static func grant_skill(participant, skill_name: String, silent: bool = false) -> void:
 	match skill_name:
 		"先制":
-			participant.has_first_strike = true
+			participant.apply_item_first_strike()
 			if not silent:
 				print("【先制付与】", participant.creature_data.get("name", "?"), " アイテムによる先制")
 		"後手":
