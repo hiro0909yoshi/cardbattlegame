@@ -165,10 +165,20 @@ func test_1020_colossal_sword_defender():
 # ========================================
 
 func test_1005_phoenix_mail_attacker():
-	await _assert_attacker_item(1005, "フェニックスメイル", 40, 50, 40, 20, "attacker_survived", [])
+	var r = await _battle_attacker_item(1005)
+	assert_eq(r.attacker_final_ap, 40, "フェニックスメイル(攻): 攻AP")
+	assert_eq(r.attacker_final_hp, 50, "フェニックスメイル(攻): 攻HP")
+	assert_eq(r.defender_final_hp, 20, "フェニックスメイル(攻): 防HP")
+	assert_eq(r.winner, "attacker_survived", "フェニックスメイル(攻): 勝者")
+	assert_true(r.attacker_item_returned, "フェニックスメイル(攻): 復帰発動")
+	assert_eq(r.attacker_item_return_type, "deck", "フェニックスメイル(攻): ブック復帰")
 
 func test_1005_phoenix_mail_defender():
-	await _assert_defender_item(1005, "フェニックスメイル", 40, 10, 40, 50, "attacker_survived", [])
+	var r = await _battle_defender_item(1005)
+	assert_eq(r.defender_final_hp, 50, "フェニックスメイル(防): 防HP")
+	assert_eq(r.winner, "attacker_survived", "フェニックスメイル(防): 勝者")
+	assert_true(r.defender_item_returned, "フェニックスメイル(防): 復帰発動")
+	assert_eq(r.defender_item_return_type, "deck", "フェニックスメイル(防): ブック復帰")
 
 func test_1011_legacy_orb_attacker():
 	await _assert_attacker_item(1011, "レガシーオーブ", 40, 10, 40, 20, "attacker_survived", [])
@@ -189,10 +199,22 @@ func test_1029_drain_mail_defender():
 	await _assert_defender_item(1029, "ドレインメイル", 40, 10, 40, 50, "attacker_survived", [])
 
 func test_1054_chakram_attacker():
-	await _assert_attacker_item(1054, "チャクラム", 60, 50, 40, 0, "attacker", [])
+	var r = await _battle_attacker_item(1054)
+	assert_eq(r.attacker_final_ap, 60, "チャクラム(攻): 攻AP")
+	assert_eq(r.attacker_final_hp, 50, "チャクラム(攻): 攻HP")
+	assert_eq(r.defender_final_hp, 0, "チャクラム(攻): 防HP")
+	assert_eq(r.winner, "attacker", "チャクラム(攻): 勝者")
+	assert_true(r.attacker_item_returned, "チャクラム(攻): 復帰発動")
+	assert_eq(r.attacker_item_return_type, "hand", "チャクラム(攻): 手札復帰")
 
 func test_1054_chakram_defender():
-	await _assert_defender_item(1054, "チャクラム", 40, -10, 60, 30, "defender", [])
+	var r = await _battle_defender_item(1054)
+	assert_eq(r.defender_final_ap, 60, "チャクラム(防): 防AP")
+	assert_eq(r.attacker_final_hp, -10, "チャクラム(防): 攻HP")
+	assert_eq(r.defender_final_hp, 30, "チャクラム(防): 防HP")
+	assert_eq(r.winner, "defender", "チャクラム(防): 勝者")
+	assert_true(r.defender_item_returned, "チャクラム(防): 復帰発動")
+	assert_eq(r.defender_item_return_type, "hand", "チャクラム(防): 手札復帰")
 
 
 # ========================================
@@ -259,10 +281,22 @@ func test_1024_lightning_orb_defender():
 	await _assert_defender_item(1024, "ライトニングオーブ", 40, 10, 40, 20, "attacker_survived", ["術攻撃"])
 
 func test_1030_return_ray_attacker():
-	await _assert_attacker_item(1030, "リターンレイ", 30, 10, 40, 20, "attacker_survived", ["術攻撃"])
+	var r = await _battle_attacker_item(1030)
+	assert_eq(r.attacker_final_ap, 30, "リターンレイ(攻): 攻AP")
+	assert_eq(r.attacker_final_hp, 10, "リターンレイ(攻): 攻HP")
+	assert_eq(r.defender_final_hp, 20, "リターンレイ(攻): 防HP")
+	assert_eq(r.winner, "attacker_survived", "リターンレイ(攻): 勝者")
+	assert_true(r.attacker_item_returned, "リターンレイ(攻): 復帰発動")
+	assert_eq(r.attacker_item_return_type, "hand", "リターンレイ(攻): 手札復帰")
 
 func test_1030_return_ray_defender():
-	await _assert_defender_item(1030, "リターンレイ", 40, 20, 30, 20, "attacker_survived", ["術攻撃"])
+	var r = await _battle_defender_item(1030)
+	assert_eq(r.defender_final_ap, 30, "リターンレイ(防): 防AP")
+	assert_eq(r.attacker_final_hp, 20, "リターンレイ(防): 攻HP")
+	assert_eq(r.defender_final_hp, 20, "リターンレイ(防): 防HP")
+	assert_eq(r.winner, "attacker_survived", "リターンレイ(防): 勝者")
+	assert_true(r.defender_item_returned, "リターンレイ(防): 復帰発動")
+	assert_eq(r.defender_item_return_type, "hand", "リターンレイ(防): 手札復帰")
 
 func test_1037_divine_halo_attacker():
 	await _assert_attacker_item(1037, "ディバインハロー", 45, 10, 40, 5, "attacker_survived", ["術攻撃", "強化術"])
@@ -477,3 +511,22 @@ func test_1041_dragon_soul_both():
 	var r = results[0]
 	assert_ne(r.attacker_name, "タイダルオーガ", "ドラゴンソウル: 攻撃側変身確認")
 	assert_ne(r.defender_name, "レッドオーガ", "ドラゴンソウル: 防御側変身確認")
+
+# ========================================
+# ランダムステータスアイテム
+# ========================================
+
+func test_1027_grow_mail_both():
+	## グロウメイル: AP+HP+10~70ランダム → 両者装備で範囲内か確認
+	## 攻撃側: base AP40 + 10~70 = 50~110
+	## 防御側: base AP40 + 10~70 = 50~110
+	var config = _create_config()
+	config.attacker_items = [1027]
+	config.defender_items = [1027]
+	var results = await _executor.execute_all_battles(config)
+	var r = results[0]
+	# APが範囲内か（ランダムボーナス10~70がbase AP40に加算）
+	assert_gte(r.attacker_final_ap, 50, "グロウメイル: 攻AP下限(40+10)")
+	assert_lte(r.attacker_final_ap, 110, "グロウメイル: 攻AP上限(40+70)")
+	assert_gte(r.defender_final_ap, 50, "グロウメイル: 防AP下限(40+10)")
+	assert_lte(r.defender_final_ap, 110, "グロウメイル: 防AP上限(40+70)")

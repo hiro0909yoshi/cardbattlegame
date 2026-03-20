@@ -51,6 +51,12 @@ var damage_dealt_by_attacker: int
 var damage_dealt_by_defender: int
 var first_strike_occurred: bool  # 先制攻撃が発生したか
 
+## 帰還結果
+var attacker_item_returned: bool = false    # 攻撃側アイテムが復帰したか
+var attacker_item_return_type: String = ""  # "hand" or "deck" or ""
+var defender_item_returned: bool = false    # 防御側アイテムが復帰したか
+var defender_item_return_type: String = ""  # "hand" or "deck" or ""
+
 ## CSV/JSON出力用
 func to_dict() -> Dictionary:
 	return {

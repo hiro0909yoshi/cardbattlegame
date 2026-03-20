@@ -254,6 +254,9 @@ func _execute_single_battle(
 	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic, mock_card)
 	battle_system.battle_preparation.setup_systems(mock_board, mock_card, mock_player, spell_magic)
 
+	# 帰還スキル用にCardSystem参照を設定
+	SkillItemReturn.card_system_ref = mock_card
+
 	attacker.spell_magic_ref = spell_magic
 	defender.spell_magic_ref = spell_magic
 
@@ -296,6 +299,10 @@ func _execute_single_battle(
 
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
+
+	# ========== 帰還処理（バトル後） ==========
+	var attacker_return_result = SkillItemReturn.check_and_apply_item_return(attacker, attacker.creature_data.get("items", []), 0)
+	var defender_return_result = SkillItemReturn.check_and_apply_item_return(defender, defender.creature_data.get("items", []), 1)
 
 	# ========== 結果を記録 ==========
 	var test_result = BattleTestResult.new()
@@ -345,6 +352,12 @@ func _execute_single_battle(
 
 	test_result.winner = winner_str
 	test_result.battle_duration_ms = Time.get_ticks_msec() - start_time
+
+	# 帰還結果
+	test_result.attacker_item_returned = attacker_return_result.get("returned", false)
+	test_result.attacker_item_return_type = "deck" if attacker_return_result.get("has_deck_return", false) else ("hand" if attacker_return_result.get("has_hand_return", false) else "")
+	test_result.defender_item_returned = defender_return_result.get("returned", false)
+	test_result.defender_item_return_type = "deck" if defender_return_result.get("has_deck_return", false) else ("hand" if defender_return_result.get("has_hand_return", false) else "")
 
 	# バトル条件
 	test_result.battle_land = config.attacker_battle_land
