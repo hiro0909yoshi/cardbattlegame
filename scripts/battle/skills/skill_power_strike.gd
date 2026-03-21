@@ -42,12 +42,7 @@ static func apply(participant, context: Dictionary, silent: bool = false, effect
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	# 強化術判定（最優先）
-	if "強化術" in keywords and participant.is_using_scroll:
-		apply_scroll_power_strike(participant, context, silent)
-		return
-	
-	# 通常の強化判定
+	# 通常の強化判定（強化術はPhase 6+8で処理するためここでは扱わない）
 	if "強化" in keywords:
 		apply_normal_power_strike(participant, context, silent, effect_combat)
 
@@ -88,7 +83,7 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}, sil
 					print("【強化術不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の術攻撃")
 				return false
 
-	# 強化術効果が見つからない場合（無条件の強化術）
+	# 強化術効果が見つからない場合（クリーチャー固有の無条件強化術）
 	var original_ap = participant.current_ap
 	participant.current_ap = int(participant.current_ap * 1.5)
 	if not silent:

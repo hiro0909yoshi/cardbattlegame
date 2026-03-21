@@ -1,5 +1,5 @@
 72322a848ab928aa5c89f0cb78209805
-::res://::1774012286
+::res://::1774093045
 ANALYSIS_COMPLETE.txt::TextFile::-1::1772892209::0::1::::<><><>0<>0<><>::
 CLAUDE.md::TextFile::-1::1773417757::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1773781688::0::1::::<><><>0<>0<><>::
@@ -294,7 +294,7 @@ README.md::TextFile::-1::1769456220::0::1::::<><><>0<>0<><>::
 47.png::CompressedTexture2D::4046508274804993917::1773747891::1773748018::1::::<><><>0<>0<>61557c534b96f36d15349d1324c077fc<>res://.godot/imported/47.png-4174a6c6cadcd914763ad14f53a962d5.ctex::
 48.png::CompressedTexture2D::5953317544504532117::1772892209::1772892209::1::::<><><>0<>0<>fe6961ab7e3d9b74594dbcadeea9e22c<>res://.godot/imported/48.png-4c718e89537756f5e603b496a70a55a1.ctex::
 49.png::CompressedTexture2D::543904479597652908::1773747891::1773748018::1::::<><><>0<>0<>f58219215ff98eba06ddeffddfe63aa1<>res://.godot/imported/49.png-78c3a85f9e0ee9f6dc54a4cebc09d0bb.ctex::
-::res://assets/images/creatures/neutral/::1774037206
+::res://assets/images/creatures/neutral/::1774037222
 402.png::CompressedTexture2D::2501327228753478920::1773522368::1773522378::1::::<><><>0<>0<>5640f915855fd6b26ef9950f0fc55213<>res://.godot/imported/402.png-d5ad8b69c13a96dc848551d83c2c4d8a.ctex::
 403.png::CompressedTexture2D::7950524444012972459::1773522368::1773522378::1::::<><><>0<>0<>19e0c1071c95712260bbfcd307f67272<>res://.godot/imported/403.png-810fb1aa4f4feff534e3cffcee8749ab.ctex::
 404.png::CompressedTexture2D::4011819732413872190::1773522368::1773522378::1::::<><><>0<>0<>e6091b458dd7799fcf609de839be21b9<>res://.godot/imported/404.png-dd62bf0d3c75a6a2e7854c91cbb84e8e.ctex::
@@ -376,7 +376,7 @@ README.md::TextFile::-1::1769456220::0::1::::<><><>0<>0<><>::
 144.png::CompressedTexture2D::2321944614729067919::1772892209::1772892209::1::::<><><>0<>0<>4ad011225d1d8b6feb49298520898775<>res://.godot/imported/144.png-bb3482d74163f4a8e2750df7b7af79d2.ctex::
 145.png::CompressedTexture2D::8312055627954778610::1772892209::1772892209::1::::<><><>0<>0<>c90cc0e102e0e3cf3971b830310ab54d<>res://.godot/imported/145.png-b8dfbc8a9158035d9e92ad6314dcff09.ctex::
 147.png::CompressedTexture2D::1507705657482408861::1772892209::1772892209::1::::<><><>0<>0<>136e91a0a96c18280ad2b1b147ac24f0<>res://.godot/imported/147.png-e65ee4b8ad5cbffa9ba2d07e5cf6a747.ctex::
-::res://assets/images/creatures/wind/::1774037189
+::res://assets/images/creatures/wind/::1774037222
 300.png::CompressedTexture2D::4279566460330422802::1772990351::1773057773::1::::<><><>0<>0<>6be48335655a8bd08f297fbf82de0a2e<>res://.godot/imported/300.png-483940eefe7667597eecb43e16f49086.ctex::
 301.png::CompressedTexture2D::7836927554509331044::1772892209::1772892209::1::::<><><>0<>0<>36ad0df4acd46e1e879c78242558fc8e<>res://.godot/imported/301.png-ca8d5a09c666e0a3bad047021becefb8.ctex::
 302.png::CompressedTexture2D::5316518153638833241::1772990351::1773057773::1::::<><><>0<>0<>268dabb76a846dbe520ce28f355d1aab<>res://.godot/imported/302.png-10395a0b6534656fb615bccdc5def6ff.ctex::
@@ -424,7 +424,7 @@ README.md::TextFile::-1::1769456220::0::1::::<><><>0<>0<><>::
 346.png::CompressedTexture2D::1662622440363925226::1773747892::1773748018::1::::<><><>0<>0<>a1cb70123339c10631f42cb16a1fa621<>res://.godot/imported/346.png-227eda8775557a0a41175909322352aa.ctex::
 347.png::CompressedTexture2D::8979643339811589416::1773506292::1773506316::1::::<><><>0<>0<>c45f3921e780256c2b93a02a1d767832<>res://.godot/imported/347.png-0c113bf265f5968a69eb152f0437cd5b.ctex::
 348.png::CompressedTexture2D::4473886739650475820::1773506292::1773506316::1::::<><><>0<>0<>12d9e062649f14a5f62c06e256110d1f<>res://.godot/imported/348.png-0c7d65ff58ff7ca005c157e6b6feabc2.ctex::
-::res://assets/images/items/::1774037219
+::res://assets/images/items/::1774037222
 1000.png::CompressedTexture2D::8942621495135501774::1773846547::1773846558::1::::<><><>0<>0<>ac31d7eba75775636850d67772dd6e04<>res://.godot/imported/1000.png-d8a43d8cf672193a8d489dea96b24350.ctex::
 1001.png::CompressedTexture2D::655722295718836088::1773846547::1773846558::1::::<><><>0<>0<>1623b99cbbbd4c6e8ae6a51baf46727b<>res://.godot/imported/1001.png-714400d2cab590d8733e0cd3d8c8a6db.ctex::
 1002.png::CompressedTexture2D::6978738840660057999::1773846547::1773846558::1::::<><><>0<>0<>772d21b63925dc39bb6d6fd1f56e7763<>res://.godot/imported/1002.png-fa617ca9fa0144977a04967c680ed511.ctex::
@@ -776,9 +776,9 @@ implementation_patterns.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
 signal_catalog.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
 ::res://docs/platform/::1771778721
 web_mobile_guide.md::TextFile::-1::1771778721::0::1::::<><><>0<>0<><>::
-::res://docs/progress/::1774033271
+::res://docs/progress/::1774050542
 architecture_migration_plan.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
-daily_log.md::TextFile::-1::1774033271::0::1::::<><><>0<>0<><>::
+daily_log.md::TextFile::-1::1774050542::0::1::::<><><>0<>0<><>::
 push_error_migration.md::TextFile::-1::1773928287::0::1::::<><><>0<>0<><>::
 refactoring_next_steps.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
 roadmap.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
@@ -789,9 +789,9 @@ battle_skill_processor_refactoring.md::TextFile::-1::1772892210::0::1::::<><><>0
 dominio_order_handler_refactoring.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
 terminology_unification.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
 toll_system_refactoring.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
-::res://docs/specs/::1774036866
+::res://docs/specs/::1774050537
 battle_test_tool_spec.md::TextFile::-1::1772955230::0::1::::<><><>0<>0<><>::
-gut_test_spec.md::TextFile::-1::1774036866::0::1::::<><><>0<>0<><>::
+gut_test_spec.md::TextFile::-1::1774050537::0::1::::<><><>0<>0<><>::
 ::res://docs/tasks/::1772892210
 skill_display_migration.md::TextFile::-1::1772892210::0::1::::<><><>0<>0<><>::
 ::res://models/::1773251680
@@ -957,13 +957,13 @@ battle_preparation.gd::GDScript::5984891509828578718::1772892210::0::1::::Battle
 battle_skill_granter.gd::GDScript::7715685711266479324::1772892210::0::1::::BattleSkillGranter<>Node<><>0<>0<><>::
 battle_skill_processor.gd::GDScript::2250407159855921987::1774015545::0::1::::BattleSkillProcessor<>Node<><>0<>0<><>::
 battle_special_effects.gd::GDScript::7505772197185425023::1774030970::0::1::::BattleSpecialEffects<>Node<><>0<>0<><>::
-::res://scripts/battle/skills/::1774033994
+::res://scripts/battle/skills/::1774041045
 skill_assist.gd::GDScript::6659741524395185628::1772892210::0::1::::SkillAssist<>RefCounted<><>0<>0<><>::
 skill_battle_end_effects.gd::GDScript::2242273575763888585::1773073177::0::1::::SkillBattleEndEffects<>RefCounted<><>0<>0<><>::
 skill_battle_start_conditions.gd::GDScript::9197170611852962419::1772892210::0::1::::SkillBattleStartConditions<>RefCounted<><>0<>0<><>::
 skill_creature_spawn.gd::GDScript::4772750755014163128::1772892210::0::1::::SkillCreatureSpawn<>RefCounted<><>0<>0<><>::
 skill_double_attack.gd::GDScript::7320014769680692890::1772892210::0::1::::SkillDoubleAttack<>RefCounted<><>0<>0<><>::
-skill_first_strike.gd::GDScript::3652807485503457267::1772892210::0::1::::SkillFirstStrike<>RefCounted<><>0<>0<><>::
+skill_first_strike.gd::GDScript::3652807485503457267::1774041045::0::1::::SkillFirstStrike<>RefCounted<><>0<>0<><>::
 skill_item_creature.gd::GDScript::6276999748489468881::1772892210::0::1::::SkillItemCreature<>RefCounted<><>0<>0<><>::
 skill_item_manipulation.gd::GDScript::5778983878006207561::1774033994::0::1::::SkillItemManipulation<>RefCounted<><>0<>0<><>::
 skill_item_return.gd::GDScript::671492003810988820::1773927757::0::1::::SkillItemReturn<>Node<><>0<>0<><>::
@@ -993,9 +993,9 @@ reflect_orb.gd::GDScript::6085718630435399455::1773166601::0::1::::ReflectOrb<>C
 skill_display_config.gd::GDScript::4701002286911288867::1773157077::0::1::::SkillDisplayConfig<>RefCounted<><>0<>0<><>::
 skill_label.gd::GDScript::870753333545592190::1773122928::0::1::::SkillLabel<>Control<><>0<>0<><>::
 transition_layer.gd::GDScript::5004691616379116595::1773148284::0::1::::TransitionLayer<>CanvasLayer<><>0<>0<><>::
-::res://scripts/battle_test/::1774033644
+::res://scripts/battle_test/::1774049221
 battle_test_config.gd::GDScript::5731548289501852158::1774027345::0::1::::BattleTestConfig<>RefCounted<><>0<>0<><>::
-battle_test_executor.gd::GDScript::9148277919743551588::1774033482::0::1::::BattleTestExecutor<>RefCounted<><>0<>0<><>::
+battle_test_executor.gd::GDScript::9148277919743551588::1774049221::0::1::::BattleTestExecutor<>RefCounted<><>0<>0<><>::
 battle_test_result.gd::GDScript::3738792139907374181::1774033644::0::1::::BattleTestResult<>RefCounted<><>0<>0<><>::
 battle_test_statistics.gd::GDScript::1200022000508590351::1772951003::0::1::::BattleTestStatistics<>RefCounted<><>0<>0<><>::
 battle_test_ui.gd::GDScript::8498231537169863081::1773165502::0::1::::<>Control<><>0<>0<><>::
@@ -1224,7 +1224,10 @@ curse_descriptions.gd::GDScript::6243469408178925808::1772892210::0::1::::CurseD
 summon_condition_checker.gd::GDScript::4659684033790180397::1772892210::0::1::::SummonConditionChecker<>RefCounted<><>0<>0<><>::
 tile_mesh_colorizer.gd::GDScript::1043317279023314474::1773927922::0::1::::TileMeshColorizer<>Node<><>0<>0<><>::
 ::res://test/::1773934446
-::res://test/battle/::1774036865
+::res://test/battle/::1774040477
+::res://test/battle/creature/::1774049635
+test_battle_creatures.gd::GDScript::2413498779100054523::1774049635::0::1::::<>GutTest<><>0<>0<><>::
+::res://test/battle/item/::1774040477
 test_battle_basic.gd::GDScript::972021778716568282::1774036865::0::1::::<>GutTest<><>0<>0<><>::
 ::res://test/unit/::1773931442
 test_rank_calculator.gd::GDScript::1656483190228389929::1773931421::0::1::::<>GutTest<><>0<>0<><>::

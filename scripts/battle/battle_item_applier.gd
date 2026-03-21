@@ -510,6 +510,7 @@ func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) ->
 	
 	# アイテム巻物フラグを立てる（他のスキルをスキップするため）
 	participant.is_using_scroll = true
+	participant.is_item_scroll = true
 	
 	# keyword_conditions に設定を保存
 	participant.creature_data["ability_parsed"]["keyword_conditions"]["術攻撃"] = scroll_config

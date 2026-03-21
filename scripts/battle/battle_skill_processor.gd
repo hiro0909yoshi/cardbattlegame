@@ -467,17 +467,40 @@ func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	
-	# 強化術の場合は SkillScrollAttack.apply() で処理済みなので何もしない
+
+	# アイテム巻物の場合: AP固定 → 条件付き強化術(×1.5)の順で処理
+	if participant.is_item_scroll:
+		# Step 1: アイテム巻物のAP固定を適用
+		var scroll_config = keyword_conditions.get("術攻撃", {})
+		var scroll_type = scroll_config.get("scroll_type", "base_ap")
+		_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
+		# Step 2: アイテムが強化術を付与している場合のみ、条件チェック+×1.5
+		var effects = ability_parsed.get("effects", [])
+		var has_scroll_power_strike = false
+		for effect in effects:
+			if effect.get("effect_type") == "scroll_power_strike":
+				has_scroll_power_strike = true
+				break
+		if has_scroll_power_strike:
+			PowerStrikeSkill.apply_scroll_power_strike(participant, context, silent)
+		if not silent:
+			print("【AP最終確定（アイテム巻物）】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+		return
+
+	# クリーチャー固有の強化術は SkillScrollAttack.apply() で処理済み
 	if "強化術" in keywords:
 		if not silent:
 			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（強化術適用済み）")
 		return
-	
-	# 術攻撃のみの場合
+
+	# クリーチャー固有の術攻撃
 	var scroll_config = keyword_conditions.get("術攻撃", {})
 	var scroll_type = scroll_config.get("scroll_type", "base_ap")
-	
+	_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
+
+
+## scroll_configに基づいてAP固定を適用（共通処理）
+func _apply_scroll_ap_by_config(participant: BattleParticipant, scroll_config: Dictionary, scroll_type: String, context: Dictionary) -> void:
 	match scroll_type:
 		"fixed_ap":
 			var value = scroll_config.get("value", 0)
@@ -856,44 +879,32 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	check_double_attack(participant, context)
 	
 	# 8. 巻物使用中の場合、AP最終確認
-	# 注: 強化術の×1.5は SkillScrollAttack.apply() 内で処理済み
 	if participant.is_using_scroll:
 		var ability_parsed = participant.creature_data.get("ability_parsed", {})
 		var keywords = ability_parsed.get("keywords", [])
-		
-		# 強化術の場合は SkillScrollAttack.apply() で処理済み
-		if "強化術" in keywords:
-			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（強化術適用済み）")
-		else:
-			# 術攻撃のみの場合、AP最終固定
-			var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+
+		# アイテム巻物の場合: AP固定 → 条件付き強化術(×1.5)
+		if participant.is_item_scroll:
 			var scroll_config = keyword_conditions.get("術攻撃", {})
 			var scroll_type = scroll_config.get("scroll_type", "base_ap")
-			var board_system = board_system_ref
-			
-			match scroll_type:
-				"fixed_ap":
-					var value = scroll_config.get("value", 0)
-					participant.current_ap = value
-					print("【AP最終固定】", participant.creature_data.get("name", "?"), 
-						  " AP:", value)
-				"base_ap":
-					var base_ap = participant.creature_data.get("ap", 0)
-					participant.current_ap = base_ap
-					print("【AP最終固定】", participant.creature_data.get("name", "?"), 
-						  " AP=基本AP:", base_ap)
-				"land_count":
-					var elements = scroll_config.get("elements", [])
-					var multiplier = scroll_config.get("multiplier", 1)
-					var total_count = 0
-					if board_system:
-						var scroll_player_id = context.get("player_id", 0)
-						for element in elements:
-							total_count += board_system.count_creatures_by_element(scroll_player_id, element)
-					var calculated_ap = total_count * multiplier
-					participant.current_ap = calculated_ap
-					print("【AP最終固定】", participant.creature_data.get("name", "?"), 
-						  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
+			_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
+			var effects = ability_parsed.get("effects", [])
+			var has_scroll_power_strike = false
+			for effect in effects:
+				if effect.get("effect_type") == "scroll_power_strike":
+					has_scroll_power_strike = true
+					break
+			if has_scroll_power_strike:
+				PowerStrikeSkill.apply_scroll_power_strike(participant, context, silent)
+		elif "強化術" in keywords:
+			# クリーチャー固有の強化術は SkillScrollAttack.apply() で処理済み
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（強化術適用済み）")
+		else:
+			# クリーチャー固有の術攻撃
+			var scroll_config = keyword_conditions.get("術攻撃", {})
+			var scroll_type = scroll_config.get("scroll_type", "base_ap")
+			_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
 
 ## 2回攻撃スキル判定
 func check_double_attack(participant: BattleParticipant, context: Dictionary) -> void:

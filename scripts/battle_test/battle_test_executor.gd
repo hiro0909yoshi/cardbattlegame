@@ -395,6 +395,10 @@ func _execute_single_battle(
 	test_result.first_strike_occurred = first_strike_occurred
 	test_result.battle_duration_ms = Time.get_ticks_msec() - start_time
 
+	# 術攻撃フラグ
+	test_result.attacker_is_using_scroll = attacker.is_using_scroll
+	test_result.defender_is_using_scroll = defender.is_using_scroll
+
 	# 刻印情報（バトル後）
 	test_result.attacker_curse = attacker.creature_data.get("curse", {}).duplicate()
 	test_result.defender_curse = defender.creature_data.get("curse", {}).duplicate()

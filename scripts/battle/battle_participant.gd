@@ -39,6 +39,7 @@ var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
 var instant_death_flag: bool = false  # 即死されたフラグ
 var is_using_scroll: bool = false  # 術攻撃フラグ（刺突とは別）
+var is_item_scroll: bool = false  # アイテム巻物由来の術攻撃フラグ
 var was_attacked_by_enemy: bool = false  # 敵から攻撃を受けたフラグ（バイロマンサー用）
 var enemy_used_item: bool = false  # 敵がアイテムを使用したフラグ（ブルガサリ用）
 var has_ogre_bonus: bool = false  # オーガボーナスが適用されたフラグ（オーガロード用）

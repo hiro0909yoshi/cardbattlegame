@@ -65,6 +65,10 @@ var defender_revive_to_hand: bool = false  # 防御側が手札復活したか
 var attacker_hand_count: int = 0
 var defender_hand_count: int = 0
 
+## 術攻撃フラグ
+var attacker_is_using_scroll: bool = false
+var defender_is_using_scroll: bool = false
+
 ## 刻印情報（バトル後のcreature_data["curse"]）
 var attacker_curse: Dictionary = {}  # {"curse_type": "...", "name": "..."} or {}
 var defender_curse: Dictionary = {}  # {"curse_type": "...", "name": "..."} or {}

@@ -1066,3 +1066,200 @@ func test_item_return_agni_no_item_no_power_strike():
 	assert_false(r.attacker_item_returned, "アイテムなし→復帰なし")
 
 
+# =============================================================================
+# 術攻撃スキル（クリーチャー固有）
+# =============================================================================
+
+## 術攻撃[固定AP]基本: ウィスプ(火,AP30/HP50,術攻撃[AP30])
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→HP40
+## 術攻撃→AP30固定、land_bonus無効化→HP30のみ
+## AP30→HP30-30=0→撃破（反撃なし）
+func test_scroll_attack_fixed_ap_basic():
+	var config = _create_config(34, 414)  # ウィスプ vs ゴブリン
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 30, "術攻撃[AP30]固定")
+	assert_true(r.attacker_is_using_scroll, "術攻撃フラグON")
+	assert_eq(r.defender_final_hp, 0, "land_bonus無効→HP30-30=0")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 術攻撃[基本AP]: セイリュウ(水,AP50/HP50,先制+術攻撃[基本AP])
+## vs レッドオーガ(火,AP40/HP50) on fire, land_bonus=10→HP60
+## 術攻撃→AP=基本AP50、先制、land_bonus無効化→HP50
+## 先制AP50→HP50-50=0→撃破
+func test_scroll_attack_base_ap():
+	var config = _create_config(128, 48, "fire")  # セイリュウ vs レッドオーガ
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 50, "術攻撃[基本AP]=50")
+	assert_true(r.attacker_is_using_scroll, "術攻撃フラグON")
+	assert_eq(r.defender_final_hp, 0, "先制+land_bonus無効→HP50-50=0")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 術攻撃+鼓舞 → 術攻撃不発（APバフ検出）
+## ウィスプ(火,AP30/HP50,術攻撃[AP30]) vs ゴブリン(無,AP20/HP30) on neutral
+## タイル6にトリックスター(342,owner=0)→鼓舞AP+20→current_ap=50≠30→術攻撃不発
+## 通常攻撃AP50→land10+HP30=40→40-50=-10→撃破
+func test_scroll_attack_cancelled_by_support():
+	var config = _create_config(34, 414)  # ウィスプ vs ゴブリン
+	config.board_layout.append({"tile_index": 6, "owner_id": 0, "creature_id": 342})
+	var r = await _execute_battle(config)
+	assert_false(r.attacker_is_using_scroll, "鼓舞でAPバフ→術攻撃不発")
+	assert_eq(r.attacker_final_ap, 50, "基本AP30+鼓舞AP20=50（通常攻撃）")
+	assert_eq(r.defender_final_hp, -10, "通常攻撃→land10有効→HP40-50=-10")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 術攻撃+アイテム(武器) → 術攻撃不発（APバフ検出）
+## ウィスプ(火,AP30/HP50,術攻撃[AP30]) + ツヴァイハンダー(AP+50) vs タイダルオーガ(水,AP40/HP50)
+## アイテムAP+50→current_ap=80≠30→術攻撃不発
+## 通常攻撃AP80→land10+HP50=60→60-80=-20→撃破
+func test_scroll_attack_cancelled_by_weapon():
+	var config = _create_config(34, 138, "water")  # ウィスプ+ツヴァイハンダー vs タイダルオーガ
+	config.attacker_items = [1009]  # ツヴァイハンダー(AP+50)
+	var r = await _execute_battle(config)
+	assert_false(r.attacker_is_using_scroll, "武器APバフ→術攻撃不発")
+	assert_eq(r.attacker_final_ap, 80, "基本AP30+武器AP50=80（通常攻撃）")
+
+
+## アイテム巻物使用: 通常クリーチャー + ライトニングオーブ(巻物,AP40)
+## レッドオーガ(火,AP40/HP50) + ライトニングオーブ(術攻撃[AP40])
+## vs タイダルオーガ(水,AP40/HP50) on water, land_bonus=10→HP60
+## 巻物→is_using_scroll=true、AP=40固定、land_bonus無効→HP50
+## AP40→HP50-40=10生存 / 反撃AP40→HP50-40=10
+func test_scroll_attack_item_scroll():
+	var config = _create_config(48, 138, "water")  # レッドオーガ+ライトニングオーブ vs タイダルオーガ
+	config.attacker_items = [1024]  # ライトニングオーブ(巻物, AP40)
+	var r = await _execute_battle(config)
+	assert_true(r.attacker_is_using_scroll, "巻物アイテム→術攻撃フラグON")
+	assert_eq(r.attacker_final_ap, 40, "巻物AP40固定")
+	assert_eq(r.defender_final_hp, 10, "land_bonus無効→HP50-40=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+# =============================================================================
+# 強化術スキル
+# =============================================================================
+
+## 強化術基本: パイロコーラー(火,AP20/HP30,強化術)
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→HP40
+## 強化術→AP20×1.5=30、land_bonus無効化→HP30
+## AP30→HP30-30=0→撃破
+func test_scroll_power_strike_basic():
+	var config = _create_config(12, 414)  # パイロコーラー vs ゴブリン
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 30, "強化術→AP20×1.5=30")
+	assert_true(r.attacker_is_using_scroll, "強化術→術攻撃フラグON")
+	assert_eq(r.defender_final_hp, 0, "land_bonus無効→HP30-30=0")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化術+鼓舞 → 強化術不発（APバフ検出）
+## パイロコーラー(火,AP20/HP30,強化術) vs ゴブリン(無,AP20/HP30) on neutral
+## タイル6にトリックスター(342,owner=0)→鼓舞AP+20→current_ap=40≠20→強化術不発
+## 通常攻撃AP40→land10+HP30=40→40-40=0→撃破
+func test_scroll_power_strike_cancelled_by_support():
+	var config = _create_config(12, 414)  # パイロコーラー vs ゴブリン
+	config.board_layout.append({"tile_index": 6, "owner_id": 0, "creature_id": 342})
+	var r = await _execute_battle(config)
+	assert_false(r.attacker_is_using_scroll, "鼓舞APバフ→強化術不発")
+	assert_eq(r.attacker_final_ap, 40, "基本AP20+鼓舞AP20=40（通常攻撃）")
+
+
+## 共鳴+強化術: バステト(地,AP20/HP30,共鳴[火AP+30]+強化術)
+## 盤面に火クリーチャーあり→共鳴発動→AP+30→current_ap=50≠20→強化術不発
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→HP40
+## 通常攻撃AP50→HP40-50=-10→撃破
+func test_scroll_power_strike_cancelled_by_resonance():
+	var config = _create_config(241, 414)  # バステト vs ゴブリン
+	# 火タイルにクリーチャー配置（共鳴[火]発動用）
+	config.board_layout.append({"tile_index": 4, "owner_id": 0, "creature_id": 48})  # レッドオーガ(火)
+	var r = await _execute_battle(config)
+	assert_false(r.attacker_is_using_scroll, "共鳴APバフ→強化術不発")
+	assert_eq(r.attacker_final_ap, 50, "基本AP20+共鳴AP30=50（通常攻撃）")
+	assert_eq(r.defender_final_hp, -10, "通常攻撃→land10有効→HP40-50=-10")
+
+
+## 共鳴なし+強化術: バステト(地,AP20/HP30,共鳴[火AP+30]+強化術)
+## 盤面に火クリーチャーなし→共鳴不発→AP=20→強化術発動→AP30
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→HP40
+## land_bonus無効→HP30 / AP30→HP30-30=0→撃破
+func test_scroll_power_strike_without_resonance():
+	var config = _create_config(241, 414)  # バステト vs ゴブリン（盤面に火なし）
+	var r = await _execute_battle(config)
+	assert_true(r.attacker_is_using_scroll, "共鳴不発→APバフなし→強化術発動")
+	assert_eq(r.attacker_final_ap, 30, "強化術→AP20×1.5=30")
+	assert_eq(r.defender_final_hp, 0, "land_bonus無効→HP30-30=0")
+
+
+## 強化術基本: ハーピークイーン(風,AP50/HP50,先制+強化術)
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→HP40
+## 強化術→AP50×1.5=75、先制、land_bonus無効化→HP30
+## 先制AP75→HP30-75=-45→撃破
+func test_scroll_power_strike_harpy_queen_basic():
+	var config = _create_config(303, 414)  # ハーピークイーン vs ゴブリン
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 75, "強化術→AP50×1.5=75")
+	assert_true(r.attacker_is_using_scroll, "強化術→術攻撃フラグON")
+	assert_true(r.first_strike_occurred, "先制発動")
+	assert_eq(r.defender_final_hp, -45, "先制+land_bonus無効→HP30-75=-45")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化術基本: デーモン(無,AP40/HP40,先制+強化術)
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→HP40
+## 強化術→AP40×1.5=60、先制、land_bonus無効化→HP30
+## 先制AP60→HP30-60=-30→撃破
+func test_scroll_power_strike_demon_basic():
+	var config = _create_config(429, 414)  # デーモン vs ゴブリン
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "強化術→AP40×1.5=60")
+	assert_true(r.attacker_is_using_scroll, "強化術→術攻撃フラグON")
+	assert_true(r.first_strike_occurred, "先制発動")
+	assert_eq(r.defender_final_hp, -30, "先制+land_bonus無効→HP30-60=-30")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化術+武器アイテム → 強化術不発（APバフ検出）
+## ドルイド(地,AP20/HP30,加勢+強化術) + ツヴァイハンダー(AP+50)
+## vs ゴブリン(無,AP20/HP30) on neutral
+## アイテムAP+50→current_ap=70≠20→強化術不発
+## 通常攻撃AP70→land10+HP30=40→40-70=-30→撃破
+func test_scroll_power_strike_cancelled_by_weapon():
+	var config = _create_config(225, 414)  # ドルイド+ツヴァイハンダー vs ゴブリン
+	config.attacker_items = [1009]  # ツヴァイハンダー(AP+50)
+	var r = await _execute_battle(config)
+	assert_false(r.attacker_is_using_scroll, "武器APバフ→強化術不発")
+	assert_eq(r.attacker_final_ap, 70, "基本AP20+武器AP50=70（通常攻撃）")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化術+鼓舞 → 強化術不発: ハーピークイーン(風,AP50/HP50,先制+強化術)
+## vs ゴブリン(無,AP20/HP30) on neutral
+## タイル6にトリックスター(342,owner=0)→鼓舞AP+20→current_ap=70≠50→強化術不発
+## 先制+通常攻撃AP70→land10+HP30=40→40-70=-30→撃破
+func test_scroll_power_strike_harpy_cancelled_by_support():
+	var config = _create_config(303, 414)  # ハーピークイーン vs ゴブリン
+	config.board_layout.append({"tile_index": 6, "owner_id": 0, "creature_id": 342})
+	var r = await _execute_battle(config)
+	assert_false(r.attacker_is_using_scroll, "鼓舞APバフ→強化術不発")
+	assert_eq(r.attacker_final_ap, 70, "基本AP50+鼓舞AP20=70（通常攻撃）")
+	assert_true(r.first_strike_occurred, "先制は発動")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 複合: バステト(地,AP20/HP30,共鳴[火AP+30]+強化術) + 巻物アイテム
+## 共鳴発動(火クリーチャーあり)→AP+30→AP50 + 巻物アイテム同時使用
+## 共鳴発動(火クリーチャーあり)→AP+30 + 巻物アイテム同時使用
+## 共鳴APバフ→クリーチャーの強化術不発、但しアイテム巻物のAP40固定が最終適用
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus無効→HP30
+## AP40→HP30-40=-10→撃破
+func test_scroll_power_strike_bastet_resonance_plus_scroll_item():
+	var config = _create_config(241, 414)  # バステト vs ゴブリン
+	config.board_layout.append({"tile_index": 4, "owner_id": 0, "creature_id": 48})  # レッドオーガ(火)→共鳴発動
+	config.attacker_items = [1024]  # ライトニングオーブ(巻物, 術AP40)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "アイテム巻物AP40が最終適用")
+	assert_true(r.attacker_is_using_scroll, "術攻撃フラグON")
+	assert_eq(r.defender_final_hp, -10, "land_bonus無効→HP30-40=-10")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
