@@ -128,9 +128,15 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	if not attacker_item.is_empty():
 		attacker.creature_data["items"].append(attacker_item)
-	
+		attacker.creature_data["equipped_item"] = attacker_item
+	else:
+		attacker.creature_data["equipped_item"] = {}
+
 	if not defender_item.is_empty():
 		defender.creature_data["items"].append(defender_item)
+		defender.creature_data["equipped_item"] = defender_item
+	else:
+		defender.creature_data["equipped_item"] = {}
 	
 	# 以下の処理はapply_pre_battle_skills()で実行（クリック後）:
 	# - クリーチャー能力のAPドレイン

@@ -178,12 +178,13 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	var battle_result = {
 		"attacker_revived": false,
 		"defender_revived": false,
+		"attacker_revive_to_hand": false,
+		"defender_revive_to_hand": false,
 		"attacker_transformed": false,
 		"defender_transformed": false,
 		"attacker_original": {},
 		"defender_original": {}
 	}
-	# 手札復活はcheck_on_death_effects内で即座に処理される
 	
 	# 戦闘終了フラグ（復活時に使用）
 	var battle_ended = false
@@ -385,11 +386,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							break
 						# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
 						elif death_effects["revive_to_hand"]:
+							if defender_p.is_attacker:
+								battle_result["attacker_revive_to_hand"] = true
+							else:
+								battle_result["defender_revive_to_hand"] = true
 							break
 						else:
 							# 復活しなかったので撃破確定
 							break
-					
+
 					# 攻撃側が反射で倒された場合（即死後）
 					if not attacker_p.is_alive():
 						print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
@@ -421,11 +426,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							break
 						# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
 						elif death_effects_attacker["revive_to_hand"]:
+							if attacker_p.is_attacker:
+								battle_result["attacker_revive_to_hand"] = true
+							else:
+								battle_result["defender_revive_to_hand"] = true
 							break
 						else:
 							# 復活しなかったので撃破確定
 							break
-					
+
 					# 🔒 攻撃成功時効果（軽減パス用）
 					# ブラックナイト等の無効化チェック
 					if defender_p.is_alive() and attacker_p.current_ap > 0:
@@ -677,11 +686,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					break
 				# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
 				elif death_effects["revive_to_hand"]:
+					if defender_p.is_attacker:
+						battle_result["attacker_revive_to_hand"] = true
+					else:
+						battle_result["defender_revive_to_hand"] = true
 					break
 				else:
 					# 復活しなかったので撃破確定
 					break
-			
+
 			# 攻撃側が反射で倒された場合
 			if not attacker_p.is_alive():
 				print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
@@ -713,11 +726,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					break
 				# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
 				elif death_effects_attacker["revive_to_hand"]:
+					if attacker_p.is_attacker:
+						battle_result["attacker_revive_to_hand"] = true
+					else:
+						battle_result["defender_revive_to_hand"] = true
 					break
 				else:
 					# 復活しなかったので撃破確定
 					break
-	
+
 	# 戦闘結果情報を返す
 	# 💰 アイテム不使用時の吸魔スキル（アマゾン）
 	# 勝敗に関係なく、生存している参加者それぞれをチェック

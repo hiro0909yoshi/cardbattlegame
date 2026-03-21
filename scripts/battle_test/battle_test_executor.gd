@@ -6,16 +6,33 @@ extends RefCounted
 var scene_tree_parent: Node = null
 
 class MockCardSystem extends CardSystem:
+	## デッキ用ダミーカード（Dictionary形式、draw_card_for_playerで直接返す）
+	var _mock_decks: Dictionary = {}
+
 	func _init():
 		# ダミープレイヤー2人分のデッキ・手札を作成（ドロー系スキル用）
 		for pid in [0, 1]:
 			player_decks[pid] = []
 			player_discards[pid] = []
+			# モックデッキ5枚（形見[カード]等のドロー用）
+			var deck_data: Array[Dictionary] = []
+			for i in range(5):
+				deck_data.append({"id": 100 + pid * 10 + i, "name": "deck_dummy_%d_%d" % [pid, i], "type": "creature"})
+			_mock_decks[pid] = deck_data
 			# 手札5枚（手札数依存アイテム用）
 			var hand_data: Array[Dictionary] = []
 			for i in range(5):
 				hand_data.append({"id": i, "name": "dummy_%d" % i})
 			player_hands[pid] = {"data": hand_data}
+
+	func draw_card_for_player(player_id: int) -> Dictionary:
+		if not _mock_decks.has(player_id) or _mock_decks[player_id].is_empty():
+			return {}
+		var card_data = _mock_decks[player_id].pop_front()
+		if not player_hands.has(player_id):
+			player_hands[player_id] = {"data": []}
+		player_hands[player_id]["data"].append(card_data)
+		return card_data
 
 class MockPlayerSystem extends PlayerSystem:
 	func _init():
@@ -202,16 +219,20 @@ func _execute_single_battle(
 	# 効果適用は apply_pre_battle_skills() Phase 0-S で行われる
 	attacker.creature_data["items"] = []
 	defender.creature_data["items"] = []
+	attacker.creature_data["equipped_item"] = {}
+	defender.creature_data["equipped_item"] = {}
 
 	if att_item_id > 0:
 		var att_item_data = CardLoader.get_card_by_id(att_item_id)
 		if att_item_data:
 			attacker.creature_data["items"].append(att_item_data)
+			attacker.creature_data["equipped_item"] = att_item_data
 
 	if def_item_id > 0:
 		var def_item_data = CardLoader.get_card_by_id(def_item_id)
 		if def_item_data:
 			defender.creature_data["items"].append(def_item_data)
+			defender.creature_data["equipped_item"] = def_item_data
 
 	# ========== モックシステムセットアップ ==========
 	var mock_board = BoardSystem3D.new()
@@ -306,7 +327,7 @@ func _execute_single_battle(
 	var pre_battle_snapshot = _snapshot_battle_state(attacker, defender, mock_player)
 
 	# 攻撃シーケンス実行
-	await battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
+	var sequence_result = await battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
 
 	# ========== バトル中に発動した効果を検出（状態差分） ==========
 	# EP差分はpre_battle_skills前のスナップショットを使用（蓄魔はpre_battle内で発動）
@@ -381,6 +402,14 @@ func _execute_single_battle(
 	# バトル中に実際に発動した効果
 	test_result.attacker_battle_effects = battle_effects.get("attacker", [])
 	test_result.defender_battle_effects = battle_effects.get("defender", [])
+
+	# 手札復活結果
+	test_result.attacker_revive_to_hand = sequence_result.get("attacker_revive_to_hand", false)
+	test_result.defender_revive_to_hand = sequence_result.get("defender_revive_to_hand", false)
+
+	# 手札枚数（形見[カード]等の検証用）
+	test_result.attacker_hand_count = mock_card.player_hands.get(0, {}).get("data", []).size()
+	test_result.defender_hand_count = mock_card.player_hands.get(1, {}).get("data", []).size()
 
 	# 帰還結果
 	test_result.attacker_item_returned = attacker_return_result.get("returned", false)

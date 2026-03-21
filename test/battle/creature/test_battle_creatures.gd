@@ -859,3 +859,210 @@ func test_penetration_not_triggered_by_support_boosted_ap():
 	assert_eq(r.winner, "defender", "鼓舞で防御側生存→攻撃側死亡")
 
 
+# =============================================================================
+# 復活スキル（手札復活）
+# =============================================================================
+
+## フェニックス防御側撃破 → 手札復活発動
+## オルトロス(火,AP50/HP40) vs フェニックス(火,AP40/HP30,復活)
+## 火タイルLv1→防御側ランドボーナスHP+10→HP40
+## 攻撃AP50→防HP40-50=-10→撃破→手札復活発動
+func test_revive_to_hand_phoenix_defender_killed():
+	var config = _create_config(213, 40, "fire")  # オルトロス vs フェニックス
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, -10, "AP50で撃破（HP40-50=-10）")
+	assert_eq(r.winner, "attacker", "防御側撃破")
+	assert_true(r.defender_revive_to_hand, "手札復活発動")
+	assert_false(r.attacker_revive_to_hand, "攻撃側は復活なし")
+
+
+## フェニックス防御側生存 → 手札復活なし
+## ゴブリン(無,AP20/HP30) vs フェニックス(火,AP40/HP30,復活)
+## 火タイルLv1→防御側ランドボーナスHP+10→HP40
+## 攻撃AP20→防HP40-20=20 / 反撃AP40→攻HP30-40=-10→攻撃側撃破
+func test_revive_to_hand_phoenix_defender_survives():
+	var config = _create_config(414, 40, "fire")  # ゴブリン vs フェニックス
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 20, "HP40-20=20で生存")
+	assert_eq(r.winner, "defender", "攻撃側撃破→防御側勝利")
+	assert_false(r.defender_revive_to_hand, "生存→手札復活なし")
+
+
+## イモータルランド防御側撃破 → 手札復活発動（JSON修正後の動作確認）
+## オルトロス(火,AP50/HP40) vs イモータルランド(地,AP30/HP40,復活+領土守護)
+## 地タイルLv1→防御側ランドボーナスHP+10→HP50
+## 攻撃AP50→防HP50-50=0→撃破→手札復活発動
+func test_revive_to_hand_immortal_land_defender_killed():
+	var config = _create_config(213, 232, "earth")  # オルトロス vs イモータルランド
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 0, "AP50でHP50→0撃破")
+	assert_eq(r.winner, "attacker", "防御側撃破")
+	assert_true(r.defender_revive_to_hand, "手札復活発動")
+
+
+## フェニックス攻撃側が先制で撃破 → 手札復活発動
+## フェニックス(火,AP40/HP30,復活) vs ケルベロス(火,AP50/HP50,先制)
+## 火タイルLv1→防御側ランドボーナスHP+10→HP60
+## ケルベロス先制AP50→フェニックスHP30-50=-20→撃破→手札復活発動
+func test_revive_to_hand_phoenix_attacker_killed():
+	var config = _create_config(40, 27, "fire")  # フェニックス vs ケルベロス
+	var r = await _execute_battle(config)
+	assert_true(r.first_strike_occurred, "先制発動")
+	assert_eq(r.attacker_final_hp, -20, "先制AP50で撃破（HP30-50=-20）")
+	assert_eq(r.winner, "defender", "攻撃側撃破→防御側勝利")
+	assert_true(r.attacker_revive_to_hand, "攻撃側手札復活発動")
+	assert_false(r.defender_revive_to_hand, "防御側は復活なし")
+
+
+# =============================================================================
+# 形見スキル[EP]
+# =============================================================================
+
+## コーンフォーク防御側撃破 → 形見[EP200]発動
+## タイダルオーガ(水,AP40/HP50) vs コーンフォーク(風,AP30/HP40,形見[200EP])
+## 風タイルLv1→防御側ランドボーナスHP+10→HP50
+## 攻AP40→防HP50-40=10(land10消費)→current_hp40 / 反撃AP30→攻HP50-30=20
+## → 両者生存 → 形見不発。AP50必要 → ツヴァイハンダー(AP+50)使用
+## タイダルオーガ+ツヴァイハンダー(AP90) vs コーンフォーク(風,HP40+land10)
+## 攻AP90→防HP50-90=-40→撃破→形見EP200 / 先に攻撃なので反撃なし
+func test_legacy_ep_cornfolk_defender_killed():
+	var config = _create_config(138, 315, "wind")  # タイダルオーガ vs コーンフォーク(風)
+	config.attacker_items = [1009]  # ツヴァイハンダー(AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, -40, "AP90でHP50→-40撃破")
+	assert_eq(r.winner, "attacker", "防御側撃破")
+	assert_true(r.defender_battle_effects.has("蓄魔[200EP]"), "形見[EP200]発動")
+
+
+## コーンフォーク防御側生存 → 形見不発
+## ゴブリン(無,AP20/HP30) vs コーンフォーク(風,AP30/HP40,形見[200EP])
+## 風タイルLv1→防御側ランドボーナスHP+10→total50
+## 攻AP20→land10消費+current_hp10消費→current_hp30 / 反撃AP30→攻HP30-30=0→攻撃側撃破
+func test_legacy_ep_cornfolk_defender_survives():
+	var config = _create_config(414, 315, "wind")  # ゴブリン vs コーンフォーク(風)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 30, "land10+current10消費→current_hp30")
+	assert_eq(r.winner, "defender", "攻撃側撃破")
+	assert_false(r.defender_battle_effects.has("蓄魔[200EP]"), "生存→形見不発")
+
+
+## ミミック防御側撃破 → 蓄魔[100]+形見[100]=EP200
+## タイダルオーガ(水,AP40/HP50) vs ミミック(無,AP10/HP30,蓄魔[100]+形見[100EP])
+## 中立タイルLv1→ランドボーナスHP+10→total40
+## 蓄魔100(バトル開始時) + 攻AP40→land10+current30消費→current_hp0→撃破→形見EP100
+## 撃破されたので反撃なし→攻HP50維持
+func test_legacy_ep_mimic_defender_killed():
+	var config = _create_config(138, 410)  # タイダルオーガ vs ミミック(中立)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 0, "AP40でtotal40→0撃破")
+	assert_eq(r.attacker_final_hp, 50, "撃破→反撃なし→HP50維持")
+	assert_eq(r.winner, "attacker", "防御側撃破")
+	assert_true(r.defender_battle_effects.has("蓄魔[200EP]"), "蓄魔100+形見100=EP200")
+
+
+# =============================================================================
+# 形見スキル[カード]
+# =============================================================================
+
+## フェイト防御側撃破 → 形見[カード1枚]発動
+## レッドオーガ(火,AP40/HP50)+ツヴァイハンダー(AP+50)=AP90 vs フェイト(水,AP10/HP40,形見[カード1枚])
+## 水タイルLv1→防御側ランドボーナスHP+10→total50
+## 攻AP90→total50-90=-40→撃破→形見カード1枚ドロー
+## 手札: 初期5枚→ドロー1枚→6枚
+func test_legacy_card_fate_defender_killed():
+	var config = _create_config(48, 136, "water")  # レッドオーガ vs フェイト(水)
+	config.attacker_items = [1009]  # ツヴァイハンダー(AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, -40, "AP90でtotal50→-40撃破")
+	assert_eq(r.winner, "attacker", "防御側撃破")
+	assert_eq(r.defender_hand_count, 6, "形見[カード]発動→初期5枚+1枚=6枚")
+
+
+## フェイト防御側生存 → 形見不発
+## ゴブリン(無,AP20/HP30) vs フェイト(水,AP10/HP40,形見[カード1枚])
+## 水タイルLv1→防御側ランドボーナスHP+10→total50
+## 攻AP20→land10+current10消費→current_hp30 / 反撃AP10→攻HP30-10=20
+func test_legacy_card_fate_defender_survives():
+	var config = _create_config(414, 136, "water")  # ゴブリン vs フェイト(水)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 30, "land10+current10消費→current_hp30")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_eq(r.defender_hand_count, 5, "生存→形見不発→初期5枚のまま")
+
+
+# =============================================================================
+# 復帰スキル（帰還[ブック]）- クリーチャースキル由来
+# =============================================================================
+
+## ケンタウロス攻撃側+武器 → アイテムがブックに復帰
+## ケンタウロス(風,AP30/HP40,先制+帰還[ブック]) + ツヴァイハンダー(AP+50) = AP80
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10→total40
+## 先制AP80→HP40-80=-40→撃破→反撃なし → 帰還:ツヴァイハンダーがブックへ
+func test_item_return_centaur_attacker_with_weapon():
+	var config = _create_config(314, 414)  # ケンタウロス+ツヴァイハンダー vs ゴブリン
+	config.attacker_items = [1009]  # ツヴァイハンダー(武器, AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 80, "AP30+50=80")
+	assert_eq(r.defender_final_hp, -40, "先制AP80→HP40-80=-40撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+	assert_true(r.attacker_item_returned, "帰還スキルでアイテムがブックに復帰")
+	assert_eq(r.attacker_item_return_type, "deck", "ブック復帰")
+
+
+## ケンタウロス攻撃側アイテムなし → 復帰なし
+## ケンタウロス(風,AP30/HP40,先制) vs ゴブリン(無,AP20/HP30) on neutral
+## land_bonus=10→total40 / 先制AP30→HP40-30=10生存 / 反撃AP20→HP40-20=20
+func test_item_return_centaur_no_item():
+	var config = _create_config(314, 414)  # ケンタウロス vs ゴブリン
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 10, "先制AP30→HP40-30=10(land10消費)")
+	assert_eq(r.attacker_final_hp, 20, "反撃AP20→HP40-20=20")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_false(r.attacker_item_returned, "アイテムなし→復帰なし")
+
+
+## ケンタウロス防御側+武器 → 防御側アイテムがブック復帰
+## レッドオーガ(火,AP40/HP50) vs ケンタウロス(風,AP30/HP40,先制+帰還) + ツヴァイハンダー(AP+50)
+## 風タイルLv1→land_bonus=10→total HP50+10=60(wind+ツヴァイハンダーHP0)
+## ケンタウロス先制: AP30+50=80 → レッドオーガHP50-80=-30→撃破→反撃なし
+## 帰還: ツヴァイハンダーがブックへ
+func test_item_return_centaur_defender_with_weapon():
+	var config = _create_config(48, 314, "wind")  # レッドオーガ vs ケンタウロス
+	config.defender_items = [1009]  # ツヴァイハンダー(武器, AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 80, "AP30+50=80")
+	assert_eq(r.attacker_final_hp, -30, "先制AP80→HP50-80=-30撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+	assert_true(r.defender_item_returned, "防御側帰還スキルでブック復帰")
+	assert_eq(r.defender_item_return_type, "deck", "ブック復帰")
+
+
+## アグニ攻撃側+武器 → 強化発動+帰還
+## アグニ(火,AP50/HP50,先制+強化[武器]+帰還[ブック]) + ツヴァイハンダー(AP+50) = AP100
+## 武器使用→強化発動→AP100×1.5=150
+## vs タイダルオーガ(水,AP40/HP50) on water, land_bonus=10→total60
+## 先制AP150→HP60-150=-90→撃破→反撃なし → 帰還:ツヴァイハンダーがブックへ
+func test_item_return_agni_attacker_power_strike_and_return():
+	var config = _create_config(41, 138, "water")  # アグニ+ツヴァイハンダー vs タイダルオーガ
+	config.attacker_items = [1009]  # ツヴァイハンダー(武器, AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 150, "武器使用→強化AP100×1.5=150")
+	assert_eq(r.defender_final_hp, -90, "先制AP150→HP60-150=-90撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+	assert_true(r.attacker_item_returned, "帰還スキルでアイテムがブック復帰")
+	assert_eq(r.attacker_item_return_type, "deck", "ブック復帰")
+
+
+## アグニ攻撃側アイテムなし → 強化不発+復帰なし
+## アグニ(火,AP50/HP50,先制) vs ゴブリン(無,AP20/HP30) on neutral
+## 武器なし→強化不発→AP50 / land_bonus=10→total40
+## 先制AP50→HP40-50=-10→撃破
+func test_item_return_agni_no_item_no_power_strike():
+	var config = _create_config(41, 414)  # アグニ vs ゴブリン
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 50, "武器なし→強化不発→AP50のまま")
+	assert_eq(r.defender_final_hp, -10, "先制AP50→HP40-50=-10撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+	assert_false(r.attacker_item_returned, "アイテムなし→復帰なし")
+
+

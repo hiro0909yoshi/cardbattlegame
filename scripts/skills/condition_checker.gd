@@ -58,13 +58,13 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 	var cond_value = condition.get("value", 0)
 	
 	match cond_type:
-		# MHP条件
+		# MHP条件（敵のMHPで判定）
 		"mhp_below":
-			var target_mhp = context.get("creature_mhp", 100)
+			var target_mhp = context.get("enemy_mhp", 100)
 			return target_mhp <= cond_value
-		
+
 		"mhp_above":
-			var target_mhp = context.get("creature_mhp", 0)
+			var target_mhp = context.get("enemy_mhp", 0)
 			return target_mhp >= cond_value
 		
 		# 属性土地条件
@@ -122,7 +122,7 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 		
 		"enemy_no_item":
 			var enemy_item = context.get("enemy_item", null)
-			return enemy_item == null
+			return enemy_item == null or (enemy_item is Dictionary and enemy_item.is_empty())
 		
 		"with_weapon":
 			var equipped_item = context.get("equipped_item", {})

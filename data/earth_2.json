@@ -271,6 +271,12 @@
 				"keywords": [
 					"復活",
 					"領土守護"
+				],
+				"effects": [
+					{
+						"effect_type": "revive_to_hand",
+						"trigger": "on_death"
+					}
 				]
 			}
 		},
