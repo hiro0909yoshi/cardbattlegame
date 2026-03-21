@@ -693,14 +693,14 @@ func test_1065_rune_shield_vs_creature_scroll_attack():
 	## ルーンシールド vs ウィスプ(ID:34, 火, AP30/HP50, 術攻撃[AP30])
 	## 防: ルーンシールド → 術攻撃無効 → ダメージ0
 	## 防HP current_hp=50のまま
-	## 防AP40 → 攻HP50-40=10
+	## 防AP40 → 攻HP50-40=10 → バイロマンサー効果(MHP-30)→HP10-30=-20
 	var config = _create_config()
 	config.attacker_creatures = [34]  # ウィスプ(火, AP30/HP50, 術攻撃[AP30])
 	config.defender_items = [1065]  # ルーンシールド
 	var results = await _executor.execute_all_battles(config)
 	var r = results[0]
 	assert_eq(r.attacker_final_ap, 30, "ルーンシールドvsクリ術攻撃: 攻AP")
-	assert_eq(r.attacker_final_hp, 10, "ルーンシールドvsクリ術攻撃: 攻HP")
+	assert_eq(r.attacker_final_hp, -20, "ルーンシールドvsクリ術攻撃: HP10→バイロマンサーMHP-30→-20")
 	assert_eq(r.defender_final_hp, 50, "ルーンシールドvsクリ術攻撃: 防HP(術攻撃無効)")
 	assert_eq(r.winner, "attacker_survived", "ルーンシールドvsクリ術攻撃: 勝者")
 
@@ -1726,13 +1726,14 @@ func test_1004_dispel_vs_piercing():
 
 func test_1004_dispel_vs_magic_attack():
 	## ウィスプ(34, fire, AP30/HP50, 術攻撃) → 術攻撃無効化
-	## 火Lv1→HP60. 攻AP40→防HP20. 防AP30→攻HP20. 術攻撃なし→通常ダメージ.
+	## 火Lv1→HP60. 攻AP40→防HP20. 防AP30→攻HP20.
+	## バイロマンサー効果: 敵攻撃を受けたので MHP-30 → HP20-30=-10
 	var config = _create_config()
 	config.attacker_items = [1004]
 	config.defender_creatures = [34]
 	var results = await _executor.execute_all_battles(config)
 	var r = results[0]
-	assert_eq(r.defender_final_hp, 20, "ディスペルvs術攻撃: 防HP20")
+	assert_eq(r.defender_final_hp, -10, "ディスペルvs術攻撃: HP20→バイロマンサーMHP-30→-10")
 	assert_eq(r.attacker_final_hp, 20, "ディスペルvs術攻撃: 攻HP20")
 	assert_true(r.defender_skills_triggered.is_empty(), "ディスペルvs術攻撃: スキル不発動")
 

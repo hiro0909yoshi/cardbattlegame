@@ -136,6 +136,7 @@ static func _apply_ap_change(participant: BattleParticipant, value: int) -> void
 		print("[永続変化] ", participant.creature_data.get("name", ""), " AP", value, " → 下限0に制限")
 	
 	participant.creature_data["base_up_ap"] = new_base_up_ap
+	participant.base_up_ap = new_base_up_ap
 	print("[永続変化] ", participant.creature_data.get("name", ""), " AP", "+" if value >= 0 else "", value, " (合計AP:", participant.creature_data.get("ap", 0) + new_base_up_ap, ")")
 
 ## MHP変化を適用（下限0チェック付き）

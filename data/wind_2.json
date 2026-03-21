@@ -43,7 +43,7 @@
 			"ability_parsed": {
 				"effects": [
 					{
-						"trigger": "on_battle_won",
+						"trigger": "on_invasion",
 						"effect_type": "reduce_tile_level",
 						"amount": 1
 					}

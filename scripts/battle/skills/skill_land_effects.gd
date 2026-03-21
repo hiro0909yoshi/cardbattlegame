@@ -162,6 +162,68 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 	return result
 
 
+## 侵略時の土地効果をチェックし適用（勝敗問わず、攻撃側のスキル）
+## @param attacker_data 攻撃側のcreature_data
+## @param tile_index 対象タイルのインデックス
+## @param board_system ボードシステム参照
+## @param defender_alive 防御側が生存しているか（領土守護チェック用）
+## @return 適用した効果の情報 { changed_element: String, level_reduced: bool }
+static func check_and_apply_on_invasion(attacker_data: Dictionary, tile_index: int, board_system, defender_alive: bool) -> Dictionary:
+	var result = {
+		"changed_element": "",
+		"level_reduced": false
+	}
+
+	if not board_system:
+		return result
+
+	var ability_parsed = attacker_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+
+	for effect in effects:
+		if effect.get("trigger") != "on_invasion":
+			continue
+
+		var effect_type = effect.get("effect_type", "")
+
+		match effect_type:
+			"reduce_tile_level":
+				var amount = effect.get("amount", 1)
+
+				# 防御側が生存中 + 領土守護 → 無効
+				if defender_alive and _tile_has_land_protection(tile_index, board_system):
+					print("【土地破壊無効】タイル%dは領土守護を持っています" % tile_index)
+					continue
+
+				if board_system:
+					var success = board_system.change_tile_level(tile_index, -amount)
+					if success:
+						result["level_reduced"] = true
+						print("【土地破壊】%s がタイル%dのレベルを-%d" % [
+							attacker_data.get("name", "?"), tile_index, amount
+						])
+
+			"change_tile_element":
+				var new_element = effect.get("element", "")
+				if new_element.is_empty():
+					continue
+
+				# 防御側が生存中 + 領土守護 → 無効
+				if defender_alive and _tile_has_land_protection(tile_index, board_system):
+					print("【不変】タイル%dは領土守護を持っています" % tile_index)
+					continue
+
+				if board_system:
+					var success = board_system.change_tile_element(tile_index, new_element)
+					if success:
+						result["changed_element"] = new_element
+						print("【属性変化】%s がタイル%dを%sに変性" % [
+							attacker_data.get("name", "?"), tile_index, new_element
+						])
+
+	return result
+
+
 ## タイルが領土守護を持っているかチェック
 ## @param tile_index タイルインデックス
 ## @param board_system ボードシステム参照

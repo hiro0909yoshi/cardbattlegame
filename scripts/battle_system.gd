@@ -573,6 +573,13 @@ func _apply_post_battle_effects(
 			# 🌍 戦闘勝利時の土地効果（属性変化・土地破壊）
 			print("[DEBUG] 土地効果チェック開始")
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
+			# 侵略時土地効果（勝敗問わず）
+			var invasion_result = SkillLandEffects.check_and_apply_on_invasion(attacker.creature_data, tile_index, board_system_ref, false)
+			# 結果をマージ
+			if invasion_result.get("changed_element", "") != "":
+				land_effect_result["changed_element"] = invasion_result["changed_element"]
+			if invasion_result.get("level_reduced", false):
+				land_effect_result["level_reduced"] = true
 			print("[DEBUG] 土地効果通知表示")
 			await _show_land_effect_notification(attacker.creature_data, land_effect_result)
 			print("[DEBUG] 土地効果通知完了")
@@ -611,6 +618,12 @@ func _apply_post_battle_effects(
 			
 			# 🌍 戦闘勝利時の土地効果（属性変化 - 防御成功時も発動）
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
+			# 侵略時土地効果（攻撃側の勝敗問わずスキル、防御側は生存）
+			var invasion_result = SkillLandEffects.check_and_apply_on_invasion(attacker.creature_data, tile_index, board_system_ref, true)
+			if invasion_result.get("changed_element", "") != "":
+				land_effect_result["changed_element"] = invasion_result["changed_element"]
+			if invasion_result.get("level_reduced", false):
+				land_effect_result["level_reduced"] = true
 			await _show_land_effect_notification(defender.creature_data, land_effect_result)
 			
 			# 💀 殲滅効果はバトル画面を閉じる前に実行済み
@@ -685,9 +698,14 @@ func _apply_post_battle_effects(
 			# 重要：tile_infoを新しく取得（バトル中の永続バフ反映のため）
 			var updated_tile_info = board_system_ref.get_tile_info(tile_index)
 			battle_special_effects.update_defender_hp(updated_tile_info, defender)
-			
+
+			# 侵略時土地効果（攻撃側の勝敗問わずスキル、防御側は生存）
+			var invasion_result = SkillLandEffects.check_and_apply_on_invasion(attacker.creature_data, tile_index, board_system_ref, true)
+			if not invasion_result.get("changed_element", "").is_empty() or invasion_result.get("level_reduced", false):
+				await _show_land_effect_notification(attacker.creature_data, invasion_result)
+
 			emit_signal("invasion_completed", false, tile_index)
-		
+
 		BattleResult.BOTH_DEFEATED:
 			print("【結果】相打ち！土地は無所有になります")
 
@@ -724,7 +742,12 @@ func _apply_post_battle_effects(
 			
 			# 攻撃側カードは破壊される（手札に戻らない）
 			print("[相打ち] 両方のクリーチャーが破壊されました")
-			
+
+			# 侵略時土地効果（攻撃側の勝敗問わずスキル、防御側は死亡）
+			var invasion_result = SkillLandEffects.check_and_apply_on_invasion(attacker.creature_data, tile_index, board_system_ref, false)
+			if not invasion_result.get("changed_element", "").is_empty() or invasion_result.get("level_reduced", false):
+				await _show_land_effect_notification(attacker.creature_data, invasion_result)
+
 			emit_signal("invasion_completed", false, tile_index)
 	
 	# 🔄 防御側の変身を元に戻す（バルダンダース専用）

@@ -217,13 +217,14 @@ static func apply_merge_effect(
 	new_creature_data["current_hp"] = max_hp
 	
 	# タイルインデックスを保持
-	var tile_index = creature_data.get("tile_index", participant.tile_index)
+	var tile_index = creature_data.get("tile_index", -1)
+	if tile_index < 0 and "tile_index" in participant:
+		tile_index = participant.tile_index
 	new_creature_data["tile_index"] = tile_index
 	
 	# BattleParticipantのcreature_dataを更新
 	participant.creature_data = new_creature_data
-	participant.base_ap = new_creature_data.get("ap", 0)
-	participant.current_ap = participant.base_ap
+	participant.current_ap = new_creature_data.get("ap", 0)
 	participant.base_hp = new_creature_data.get("hp", 0)
 	participant.current_hp = max_hp
 	
@@ -238,7 +239,7 @@ static func apply_merge_effect(
 	result["cost"] = cost
 	result["result_creature"] = new_creature_data
 	
-	print("[合体] 完了: %s (HP:%d AP:%d)" % [result_name, max_hp, participant.base_ap])
+	print("[合体] 完了: %s (HP:%d AP:%d)" % [result_name, max_hp, participant.current_ap])
 	
 	return result
 

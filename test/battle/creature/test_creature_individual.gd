@@ -867,3 +867,1043 @@ func test_deadly_jelly_ep_loss_on_death():
 	var r = await _execute_battle(config)
 	assert_eq(r.winner, "attacker", "攻撃側勝利")
 	assert_true(r.defender_battle_effects.has("EP損失[100EP]"), "防御側100EP損失: %s" % str(r.defender_battle_effects))
+
+
+# ===========================================================================
+# シンダーハンター (42): 火, N, AP30/HP30
+# 強化[敵MHP40以下]
+# ===========================================================================
+
+## 強化発動: 敵MHP30(<=40) → AP30×1.5=45
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP45→land10+cur30消費→def_hp=-5→撃破
+func test_cinder_hunter_power_strike_mhp_below():
+	var config = _create_config(42, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 45, "敵MHP30<=40→強化発動→AP30×1.5=45")
+	assert_eq(r.defender_final_hp, -5, "防HP40(30+land10)-45=-5→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化不発: 敵MHP50(>40) → AP30のまま
+## vs ドラゴンゾンビ(無,AP50/HP60) on neutral, land_bonus=10
+## AP30→land10+cur60消費→def_hp=40(生存)
+## 防AP50→att_hp=30-50=-20→撃破
+func test_cinder_hunter_no_power_strike_mhp_above():
+	var config = _create_config(42, 425)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 30, "敵MHP60>40→強化不発→AP30")
+	assert_eq(r.defender_final_hp, 40, "防HP70(60+land10)-30=40")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## 強化アイテム併用: シンダーハンター+ジャイアントキラー(AP+30,強化[MHP>=40])
+## 敵MHP30→シンダーハンター強化発動、ジャイアントキラー強化不発(MHP30<40)
+## AP30+30=60→×1.5=90
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+func test_cinder_hunter_with_power_strike_item():
+	var config = _create_config(42, 414)
+	config.attacker_items = [1060]  # ジャイアントキラー(AP+30,強化[MHP>=40])
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 90, "AP60→強化×1.5=90")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 巻物アイテム併用: シンダーハンター+ライトニングオーブ(術攻撃[AP40])
+## 術攻撃AP40固定（強化のAP上昇は巻物でリセット）
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+func test_cinder_hunter_with_scroll_item():
+	var config = _create_config(42, 414)
+	config.attacker_items = [1024]  # ライトニングオーブ(術攻撃[AP40])
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "巻物AP40固定（強化リセット）")
+	assert_eq(r.attacker_is_using_scroll, true, "術攻撃フラグON")
+
+
+# ===========================================================================
+# シールブレイカー (235): 地, R, AP40/HP40
+# 強化[敵AP<=30]
+# ===========================================================================
+
+## 強化発動: 敵AP20(<=30) → AP40×1.5=60
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP60→land10+cur30消費→def_hp=-20→撃破
+func test_shield_breaker_power_strike_enemy_low_ap():
+	var config = _create_config(235, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "敵AP20<=30→強化発動→AP40×1.5=60")
+	assert_eq(r.defender_final_hp, -20, "防HP40(30+land10)-60=-20→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化不発: 敵AP50(>30) → AP40のまま
+## vs ドラゴンゾンビ(無,AP50/HP60) on neutral, land_bonus=10
+## 攻HP40-50=-10→撃破、防HP70(60+land10)-40=30
+func test_shield_breaker_no_power_strike_enemy_high_ap():
+	var config = _create_config(235, 425)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "敵AP50>30→強化不発→AP40")
+	assert_eq(r.defender_final_hp, 30, "防HP70(60+land10)-40=30")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## 強化アイテム併用: シールブレイカー+ジャイアントキラー(AP+30,強化[MHP>=40])
+## 敵ゴブリンMHP30<40→ジャイアントキラー強化不発、シールブレイカー強化発動
+## AP40+30=70→×1.5=105
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+func test_shield_breaker_with_power_strike_item():
+	var config = _create_config(235, 414)
+	config.attacker_items = [1060]  # ジャイアントキラー(AP+30,強化[MHP>=40])
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 105, "AP70→強化×1.5=105")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 巻物アイテム併用: シールブレイカー+ライトニングオーブ(術攻撃[AP40])
+## 術攻撃AP40固定（強化リセット）
+func test_shield_breaker_with_scroll_item():
+	var config = _create_config(235, 414)
+	config.attacker_items = [1024]  # ライトニングオーブ(術攻撃[AP40])
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "巻物AP40固定（強化リセット）")
+	assert_eq(r.attacker_is_using_scroll, true, "術攻撃フラグON")
+
+
+# ===========================================================================
+# ナイト (333): 風, R, AP50/HP40
+# 強化[敵MHP>=50]
+# ===========================================================================
+
+## 強化発動: 敵MHP50(>=50) → AP50×1.5=75
+## vs レッドオーガ(火,AP40/HP50) on fire, land_bonus=10
+## AP75→land10+cur50消費→def_hp=-15→撃破
+func test_knight_power_strike_enemy_high_mhp():
+	var config = _create_config(333, 48, "fire")
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 75, "敵MHP50>=50→強化発動→AP50×1.5=75")
+	assert_eq(r.defender_final_hp, -15, "防HP60(50+land10)-75=-15→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化不発: 敵MHP30(<50) → AP50のまま
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP50→land10+cur30消費→def_hp=-10→撃破
+func test_knight_no_power_strike_enemy_low_mhp():
+	var config = _create_config(333, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 50, "敵MHP30<50→強化不発→AP50")
+	assert_eq(r.defender_final_hp, -10, "防HP40(30+land10)-50=-10→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化アイテム併用: ナイト+ジャイアントキラー(AP+30,強化[MHP>=40])
+## 敵MHP50>=40→両方の強化条件成立だが×1.5は1回のみ
+## AP50+30=80→×1.5=120
+## vs レッドオーガ(火,AP40/HP50) on fire, land_bonus=10
+func test_knight_with_power_strike_item():
+	var config = _create_config(333, 48, "fire")
+	config.attacker_items = [1060]  # ジャイアントキラー(AP+30,強化[MHP>=40])
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 120, "AP80→強化×1.5=120（2重にならない）")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 巻物アイテム併用: ナイト+ライトニングオーブ(術攻撃[AP40])
+## 術攻撃AP40固定（強化リセット）
+func test_knight_with_scroll_item():
+	var config = _create_config(333, 48, "fire")
+	config.attacker_items = [1024]  # ライトニングオーブ(術攻撃[AP40])
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "巻物AP40固定（強化リセット）")
+	assert_eq(r.attacker_is_using_scroll, true, "術攻撃フラグON")
+
+
+# ===========================================================================
+# サラマンダー (46): 火, R, AP40/HP50
+# 共鳴[地・AP+20/HP+10] + 強化[敵属性:火,地]
+# 巻物使用不可
+# ===========================================================================
+
+## 共鳴+強化同時発動: 地土地2つ所有で共鳴、敵が地属性で強化
+## 共鳴AP+20 → AP60, 強化×1.5 → AP90
+## vs ロックウォッチャー(地,AP30/HP50) on earth, land_bonus=10
+## AP90 → 防HP60(50+land10)-90=-30→撃破
+func test_salamander_resonance_and_power_strike():
+	var config = BattleTestConfig.new()
+	config.attacker_creatures = [46]
+	config.defender_creatures = [204]
+	config.battle_tile_index = 16  # 地タイル
+	config.board_layout = [
+		{"tile_index": 16, "owner_id": 1, "creature_id": 204},
+		{"tile_index": 17, "owner_id": 0, "creature_id": 48},  # 攻撃側地タイル1
+		{"tile_index": 18, "owner_id": 0, "creature_id": 48},  # 攻撃側地タイル2
+	]
+	config.attacker_battle_land = "earth"
+	config.defender_battle_land = "earth"
+	config.attacker_battle_land_level = 1
+	config.defender_battle_land_level = 1
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 90, "共鳴AP+20→60→強化×1.5=90")
+	assert_eq(r.defender_final_hp, -30, "防HP60(50+land10)-90=-30→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 共鳴のみ発動: 地土地所有で共鳴、敵が水属性で強化不発
+## 共鳴AP+20/HP+10 → AP60/HP60, 強化不発
+## vs プレッシャーリング(水,AP20/HP30) on water, land_bonus=10
+func test_salamander_resonance_only_no_power_strike():
+	var config = BattleTestConfig.new()
+	config.attacker_creatures = [46]
+	config.defender_creatures = [105]
+	config.battle_tile_index = 6  # 水タイル
+	config.board_layout = [
+		{"tile_index": 6, "owner_id": 1, "creature_id": 105},
+		{"tile_index": 16, "owner_id": 0, "creature_id": 48},  # 攻撃側地タイル1
+		{"tile_index": 17, "owner_id": 0, "creature_id": 48},  # 攻撃側地タイル2
+	]
+	config.attacker_battle_land = "water"
+	config.defender_battle_land = "water"
+	config.attacker_battle_land_level = 1
+	config.defender_battle_land_level = 1
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "共鳴AP+20→60、敵水→強化不発")
+	assert_eq(r.defender_final_hp, -20, "防HP40(30+land10)-60=-20→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 強化アイテム併用: サラマンダー+ジャイアントキラー(AP+30,強化[MHP>=40])
+## 敵MHP50>=40→ジャイアントキラー強化も成立、AP40+20(共鳴)+30=90→×1.5=135
+## vs ロックウォッチャー(地,AP30/HP50) on earth, land_bonus=10
+func test_salamander_with_power_strike_item():
+	var config = BattleTestConfig.new()
+	config.attacker_creatures = [46]
+	config.defender_creatures = [204]
+	config.attacker_items = [1060]  # ジャイアントキラー(AP+30,強化[MHP>=40])
+	config.battle_tile_index = 16
+	config.board_layout = [
+		{"tile_index": 16, "owner_id": 1, "creature_id": 204},
+		{"tile_index": 17, "owner_id": 0, "creature_id": 48},
+		{"tile_index": 18, "owner_id": 0, "creature_id": 48},
+	]
+	config.attacker_battle_land = "earth"
+	config.defender_battle_land = "earth"
+	config.attacker_battle_land_level = 1
+	config.defender_battle_land_level = 1
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 135, "AP40+20(共鳴)+30(item)=90→×1.5=135")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+# ===========================================================================
+# ニーベルングブレイド (16): 火, S, AP40/HP40
+# 即死[敵AP>=50, 60%] + 無効化[MHP>=50]
+# ===========================================================================
+
+## 即死条件不成立: 敵AP20(<50) → 即死判定なし → 通常戦闘
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP40 → 防HP40(30+land10)-40=0→撃破
+func test_nibelungblade_no_instant_death_low_ap():
+	var config = _create_config(16, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "AP40維持")
+	assert_eq(r.defender_final_hp, 0, "防HP40(30+land10)-40=0→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 無効化発動: 敵MHP50(>=50) → 攻撃無効
+## レッドオーガ(火,AP40/MHP50) vs ニーベルングブレイド(防御側, fire, land=10)
+## MHP50>=50 → 無効化 → ダメージ0
+## 反撃AP40 → レッドオーガHP50-40=10
+## ※current_hpはland_bonusを含まない
+func test_nibelungblade_nullify_high_mhp():
+	var config = _create_config(48, 16, "fire")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 40, "無効化→防HP40維持(land10は別管理)")
+	assert_eq(r.attacker_final_hp, 10, "反撃AP40→攻HP50-40=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## 無効化不発: 敵MHP30(<50) → 通常ダメージ
+## ゴブリン(無,AP20/MHP30) vs ニーベルングブレイド(防御側, fire, land=10)
+## MHP30<50 → 無効化不発 → AP20ダメージ
+## HP50-20=30、反撃AP40→ゴブリンHP30-40=-10→撃破
+func test_nibelungblade_no_nullify_low_mhp():
+	var config = _create_config(414, 16, "fire")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 30, "MHP30<50→無効化不発→HP50-20=30")
+	assert_eq(r.attacker_final_hp, -10, "反撃AP40→HP30-40=-10→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+# ===========================================================================
+# フロストキラー (111): 水, S, AP40/HP40
+# 即死[敵属性fire, 60%] + 無効化[属性fire]
+# 巻物使用不可
+# ===========================================================================
+
+## 即死条件不成立: 敵が非火属性 → 即死判定なし → 通常戦闘
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP40 → 防HP40(30+land10)-40=0→撃破
+func test_frost_killer_no_instant_death_non_fire():
+	var config = _create_config(111, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "AP40維持")
+	assert_eq(r.defender_final_hp, 0, "防HP40-40=0→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 無効化発動: 敵が火属性 → 攻撃無効
+## レッドオーガ(火,AP40) vs フロストキラー(防御側, water, land=10)
+## 火属性 → 無効化 → ダメージ0
+## ※即死[fire,60%]が確率発動するため、攻撃側結果は可変
+func test_frost_killer_nullify_fire_element():
+	var config = _create_config(48, 111, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 40, "火属性無効化→防HP40維持(land10は別管理)")
+
+
+## 無効化不発: 敵が非火属性 → 通常ダメージ
+## ゴブリン(無,AP20) vs フロストキラー(防御側, water, land=10)
+## 無属性 → 無効化不発 → AP20ダメージ
+## HP50-20=30、反撃AP40→ゴブリンHP30-40=-10→撃破
+func test_frost_killer_no_nullify_non_fire():
+	var config = _create_config(414, 111, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 30, "無属性→無効化不発→HP50-20=30")
+	assert_eq(r.attacker_final_hp, -10, "反撃AP40→HP30-40=-10→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+# ===========================================================================
+# アヌビス (144): 水, R, AP60/HP60
+# 無効化[AP>=50]
+# アクセサリ使用不可, 地属性召喚不可
+# ===========================================================================
+
+## 無効化発動: 敵AP50(>=50) → 攻撃無効
+## ドラゴンゾンビ(無,AP50) vs アヌビス(防御側, water, land=10)
+## AP50>=50 → 無効化 → ダメージ0
+## 反撃AP60 → ドラゴンゾンビHP60-60=0→撃破
+## ※鼓舞[水風HP+10]あり、current_hpはland/tempボーナス含まず
+func test_anubis_nullify_high_ap():
+	var config = _create_config(425, 144, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 60, "無効化→防HP60維持(land10+鼓舞10は別管理)")
+	assert_eq(r.attacker_final_hp, 0, "反撃AP60→HP60-60=0→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## 無効化不発: 敵AP20(<50) → 通常ダメージ
+## ゴブリン(無,AP20) vs アヌビス(防御側, water, land=10)
+## AP20<50 → 無効化不発 → AP20ダメージ
+## land10+鼓舞temp10で吸収→current_hp=60維持、反撃AP60→ゴブリン撃破
+func test_anubis_no_nullify_low_ap():
+	var config = _create_config(414, 144, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 60, "AP20→land10+鼓舞10で吸収→HP60維持")
+	assert_eq(r.attacker_final_hp, -30, "反撃AP60→HP30-60=-30→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+# ===========================================================================
+# ウンディーネ (100): 水, S, AP30/HP50
+# 無効化[地,風属性]
+# 巻物使用不可
+# ===========================================================================
+
+## 無効化発動: 敵が地属性 → 攻撃無効
+## ロックウォッチャー(地,AP30) vs ウンディーネ(防御側, water, land=10)
+## 地属性 → 無効化 → ダメージ0
+## 反撃AP30 → ロックウォッチャーHP50-30=20
+func test_undine_nullify_earth_element():
+	var config = _create_config(204, 100, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 50, "地属性無効化→防HP50維持(land10は別管理)")
+	assert_eq(r.attacker_final_hp, 20, "反撃AP30→攻HP50-30=20")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## 無効化不発: 敵が火属性 → 通常ダメージ
+## レッドオーガ(火,AP40) vs ウンディーネ(防御側, water, land=10)
+## 火属性 → 無効化不発 → AP40ダメージ
+## HP60-40=20、反撃AP30→レッドオーガHP50-30=20
+func test_undine_no_nullify_fire_element():
+	var config = _create_config(48, 100, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 20, "火属性→無効化不発→HP60-40=20")
+	assert_eq(r.attacker_final_hp, 20, "反撃AP30→HP50-30=20")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+# ===========================================================================
+# ネプチューンガード (103): 水, R, AP50/HP50
+# 無効化[通常攻撃・防具使用時] + 加勢[water] + 堅牢
+# ===========================================================================
+
+## 防具使用時、通常攻撃無効化
+## ゴブリン(無,AP20) vs ネプチューンガード(防御側, water, land=10) + フルプレート(防具,HP+50)
+## 防具使用中 → 通常攻撃無効化 → ダメージ0
+## 反撃AP50 → ゴブリンHP30-50=-20→撃破
+## ※current_hpはland/itemボーナスを含まない
+func test_neptune_guard_nullify_with_armor():
+	var config = _create_config(414, 103, "water")
+	config.defender_items = [1058]  # フルプレート(HP+50, 防具)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 50, "無効化→防HP50維持(land10+item50は別管理)")
+	assert_eq(r.attacker_final_hp, -20, "反撃AP50→HP30-50=-20→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## 防具なし → 通常ダメージ
+## ゴブリン(無,AP20) vs ネプチューンガード(防御側, water, land=10)
+## 防具なし → 無効化不発 → AP20ダメージ
+## HP60-20=40、反撃AP50→ゴブリンHP30-50=-20→撃破
+func test_neptune_guard_no_nullify_without_armor():
+	var config = _create_config(414, 103, "water")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 40, "防具なし→無効化不発→HP60-20=40")
+	assert_eq(r.attacker_final_hp, -20, "反撃AP50→HP30-50=-20→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+# ===========================================================================
+# ドラゴニュート (307): 風, S, AP0/HP40
+# AP&HP=[風]配置数×10 (set)
+# 地属性召喚不可
+# ===========================================================================
+
+## 風3つ配置: AP&HP=30
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP30 → 防HP40(30+land10)-30=10、ゴブリンAP20→HP30-20=10
+func test_dragonnewt_wind_count_3():
+	var config = _create_config(307, 414)
+	config.board_layout.append({"tile_index": 11, "owner_id": 0, "creature_id": 48})  # 風タイル1
+	config.board_layout.append({"tile_index": 12, "owner_id": 0, "creature_id": 48})  # 風タイル2
+	config.board_layout.append({"tile_index": 13, "owner_id": 0, "creature_id": 48})  # 風タイル3
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 30, "風3×10=AP30(set)")
+	assert_eq(r.attacker_final_hp, 10, "HP30(set)-20=10")
+	assert_eq(r.defender_final_hp, 10, "防HP40-30=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## 風0配置: AP&HP=0 → HP0で戦闘開始前に死亡
+## vs ゴブリン(無,AP20/HP30) on neutral
+## HP0→is_alive()=false→攻撃不可→ゴブリン無傷
+func test_dragonnewt_wind_count_0():
+	var config = _create_config(307, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 0, "風0×10=AP0(set)")
+	assert_eq(r.attacker_final_hp, 0, "HP0(set)→戦闘開始前に死亡")
+	assert_eq(r.defender_final_hp, 30, "防HP30維持(land10は別管理)")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## 強化アイテム併用: 風3配置(AP30 set) + ガーディアンブレイド(AP+30/HP+30)
+## setがアイテム後に適用 → current_ap=30(setで上書き)、item_bonus_hp=30は別プール
+## vs ゴブリン(無,AP20/HP30) on neutral
+## AP30 → land10+HP20消費→HP10、ゴブリンAP20→HP30-20=10 → 両者生存
+func test_dragonnewt_with_boost_item():
+	var config = _create_config(307, 414)
+	config.attacker_items = [1008]  # ガーディアンブレイド(AP+30/HP+30)
+	config.board_layout.append({"tile_index": 11, "owner_id": 0, "creature_id": 48})
+	config.board_layout.append({"tile_index": 12, "owner_id": 0, "creature_id": 48})
+	config.board_layout.append({"tile_index": 13, "owner_id": 0, "creature_id": 48})
+	var r = await _execute_battle(config)
+	# setでAP=30に上書き（アイテムAP+30は上書きされる）
+	assert_eq(r.attacker_final_ap, 30, "set後AP=30（アイテムAPはset上書き）")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## 巻物アイテム併用: 風3配置 + フォースストライク(巻物,base_ap)
+## 巻物AP=base_ap(creature_data['ap']=0) → setが先に30→巻物が最後に0上書き？
+## or 巻物が最後に再適用 → AP=0
+## vs ゴブリン(無,AP20/HP30) on neutral
+func test_dragonnewt_with_scroll_item():
+	var config = _create_config(307, 414)
+	config.attacker_items = [1007]  # フォースストライク(巻物,base_ap)
+	config.board_layout.append({"tile_index": 11, "owner_id": 0, "creature_id": 48})
+	config.board_layout.append({"tile_index": 12, "owner_id": 0, "creature_id": 48})
+	config.board_layout.append({"tile_index": 13, "owner_id": 0, "creature_id": 48})
+	var r = await _execute_battle(config)
+	# 巻物base_ap → creature_data["ap"]=0 → AP=0
+	assert_eq(r.attacker_final_ap, 0, "巻物base_ap=creature_data.ap=0")
+
+
+# ===========================================================================
+# ヒドラ (146): 水, S, AP0/HP30
+# AP+手札数×10
+# ===========================================================================
+
+## 手札5枚(デフォルト): AP=0+50=50
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP50 → 防HP40-50=-10→撃破
+func test_hydra_hand_count_5():
+	var config = _create_config(146, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 50, "手札5×10=AP50")
+	assert_eq(r.defender_final_hp, -10, "防HP40(30+land10)-50=-10→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 手札3枚: AP=0+30=30
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## AP30 → 防HP40-30=10、ゴブリンAP20→HP30-20=10
+func test_hydra_hand_count_3():
+	var config = _create_config(146, 414)
+	config.attacker_initial_hand_size = 3
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 30, "手札3×10=AP30")
+	assert_eq(r.defender_final_hp, 10, "防HP40(30+land10)-30=10")
+	assert_eq(r.attacker_final_hp, 10, "攻HP30-20=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+# ===========================================================================
+# ロックウォッチャー (204): 地, N, AP30/HP50
+# 先制 + 防御時AP=50
+# ===========================================================================
+
+## 攻撃時: AP30のまま（防御時AP=50は不発）
+## vs ゴブリン(無,AP20/HP30) on neutral, land_bonus=10
+## 先制AP30 → 防HP40-30=10、反撃AP20→攻HP50-20=30
+func test_rock_watcher_attack_normal_ap():
+	var config = _create_config(204, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 30, "攻撃時→AP30のまま")
+	assert_eq(r.defender_final_hp, 10, "防HP40(30+land10)-30=10")
+	assert_eq(r.attacker_final_hp, 30, "攻HP50-20=30")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## 防御時: AP=50に変更
+## ゴブリン(無,AP20) vs ロックウォッチャー(防御側, earth, land=10)
+## 先制あり→ロックウォッチャーが先に攻撃(AP50)→ゴブリンHP30-50=-20→撃破
+func test_rock_watcher_defend_fixed_ap():
+	var config = _create_config(414, 204, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 50, "防御時→AP=50")
+	assert_eq(r.attacker_final_hp, -20, "先制AP50→ゴブリンHP30-50=-20→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+# ===========================================================================
+# ベヒーモス (212): 地, S, AP60/HP50
+# 無効化[先制の能力を持つクリーチャー]
+# ===========================================================================
+
+## 無効化発動: フレイムキメラ(火,AP30/HP50,先制持ち) vs ベヒーモス(地,earth,land=10)
+## 先制持ち→無効化発動→攻撃無効、ベヒーモスAP60→フレイムキメラHP50-60=-10→撃破
+func test_behemoth_nullify_first_strike():
+	var config = _create_config(7, 212, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 50, "無効化→防HP50維持(land10は別管理)")
+	assert_eq(r.attacker_final_hp, -10, "ベヒーモスAP60→攻HP50-60=-10→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## 無効化不発: ゴブリン(無,AP20/HP30,先制なし) vs ベヒーモス(地,earth,land=10)
+## 先制なし→無効化不発→通常戦闘
+## ゴブリンAP20 vs land10→land消費、ベヒーモスAP60→ゴブリンHP30-60=-30→撃破
+func test_behemoth_no_nullify_no_first_strike():
+	var config = _create_config(414, 212, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 40, "ゴブリンAP20→land10消費→HP50-10=40")
+	assert_eq(r.attacker_final_hp, -30, "ベヒーモスAP60→ゴブリンHP30-60=-30→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+# ===========================================================================
+# バジリスク (215): 地, S, AP30/HP40
+# 変質[on_attack_success → メガリスガード(222)に変身]
+# ===========================================================================
+
+## 攻撃成功→変質発動: バジリスク(AP30) vs ゴブリン(HP30+land10=40) on neutral
+## AP30→land10+20消費→HP10→変質→メガリスガード(HP60,AP0)に変身
+## メガリスガードAP0→バジリスクHP40維持
+func test_basilisk_transform_on_attack_success():
+	var config = _create_config(215, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, 40, "メガリスガードAP0→ノーダメージ→HP40維持")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_true(r.attacker_battle_effects.has("変質"), "変質効果が発動")
+
+
+## 攻撃で敵撃破→変質不発(死亡): バジリスク(AP30) vs 弱い敵
+## HP20以下の敵を一撃で倒す→変質対象がいない
+func test_basilisk_no_transform_on_kill():
+	var config = _create_config(215, 414)
+	config.defender_buff_config["base_up_hp"] = -20  # ゴブリンHP30→10
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "attacker", "攻撃側勝利（一撃撃破）")
+	assert_false(r.attacker_battle_effects.has("変質"), "敵死亡→変質不発")
+
+
+# ===========================================================================
+# セイレーン (332): 風, R, AP30/HP30
+# 先制；攻撃成功時、敵に刻印[消沈]
+# ===========================================================================
+
+## 先制→攻撃成功→刻印[消沈]付与→反撃無効
+## セイレーン(AP30,先制) vs ゴブリン(HP30+land10=40) on neutral
+## 先制AP30→land10+20消費→HP30-20=10(生存)→消沈で反撃不可
+func test_siren_curse_on_attack_success():
+	var config = _create_config(332, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, 30, "消沈で反撃不可→HP30維持")
+	assert_eq(r.defender_final_hp, 10, "先制AP30→land10+20消費→HP30-20=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_true(r.attacker_battle_effects.has("刻印[消沈]"), "刻印[消沈]が発動")
+	assert_eq(r.defender_curse.get("curse_type", ""), "battle_disable", "消沈刻印が付与")
+
+
+# ===========================================================================
+# リンドヴルム (320): 風, N, AP30/HP40
+# 攻撃成功時、敵に刻印[衰弱]
+# ===========================================================================
+
+## 攻撃成功→刻印[衰弱]付与→衰弱ダメージで敵撃破
+## リンドヴルム(AP30) vs ゴブリン(HP30+land10=40) on neutral
+## AP30→land10+20消費→HP30-20=10→衰弱ダメージ→HP0→撃破
+## ゴブリンAP20→リンドヴルムHP40-20=20
+func test_lindwurm_curse_on_attack_success():
+	var config = _create_config(320, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, 20, "ゴブリンAP20→HP40-20=20")
+	assert_eq(r.defender_final_hp, 0, "衰弱ダメージで追加撃破→HP0")
+	assert_eq(r.winner, "attacker", "衰弱ダメージで敵撃破→攻撃側勝利")
+	assert_true(r.attacker_battle_effects.has("刻印[衰弱]"), "刻印[衰弱]が発動")
+	assert_eq(r.defender_curse.get("curse_type", ""), "plague", "衰弱刻印が付与")
+
+
+# ===========================================================================
+# シャドウレイス (418): 無, R, AP40/HP30
+# 先制；APドレイン；奮闘
+# ===========================================================================
+
+## 先制→APドレイン→敵AP=0で反撃ダメージなし
+## シャドウレイス(AP40,先制) vs ドラゴンゾンビ(無,AP50/HP60) on neutral, land10
+## 先制AP40→land10+30消費→HP60-30=30(生存)→APドレイン→AP=0
+## ドラゴンゾンビAP0→シャドウレイスHP30-0=30(ノーダメージ)
+func test_shadow_wraith_ap_drain():
+	var config = _create_config(418, 425)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, 30, "APドレイン→敵AP0→ノーダメージ")
+	assert_eq(r.defender_final_hp, 30, "先制AP40→land10+30消費→HP60-30=30")
+	assert_eq(r.defender_final_ap, 0, "APドレイン→AP=0")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_true(r.attacker_battle_effects.has("APドレイン"), "APドレイン効果が発動")
+
+
+# ===========================================================================
+# セクメト (35): 火, N, AP30/HP30
+# 加勢[無火地]；先制；敵破壊時、AP+10（永続）
+# ===========================================================================
+
+## 先制で敵撃破→AP+10永続バフ
+## ゴブリン(AP20) attacks セクメト(防御側,fire,land=10)
+## 先制→セクメトAP30→ゴブリンHP30-30=0→撃破→AP+10発動
+func test_sekhmet_destroy_bonus():
+	var config = _create_config(414, 35, "fire")
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, 0, "先制AP30→ゴブリンHP30-30=0→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+	assert_eq(r.defender_effect_info.get("base_up_ap", 0), 10, "敵破壊→AP+10永続")
+
+
+# ===========================================================================
+# キルフィーダー (227): 地, S, AP40/HP40
+# 先制；敵破壊時、AP+10・MHP+10（永続）
+# ===========================================================================
+
+## 先制で敵撃破→AP+10・MHP+10永続バフ
+## ゴブリン(AP20) attacks キルフィーダー(防御側,earth,land=10)
+## 先制→キルフィーダーAP40→ゴブリンHP30-40=-10→撃破→AP+10/MHP+10発動
+func test_killfeeder_destroy_bonus():
+	var config = _create_config(414, 227, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, -10, "先制AP40→ゴブリンHP30-40=-10→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+	assert_eq(r.defender_effect_info.get("base_up_ap", 0), 10, "敵破壊→AP+10永続")
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), 10, "敵破壊→MHP+10永続")
+
+
+# ===========================================================================
+# バフォメット (443): 無, R, AP20/HP30
+# 戦闘後、敵のAPとMHPを交換
+# ===========================================================================
+
+## 戦闘後→敵のAP⇔MHP交換
+## バフォメット(AP20) vs ドラゴンゾンビ(無,AP50/HP60) on neutral, land10
+## AP20→land10+10消費→HP60-10=50、ドラゴンゾンビAP50→HP30-50=-20→バフォメット撃破
+## 戦闘後：ドラゴンゾンビのAP50⇔MHP60交換→AP=60,MHP=50
+## current_hp=min(50,50)=50
+func test_baphomet_swap_ap_mhp():
+	var config = _create_config(443, 425)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_hp, -20, "ドラゴンゾンビAP50→HP30-50=-20→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## バフォメット防御側で生存→敵のAP⇔MHP交換
+## ゴブリン(AP20) vs バフォメット(無,HP30) on neutral, land10
+## ゴブリンAP20→land10+10消費→HP30-10=20
+## バフォメットAP20→ゴブリン HP30+land10: land10消費+10base→HP30-10=20
+## 戦闘後：ゴブリンAP20⇔MHP30交換→AP=30,MHP=20
+## current_hp=min(20,20)=20
+func test_baphomet_defend_swap():
+	var config = _create_config(414, 443)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 20, "AP20→land10+10消費→HP30-10=20")
+	assert_eq(r.attacker_final_hp, 10, "ゴブリン(攻撃側landなし)HP30-バフォメットAP20=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+# ===========================================================================
+# ヴァンパイア (446): 無, N, AP70/HP70
+# 戦闘後、AP&MHP-10（永続）
+# ===========================================================================
+
+## 戦闘後→AP&MHP-10永続減少
+## ヴァンパイア(AP70) vs ゴブリン(HP30+land10=40) on neutral
+## AP70→ゴブリン撃破→戦闘後AP-10/MHP-10
+## ※add_base_up_hpでcurrent_hpも-10される→HP70-10=60
+func test_vampire_after_battle_penalty():
+	var config = _create_config(446, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+	assert_eq(r.attacker_final_hp, 60, "戦闘後MHP-10→current_hpも-10→70-10=60")
+	assert_eq(r.attacker_effect_info.get("base_up_ap", 0), -10, "戦闘後AP-10永続")
+	assert_eq(r.attacker_effect_info.get("base_up_hp", 0), -10, "戦闘後MHP-10永続")
+
+
+## 防御時も戦闘後ペナルティ発動
+## ゴブリン(AP20) vs ヴァンパイア(HP70+land10=80) on neutral, land10
+## ゴブリンAP20→land10消費+10base→HP70-10=60
+## ヴァンパイアAP70→ゴブリンHP30-70=-40→撃破
+## 戦闘後MHP-10→current_hpも-10→60-10=50
+func test_vampire_defend_penalty():
+	var config = _create_config(414, 446)
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "defender", "防御側勝利")
+	assert_eq(r.defender_final_hp, 50, "HP60(戦闘後)-10(ペナルティ)=50")
+	assert_eq(r.defender_effect_info.get("base_up_ap", 0), -10, "戦闘後AP-10永続")
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), -10, "戦闘後MHP-10永続")
+
+
+# ===========================================================================
+# ヌエ (339): 風, S, AP40/HP40
+# アイテム使用時AP+20；敵アイテム使用の戦闘後MHP+10
+# ===========================================================================
+
+## 自分がアイテム使用→AP+20ボーナス
+## ヌエ(AP40) + ガーディアンブレイド(AP+30,HP+30) vs ゴブリン on neutral
+## AP40 + item30 + ブルガサリボーナス20 = 90
+func test_nue_self_item_ap_bonus():
+	var config = _create_config(339, 414)
+	config.attacker_items = [1008]  # ガーディアンブレイド(武器,AP+30,HP+30)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 90, "AP40+item30+ヌエボーナス20=90")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 敵がアイテム使用→戦闘後MHP+10
+## ゴブリン+ドミニオンリング(AP+10,HP+20) vs ヌエ(防御側,wind,HP40+land10) on wind
+## ゴブリンAP30→land10消費+20base→HP40-20=20(ヌエ生存)
+## ヌエAP40→ゴブリン: item20消費+20base→HP30-20=10
+## 戦闘後：MHP+10 → add_base_up_hpでcurrent_hpも+10 → HP20+10=30
+func test_nue_enemy_item_mhp_bonus():
+	var config = _create_config(414, 339, "wind")
+	config.attacker_items = [1016]  # ドミニオンリング(アクセサリ,AP+10,HP+20)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 30, "HP20(戦闘後)+10(MHP永続ボーナス)=30")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), 10, "敵アイテム使用→MHP+10永続")
+
+
+# ===========================================================================
+# エアエレメンタル (330): 風, N, AP20/HP50
+# 先制；常時補正AP+20、HP-10
+# ===========================================================================
+
+## 常時補正: AP=20+20=40, HP=50-10(temp)=実質40
+## エアエレメンタル(先制AP40) vs ゴブリン(HP30+land10=40) on neutral
+## 先制AP40→land10+30消費→HP30-30=0→撃破
+func test_air_elemental_constant_bonus():
+	var config = _create_config(330, 414)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 40, "AP20+常時補正20=40")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+## 常時補正HP-10: 被ダメージ時にtemp_bonus_hpが先に消費
+## ゴブリン(AP20) vs エアエレメンタル(防御側,wind,HP50+land10,temp-10) on wind
+## ゴブリンAP20 vs エアエレメンタル: land10消費+temp(-10)は0以下なのでスキップ→base HP50-10=40
+## 先制AP40→ゴブリンHP30-40=-10→撃破
+func test_air_elemental_defend_hp_penalty():
+	var config = _create_config(414, 330, "wind")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 40, "AP20+常時補正20=40")
+	assert_eq(r.winner, "defender", "先制AP40→ゴブリン撃破")
+
+
+# ===========================================================================
+# スパインウォール (205): 地, N, AP10/HP50
+# 堅守；敵が水風の場合HP+50；再生
+# ===========================================================================
+
+## 敵が水属性→HP+50ボーナス（temp_bonus_hp）
+## ヘヴィアンカー(水,AP10) vs スパインウォール(地,earth,HP50+land10+temp50) on earth
+## AP10→land10消費→current_hp=50維持
+## スパインウォールAP10→ヘヴィアンカーHP70-10=60
+func test_spine_wall_water_enemy_hp_bonus():
+	var config = _create_config(101, 205, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 50, "水属性→HP+50、AP10はland10で吸収→HP50維持")
+	assert_eq(r.attacker_final_hp, 60, "スパインウォールAP10→HP70-10=60")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## 敵が地属性→HP+50なし、AP60で撃破
+## ベヒーモス(地,AP60) vs スパインウォール(地,earth,HP50+land10) on earth
+## AP60→land10消費+base50→HP50-50=0→撃破（再生不可）
+func test_spine_wall_no_bonus_earth_enemy():
+	var config = _create_config(212, 205, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_hp, 0, "地属性→ボーナスなし、AP60→land10+HP50=60→HP0→撃破")
+	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+# ==============================================================================
+# 個別クリーチャーテスト: ライフリンク(ID:137)
+# 水, S, AP20/HP20, 加勢[水地風], MHP+加勢クリーチャーのHP (上限100)
+# ==============================================================================
+
+## 基本加勢: 水クリーチャー(プレッシャーリング ID:105 AP20/HP30)を加勢使用
+## ライフリンク(AP20,HP20) + 加勢AP20 + 加勢HP30(item_bonus) + MHP永続吸収30
+## → current_ap=40, MHP=50(current_hp=50), item_bonus_hp=30
+## ゴブリン(414,AP20) → ライフリンク: land10+item10消費 → item残20, HP50
+## ライフリンクAP40 → ゴブリンHP30: 撃破 → winner=defender
+func test_life_link_basic_assist_water():
+	var config = _create_config(414, 137, "neutral")
+	config.defender_items = [105]  # プレッシャーリング(水,AP20/HP30)を加勢
+	var r = await _execute_battle(config)
+	# MHP永続吸収: base20 + absorbed30 = MHP50
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), 30, "MHP永続吸収+30")
+	# ゴブリンAP20 → land10+item10消費 → base HP50無傷
+	assert_eq(r.defender_final_hp, 50, "AP20→land10+item10消費→HP50維持")
+	assert_eq(r.winner, "defender", "ライフリンクAP40でゴブリンHP30撃破")
+
+
+## 地属性クリーチャー加勢: ヴォイドパペット(ID:203 地 AP20/HP20)
+## ライフリンク(AP20,HP20) + 加勢AP20 + 加勢HP20(item_bonus) + MHP永続吸収20
+## → current_ap=40, MHP=40(current_hp=40), item_bonus_hp=20
+## ゴブリンAP20 → land10+item10 → item残10, HP40
+## ライフリンクAP40 → ゴブリンHP30: 撃破
+func test_life_link_assist_earth_creature():
+	var config = _create_config(414, 137, "neutral")
+	config.defender_items = [203]  # ヴォイドパペット(地,AP20/HP20)
+	var r = await _execute_battle(config)
+	# MHP永続吸収: base20 + absorbed20 = MHP40
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), 20, "地クリーチャー加勢でMHP+20")
+	assert_eq(r.winner, "defender", "ライフリンクAP40でゴブリンHP30撃破")
+
+
+## MHP上限100テスト: ライフリンク(HP20) + base_up_hp50 + 加勢HP40 → 20+50+40=110 → 100に制限
+## buff_configでbase_up_hpを事前に50上げ、加勢クリーチャーHP40で上限確認
+## ゴブリンAP20 → land10+item10 → item残30, HP100
+## ライフリンクAP40 → ゴブリンHP30: 撃破
+func test_life_link_mhp_cap_100():
+	var config = _create_config(414, 137, "neutral")
+	config.defender_buff_config["base_up_hp"] = 50  # 事前にMHP70(20+50)
+	config.defender_items = [106]  # アビスキーパー(水,AP20/HP40) → 70+40=110→100制限
+	var r = await _execute_battle(config)
+	# 上限100なので、吸収量は100-70=30のみ
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), 50 + 30, "MHP上限100: 50+30=80(base_up_hp)")
+	# MHP=100, ゴブリンAP20 → land10+item10消費 → item残30 → HP100維持
+	assert_eq(r.defender_final_hp, 100, "MHP100でHP100維持")
+	assert_eq(r.winner, "defender", "ライフリンクAP40でゴブリンHP30撃破")
+
+
+## 風クリーチャー加勢: ウィンドオーガ(ID:301 風 AP40/HP50)で加勢
+## ライフリンク(AP20,HP20) + 加勢AP40 + 加勢HP50(item_bonus) + MHP永続吸収50
+## → current_ap=60, MHP=70(current_hp=70), item_bonus_hp=50
+## ゴブリンAP20 → land10+item10 → item残40, HP70
+## ライフリンクAP60 → ゴブリンHP30: 撃破
+func test_life_link_assist_wind_creature():
+	var config = _create_config(414, 137, "neutral")
+	config.defender_items = [301]  # ウィンドオーガ(風,AP40/HP50)
+	var r = await _execute_battle(config)
+	# MHP永続吸収: base20 + absorbed50 = MHP70
+	assert_eq(r.defender_effect_info.get("base_up_hp", 0), 50, "風クリーチャー加勢でMHP+50")
+	# ライフリンク current_ap = 20(base) + 40(assist) = 60
+	assert_eq(r.winner, "defender", "ライフリンクAP60でゴブリンHP30撃破")
+
+
+# ==============================================================================
+# 個別クリーチャーテスト: ストームブリンガー(ID:327)
+# 風, S, AP50/HP40, 侵略時土地破壊（on_invasion: 勝敗問わずLv-1）
+# ==============================================================================
+
+## 侵略勝利時にタイルレベルが-1される
+## ストームブリンガー(327,AP50+buff30=80) vs ゴブリン(414,AP20/HP30) on neutral
+## AP80 → land10+HP20消費→HP0→ゴブリン撃破 → on_invasion: Lv-1
+func test_storm_bringer_reduce_level_on_win():
+	var config = _create_config(327, 414, "neutral")
+	config.attacker_buff_config["base_up_ap"] = 30  # AP80で確実撃破
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "attacker", "ストームブリンガーがゴブリン撃破")
+	assert_eq(r.land_effect_level_reduced, true, "侵略時にタイルレベル-1")
+
+
+## 侵略敗北時もタイルレベルが-1される（防御側に領土守護なし）
+## ストームブリンガー(327,AP50/HP40) vs ベヒーモス(212,地,AP60/HP60) on earth
+## AP50 → land10+HP50消費→HP10, ベヒーモスAP60 → HP40→0→撃破
+## 侵略側敗北だがon_invasion発動 → 防御側に領土守護なし → Lv-1
+func test_storm_bringer_reduce_level_on_loss():
+	var config = _create_config(327, 212, "earth")
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "defender", "ベヒーモス防御勝利")
+	assert_eq(r.land_effect_level_reduced, true, "侵略敗北でもタイルレベル-1")
+
+
+## 侵略敗北時、防御側が領土守護持ちで生存 → レベル減少無効
+## ストームブリンガー(327,AP50/HP40) vs イモータルランド(232,地,AP30/HP40,領土守護) on earth
+## AP50 → land10+HP40消費→HP0→イモータルランド撃破... ではダメ
+## → 両者生存にするためAPを下げる: buff で AP-30 → AP20
+## AP20 → land10+HP10消費→HP30, イモータルランドAP30 → HP40-30=10 → 両者生存
+## 侵略側生存だがon_invasion発動 → 防御側生存+領土守護 → Lv変化なし
+func test_storm_bringer_blocked_by_land_protection():
+	var config = _create_config(327, 232, "earth")
+	config.attacker_buff_config["base_up_ap"] = -30  # AP50-30=20で両者生存
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+	assert_eq(r.land_effect_level_reduced, false, "領土守護により土地破壊が無効")
+
+
+## 防御側の場合は侵略ではないので発動しない
+## ゴブリン(414,AP20/HP30) vs ストームブリンガー(327,AP50/HP40) on neutral
+## ゴブリンAP20 → land10+HP10消費→HP30, ストームブリンガーAP50 → HP30-50→0→撃破
+## ストームブリンガーは防御側 → on_invasionは攻撃側のみ → 不発
+func test_storm_bringer_no_reduce_as_defender():
+	var config = _create_config(414, 327, "neutral")
+	var r = await _execute_battle(config)
+	assert_eq(r.winner, "defender", "ストームブリンガー防御勝利")
+	assert_eq(r.land_effect_level_reduced, false, "防御側ではon_invasion不発")
+
+
+# ==============================================================================
+# 個別クリーチャーテスト: オーガロード(ID:407)
+# 無, S, AP40/HP50, 火風オーガ配置でAP+20/水地オーガ配置でHP+20, 強化術
+# ==============================================================================
+
+## 火オーガ(レッドオーガ48)配置 → AP+20
+## オーガロード(AP40+20=60) vs ゴブリン(414,AP20/HP30) on neutral
+## 強化術は巻物使用時のみ発動（ここではアイテムなし）
+func test_ogre_lord_fire_ogre_ap_bonus():
+	var config = _create_config(407, 414, "neutral")
+	config.board_layout.append({"tile_index": 1, "owner_id": 0, "creature_id": 48})
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "火オーガ配置→AP40+20=60")
+	assert_eq(r.winner, "attacker", "AP60でゴブリン撃破")
+
+
+## 水地オーガ(アースオーガ210+タイダルオーガ138)配置 → HP+20(temporary_bonus_hp)
+## AP変動なし→強化術発動(AP40×1.5=60)、強化術は土地ボーナスも無効化
+## current_hpは50のまま（temporary_bonus_hpは別プール）
+func test_ogre_lord_water_earth_ogre_hp_bonus():
+	var config = _create_config(407, 414, "neutral")
+	config.board_layout.append({"tile_index": 6, "owner_id": 0, "creature_id": 138})   # タイダルオーガ(水)
+	config.board_layout.append({"tile_index": 16, "owner_id": 0, "creature_id": 210})  # アースオーガ(地)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "水地オーガのみ→APバフなし→強化術発動(40×1.5=60)")
+	assert_eq(r.attacker_final_hp, 50, "current_hp=50(temp+20は別プール)、撃破→反撃なし")
+	assert_eq(r.winner, "attacker", "AP60でゴブリン撃破")
+
+
+## 火風+水地オーガ全配置 → AP+20 & HP+20(temporary_bonus_hp)
+## AP+20バフ検出→強化術不発→AP60, current_hp=50(temp+20は別プール)
+func test_ogre_lord_all_ogres():
+	var config = _create_config(407, 414, "neutral")
+	config.board_layout.append({"tile_index": 1, "owner_id": 0, "creature_id": 48})    # レッドオーガ(火)
+	config.board_layout.append({"tile_index": 11, "owner_id": 0, "creature_id": 301})  # ウィンドオーガ(風)
+	config.board_layout.append({"tile_index": 6, "owner_id": 0, "creature_id": 138})   # タイダルオーガ(水)
+	config.board_layout.append({"tile_index": 16, "owner_id": 0, "creature_id": 210})  # アースオーガ(地)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "火風オーガAP+20→バフ検出→強化術不発→AP60")
+	assert_eq(r.attacker_final_hp, 50, "current_hp=50(temp+20は別プール)、撃破→反撃なし")
+	assert_eq(r.winner, "attacker", "AP60でゴブリン撃破")
+
+
+## オーガ未配置 → オーガボーナスなし、APバフなし→強化術発動
+## オーガロード(AP40×1.5=60,HP50) vs ゴブリン(414,AP20/HP30) on neutral
+## 強化術で土地ボーナス無効化、AP60→撃破→反撃なし→HP50維持
+func test_ogre_lord_no_ogres():
+	var config = _create_config(407, 414, "neutral")
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 60, "オーガ未配置→APバフなし→強化術発動(40×1.5=60)")
+	assert_eq(r.attacker_final_hp, 50, "ゴブリン撃破→反撃なし→HP50維持")
+	assert_eq(r.winner, "attacker", "AP60でゴブリン撃破")
+
+
+# ==============================================================================
+# 個別クリーチャーテスト: ゴブリンシャーマン(ID:445)
+# 無, N, AP30/HP30, AP&HP=ゴブリン配置数×20, 鼓舞[ゴブリン・AP+20]
+# ==============================================================================
+
+## ゴブリン1体配置(ボード上) → count=1 → AP&HP=1×20=20
+## ※include_selfはtile非配置の攻撃側には効かない（現仕様）
+## ゴブリンシャーマン(AP20,HP20) vs レッドオーガ(48,AP40/HP50) on neutral
+func test_goblin_shaman_1_goblin_on_board():
+	var config = _create_config(445, 48, "neutral")
+	# ゴブリン(414)を1体配置
+	config.board_layout.append({"tile_index": 15, "owner_id": 0, "creature_id": 414})
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 20, "ゴブリン1体×20=AP20")
+	assert_eq(r.attacker_final_hp, -20, "HP20-40=-20→撃破")
+	assert_eq(r.winner, "defender", "レッドオーガ生存")
+
+
+## ゴブリン0体(自身のみ、ボード未配置) → AP&HP=1×20=20? or 0?
+## include_self=trueなので自身をカウント
+## ただしboard上のtile_nodesから数えるので、自身がtileに配置されていなければ0
+func test_goblin_shaman_self_only():
+	var config = _create_config(445, 414, "neutral")
+	# 自身以外ゴブリンなし（自身も攻撃側なのでタイルに配置されない）
+	var r = await _execute_battle(config)
+	# タイル上にゴブリンがいない → 0体×20 = AP&HP=0
+	assert_eq(r.attacker_final_ap, 0, "ゴブリン配置0体→AP=0")
+	assert_eq(r.attacker_final_hp, 0, "ゴブリン配置0体→HP=0→死亡")
+	assert_eq(r.winner, "defender", "HP0で防御側勝利")
+
+
+# ==============================================================================
+# 個別クリーチャーテスト: 合体スキル
+# グランギア(409)+スカイギア(419)→アンドロギア(406)
+# アンドロギア(406)+ビーストギア(434)→ギアリオン(408)
+# ==============================================================================
+
+## グランギア(409,AP20/HP40)+スカイギア(419)→アンドロギア(406,AP60/HP60)
+## 合体後アンドロギア(AP60,HP60) vs ゴブリン(414,AP20/HP30) on neutral
+## 先制持ち→AP60→撃破→反撃なし→HP60維持
+func test_merge_gran_gear_to_androgia():
+	var config = _create_config(409, 414, "neutral")
+	config.attacker_merge_partner_id = 419  # スカイギア
+	var r = await _execute_battle(config)
+	# 合体後はアンドロギア(AP60/HP60)のステータスになる
+	assert_eq(r.attacker_final_ap, 60, "合体後アンドロギア AP60")
+	assert_eq(r.attacker_final_hp, 60, "合体後アンドロギア HP60、撃破→反撃なし")
+	assert_eq(r.winner, "attacker", "AP60でゴブリン撃破")
+
+
+## アンドロギア(406,AP60/HP60)+ビーストギア(434)→ギアリオン(408,AP80/HP80)
+## 合体後ギアリオン(AP80,HP80) vs レッドオーガ(48,AP40/HP50) on neutral
+## 先制持ち→AP80→撃破→反撃なし→HP80維持
+func test_merge_androgia_to_gearion():
+	var config = _create_config(406, 48, "neutral")
+	config.attacker_merge_partner_id = 434  # ビーストギア
+	var r = await _execute_battle(config)
+	# 合体後はギアリオン(AP80/HP80)のステータスになる
+	assert_eq(r.attacker_final_ap, 80, "合体後ギアリオン AP80")
+	assert_eq(r.attacker_final_hp, 80, "合体後ギアリオン HP80、撃破→反撃なし")
+	assert_eq(r.winner, "attacker", "AP80でレッドオーガ撃破")

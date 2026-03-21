@@ -154,6 +154,13 @@ var defender_initial_hand_size: int = -1
 ## 例: {"curse_type": "skill_disable", "name": "吊人", "params": {"disabled_triggers": ["on_battle_end"]}}
 var world_curse: Dictionary = {}
 
+## ========== 新規追加: 合体設定 ==========
+
+## 合体パートナーID（0 = 合体なし）
+## 指定すると手札にパートナーを追加し、バトル前に合体を実行
+var attacker_merge_partner_id: int = 0
+var defender_merge_partner_id: int = 0
+
 ## ========== 新規追加: ビジュアルモード設定 ==========
 
 ## ビジュアルモード（BattleScreen表示）

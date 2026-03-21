@@ -310,6 +310,9 @@ func _execute_single_battle(
 		else:
 			_setup_mock_lands_for_battle(tile_data_mgr, 1, config.defender_owned_lands)
 
+	# tile_nodesをmock_boardにも同期（SkillLandEffectsの領土守護チェック用）
+	mock_board.tile_nodes = tile_data_mgr.tile_nodes
+
 	var mock_card = MockCardSystem.new()
 	# 手札枚数調整（カード獲得テスト用）
 	if config.attacker_initial_hand_size >= 0:
@@ -340,6 +343,12 @@ func _execute_single_battle(
 
 	attacker.spell_magic_ref = spell_magic
 	defender.spell_magic_ref = spell_magic
+
+	# ========== 合体処理（バトル前にクリーチャー変身） ==========
+	if config.attacker_merge_partner_id > 0:
+		_apply_merge(attacker, config.attacker_merge_partner_id, 0, mock_card, mock_board, mock_player)
+	if config.defender_merge_partner_id > 0:
+		_apply_merge(defender, config.defender_merge_partner_id, 1, mock_card, mock_board, mock_player)
 
 	# ========== スキル状態スナップショット（pre-battle前） ==========
 	var att_skills_before = _snapshot_skill_state(attacker)
@@ -393,12 +402,30 @@ func _execute_single_battle(
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
 
+	# ========== 永続バフ適用（敵破壊時・戦闘後） ==========
+	# 敵破壊時の永続バフ（セクメト・キルフィーダー等）
+	if battle_result == BattleSystem.BattleResult.ATTACKER_WIN:
+		SkillPermanentBuff.apply_on_destroy_buffs(attacker)
+	elif battle_result == BattleSystem.BattleResult.DEFENDER_WIN:
+		SkillPermanentBuff.apply_on_destroy_buffs(defender)
+	# 戦闘後の永続変化（ヴァンパイア・ヌエ等）
+	SkillPermanentBuff.apply_after_battle_changes(attacker)
+	SkillPermanentBuff.apply_after_battle_changes(defender)
+
 	# ========== 勝利時土地効果（属性変化・土地破壊） ==========
 	var land_effect_result = {"changed_element": "", "level_reduced": false}
 	if battle_result == BattleSystem.BattleResult.ATTACKER_WIN:
 		land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, _battle_tile_idx, mock_board)
 	elif battle_result == BattleSystem.BattleResult.DEFENDER_WIN:
 		land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, _battle_tile_idx, mock_board)
+
+	# ========== 侵略時土地効果（勝敗問わず、攻撃側のon_invasionスキル） ==========
+	var defender_alive = defender.is_alive()
+	var invasion_result = SkillLandEffects.check_and_apply_on_invasion(attacker.creature_data, _battle_tile_idx, mock_board, defender_alive)
+	if invasion_result.get("changed_element", "") != "":
+		land_effect_result["changed_element"] = invasion_result["changed_element"]
+	if invasion_result.get("level_reduced", false):
+		land_effect_result["level_reduced"] = true
 
 	# ========== 再生処理（バトル後、生存者のHP全回復） ==========
 	await battle_system.battle_special_effects.apply_regeneration(attacker)
@@ -915,3 +942,31 @@ func _setup_mock_lands_for_battle(tile_data_mgr: TileDataManager, player_id: int
 			mock_tile.creature_data = {"element": element, "name": "mock_%s" % element}
 			tile_data_mgr.tile_nodes[idx] = mock_tile
 			idx += 1
+
+
+## 合体処理: 手札にパートナーを追加し、SkillMerge.apply_merge_effectで変身
+func _apply_merge(participant: BattleParticipant, partner_id: int, player_id: int, mock_card: CardSystem, mock_board, mock_player) -> void:
+	var partner_data = CardLoader.get_card_by_id(partner_id)
+	if partner_data.is_empty():
+		push_error("[合体テスト] パートナーID %d が見つかりません" % partner_id)
+		return
+
+	# 手札にパートナーを追加
+	var hand = mock_card.player_hands.get(player_id, {}).get("data", [])
+	hand.append(partner_data.duplicate(true))
+
+	# EP を十分に設定（コスト不足を防ぐ）
+	var cost = partner_data.get("cost", {})
+	var ep_cost = cost.get("ep", 0) if cost is Dictionary else cost
+	var current_ep = mock_player.get_magic(player_id)
+	if current_ep < ep_cost:
+		mock_player.add_magic(player_id, ep_cost - current_ep + 100)
+
+	# tile_indexをcreature_dataに設定（apply_merge_effectが参照する）
+	if not participant.creature_data.has("tile_index"):
+		participant.creature_data["tile_index"] = -1
+
+	# 合体実行
+	var merge_result = SkillMerge.apply_merge_effect(
+		participant, hand, player_id, mock_card, mock_board, mock_player
+	)
