@@ -17,7 +17,7 @@
 			"ap": 0,
 			"hp": 50,
 			"ability": "AP変動",
-			"ability_detail": "AP+火地配置数×10；無効化[巻物]",
+			"ability_detail": "AP+火地の土地配置数×10；無効化[巻物]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化"

@@ -451,7 +451,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							# ダウン付与（ショッカー等）
 							var battle_tile_index = tile_info.get("index", -1)
 							if battle_tile_index >= 0 and special_effects.board_system_ref:
-								var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
+								var board_ref = special_effects.board_system_ref
+								var _tile_nodes = board_ref.tile_data_manager.tile_nodes if board_ref.tile_data_manager else board_ref.tile_nodes
+								var tile = _tile_nodes.get(battle_tile_index)
 								SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
 							# 攻撃成功時効果（APドレイン、蓄魔等）
 							var success_effects = _apply_on_attack_success_effects(attacker_p, defender_p, spell_magic_ref)
@@ -637,7 +639,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					# ダウン付与（ショッカー等）
 					var battle_tile_index = tile_info.get("index", -1)
 					if battle_tile_index >= 0 and special_effects.board_system_ref:
-						var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
+						var board_ref = special_effects.board_system_ref
+						var _tile_nodes = board_ref.tile_data_manager.tile_nodes if board_ref.tile_data_manager else board_ref.tile_nodes
+						var tile = _tile_nodes.get(battle_tile_index)
 						SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
 					# 攻撃成功時効果（APドレイン、蓄魔等）
 					var success_effects = _apply_on_attack_success_effects(attacker_p, defender_p, spell_magic_ref)
@@ -825,7 +829,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	await _check_destroy_after_battle(original_attacker, original_defender)
 
 	# 🔮 崩壊付与スキル（オトヒメ等：両者生存時に敵へ刻印付与）
-	_check_apply_destroy_after_battle_skill(original_attacker, original_defender)
+	_check_apply_destroy_after_battle_skill(original_attacker, original_defender, special_effects)
 	
 	return battle_result
 
@@ -911,9 +915,21 @@ func _check_destroy_after_battle(attacker: BattleParticipant, defender: BattlePa
 
 
 ## 🔮 崩壊付与スキル（オトヒメ等：自分が生存 AND 敵も生存の場合に敵へ刻印付与）
-func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defender: BattleParticipant, special_effects = null) -> void:
 	# 両者生存時のみ
 	if not attacker.is_alive() or not defender.is_alive():
+		return
+
+	# ハングドマンズシール（吊人）: on_battle_end無効化チェック
+	var stats = {}
+	if special_effects and special_effects.board_system_ref:
+		var board_ref = special_effects.board_system_ref
+		if board_ref.has_meta("test_game_stats"):
+			stats = board_ref.get_meta("test_game_stats")
+		elif board_ref.game_flow_manager and board_ref.game_flow_manager.game_stats:
+			stats = board_ref.game_flow_manager.game_stats
+	if SpellWorldCurse.is_trigger_disabled("on_battle_end", stats):
+		print("【世界刻印】吊人により戦闘終了時効果が無効化")
 		return
 
 	# 攻撃側がスキルを持っているかチェック
@@ -924,7 +940,7 @@ func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defend
 	if "慈悲" in attacker_keywords:
 		SpellCurseBattle.apply_creature_toll_disable(defender.creature_data)
 		print("【慈悲】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に刻印を付与")
-	
+
 	# 防御側がスキルを持っているかチェック
 	var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
 	if "崩壊" in defender_keywords:

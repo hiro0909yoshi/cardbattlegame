@@ -475,13 +475,7 @@ func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -
 		var scroll_type = scroll_config.get("scroll_type", "base_ap")
 		_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
 		# Step 2: アイテムが強化術を付与している場合のみ、条件チェック+×1.5
-		var effects = ability_parsed.get("effects", [])
-		var has_scroll_power_strike = false
-		for effect in effects:
-			if effect.get("effect_type") == "scroll_power_strike":
-				has_scroll_power_strike = true
-				break
-		if has_scroll_power_strike:
+		if PowerStrikeSkill.has_scroll_power_strike_effect(participant.creature_data):
 			PowerStrikeSkill.apply_scroll_power_strike(participant, context, silent)
 		if not silent:
 			print("【AP最終確定（アイテム巻物）】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
@@ -823,8 +817,6 @@ func _show_skill_change_owner_target(skill_owner: BattleParticipant, target: Bat
 ## シミュレーション時は silent=true で出力を抑制
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
-	var _has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
-	
 	# 0. レリックのクリーチャー時効果を適用
 	if SkillItemCreature.is_item_creature(participant.creature_data):
 		SkillItemCreature.apply_as_creature(participant, board_system_ref)
@@ -889,13 +881,7 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 			var scroll_config = keyword_conditions.get("術攻撃", {})
 			var scroll_type = scroll_config.get("scroll_type", "base_ap")
 			_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
-			var effects = ability_parsed.get("effects", [])
-			var has_scroll_power_strike = false
-			for effect in effects:
-				if effect.get("effect_type") == "scroll_power_strike":
-					has_scroll_power_strike = true
-					break
-			if has_scroll_power_strike:
+			if PowerStrikeSkill.has_scroll_power_strike_effect(participant.creature_data):
 				PowerStrikeSkill.apply_scroll_power_strike(participant, context, silent)
 		elif "強化術" in keywords:
 			# クリーチャー固有の強化術は SkillScrollAttack.apply() で処理済み

@@ -40,10 +40,40 @@ class MockPlayerSystem extends PlayerSystem:
 		var p0 = PlayerData.new()
 		p0.id = 0
 		p0.name = "テスト攻撃側"
+		p0.magic_power = 500
 		var p1 = PlayerData.new()
 		p1.id = 1
 		p1.name = "テスト防御側"
+		p1.magic_power = 500
 		players = [p0, p1]
+
+class MockBoardSystem extends BoardSystem3D:
+	## spell_land不要で直接tile_data_managerのMockTileを変更
+	func change_tile_element(tile_index: int, new_element: String) -> bool:
+		if tile_data_manager and tile_data_manager.tile_nodes.has(tile_index):
+			tile_data_manager.tile_nodes[tile_index].tile_type = new_element
+			return true
+		return false
+
+	func change_tile_level(tile_index: int, amount: int) -> bool:
+		if tile_data_manager and tile_data_manager.tile_nodes.has(tile_index):
+			tile_data_manager.tile_nodes[tile_index].level = max(0, tile_data_manager.tile_nodes[tile_index].level + amount)
+			return true
+		return false
+
+	## 隣接タイル取得（MockTileのconnectionsを使用）
+	func get_spatial_neighbors(idx: int) -> Array:
+		if tile_data_manager and tile_data_manager.tile_nodes.has(idx):
+			return tile_data_manager.tile_nodes[idx].connections
+		return []
+
+	## 隣接味方土地判定
+	func has_adjacent_ally_land(idx: int, player_id: int, _bs = null) -> bool:
+		for neighbor_idx in get_spatial_neighbors(idx):
+			if tile_data_manager.tile_nodes.has(neighbor_idx):
+				if tile_data_manager.tile_nodes[neighbor_idx].owner_id == player_id:
+					return true
+		return false
 
 class MockTile extends RefCounted:
 	var owner_id: int = -1
@@ -53,6 +83,7 @@ class MockTile extends RefCounted:
 	var tile_index: int = 0
 	var global_position: Vector3 = Vector3.ZERO
 	var connections = []
+	var _down_state: bool = false
 
 	func set_level(new_level: int):
 		level = new_level
@@ -62,6 +93,12 @@ class MockTile extends RefCounted:
 			level += 1
 			return true
 		return false
+
+	func set_down_state(down: bool) -> void:
+		_down_state = down
+
+	func is_down() -> bool:
+		return _down_state
 
 ## ダイアモンドボード（20タイル）のデフォルト属性
 const DEFAULT_TILE_TYPES = [
@@ -235,7 +272,7 @@ func _execute_single_battle(
 			defender.creature_data["equipped_item"] = def_item_data
 
 	# ========== モックシステムセットアップ ==========
-	var mock_board = BoardSystem3D.new()
+	var mock_board = MockBoardSystem.new()
 	mock_board.name = "BoardSystem3D_Test"
 	battle_system.add_child(mock_board)
 
@@ -243,6 +280,16 @@ func _execute_single_battle(
 		"support": {},
 		"world_spell": {}
 	}
+
+	# 隣接判定用ダミーTileNeighborSystem（ConditionCheckerのadjacent_ally_landに必要）
+	var mock_tns = TileNeighborSystem.new()
+	mock_tns.name = "TileNeighborSystem"
+	mock_board.add_child(mock_tns)
+	mock_board.tile_neighbor_system = mock_tns
+
+	# 世界刻印設定（ハングドマンズシール等、game_stats経由で参照される）
+	if not config.world_curse.is_empty():
+		mock_board.set_meta("test_game_stats", {"world_curse": config.world_curse})
 
 	var tile_data_mgr = TileDataManager.new()
 	tile_data_mgr.name = "TileDataManager"
@@ -264,6 +311,15 @@ func _execute_single_battle(
 			_setup_mock_lands_for_battle(tile_data_mgr, 1, config.defender_owned_lands)
 
 	var mock_card = MockCardSystem.new()
+	# 手札枚数調整（カード獲得テスト用）
+	if config.attacker_initial_hand_size >= 0:
+		var hand = mock_card.player_hands.get(0, {}).get("data", [])
+		while hand.size() > config.attacker_initial_hand_size:
+			hand.pop_back()
+	if config.defender_initial_hand_size >= 0:
+		var hand = mock_card.player_hands.get(1, {}).get("data", [])
+		while hand.size() > config.defender_initial_hand_size:
+			hand.pop_back()
 	var mock_player = MockPlayerSystem.new()
 
 	var spell_magic = SpellMagic.new()
@@ -336,6 +392,13 @@ func _execute_single_battle(
 
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
+
+	# ========== 勝利時土地効果（属性変化・土地破壊） ==========
+	var land_effect_result = {"changed_element": "", "level_reduced": false}
+	if battle_result == BattleSystem.BattleResult.ATTACKER_WIN:
+		land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, _battle_tile_idx, mock_board)
+	elif battle_result == BattleSystem.BattleResult.DEFENDER_WIN:
+		land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, _battle_tile_idx, mock_board)
 
 	# ========== 再生処理（バトル後、生存者のHP全回復） ==========
 	await battle_system.battle_special_effects.apply_regeneration(attacker)
@@ -414,6 +477,15 @@ func _execute_single_battle(
 	# 手札枚数（形見[カード]等の検証用）
 	test_result.attacker_hand_count = mock_card.player_hands.get(0, {}).get("data", []).size()
 	test_result.defender_hand_count = mock_card.player_hands.get(1, {}).get("data", []).size()
+
+	# ダウン状態（攻撃成功時ダウン等）
+	var battle_tile = tile_data_mgr.tile_nodes.get(_battle_tile_idx)
+	if battle_tile and battle_tile.has_method("is_down"):
+		test_result.defender_tile_down = battle_tile.is_down()
+
+	# 勝利時土地効果
+	test_result.land_effect_changed_element = land_effect_result.get("changed_element", "")
+	test_result.land_effect_level_reduced = land_effect_result.get("level_reduced", false)
 
 	# 帰還結果
 	test_result.attacker_item_returned = attacker_return_result.get("returned", false)
@@ -550,6 +622,11 @@ func apply_buff_to_creature_data(card_data: Dictionary, buff_config: Dictionary)
 		print("[バフ→creature_data] ", card_data.get("name", "?"), " base_up_ap=", card_data["base_up_ap"])
 
 	# effect配列をcreature_dataに設定（apply_effect_arraysが読む）
+	# current_hp設定（HP減少状態のテスト用）
+	if buff_config.has("current_hp"):
+		card_data["current_hp"] = buff_config.get("current_hp")
+		print("[バフ→creature_data] ", card_data.get("name", "?"), " current_hp=", card_data["current_hp"])
+
 	var perm = buff_config.get("permanent_effects", [])
 	if not perm.is_empty():
 		card_data["permanent_effects"] = perm.duplicate(true)
@@ -693,13 +770,26 @@ func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defende
 	# EP比較元: ep_beforeがあればそちらを使用（蓄魔対応）、なければbeforeを使用
 	var ep_ref = ep_before if not ep_before.is_empty() else before
 
-	# --- 攻撃側が発動した効果 ---
-	# 蓄魔: 攻撃側のEPが増えた
+	# --- EP変動の計算（蓄魔/吸魔の判別に使用） ---
 	var att_ep_after = 0
 	if attacker.player_id >= 0 and attacker.player_id < mock_player.players.size():
 		att_ep_after = mock_player.players[attacker.player_id].magic_power
-	if att_ep_after > ep_ref["attacker_ep"]:
-		att_effects.append("蓄魔[%dEP]" % (att_ep_after - ep_ref["attacker_ep"]))
+	var def_ep_after = 0
+	if defender.player_id >= 0 and defender.player_id < mock_player.players.size():
+		def_ep_after = mock_player.players[defender.player_id].magic_power
+	var att_ep_gain = att_ep_after - ep_ref["attacker_ep"]
+	var def_ep_gain = def_ep_after - ep_ref["defender_ep"]
+
+	# --- 攻撃側が発動した効果 ---
+	# 吸魔: 攻撃側EP増加 + 防御側EP減少 / 蓄魔: 攻撃側EP増加のみ
+	if att_ep_gain > 0:
+		if def_ep_gain < 0:
+			att_effects.append("吸魔[%dEP]" % att_ep_gain)
+		else:
+			att_effects.append("蓄魔[%dEP]" % att_ep_gain)
+	# EP損失: 攻撃側EP減少（吸魔による減少でない場合）
+	elif att_ep_gain < 0 and def_ep_gain <= 0:
+		att_effects.append("EP損失[%dEP]" % abs(att_ep_gain))
 
 	# 刻印付与: 防御側のcurseが変化した
 	var def_curse_after = defender.creature_data.get("curse", {})
@@ -717,12 +807,15 @@ func _diff_battle_state(before: Dictionary, attacker: BattleParticipant, defende
 		att_effects.append("APドレイン")
 
 	# --- 防御側が発動した効果 ---
-	# 蓄魔: 防御側のEPが増えた
-	var def_ep_after = 0
-	if defender.player_id >= 0 and defender.player_id < mock_player.players.size():
-		def_ep_after = mock_player.players[defender.player_id].magic_power
-	if def_ep_after > ep_ref["defender_ep"]:
-		def_effects.append("蓄魔[%dEP]" % (def_ep_after - ep_ref["defender_ep"]))
+	# 吸魔: 防御側EP増加 + 攻撃側EP減少 / 蓄魔: 防御側EP増加のみ
+	if def_ep_gain > 0:
+		if att_ep_gain < 0:
+			def_effects.append("吸魔[%dEP]" % def_ep_gain)
+		else:
+			def_effects.append("蓄魔[%dEP]" % def_ep_gain)
+	# EP損失: 防御側EP減少（吸魔による減少でない場合）
+	elif def_ep_gain < 0 and att_ep_gain <= 0:
+		def_effects.append("EP損失[%dEP]" % abs(def_ep_gain))
 
 	# 刻印付与: 攻撃側のcurseが変化した
 	var att_curse_after = attacker.creature_data.get("curse", {})

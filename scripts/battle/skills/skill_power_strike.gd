@@ -46,9 +46,20 @@ static func apply(participant, context: Dictionary, silent: bool = false, effect
 	if "強化" in keywords:
 		apply_normal_power_strike(participant, context, silent, effect_combat)
 
-## 強化術を適用
+## アイテム付与の scroll_power_strike effect があるかチェック
 ##
-## 無条件でAP×1.5
+## @param creature_data クリーチャーデータ
+## @return scroll_power_strike effectを持っているか
+static func has_scroll_power_strike_effect(creature_data: Dictionary) -> bool:
+	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "scroll_power_strike":
+			return true
+	return false
+
+## 強化術を適用（条件付き×1.5）
+##
+## scroll_power_strike effectが存在する場合のみ動作。effectが無ければfalseを返す。
 ##
 ## @param participant バトル参加者
 static func apply_scroll_power_strike(participant, context: Dictionary = {}, silent: bool = false) -> bool:
@@ -83,13 +94,8 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}, sil
 					print("【強化術不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の術攻撃")
 				return false
 
-	# 強化術効果が見つからない場合（クリーチャー固有の無条件強化術）
-	var original_ap = participant.current_ap
-	participant.current_ap = int(participant.current_ap * 1.5)
-	if not silent:
-		print("【強化術発動】", participant.creature_data.get("name", "?"),
-			  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5・無条件)")
-	return true
+	# scroll_power_strike effectが無い場合は何もしない
+	return false
 
 ## 通常の強化を適用
 ##

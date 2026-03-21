@@ -90,10 +90,21 @@
 - ✅ 鼓舞AP上昇と刺突条件: current_ap上昇でもベースAPで判定→不発を確認
 - ✅ Executor修正: EPスナップショットをpre_battle_skills前に取得（蓄魔の差分検出対応）
 
+#### Phase 3p: 個別クリーチャーテスト（16テスト追加、113テスト全パス）
+- ✅ `test_creature_individual.gd` 新規作成（スキルテストから個別クリーチャーテストを分離）
+- ✅ フレイムパラディン(1): AP変動[火地×10]基本/ゼロAP/無効化[巻物]/強化アイテム併用 (4件)
+- ✅ ウリエル(4): 強化[刻印有]発動/不発/ガイアハンマー2重防止 (3件)
+- ✅ ボムスライム(13): 死亡時HP-40（攻撃側/相討ち/生存不発/防御側/刻印弱体） (5件)
+- ✅ マルコシアス(15): AP+MHP50以上配置数×5（混合配置テスト） (1件)
+- ✅ ショックブリンガー(18): 攻撃成功時ダウン/奮闘でブロック/サイレントローブで無効化 (3件)
+- ✅ ダウン状態テスト基盤: MockTileにset_down_state/is_down追加、BattleTestResultにdefender_tile_down追加
+- ✅ battle_execution.gd: タイル参照をtile_data_manager経由に修正（テスト環境でも動作）
+- ✅ skill_land_effects.gd: 型パラメータをNode→Variant化（MockTile互換性）
+- ✅ board_system_3d.gd: get_player_tiles()をtile_data_manager経由に修正
+
 ### 📋 次のステップ
 
-- Phase 3続行: 残りスキルテスト（強化術、術攻撃、復活、復帰、形見）
-- Phase 4: 個別クリーチャーテスト（個別スキル1→個別スキル4→スルト→ボムスライム→マルコシアス）
+- Phase 3続行: 残り個別クリーチャーテスト
 - エフェクト作成ブランチの本来タスクへ
 
 ---

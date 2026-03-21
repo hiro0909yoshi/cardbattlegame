@@ -205,10 +205,8 @@ func reduce_magic(player_id: int, amount: int) -> void:
 		GameLogger.error("Spell", "無効なプレイヤーID: %d" % player_id)
 		return
 	
-	# 0未満にならないようにする
-	var actual_reduction = min(amount, player.magic_power)
-	player.magic_power -= actual_reduction
-	print("[EP減少] プレイヤー", player_id + 1, " -", actual_reduction, "EP → 合計:", player.magic_power, "EP")
+	player.magic_power -= amount
+	print("[EP減少] プレイヤー", player_id + 1, " -", amount, "EP → 合計:", player.magic_power, "EP")
 
 ## 吸魔
 func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
@@ -743,7 +741,7 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 				var current_magic = player_system_ref.get_magic(stopped_player_id)
 				var reduction = int(current_magic * percentage / 100.0)
 				if reduction > 0:
-					player_system_ref.add_magic(stopped_player_id, -reduction)
+					reduce_magic(stopped_player_id, reduction)
 					print("[土地刻印効果] プレイヤー%d のEP -%dEP (%d%%)" % [stopped_player_id + 1, reduction, percentage])
 		
 		"damage_creature":

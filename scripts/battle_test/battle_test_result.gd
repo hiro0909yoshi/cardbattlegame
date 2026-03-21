@@ -69,6 +69,13 @@ var defender_hand_count: int = 0
 var attacker_is_using_scroll: bool = false
 var defender_is_using_scroll: bool = false
 
+## ダウン状態（攻撃成功時ダウン等）
+var defender_tile_down: bool = false
+
+## 勝利時土地効果
+var land_effect_changed_element: String = ""  # 属性変化先（""=なし）
+var land_effect_level_reduced: bool = false    # 土地破壊が発生したか
+
 ## 刻印情報（バトル後のcreature_data["curse"]）
 var attacker_curse: Dictionary = {}  # {"curse_type": "...", "name": "..."} or {}
 var defender_curse: Dictionary = {}  # {"curse_type": "...", "name": "..."} or {}

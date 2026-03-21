@@ -389,8 +389,9 @@ func get_tile_data_array() -> Array:
 # プレイヤーが所有している全タイルを取得
 func get_player_tiles(player_id: int) -> Array:
 	var player_tiles = []
-	for tile_index in tile_nodes.keys():
-		var tile = tile_nodes[tile_index]
+	var nodes = tile_data_manager.tile_nodes if tile_data_manager else tile_nodes
+	for tile_index in nodes.keys():
+		var tile = nodes[tile_index]
 		if tile.owner_id == player_id:
 			player_tiles.append(tile)
 	return player_tiles

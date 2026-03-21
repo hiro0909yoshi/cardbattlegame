@@ -20,7 +20,7 @@ class_name SkillLandEffects
 ## @param attacker_data 攻撃側のcreature_data
 ## @param defender_tile 防御側のタイル（ダウン対象）
 ## @return ダウンを付与したかどうか
-static func check_and_apply_on_attack_success_down(attacker_data: Dictionary, defender_tile: Node) -> bool:
+static func check_and_apply_on_attack_success_down(attacker_data: Dictionary, defender_tile) -> bool:
 	if not defender_tile:
 		return false
 	
@@ -51,7 +51,7 @@ static func check_and_apply_on_attack_success_down(attacker_data: Dictionary, de
 
 
 ## タイルにダウンを適用
-static func _apply_down_to_tile(tile: Node, source_name: String) -> bool:
+static func _apply_down_to_tile(tile, source_name: String) -> bool:
 	if not tile:
 		return false
 	

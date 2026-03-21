@@ -1263,3 +1263,82 @@ func test_scroll_power_strike_bastet_resonance_plus_scroll_item():
 	assert_true(r.attacker_is_using_scroll, "術攻撃フラグON")
 	assert_eq(r.defender_final_hp, -10, "land_bonus無効→HP30-40=-10")
 	assert_eq(r.winner, "attacker", "攻撃側勝利")
+
+
+# ==============================================================================
+# アイテム破壊スキル
+# ==============================================================================
+
+## ストリップペンギン(水,AP30/HP50,アイテム破壊[アクセサリ,巻物,加勢])
+## vs ゴブリン(無,AP20/HP30) + クイックチャーム(アクセサリ,AP+10)
+## アクセサリ→破壊対象→破壊成功→ゴブリンAP20のまま
+## neutral, land_bonus=10→MHP40, AP30→land10+cur20消費→cur_hp=10, AP20→50-20=30
+func test_destroy_item_penguin_accessory_destroyed():
+	var config = _create_config(116, 414)
+	config.defender_items = [1000]  # クイックチャーム(アクセサリ,AP+10)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 20, "アクセサリ破壊→AP+10なし")
+	assert_eq(r.defender_final_hp, 10, "防cur_hp=30-20=10")
+	assert_eq(r.attacker_final_hp, 30, "攻HP50-20=30")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## ストリップペンギン(水,AP30/HP50,アイテム破壊[アクセサリ,巻物,加勢])
+## vs ゴブリン(無,AP20/HP30) + ツヴァイハンダー(武器,AP+50)
+## 武器→破壊対象外→破壊されず→ゴブリンAP70
+## neutral, land_bonus=10→MHP40, AP30→10+20=30消費→cur_hp=10, AP70→50-70=-20
+func test_destroy_item_penguin_weapon_not_target():
+	var config = _create_config(116, 414)
+	config.defender_items = [1009]  # ツヴァイハンダー(武器,AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 70, "武器は破壊対象外→AP+50あり")
+	assert_eq(r.defender_final_hp, 10, "防cur_hp=30-20=10")
+	assert_eq(r.attacker_final_hp, -20, "攻HP50-70=-20")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## デビルアイ(風,AP20/HP30,アイテム破壊[武器,防具,アクセサリ,巻物])
+## vs ゴブリン(無,AP20/HP30) + ツヴァイハンダー(武器,AP+50)
+## 武器→破壊対象→破壊成功→ゴブリンAP20のまま
+## neutral, land_bonus=10→MHP40, AP20→10+10=20消費→cur_hp=20, AP20→30-20=10
+func test_destroy_item_devil_eye_weapon_destroyed():
+	var config = _create_config(313, 414)
+	config.defender_items = [1009]  # ツヴァイハンダー(武器,AP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 20, "武器破壊→AP+50なし")
+	assert_eq(r.defender_final_hp, 20, "防cur_hp=30-10=20")
+	assert_eq(r.attacker_final_hp, 10, "攻HP30-20=10")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+
+## デビルアイ(風,AP20/HP30,アイテム破壊) + ツヴァイハンダー(武器,AP+50) → AP70
+## vs ドルイド(地,AP20/HP30,アイテム破壊無効+強化術) + フルプレート(防具,HP+50)
+## nullify→破壊無効→HP+50維持→AP70でもitem_hp+land吸収で生存
+## 破壊されていればHP40(30+land10)→AP70で一撃撃破だが、nullifyで防げている証明
+## neutral, land_bonus=10, AP70→land10+item50+cur10→cur_hp=20, AP30(強化術)→30-30=0
+func test_destroy_item_blocked_by_nullify():
+	var config = _create_config(313, 225)
+	config.attacker_items = [1009]  # ツヴァイハンダー(武器,AP+50)
+	config.defender_items = [1058]  # フルプレート(防具,HP+50)
+	var r = await _execute_battle(config)
+	assert_eq(r.attacker_final_ap, 70, "デビルアイAP20+武器50=70")
+	assert_eq(r.defender_final_hp, 20, "破壊無効→land10+item50吸収→cur_hp=20で生存")
+	assert_eq(r.attacker_final_hp, 0, "攻HP30-30(強化術)=0→撃破")
+	assert_eq(r.winner, "defender", "防御側勝利")
+
+
+## ストリップペンギン(水,AP30/HP50,アイテム破壊[アクセサリ,巻物,加勢])
+## vs ゴブリン(無,AP20/HP30) + ライトニングオーブ(巻物,術AP40)
+## 巻物→破壊対象→破壊成功→術攻撃なし→ゴブリンAP20のまま
+## neutral, land_bonus=10→MHP40, AP30→10+20=30消費→cur_hp=10, AP20→50-20=30
+func test_destroy_item_penguin_scroll_destroyed():
+	var config = _create_config(116, 414)
+	config.defender_items = [1024]  # ライトニングオーブ(巻物,術AP40)
+	var r = await _execute_battle(config)
+	assert_eq(r.defender_final_ap, 20, "巻物破壊→術攻撃なし、素AP20")
+	assert_eq(r.defender_is_using_scroll, false, "巻物破壊→術攻撃フラグOFF")
+	assert_eq(r.defender_final_hp, 10, "防cur_hp=30-20=10")
+	assert_eq(r.attacker_final_hp, 30, "攻HP50-20=30")
+	assert_eq(r.winner, "attacker_survived", "両者生存")
+
+# 個別クリーチャーテストは test_creature_individual.gd に分割

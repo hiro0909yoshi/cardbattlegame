@@ -997,10 +997,24 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 						print("【自破壊時効果】%s は死亡" % opponent.creature_data.get("name", "?"))
 						result["opponent_killed"] = true
 			
+			"ep_loss":
+				# デッドリージェル: 自破壊時EPを失う
+				if target == "self" and spell_magic_ref:
+					var amount = effect.get("amount", 0)
+					var player_id = defeated.player_id
+					print("【自破壊時効果】%s → プレイヤー%d が %dEP を失う" % [
+						defeated.creature_data.get("name", "?"),
+						player_id + 1,
+						amount
+					])
+					spell_magic_ref.reduce_magic(player_id, amount)
+					result["ep_loss_activated"] = true
+					result["ep_loss_amount"] = amount
+
 			"legacy_ep", "legacy_magic", "legacy_card":
 				# 形見 - skill_legacy.gdで処理
 				pass
-	
+
 	return result
 
 

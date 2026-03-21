@@ -212,6 +212,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			"spell_curse_toll": spell_container.spell_curse_toll if spell_container else null,
 			"spell_cost_modifier": spell_container.spell_cost_modifier if spell_container else null,
 			"spell_player_move": spell_container.spell_player_move if spell_container else null,
+			"spell_world_curse": spell_container.spell_world_curse if spell_container else null,
 			"spell_creature_move": handler.spell_systems.spell_creature_move if (handler and handler.spell_systems) else null,
 			"spell_damage": handler.spell_systems.spell_damage if (handler and handler.spell_systems) else null,
 			"spell_purify": handler.spell_systems.spell_purify if (handler and handler.spell_systems) else null,

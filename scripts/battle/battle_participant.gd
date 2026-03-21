@@ -259,10 +259,14 @@ func _trigger_magic_from_damage(damage: int) -> void:
 	"""
 	if not spell_magic_ref:
 		return
-	
+
 	if damage <= 0:
 		return
-	
+
+	# 撃破された場合は蓄魔しない
+	if not is_alive():
+		return
+
 	var items = creature_data.get("items", [])
 	for item in items:
 		var effect_parsed = item.get("effect_parsed", {})

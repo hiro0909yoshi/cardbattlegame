@@ -142,6 +142,18 @@ var defender_buff_config: Dictionary = {
 	"temporary_effects": []
 }
 
+## ========== 手札枚数設定（カード獲得テスト用） ==========
+
+## 初期手札枚数（-1 = デフォルト5枚）
+var attacker_initial_hand_size: int = -1
+var defender_initial_hand_size: int = -1
+
+## ========== 新規追加: 世界刻印設定 ==========
+
+## 世界刻印（空なら無効）
+## 例: {"curse_type": "skill_disable", "name": "吊人", "params": {"disabled_triggers": ["on_battle_end"]}}
+var world_curse: Dictionary = {}
+
 ## ========== 新規追加: ビジュアルモード設定 ==========
 
 ## ビジュアルモード（BattleScreen表示）
