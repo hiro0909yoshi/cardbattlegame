@@ -102,10 +102,53 @@
 - ✅ skill_land_effects.gd: 型パラメータをNode→Variant化（MockTile互換性）
 - ✅ board_system_3d.gd: get_player_tiles()をtile_data_manager経由に修正
 
+---
+
+## 2026年3月22日（Session: クリーチャー自動テスト完了）
+
+### 完了した作業
+
+#### Phase 3p続行: 個別クリーチャーテスト追加
+- ✅ ストームブリンガー(18): 攻撃成功時ダウン関連テスト追加
+- ✅ ドラゴニュート: 変身系テスト
+- ✅ オーガロード(407): オーガ数依存AP/HP強化 + 強化術自動発動の相互作用テスト (4件)
+  - 強化術は巻物不要で自動発動（APバフ未検出時に発動）
+  - temporary_bonus_hpはcurrent_hpとは別プール
+- ✅ ゴブリンシャーマン(445): ゴブリン族ボード配置依存AP/HP強化テスト (2件)
+- ✅ ライフリンク関連テスト
+
+#### 合体(Merge)テスト基盤構築 + テスト2件
+- ✅ `BattleTestConfig` に `attacker_merge_partner_id` / `defender_merge_partner_id` 追加
+- ✅ `BattleTestExecutor` に `_apply_merge()` ヘルパー追加（手札操作・EP確保・SkillMerge呼出）
+- ✅ グランギア(409)+スカイギア(419)→アンドロギア(406) 合体テスト
+- ✅ アンドロギア(406)+ビーストギア(434)→ギアリオン(408) 合体テスト
+
+#### skill_merge.gd バグ修正3件（テストで発見）
+- ✅ `participant.tile_index` → 安全アクセスパターンに修正（BattleParticipantにtile_indexプロパティなし）
+- ✅ `participant.base_ap` 代入削除（BattleParticipantにbase_apインスタンス変数なし）
+- ✅ print文の `participant.base_ap` → `participant.current_ap` に修正
+
+#### クリーチャー自動テスト完了
+- ✅ **639テスト / 2201アサート 全パス**
+- ✅ `docs/specs/gut_test_spec.md` に完了マーカー記載
+
 ### 📋 次のステップ
 
-- Phase 3続行: 残り個別クリーチャーテスト
+- Phase 4: スペルテスト
 - エフェクト作成ブランチの本来タスクへ
+
+---
+
+## 2026年3月20日（Session: GUT自動テスト導入 - バトルアイテムテスト）
+
+### 完了した作業（省略 - 詳細は git log 参照）
+- ✅ GUT環境セットアップ、Phase 1-2 バトルアイテムテスト完了
+- ✅ MockBoard設計、Phase 3k 刺突テスト、Phase 3p 個別クリーチャーテスト開始
+- ✅ 323テスト全パス
+
+### 📋 次のステップ
+
+- Phase 3p続行 → 完了済み（3/22）
 
 ---
 

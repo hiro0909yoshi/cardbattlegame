@@ -268,7 +268,7 @@
 	},
 	"orc": {
 	  "name": "オーク",
-	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+	  "model_path": "res://scenes/Characters/Orc.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-8から登場する好戦的な敵",
 	  "difficulties": [
