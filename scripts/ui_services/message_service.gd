@@ -73,6 +73,12 @@ func show_big_dice_result(value: int, duration: float = 1.5) -> void:
 		_phase_display.show_big_dice_result(value, duration)
 
 
+## 3Dサイコロ演出を表示
+func show_dice_roll_3d(dice_values: Array, total: int, duration: float = 1.5) -> void:
+	if _phase_display and _phase_display.has_method("show_dice_roll_3d"):
+		_phase_display.show_dice_roll_3d(dice_values, total, duration)
+
+
 ## ダブルダイス結果を表示
 func show_dice_result_double(dice1: int, dice2: int, total: int) -> void:
 	if _phase_display and _phase_display.has_method("show_dice_result_double"):

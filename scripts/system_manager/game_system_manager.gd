@@ -1508,8 +1508,6 @@ func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
 		GameLogger.error("Init", "_connect_dice_phase_signals: DicePhaseHandler または UIManager が null です。dice_handler=%s, ui_manager=%s" % [dice_handler != null, p_ui_manager != null])
 		return
 
-	if not dice_handler.dice_ui_big_result_requested.is_connected(p_ui_manager.show_big_dice_result):
-		dice_handler.dice_ui_big_result_requested.connect(p_ui_manager.show_big_dice_result)
 	if not dice_handler.dice_ui_double_result_shown.is_connected(p_ui_manager.show_dice_result_double):
 		dice_handler.dice_ui_double_result_shown.connect(p_ui_manager.show_dice_result_double)
 	if not dice_handler.dice_ui_triple_result_shown.is_connected(p_ui_manager.show_dice_result_triple):

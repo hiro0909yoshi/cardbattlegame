@@ -7,6 +7,7 @@ signal dice_ui_big_result_requested(value: int, duration: float)
 signal dice_ui_double_result_shown(d1: int, d2: int, total: int)
 signal dice_ui_triple_result_shown(d1: int, d2: int, d3: int, total: int)
 signal dice_ui_range_result_shown(curse_name: String, value: int)
+signal dice_ui_3d_roll_requested(dice_values: Array, total: int, duration: float)
 signal dice_ui_phase_text_requested(text: String)
 signal dice_ui_navigation_disabled()
 signal dice_ui_comment_and_wait_requested(message: String, player_id: int)
@@ -108,8 +109,9 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 
 	GameLogger.info("Dice", "ダイス: P%d 出目%d (修正後:%d)" % [player_system.current_player_index + 1, total_dice, modified_dice])
 
-	# ダイス結果を大きく表示（1.5秒）
-	dice_ui_big_result_requested.emit(modified_dice, 1.5)
+	# 3Dサイコロ演出（ゲームの3Dシーンに直接配置）
+	var dice_values: Array = [dice1, dice2, dice3] if needs_third else [dice1, dice2]
+	_show_3d_dice_roll(dice_values, modified_dice, 1.5)
 
 	# ダイス結果を詳細表示（上部）
 	# ダイス範囲刻印がある場合は特殊表示
@@ -140,6 +142,23 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	if board_system_3d:
 		dice_ui_phase_text_requested.emit("移動中...")
 		board_system_3d.move_player_3d(current_player.id, modified_dice, modified_dice)
+
+## 3Dサイコロをゲームシーンに直接配置して転がす
+func _show_3d_dice_roll(dice_values: Array, total: int, duration: float) -> void:
+	if not board_system_3d:
+		return
+	# プレイヤーの3D位置を取得
+	var player_pos: Vector3 = Vector3.ZERO
+	var player_id: int = player_system.current_player_index
+	if player_id < board_system_3d.player_nodes.size() and board_system_3d.player_nodes[player_id]:
+		player_pos = board_system_3d.player_nodes[player_id].global_position
+	# 3Dシーンルートを取得
+	var scene_root: Node = board_system_3d.get_parent()
+	if not scene_root:
+		return
+	var roller := DiceRollerUI.new()
+	scene_root.add_child(roller)
+	roller.show_roll_in_scene(scene_root, player_pos, dice_values, total, duration)
 
 # ナビゲーションボタンのクリア（GameFlowManagerの_clear_dice_phase_navigation()から移動）
 func _clear_dice_phase_navigation() -> void:

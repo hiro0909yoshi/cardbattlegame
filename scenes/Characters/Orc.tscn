@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/shared/Walking.fbx" id="1_model"]
-[ext_resource type="PackedScene" path="res://assets/models/orc/Idle.fbx" id="2_idle"]
+[ext_resource type="PackedScene" path="res://assets/models/dwarf/Idle.fbx" id="2_idle"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_001"]
 

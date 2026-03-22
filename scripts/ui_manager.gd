@@ -687,6 +687,11 @@ func show_big_dice_result(value: int, duration: float = 1.5):
 	if _message_service:
 		_message_service.show_big_dice_result(value, duration)
 
+## 3Dサイコロ演出を表示
+func show_dice_roll_3d(dice_values: Array, total: int, duration: float = 1.5):
+	if _message_service:
+		_message_service.show_dice_roll_3d(dice_values, total, duration)
+
 ## ダイス結果（2個）を表示
 func show_dice_result_double(dice1: int, dice2: int, total: int):
 	if _message_service:
