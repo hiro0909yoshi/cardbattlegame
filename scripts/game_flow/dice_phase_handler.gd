@@ -3,11 +3,9 @@ extends Node
 class_name DicePhaseHandler
 
 # === UI Signal 定義（Phase 6-B: UI層分離） ===
-signal dice_ui_big_result_requested(value: int, duration: float)
 signal dice_ui_double_result_shown(d1: int, d2: int, total: int)
 signal dice_ui_triple_result_shown(d1: int, d2: int, d3: int, total: int)
 signal dice_ui_range_result_shown(curse_name: String, value: int)
-signal dice_ui_3d_roll_requested(dice_values: Array, total: int, duration: float)
 signal dice_ui_phase_text_requested(text: String)
 signal dice_ui_navigation_disabled()
 signal dice_ui_comment_and_wait_requested(message: String, player_id: int)

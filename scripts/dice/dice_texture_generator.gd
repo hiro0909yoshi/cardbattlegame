@@ -101,7 +101,7 @@ static func _get_dot_positions(value: int, size: int) -> Array[Vector2i]:
 	var c := int(size * 0.5)
 	var e := size - m
 	var tl := Vector2i(m, m)
-	var tr := Vector2i(e, m)
+	var top_r := Vector2i(e, m)
 	var ml := Vector2i(m, c)
 	var mc := Vector2i(c, c)
 	var mr := Vector2i(e, c)
@@ -109,11 +109,11 @@ static func _get_dot_positions(value: int, size: int) -> Array[Vector2i]:
 	var br := Vector2i(e, e)
 	match value:
 		1: return [mc]
-		2: return [tr, bl]
-		3: return [tr, mc, bl]
-		4: return [tl, tr, bl, br]
-		5: return [tl, tr, mc, bl, br]
-		6: return [tl, tr, ml, mr, bl, br]
+		2: return [top_r, bl]
+		3: return [top_r, mc, bl]
+		4: return [tl, top_r, bl, br]
+		5: return [tl, top_r, mc, bl, br]
+		6: return [tl, top_r, ml, mr, bl, br]
 		_: return [mc]
 
 

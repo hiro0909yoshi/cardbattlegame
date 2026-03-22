@@ -17,7 +17,6 @@ extends Control
 # 左パネル（タップでステータス画面へ）
 @onready var _left_panel: Control = $MainVBox/ContentArea/LeftPanel
 @onready var _player_name_label: Label = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameLabel
-@onready var _title_label: Label = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/TitleLabel
 @onready var _character_rect: TextureRect = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterRect
 
 # 右パネル（メインボタン）

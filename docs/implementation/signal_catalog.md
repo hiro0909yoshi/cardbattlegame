@@ -628,7 +628,6 @@ SpellPhaseHandler.spell_phase_completed
 
 | シグナル | 引数 | 用途 |
 |---------|------|------|
-| `dice_ui_big_result_requested` | `value: int, duration: float` | ダイス結果大表示 |
 | `dice_ui_double_result_shown` | `d1: int, d2: int, total: int` | 2Dダイス結果表示 |
 | `dice_ui_triple_result_shown` | `d1: int, d2: int, d3: int, total: int` | 3Dダイス結果表示 |
 | `dice_ui_range_result_shown` | `curse_name: String, value: int` | ダイス範囲刻印表示 |

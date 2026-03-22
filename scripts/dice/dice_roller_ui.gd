@@ -37,7 +37,7 @@ func show_roll_in_scene(scene_root: Node, player_pos: Vector3, dice_values: Arra
 	var start_x := -(dice_count - 1) * spacing / 2.0
 
 	# ダイスの種類: [ダイス1, ダイス2] または [ダイス1, ダイス2, ダイス3]
-	var dice_types := [1, 2, 3]
+	var dice_types: Array[int] = [1, 2, 3]
 	for i in range(dice_count):
 		var die := Dice3D.new()
 		die.position = Vector3(start_x + i * spacing, 0, 0)

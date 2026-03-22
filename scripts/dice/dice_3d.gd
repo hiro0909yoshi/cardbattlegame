@@ -29,11 +29,7 @@ const FACE_POSITIONS := [
 const FACE_INDEX_MAP := [0, 5, 1, 4, 2, 3]
 
 var _dice_type: int = 1
-var _faces: Array = []
-
-
-func _ready() -> void:
-	pass
+var _faces: Array[int] = []
 
 
 func setup(dice_type: int) -> void:

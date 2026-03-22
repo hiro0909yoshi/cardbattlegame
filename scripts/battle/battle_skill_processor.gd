@@ -471,9 +471,9 @@ func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -
 	# アイテム巻物の場合: AP固定 → 条件付き強化術(×1.5)の順で処理
 	if participant.is_item_scroll:
 		# Step 1: アイテム巻物のAP固定を適用
-		var scroll_config = keyword_conditions.get("術攻撃", {})
-		var scroll_type = scroll_config.get("scroll_type", "base_ap")
-		_apply_scroll_ap_by_config(participant, scroll_config, scroll_type, context)
+		var item_scroll_config: Dictionary = keyword_conditions.get("術攻撃", {})
+		var item_scroll_type: String = item_scroll_config.get("scroll_type", "base_ap")
+		_apply_scroll_ap_by_config(participant, item_scroll_config, item_scroll_type, context)
 		# Step 2: アイテムが強化術を付与している場合のみ、条件チェック+×1.5
 		if PowerStrikeSkill.has_scroll_power_strike_effect(participant.creature_data):
 			PowerStrikeSkill.apply_scroll_power_strike(participant, context, silent)

@@ -612,12 +612,13 @@ func update_stamina_by_time():
 		stamina.updated_at = now
 		return
 
-	var elapsed = now - last_time
+	var elapsed: int = int(now - last_time)
 
 	if elapsed <= 0:
 		return
 
-	var recovery = elapsed / STAMINA_RECOVERY_SECONDS
+	@warning_ignore("integer_division")
+	var recovery: int = elapsed / STAMINA_RECOVERY_SECONDS
 	if recovery > 0:
 		stamina.current = mini(current + recovery, max_val)
 		# 余りの秒数を考慮して更新時刻を調整
