@@ -142,7 +142,7 @@ func _setup_3d_scene_before_init():
 ## プレイヤーキャラクター作成
 func _create_player_characters(container: Node3D):
 	# プレイヤー1（Mario）
-	var mario_scene = load("res://scenes/Characters/Necromancer.tscn")
+	var mario_scene = load("res://scenes/Characters/Hero.tscn")
 	if mario_scene:
 		var mario = mario_scene.instantiate()
 		mario.name = "Player"

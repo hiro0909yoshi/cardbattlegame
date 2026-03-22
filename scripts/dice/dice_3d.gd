@@ -34,7 +34,7 @@ var _faces: Array[int] = []
 
 func setup(dice_type: int) -> void:
 	_dice_type = dice_type
-	_faces = DICE_FACES.get(dice_type, DICE_FACES[3])
+	_faces.assign(DICE_FACES.get(dice_type, DICE_FACES[3]))
 	_build_mesh()
 
 
