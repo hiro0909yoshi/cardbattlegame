@@ -139,6 +139,7 @@ func _setup_3d_scene_before_init():
 	# プレイヤーキャラクター作成
 	_create_player_characters(players_container)
 
+
 ## プレイヤーキャラクター作成
 func _create_player_characters(container: Node3D):
 	# プレイヤー1（Mario）

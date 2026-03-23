@@ -242,13 +242,13 @@ func update_visual():
 		# MeshInstance3Dの色を更新
 		if has_node("MeshInstance3D"):
 			var mesh = $MeshInstance3D
-			
+
 			# マテリアルを取得または作成
 			if not mesh.material_override:
 				mesh.material_override = StandardMaterial3D.new()
-			
+
 			var mat = mesh.material_override as StandardMaterial3D
-			
+
 			# 所有者に応じた色設定
 			if owner_id == -1:
 				# 未所有
@@ -259,7 +259,7 @@ func update_visual():
 			elif owner_id == 1:
 				# プレイヤー2（青系）
 				mat.albedo_color = base_color.lerp(Color.BLUE, 0.3)
-			
+
 			# レベルに応じた明度調整
 			mat.albedo_color = mat.albedo_color.lerp(Color.WHITE, (level - 1) * 0.1)
 	

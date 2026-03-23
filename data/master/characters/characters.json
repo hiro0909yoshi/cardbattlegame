@@ -172,7 +172,7 @@
 	},
 	"cleric": {
 	  "name": "クレリック",
-	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+	  "model_path": "res://scenes/Characters/Elf.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド2-3の敵",
 	  "difficulties": [

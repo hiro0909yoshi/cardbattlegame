@@ -32,7 +32,8 @@ var current_moving_player = -1
 # システム参照
 var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
-var game_flow_manager = null  # カメラ制御・CPU判定用（is_game_ended は Callable 化済み）
+var game_flow_manager = null  # CPU判定用（is_game_ended は Callable 化済み）
+var board_system: BoardSystem3D = null  # カメラ制御用
 var is_game_ended_checker: Callable = func() -> bool: return false
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var spell_movement: SpellMovement = null
@@ -146,7 +147,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 		var current_tile = player_tiles[player_id]
 		var came_from = _get_player_came_from(player_id)
 		current_remaining_steps = steps
-		var first_tile = await _select_first_tile(current_tile, came_from)
+		var first_tile = await _select_first_tile(current_tile, came_from, true)
 
 		_set_player_came_from(player_id, current_tile)
 		_consume_direction_choice(player_id)
@@ -276,7 +277,7 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 
 
 # 最初の1歩を選択（分岐点の場合）
-func _select_first_tile(current_tile: int, came_from: int) -> int:
+func _select_first_tile(current_tile: int, came_from: int, has_direction_choice: bool = false) -> int:
 	var tile = tile_nodes.get(current_tile)
 
 	if not tile or not tile.connections or tile.connections.is_empty():
@@ -297,10 +298,14 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		set_player_current_direction(current_moving_player, selected_dir)
 		return current_tile + selected_dir
 
+	# 方向選択権がある場合はcame_fromを除外しない（両方向から選べる）
 	var choices = []
-	for conn in tile.connections:
-		if conn != came_from:
-			choices.append(conn)
+	if has_direction_choice:
+		choices = tile.connections.duplicate()
+	else:
+		for conn in tile.connections:
+			if conn != came_from:
+				choices.append(conn)
 
 	if choices.is_empty():
 		return came_from
@@ -483,8 +488,7 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	tween.tween_property(player_node, "global_position", target_pos, MOVE_DURATION)
 
 	if camera and player_system and player_id == player_system.current_player_index:
-		var bs = game_flow_manager.board_system_3d if game_flow_manager else null
-		var skip_follow = bs and bs.is_direction_camera_active()
+		var skip_follow = board_system and board_system.is_direction_camera_active()
 		if not skip_follow:
 			# タイル位置基準でカメラ追従（他フェーズと統一）
 			var tile_pos = tile_nodes[tile_index].global_position

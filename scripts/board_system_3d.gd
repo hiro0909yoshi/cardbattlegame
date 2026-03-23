@@ -966,6 +966,7 @@ func get_spell_movement():
 func set_movement_controller_gfm(gfm):
 	if movement_controller:
 		movement_controller.game_flow_manager = gfm
+		movement_controller.board_system = self
 
 # CardSelectionUIを設定（destination_predictorに直接参照を渡す）
 func set_movement_controller_card_selection_ui(ui: CardSelectionUI) -> void:

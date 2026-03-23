@@ -286,7 +286,7 @@ func get_available_directions(player_id: int) -> Array:
 	var player = player_system.players[player_id]
 	
 	# 方向選択権があれば両方向を返す
-	if player.buffs.has("direction_choice"):
+	if player.buffs.has("direction_choice_pending"):
 		return [1, -1]  # 順方向、逆方向
 	
 	# 反転刻印チェック
@@ -299,8 +299,8 @@ func get_available_directions(player_id: int) -> Array:
 ## 方向選択権を消費
 func consume_direction_choice(player_id: int) -> void:
 	var player = player_system.players[player_id]
-	if player.buffs.has("direction_choice"):
-		player.buffs.erase("direction_choice")
+	if player.buffs.has("direction_choice_pending"):
+		player.buffs.erase("direction_choice_pending")
 		print("[SpellPlayerMove] 方向選択権消費: プレイヤー%d" % player_id)
 
 ## 最終的な移動方向を取得（反転＋方向選択の組み合わせ）

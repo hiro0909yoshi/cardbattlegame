@@ -199,7 +199,7 @@ func _setup_3d_scene_before_init():
 	
 	# プレイヤーキャラクター作成
 	_create_player_characters(players_container)
-	
+
 	print("[Game3D] 3Dシーン事前構築完了")
 
 ## プレイヤーキャラクター作成

@@ -73,9 +73,8 @@ func _update_ui():
 			var np = controller.tile_nodes[nt].global_position
 			var dv = (np - cp).normalized()
 			var offset_pos = cp + dv * cp.distance_to(np) * 5.0
-			var gfm = controller.game_flow_manager
-			if gfm and gfm.board_system_3d:
-				gfm.board_system_3d.focus_camera_slow(offset_pos, 0.5)
+			if controller.board_system:
+				controller.board_system.focus_camera_slow(offset_pos, 0.5)
 
 	# 到着予想タイルに基づいて手札の配置制限表示を更新
 	if player_id >= 0:
@@ -136,7 +135,7 @@ func confirm_selection():
 func _confirm_selection():
 	if not is_active:
 		return
-	controller.destination_predictor.update_hand_restriction_for_destinations([])  # 到着予想制限をクリア
+	controller.destination_predictor.update_hand_restriction_for_destinations([])
 	direction_selected.emit(selected_direction)
 
 
