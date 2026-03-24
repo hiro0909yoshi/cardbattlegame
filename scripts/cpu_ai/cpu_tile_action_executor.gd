@@ -96,10 +96,14 @@ func prepare_summon(card_index: int, player_id: int) -> Dictionary:
 	# カード犠牲処理
 	var sacrifice_card = {}
 	if _requires_card_sacrifice(card_data) and not _is_condition_check_disabled("card_sacrifice"):
-		sacrifice_card = select_sacrifice_card(player_id, card_data, tile_element)
+		var sacrifice_result = select_sacrifice_card(player_id, card_data, tile_element)
+		sacrifice_card = sacrifice_result.get("card", {})
 		if sacrifice_card.is_empty():
 			return {"success": false, "reason": "no_sacrifice"}
-	
+		# 犠牲カード破棄後のインデックス調整
+		var sacrifice_index = sacrifice_result.get("sacrifice_index", -1)
+		card_index = adjust_index_after_sacrifice(card_index, sacrifice_index)
+
 	# クリーチャー合成処理
 	var is_synthesized = false
 	if not sacrifice_card.is_empty() and creature_synthesis:
@@ -107,15 +111,15 @@ func prepare_summon(card_index: int, player_id: int) -> Dictionary:
 		if is_synthesized:
 			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
 			print("[CPUTileActionExecutor] 合成成立: %s" % card_data.get("name", "?"))
-	
+
 	# コスト計算
 	var cost = _calculate_cost(card_data, player_id)
-	
+
 	# EPチェック
 	var current_magic = player_system.get_magic(player_id)
 	if current_magic < cost:
 		return {"success": false, "reason": "insufficient_magic"}
-	
+
 	return {
 		"success": true,
 		"card_data": card_data,
@@ -188,10 +192,15 @@ func prepare_battle(card_index: int, tile_info: Dictionary, item_index: int, pla
 	# カード犠牲処理
 	var sacrifice_card = {}
 	if _requires_card_sacrifice(card_data) and not _is_condition_check_disabled("card_sacrifice"):
-		sacrifice_card = select_sacrifice_card(player_id, card_data, tile_element)
+		var sacrifice_result = select_sacrifice_card(player_id, card_data, tile_element)
+		sacrifice_card = sacrifice_result.get("card", {})
 		if sacrifice_card.is_empty():
 			return {"success": false, "reason": "no_sacrifice"}
-	
+		# 犠牲カード破棄後のインデックス調整（card_indexとitem_index両方）
+		var sacrifice_index = sacrifice_result.get("sacrifice_index", -1)
+		card_index = adjust_index_after_sacrifice(card_index, sacrifice_index)
+		item_index = adjust_index_after_sacrifice(item_index, sacrifice_index)
+
 	# クリーチャー合成処理
 	var is_synthesized = false
 	if not sacrifice_card.is_empty() and creature_synthesis:
@@ -199,7 +208,7 @@ func prepare_battle(card_index: int, tile_info: Dictionary, item_index: int, pla
 		if is_synthesized:
 			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
 			print("[CPUTileActionExecutor] 合成成立: %s" % card_data.get("name", "?"))
-	
+
 	# アイテムデータ取得
 	var item_data = {}
 	if item_index >= 0:
@@ -207,15 +216,15 @@ func prepare_battle(card_index: int, tile_info: Dictionary, item_index: int, pla
 		if not item_data.is_empty():
 			item_data = item_data.duplicate()
 			item_data["_hand_index"] = item_index
-	
+
 	# コスト計算
 	var cost = _calculate_cost(card_data, player_id)
-	
+
 	# EPチェック
 	var current_magic = player_system.get_magic(player_id)
 	if current_magic < cost:
 		return {"success": false, "reason": "insufficient_magic"}
-	
+
 	return {
 		"success": true,
 		"card_data": card_data,
@@ -232,6 +241,7 @@ func prepare_battle(card_index: int, tile_info: Dictionary, item_index: int, pla
 # ============================================================
 
 ## CPU用犠牲カード自動選択
+## 戻り値: {"card": Dictionary, "sacrifice_index": int} （空の場合はcardが空辞書）
 func select_sacrifice_card(player_id: int, creature_card: Dictionary, tile_element: String = "") -> Dictionary:
 	# CPUSacrificeSelectorを初期化
 	if not sacrifice_selector:
@@ -239,24 +249,34 @@ func select_sacrifice_card(player_id: int, creature_card: Dictionary, tile_eleme
 		sacrifice_selector.initialize(card_system, board_system)
 		if creature_synthesis:
 			sacrifice_selector.creature_synthesis = creature_synthesis
-	
+
 	# 犠牲カードを選択
 	var result = sacrifice_selector.select_sacrifice_for_creature(creature_card, player_id, tile_element)
 	var sacrifice_card = result.get("card", {})
-	
+
 	if sacrifice_card.is_empty():
 		print("[CPUTileActionExecutor] 犠牲カードが選択できませんでした")
-		return {}
-	
+		return {"card": {}, "sacrifice_index": -1}
+
 	# カードを破棄（インデックスを探して破棄）
+	var sacrifice_index = -1
 	var hand = card_system.get_all_cards_for_player(player_id)
 	for i in range(hand.size()):
 		if hand[i].get("id") == sacrifice_card.get("id"):
 			card_system.discard_card(player_id, i, "sacrifice")
-			print("[CPUTileActionExecutor] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
+			sacrifice_index = i
+			print("[CPUTileActionExecutor] %s を犠牲にしました (index=%d)" % [sacrifice_card.get("name", "?"), i])
 			break
-	
-	return sacrifice_card
+
+	return {"card": sacrifice_card, "sacrifice_index": sacrifice_index}
+
+
+## 犠牲カード破棄後のインデックス調整
+## sacrifice_indexより後ろのインデックスは1つ前にずれる
+static func adjust_index_after_sacrifice(original_index: int, sacrifice_index: int) -> int:
+	if sacrifice_index >= 0 and sacrifice_index < original_index:
+		return original_index - 1
+	return original_index
 
 
 # ============================================================

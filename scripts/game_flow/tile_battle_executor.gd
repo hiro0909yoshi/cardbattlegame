@@ -110,6 +110,13 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 			show_battle_ui_callback.call()
 			return
 	
+	# 犠牲カード破棄後のインデックス調整
+	var sacrifice_index = sacrifice_card.get("index", -1)
+	var adjusted = CPUTileActionExecutor.adjust_index_after_sacrifice(card_index, sacrifice_index)
+	if adjusted != card_index:
+		card_index = adjusted
+		print("[TileBattleExecutor] 犠牲カード破棄によりcard_indexを調整: %d" % card_index)
+
 	# クリーチャー合成処理
 	var is_synthesized = false
 	var sacrifice_card_data = sacrifice_card.get("card", {})
@@ -118,7 +125,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		if is_synthesized:
 			card_data = _summon_executor.creature_synthesis.apply_synthesis(card_data, sacrifice_card_data, true)
 			print("[TileBattleExecutor] 合成成立（バトル）: %s" % card_data.get("name", "?"))
-	
+
 	# バトル情報を保存
 	pending_battle_card_index = card_index
 	pending_battle_card_data = card_data

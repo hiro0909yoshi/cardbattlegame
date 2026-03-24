@@ -104,6 +104,36 @@
 
 ---
 
+## 2026年3月24日（Session: ナビゲーター方向選択UI修正 + テスト警告全解消）
+
+### 完了した作業
+
+#### ナビゲーター方向選択UI修正
+- ✅ `movement_controller.gd`: `_select_first_tile()` に `has_direction_choice` パラメータ追加
+  - `direction_choice_pending` 時は `came_from` フィルタリングをスキップ → 両方向が選択肢に残る
+  - これにより `MovementBranchSelector` が起動し、黄色マーカー + 到着予測マーカーが正常表示
+- ✅ `spell_player_move.gd`: `direction_choice` → `direction_choice_pending` キー名修正（`get_available_directions`, `consume_direction_choice`）
+
+#### 3チェーンアクセス違反修正（コーディング規約準拠）
+- ✅ `MovementController3D` に `board_system: BoardSystem3D` 直接参照を追加
+- ✅ `board_system_3d.gd`: `set_movement_controller_gfm()` で `board_system = self` を注入
+- ✅ `movement_direction_selector.gd`: `controller.game_flow_manager.board_system_3d` → `controller.board_system`（全箇所）
+- ✅ `movement_branch_selector.gd`: 同様に3チェーン → 2チェーンに修正（`gfm`/`gfm2` ローカル変数削除）
+
+#### GUT自動テスト警告全解消（39警告 → 0警告）
+- ✅ Float/Int比較警告修正（22箇所）: JSON値を `int()` でキャスト（GodotのJSONパーサーが数値をfloatで返すため）
+- ✅ unfreed children警告修正（15ファイル）: `queue_free()` → `free()` に変更（即時解放で蓄積防止）
+- ✅ `test_spell_player_move.gd`: `get_children()` ループ → 明示的な変数名指定の `free()` に変更（GUT内部の `_awaiter` ノード誤解放防止）
+- ✅ `test_spell_purify.gd`: 欠落していた `after_each()` を追加
+- ✅ 最終結果: **962テスト、0警告、全パス**
+
+### 📋 次のステップ
+
+- 残りスペルテスト3件（スペル借用系2、ミリティア1）→ 進捗 195/198 (98%)
+- エフェクト作成ブランチの本来タスクへ
+
+---
+
 ## 2026年3月22日（Session: クリーチャー自動テスト完了）
 
 ### 完了した作業

@@ -92,23 +92,18 @@ func consume_card(player_id: int, card: Dictionary) -> bool:
 	if card.is_empty():
 		GameLogger.error("Card", "CardSacrificeHelper: 破棄するカードが空です (player=%d)" % player_id)
 		return false
-	
+
 	var hand = card_system_ref.get_all_cards_for_player(player_id)
 	var card_id = card.get("id", -1)
 	var card_name = card.get("name", "不明")
 
-	# カードを探して削除
+	# カードを探してdiscard_card()で削除（捨て札プールに追加される）
 	for i in range(hand.size()):
 		if hand[i].get("id") == card_id:
-			card_system_ref.player_hands[player_id]["data"].remove_at(i)
+			card_system_ref.discard_card(player_id, i, "sacrifice")
 			print("[CardSacrificeHelper] %s を犠牲にしました" % card_name)
-			
-			# hand_updatedシグナルを発行
-			if card_system_ref.has_signal("hand_updated"):
-				card_system_ref.emit_signal("hand_updated")
-			
 			return true
-	
+
 	GameLogger.error("Card", "CardSacrificeHelper: カード %s が手札に見つかりません (player=%d)" % [card_name, player_id])
 	return false
 

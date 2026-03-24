@@ -127,9 +127,10 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 			show_summon_ui_callback.call()
 			return
 		
-		# 犠牲カードが召喚カードより前のインデックスにあった場合、インデックスを調整
-		if sacrifice_index >= 0 and sacrifice_index < card_index:
-			card_index -= 1
+		# 犠牲カード破棄後のインデックス調整
+		var adjusted = CPUTileActionExecutor.adjust_index_after_sacrifice(card_index, sacrifice_index)
+		if adjusted != card_index:
+			card_index = adjusted
 			print("[TileSummonExecutor] 犠牲カード破棄によりcard_indexを調整: %d" % card_index)
 	
 	# クリーチャー合成処理
