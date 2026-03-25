@@ -12,6 +12,18 @@
 
 ---
 
+## 2026年3月25日（Session: キャラクター3Dプレビュー）
+
+### 完了した作業
+
+#### キャラクター3Dプレビュー表示
+- ✅ `character_preview.gd` 作成 — SubViewport + Camera3Dで3Dモデルを2D UIに静止画表示
+- ✅ MainMenu / StatusScreen の TextureRect → SubViewportContainer に置換
+- ✅ モバイル負荷対策: UPDATE_DISABLED + 数フレームだけ描画してキャプチャ
+- ✅ メイン画面に仮グラデーション背景追加（透過確認済み）
+
+---
+
 ## 2026年3月25日（Session: プレイヤーアカウント設計）
 
 ### 完了した作業

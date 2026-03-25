@@ -16,7 +16,7 @@ extends Control
 
 # 左パネル（タップでステータス画面へ）
 @onready var _player_name_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameButton
-@onready var _character_rect: TextureRect = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterRect
+@onready var _character_preview: SubViewportContainer = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterPreview
 
 # 右パネル（メインボタン）
 @onready var _right_vbox: VBoxContainer = $MainVBox/ContentArea/RightPanel/RightVBox
@@ -28,6 +28,9 @@ extends Control
 
 
 func _ready():
+	# 背景グラデーション設定（仮）
+	_setup_background()
+
 	# 上部バーの背景色を設定（黒とグレーの中間）
 	_setup_top_bar_style()
 
@@ -126,6 +129,21 @@ func _check_login_bonus():
 	dialog.popup_centered()
 
 
+## 背景グラデーション設定（仮：透過テスト用）
+func _setup_background():
+	var bg = $Background
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(0.05, 0.1, 0.25))
+	gradient.set_color(1, Color(0.15, 0.05, 0.2))
+	var tex = GradientTexture2D.new()
+	tex.gradient = gradient
+	tex.fill_from = Vector2(0, 0)
+	tex.fill_to = Vector2(1, 1)
+	tex.width = 512
+	tex.height = 512
+	bg.texture = tex
+
+
 ## 上部バーのスタイル設定
 func _setup_top_bar_style():
 	var style = StyleBoxFlat.new()
@@ -141,10 +159,8 @@ func _update_user_info():
 	# 左パネル
 	if _player_name_button:
 		_player_name_button.text = GameData.player_data.profile.name
-	if _character_rect:
-		var texture = load("res://assets/images/characters/marion.png")
-		if texture:
-			_character_rect.texture = texture
+	if _character_preview:
+		_character_preview.set_selected_character()
 
 	# 上部バー
 	if _gold_label:

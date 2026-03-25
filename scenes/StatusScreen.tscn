@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/status_screen.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui_components/character_preview.gd" id="2_preview"]
 
 [node name="StatusScreen" type="Control"]
 layout_mode = 3
@@ -84,12 +85,12 @@ layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="CharacterRect" type="TextureRect" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
-custom_minimum_size = Vector2(300, 400)
+[node name="CharacterPreview" type="SubViewportContainer" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
+custom_minimum_size = Vector2(600, 700)
 layout_mode = 2
 size_flags_horizontal = 4
-expand_mode = 1
-stretch_mode = 5
+stretch = true
+script = ExtResource("2_preview")
 
 [node name="PlayerNameLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2

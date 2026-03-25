@@ -1,7 +1,7 @@
 extends Control
 
 # 左パネル
-@onready var _character_rect: TextureRect = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/CharacterRect
+@onready var _character_preview: SubViewportContainer = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/CharacterPreview
 @onready var _player_name_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/PlayerNameLabel
 @onready var _level_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/LevelLabel
 @onready var _title_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/TitleLabel
@@ -56,10 +56,8 @@ func _update_display():
 	_level_label.text = "Lv. %d  (EXP: %d)" % [profile.level, profile.exp]
 	_title_label.text = "はじまりの一歩"
 
-	if _character_rect:
-		var texture = load("res://assets/images/characters/marion.png")
-		if texture:
-			_character_rect.texture = texture
+	if _character_preview:
+		_character_preview.set_selected_character()
 
 	# 基本情報
 	_gold_value.text = "%d" % int(profile.gold)
@@ -111,7 +109,58 @@ func _on_back_pressed():
 
 
 func _on_character_change_pressed():
-	print("キャラクター変更（未実装）")
+	var dialog = AcceptDialog.new()
+	dialog.title = "キャラクター変更"
+	dialog.ok_button_text = "閉じる"
+	dialog.exclusive = true
+
+	var ok_btn = dialog.get_ok_button()
+	ok_btn.custom_minimum_size = Vector2(400, 100)
+	ok_btn.add_theme_font_size_override("font_size", 48)
+
+	var scroll = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(800, 500)
+
+	var grid = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 20)
+
+	var current_id = GameData.player_data.character.selected_id
+
+	for char_id in GameData.PLAYABLE_CHARACTERS:
+		var char_data = GameData.PLAYABLE_CHARACTERS[char_id]
+		var is_unlocked = GameData.is_character_unlocked(char_id)
+		var is_selected = char_id == current_id
+
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(240, 100)
+		btn.add_theme_font_size_override("font_size", 32)
+
+		if is_selected:
+			btn.text = "%s\n[装備中]" % char_data.name
+			btn.disabled = true
+		elif is_unlocked:
+			btn.text = char_data.name
+			btn.pressed.connect(_on_character_selected.bind(char_id, dialog))
+		else:
+			btn.text = "%s\n🔒" % char_data.name
+			btn.disabled = true
+
+		grid.add_child(btn)
+
+	scroll.add_child(grid)
+	dialog.add_child(scroll)
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _on_character_selected(char_id: String, dialog: AcceptDialog):
+	if GameData.select_character(char_id):
+		_update_display()
+		if dialog and is_instance_valid(dialog):
+			dialog.queue_free()
+		print("[StatusScreen] キャラクター変更: %s" % char_id)
 
 
 ## 将来追加予定:
