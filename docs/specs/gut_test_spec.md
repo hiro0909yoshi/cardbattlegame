@@ -75,10 +75,10 @@ test/
 ├── helpers/                      # 共通Mock・ヘルパー（将来）
 │   └── mock_board.gd
 └── battle/
-    ├── item/                     # Phase 2: アイテムバトルテスト
-    │   └── test_battle_basic.gd        (187テスト)
-    └── creature/                 # Phase 3: クリーチャースキルテスト
-        └── test_battle_creatures.gd    (9テスト)
+	├── item/                     # Phase 2: アイテムバトルテスト
+	│   └── test_battle_basic.gd        (187テスト)
+	└── creature/                 # Phase 3: クリーチャースキルテスト
+		└── test_battle_creatures.gd    (9テスト)
 ```
 
 ---
@@ -140,10 +140,10 @@ test/
 ```gdscript
 # 各アイテムごとに攻撃側・防御側の2テスト
 func test_1009_zweihander_attacker():
-    await _assert_attacker_item(1009, "ツヴァイハンダー", 90, 50, 40, -30, "attacker", [])
+	await _assert_attacker_item(1009, "ツヴァイハンダー", 90, 50, 40, -30, "attacker", [])
 
 func test_1009_zweihander_defender():
-    await _assert_defender_item(1009, "ツヴァイハンダー", 40, -40, 90, 20, "defender", [])
+	await _assert_defender_item(1009, "ツヴァイハンダー", 40, -40, 90, 20, "defender", [])
 ```
 
 ### 各テストのアサート項目（6項目）
@@ -385,30 +385,30 @@ extends GutTest
 var _executor: BattleTestExecutor
 
 func before_all():
-    _executor = BattleTestExecutor.new()
-    _executor.scene_tree_parent = self
+	_executor = BattleTestExecutor.new()
+	_executor.scene_tree_parent = self
 
 func _create_config(attacker_id: int, defender_id: int, defender_land: String = "neutral") -> BattleTestConfig:
-    var config = BattleTestConfig.new()
-    config.attacker_creatures = [attacker_id]
-    config.defender_creatures = [defender_id]
-    # defender_landに応じたタイルインデックスを設定
-    var tile_idx: int
-    match defender_land:
-        "fire": tile_idx = 4
-        "water": tile_idx = 6
-        "wind": tile_idx = 11
-        "earth": tile_idx = 16
-        _: tile_idx = 5  # neutral
-    config.battle_tile_index = tile_idx
-    config.board_layout = [
-        {"tile_index": tile_idx, "owner_id": 1, "creature_id": defender_id},
-    ]
-    config.attacker_battle_land = defender_land
-    config.defender_battle_land = defender_land
-    config.attacker_battle_land_level = 1
-    config.defender_battle_land_level = 1
-    return config
+	var config = BattleTestConfig.new()
+	config.attacker_creatures = [attacker_id]
+	config.defender_creatures = [defender_id]
+	# defender_landに応じたタイルインデックスを設定
+	var tile_idx: int
+	match defender_land:
+		"fire": tile_idx = 4
+		"water": tile_idx = 6
+		"wind": tile_idx = 11
+		"earth": tile_idx = 16
+		_: tile_idx = 5  # neutral
+	config.battle_tile_index = tile_idx
+	config.board_layout = [
+		{"tile_index": tile_idx, "owner_id": 1, "creature_id": defender_id},
+	]
+	config.attacker_battle_land = defender_land
+	config.defender_battle_land = defender_land
+	config.attacker_battle_land_level = 1
+	config.defender_battle_land_level = 1
+	return config
 ```
 
 ### ステータス上昇系スキルの共通テストルール

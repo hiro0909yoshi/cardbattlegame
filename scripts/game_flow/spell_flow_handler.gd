@@ -164,6 +164,8 @@ func use_spell(spell_card: Dictionary):
 	_spell_state.set_spell_card(spell_card)
 	_spell_state.set_spell_used_this_turn(true)
 
+	print("[Spell] 選択開始: P%d %s(id:%d)" % [_spell_state.current_player_id + 1, spell_card.get("name", "?"), spell_card.get("id", -1)])
+
 	# アクション指示パネルを閉じる
 	spell_ui_action_prompt_hidden.emit()
 
@@ -353,6 +355,12 @@ func return_to_spell_selection():
 
 ## スペル効果を実行（Strategy パターンで試行、フォールバック対応）
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
+	var _s_name = spell_card.get("name", "?")
+	var _s_id = spell_card.get("id", -1)
+	var _s_pid = _spell_state.current_player_id
+	var _t_type = target_data.get("type", "none")
+	var _t_tile = target_data.get("tile_index", -1)
+	GameLogger.info("Spell", "選択確定: P%d %s(id:%d) → %s tile:%d" % [_s_pid + 1, _s_name, _s_id, _t_type, _t_tile])
 
 	# 犠牲カードを消費（スペル実行確定時）
 	if not _spell_state.get_pending_sacrifice_card().is_empty() and _card_sacrifice_helper:

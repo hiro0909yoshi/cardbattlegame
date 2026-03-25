@@ -171,8 +171,17 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 # バトルコア処理（共通化）
 func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1):
 	print("========== バトル開始 ==========")
-	
+
 	var tile_index = tile_info.get("index", -1)
+	var _b_atk_name = card_data.get("name", "?")
+	var _b_atk_id = card_data.get("id", -1)
+	var _b_def_creature = tile_info.get("creature", {})
+	var _b_def_name = _b_def_creature.get("name", "?")
+	var _b_def_id = _b_def_creature.get("id", -1)
+	var _b_atk_item = attacker_item.get("name", "") if not attacker_item.is_empty() else "なし"
+	var _b_def_item = defender_item.get("name", "") if not defender_item.is_empty() else "なし"
+	GameLogger.info("Battle", "バトル開始: P%d %s(id:%d) vs %s(id:%d) タイル%d ATKアイテム:%s DEFアイテム:%s" % [
+		attacker_index + 1, _b_atk_name, _b_atk_id, _b_def_name, _b_def_id, tile_index, _b_atk_item, _b_def_item])
 	
 	# ハーミットズパラドックスチェック: 同名クリーチャーなら戦闘前に両者破壊
 	if await _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_index, from_tile_index):
@@ -253,6 +262,18 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# 5. 結果判定
 	var result = battle_execution.resolve_battle_result(attacker, defender)
+
+	# バトル結果ログ
+	var _result_labels = ["攻撃側勝利", "防御側勝利", "攻撃側生存", "相打ち"]
+	var _result_label = _result_labels[result] if result >= 0 and result < _result_labels.size() else "不明"
+	var _atk_name = attacker.creature_data.get("name", "?")
+	var _atk_id = attacker.creature_data.get("id", -1)
+	var _def_name = defender.creature_data.get("name", "?")
+	var _def_id = defender.creature_data.get("id", -1)
+	GameLogger.info("Battle", "バトル結果: P%d %s(id:%d) vs P%d %s(id:%d) → %s (タイル%d)" % [
+		attacker_index + 1, _atk_name, _atk_id,
+		defender.player_id + 1, _def_name, _def_id,
+		_result_label, tile_index])
 
 	# 🎬 戦闘終了時能力（カードが見える状態で表示）
 	await battle_special_effects.apply_regeneration(attacker)

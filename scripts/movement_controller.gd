@@ -506,7 +506,7 @@ func _check_direction_choice_pending(player_id: int) -> bool:
 		return false
 	if player_id < 0 or player_id >= player_system.players.size():
 		return false
-	return player_system.players[player_id].buffs.get("direction_choice_pending", false)
+	return player_system.players[player_id].direction_choice_pending
 
 
 func _consume_direction_choice(player_id: int) -> void:
@@ -514,7 +514,7 @@ func _consume_direction_choice(player_id: int) -> void:
 		return
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
-	player_system.players[player_id].buffs.erase("direction_choice_pending")
+	player_system.players[player_id].direction_choice_pending = false
 
 
 func _get_tutorial_manager():

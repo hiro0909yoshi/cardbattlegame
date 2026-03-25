@@ -81,6 +81,7 @@ func on_player_won(player_id: int):
 		print("[GameResultHandler] ゲームは既に終了しています")
 		return
 	_game_ended = true
+	GameLogger.info("Game", "ゲーム終了: P%d勝利 ラウンド%d" % [player_id + 1, _get_current_turn()])
 
 	var _player = player_system.players[player_id]  # 将来の拡張用
 	if _end_game_cb.is_valid():
@@ -104,6 +105,7 @@ func on_player_defeated(reason: String = ""):
 		print("[GameResultHandler] ゲームは既に終了しています")
 		return
 	_game_ended = true
+	GameLogger.info("Game", "ゲーム終了: P1敗北 理由=%s ラウンド%d" % [reason, _get_current_turn()])
 
 	if _end_game_cb.is_valid():
 		_end_game_cb.call()

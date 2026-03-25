@@ -263,7 +263,8 @@ func execute_action(action_type: String) -> bool:
 	var tile_info = board_system.get_tile_info(selected_tile_index) if board_system else {}
 	var creature_name = tile_info.get("creature", {}).get("name", "?") if not tile_info.is_empty() else "?"
 	var creature_id = tile_info.get("creature", {}).get("id", -1) if not tile_info.is_empty() else -1
-	GameLogger.info("Dominio", "コマンド: P%d %s タイル%d %s(id:%d)" % [board_system.current_player_index + 1 if board_system else 0, action_type, selected_tile_index, creature_name, creature_id])
+	var tile_level = tile_info.get("level", 1) if not tile_info.is_empty() else 1
+	GameLogger.info("Dominio", "コマンド: P%d %s タイル%d Lv%d %s(id:%d)" % [board_system.current_player_index + 1 if board_system else 0, action_type, selected_tile_index, tile_level, creature_name, creature_id])
 
 	var success = false
 	match action_type:

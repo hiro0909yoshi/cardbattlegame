@@ -400,8 +400,12 @@ func use_item(item_card: Dictionary):
 				break
 	
 	# カード使用シグナル
+	var _item_name = item_card.get("name", "?")
+	var _item_id = item_card.get("id", -1)
+	var _phase_side = "攻撃側" if _is_current_phase_attacker else "防御側"
+	GameLogger.info("Battle", "アイテム使用: P%d %s %s(id:%d)" % [current_player_id + 1, _phase_side, _item_name, _item_id])
 	item_used.emit(item_card)
-	
+
 	# フェーズ完了
 	complete_item_phase()
 
@@ -439,7 +443,10 @@ func _execute_merge(partner_card: Dictionary):
 	
 	# 合体後データを保存
 	merged_creature_data = merge_result.get("result_creature", {})
-	
+	var _merge_name = merged_creature_data.get("name", "?")
+	var _merge_id = merged_creature_data.get("id", -1)
+	GameLogger.info("Battle", "合体: P%d %s(id:%d) → %s(id:%d)" % [current_player_id + 1, battle_creature_data.get("name", "?"), battle_creature_data.get("id", -1), _merge_name, _merge_id])
+
 	# シグナル発信
 	creature_merged.emit(merged_creature_data)
 	

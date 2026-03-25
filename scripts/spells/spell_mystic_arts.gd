@@ -430,6 +430,7 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 
 ## ターゲット選択
 func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> void:
+	print("[Spell] アーツ選択開始: P%d %s(spell_id:%s)" % [current_mystic_player_id + 1, mystic_art.get("name", "?"), mystic_art.get("spell_id", mystic_art.get("id", "none"))])
 	var target_type = mystic_art.get("target_type", "")
 	var target_filter = mystic_art.get("target_filter", "any")
 	var target_info = mystic_art.get("target_info", {}).duplicate()
@@ -528,24 +529,30 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		"spell_used_this_turn": spell_phase_handler_ref.spell_state.is_spell_used_this_turn() if (spell_phase_handler_ref and spell_phase_handler_ref.spell_state) else false,
 		"tile_index": creature.get("tile_index", -1)
 	}
-	
+
 	if not can_cast_mystic_art(mystic_art, context):
 		ui_message_requested.emit("アルカナアーツ発動条件を満たしていません")
 		clear_selection()
 		end_mystic_phase()
 		return
-	
+
+	var _arts_name = mystic_art.get("name", "?")
+	var _arts_sid = mystic_art.get("spell_id", mystic_art.get("id", "none"))
+	var _t_tile = target_data.get("tile_index", -1)
+	var _t_type = target_data.get("type", "none")
+	GameLogger.info("Spell", "アーツ選択確定: P%d %s(spell_id:%s) → %s tile:%d" % [player_id + 1, _arts_name, _arts_sid, _t_type, _t_tile])
+
 	# 発動通知を表示
 	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.show_spell_cast_notification(caster_name, target_data, mystic_art, true)
-	
+
 	# 非同期効果かどうかを事前判定
 	var is_async = _is_async_mystic_art(mystic_art)
-	
+
 	# アルカナアーツ効果を適用
 	var success = await apply_mystic_art_effect(mystic_art, target_data, context)
-	
+
 	if success:
 		# EP消費
 		var cost = mystic_art.get("cost", 0)
@@ -559,11 +566,13 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		# キャスターをダウン状態に設定
 		_set_caster_down_state(creature.get("tile_index", -1), board_system_ref)
 
+		GameLogger.info("Spell", "アーツ効果完了: P%d %s(spell_id:%s) result=success" % [player_id + 1, _arts_name, _arts_sid])
 		ui_message_requested.emit("『%s』を発動しました！" % mystic_art.get("name", "Unknown"))
 
 		# 排他制御
 		mystic_art_used.emit()
 	else:
+		GameLogger.info("Spell", "アーツ効果完了: P%d %s(spell_id:%s) result=fail" % [player_id + 1, _arts_name, _arts_sid])
 		ui_message_requested.emit("アルカナアーツの発動に失敗しました")
 	
 	# アルカナアーツ選択状態をクリア

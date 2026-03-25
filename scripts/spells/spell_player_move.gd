@@ -184,8 +184,8 @@ func _reverse_player_direction(player_id: int) -> void:
 		return
 	
 	# 方向選択権を消費（反転した方向を固定するため）
-	if player_system.players[player_id].buffs.has("direction_choice_pending"):
-		player_system.players[player_id].buffs.erase("direction_choice_pending")
+	if player_system.players[player_id].direction_choice_pending:
+		player_system.players[player_id].direction_choice_pending = false
 		print("[SpellPlayerMove] プレイヤー%d の方向選択権を消費" % [player_id + 1])
 	
 	if not board_system:
@@ -233,8 +233,8 @@ func grant_direction_choice(player_id: int, _duration: int = 1) -> void:
 	var player = player_system.players[player_id]
 	
 	# MovementControllerがチェックするフラグを設定
-	player.buffs["direction_choice_pending"] = true
-	
+	player.direction_choice_pending = true
+
 	var player_name = "プレイヤー%d" % (player_id + 1)
 	print("[SpellPlayerMove] 方向選択権付与: %s" % player_name)
 
@@ -286,7 +286,7 @@ func get_available_directions(player_id: int) -> Array:
 	var player = player_system.players[player_id]
 	
 	# 方向選択権があれば両方向を返す
-	if player.buffs.has("direction_choice_pending"):
+	if player.direction_choice_pending:
 		return [1, -1]  # 順方向、逆方向
 	
 	# 反転刻印チェック
@@ -299,8 +299,8 @@ func get_available_directions(player_id: int) -> Array:
 ## 方向選択権を消費
 func consume_direction_choice(player_id: int) -> void:
 	var player = player_system.players[player_id]
-	if player.buffs.has("direction_choice_pending"):
-		player.buffs.erase("direction_choice_pending")
+	if player.direction_choice_pending:
+		player.direction_choice_pending = false
 		print("[SpellPlayerMove] 方向選択権消費: プレイヤー%d" % player_id)
 
 ## 最終的な移動方向を取得（反転＋方向選択の組み合わせ）
@@ -403,7 +403,7 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 		board_system.set_player_tile(player_id, target_tile)
 	
 	# 次ターンの方向選択権を付与（スペルワープ後）
-	player_system.players[player_id].buffs["direction_choice_pending"] = true
+	player_system.players[player_id].direction_choice_pending = true
 	print("[SpellPlayerMove] プレイヤー%d: 次ターン方向選択権付与" % (player_id + 1))
 	
 	print("[SpellPlayerMove] プレイヤー%d ワープ: %d → %d" % [player_id, from_tile, target_tile])
