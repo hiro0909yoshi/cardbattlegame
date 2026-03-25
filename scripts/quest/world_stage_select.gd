@@ -113,18 +113,15 @@ func _create_world_buttons():
 		world_container.add_child(btn)
 		world_buttons.append(btn)
 
-## ワールドがアンロック済みか判定
+## ワールドがアンロック済みか判定（UnlockManager委譲）
 func _is_world_unlocked(world_index: int) -> bool:
 	if world_index == 0:
 		return true  # 先頭ワールドは常にアンロック
-	# テストワールドはアンロック判定に影響しない
-	var prev_world = worlds[world_index - 1]
-	if prev_world.id == "world_test":
-		if world_index <= 1:
-			return true
-		prev_world = worlds[world_index - 2]
-	var last_stage_id = prev_world.stages[prev_world.stages.size() - 1]
-	return StageRecordManager.is_cleared(last_stage_id)
+	var world_id = worlds[world_index].id
+	# テストワールドは常にアンロック
+	if world_id == "world_test":
+		return true
+	return UnlockManager.is_unlocked("world." + world_id)
 
 ## ステージがアンロック済みか判定
 func _is_stage_unlocked(world_index: int, stage_index: int) -> bool:

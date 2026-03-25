@@ -21,6 +21,7 @@ extends Control
 # 右パネル - 所持情報
 @onready var _card_value: Label = $MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/CardRow/CardValue
 @onready var _deck_value: Label = $MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/DeckRow/DeckValue
+@onready var _map_value: Label = $MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/MapRow/MapValue
 
 # 右パネル - ログイン
 @onready var _streak_value: Label = $MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection/StreakRow/StreakValue
@@ -80,6 +81,10 @@ func _update_display():
 	var max_decks = GameData.player_data.get("max_decks", 6)
 	_deck_value.text = "%d / %d" % [deck_count, max_decks]
 
+	# マップ
+	var unlocked_maps = UnlockManager.get_unlocked_by_prefix("map.")
+	_map_value.text = "%d 種" % unlocked_maps.size()
+
 	# ログイン
 	_streak_value.text = "%d 日" % login.login_streak
 	_total_login_value.text = "%d 日" % login.total_login_days
@@ -130,7 +135,7 @@ func _on_character_change_pressed():
 
 	for char_id in GameData.PLAYABLE_CHARACTERS:
 		var char_data = GameData.PLAYABLE_CHARACTERS[char_id]
-		var is_unlocked = GameData.is_character_unlocked(char_id)
+		var is_unlocked = UnlockManager.is_unlocked("character." + char_id)
 		var is_selected = char_id == current_id
 
 		var btn = Button.new()
@@ -144,7 +149,9 @@ func _on_character_change_pressed():
 			btn.text = char_data.name
 			btn.pressed.connect(_on_character_selected.bind(char_id, dialog))
 		else:
-			btn.text = "%s\n🔒" % char_data.name
+			var condition = UnlockManager.get_condition_for_key("character." + char_id)
+			var lock_text = condition.get("lock_description", "???") if condition else "???"
+			btn.text = "%s\n🔒 %s" % [char_data.name, lock_text]
 			btn.disabled = true
 
 		grid.add_child(btn)

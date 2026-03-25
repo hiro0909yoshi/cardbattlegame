@@ -40,7 +40,7 @@ var player_data = {
 	# === アンロック情報 ===
 	"unlocks": {
 		"stages": [1],    # アンロック済みステージ（最初は1だけ）
-		"modes": ["story"] # アンロック済みモード
+		"keys": []        # UnlockManager管理の解放済みキー
 	},
 	
 	# === 統計情報 ===
@@ -75,8 +75,7 @@ var player_data = {
 
 	# === キャラクター ===
 	"character": {
-		"selected_id": "hero",           # 現在選択中のキャラクターID
-		"unlocked": ["hero"]             # 解放済みキャラクターIDリスト
+		"selected_id": "hero"            # 現在選択中のキャラクターID
 	},
 
 	# === 設定 ===
@@ -122,7 +121,7 @@ const PLAYABLE_CHARACTERS: Dictionary = {
 		"portrait_path": "",
 	},
 	"undead_monk": {
-		"name": "アンデッドモンク",
+		"name": "クレリック",
 		"model_path": "res://scenes/Characters/UndeadMonk.tscn",
 		"portrait_path": "",
 	},
@@ -177,21 +176,9 @@ func get_selected_character_portrait() -> String:
 	return get_selected_character().portrait_path
 
 
-## キャラクターが解放済みか
-func is_character_unlocked(char_id: String) -> bool:
-	return char_id in player_data.character.unlocked
-
-
-## キャラクターを解放
-func unlock_character(char_id: String) -> void:
-	if not is_character_unlocked(char_id):
-		player_data.character.unlocked.append(char_id)
-		save_to_file()
-
-
-## キャラクターを選択
+## キャラクターを選択（解放判定はUnlockManager経由）
 func select_character(char_id: String) -> bool:
-	if not is_character_unlocked(char_id):
+	if not UnlockManager.is_unlocked("character." + char_id):
 		return false
 	player_data.character.selected_id = char_id
 	save_to_file()
@@ -377,9 +364,25 @@ func _validate_save_data():
 		player_data["inventory"] = {}
 	if not player_data.has("character"):
 		player_data["character"] = {
-			"selected_id": "hero",
-			"unlocked": ["hero"]
+			"selected_id": "hero"
 		}
+
+	# unlocks.keys がなければ作成 + 既存データから移行
+	if not player_data.unlocks.has("keys"):
+		player_data.unlocks["keys"] = []
+
+	# character.unlocked → unlocks.keys に移行（旧セーブデータ互換）
+	if player_data.has("character") and player_data.character.has("unlocked"):
+		for char_id in player_data.character.unlocked:
+			var key = "character." + char_id
+			if key not in player_data.unlocks.keys:
+				player_data.unlocks.keys.append(key)
+		player_data.character.erase("unlocked")
+		print("[GameData] character.unlocked を unlocks.keys に移行完了")
+
+	# 旧 unlocks.modes → 削除（不要）
+	if player_data.unlocks.has("modes"):
+		player_data.unlocks.erase("modes")
 	if not player_data.has("login_bonus"):
 		player_data["login_bonus"] = {
 			"claimed_campaigns": [],

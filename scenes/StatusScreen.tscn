@@ -285,6 +285,19 @@ text = "デッキ数"
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 
+[node name="MapRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection"]
+layout_mode = 2
+
+[node name="MapKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/MapRow"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "マップ"
+
+[node name="MapValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/MapRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+
 [node name="Sep3" type="HSeparator" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
 

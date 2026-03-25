@@ -200,6 +200,11 @@ func _process_victory_result():
 	# バトル戦績更新
 	GameData.record_battle_result(true)
 
+	# アンロックチェック
+	var unlocked_items: Array[Dictionary] = []
+	unlocked_items.append_array(UnlockManager.on_stage_cleared(stage_id))
+	unlocked_items.append_array(UnlockManager.on_battle_finished())
+
 	# ゴールド付与
 	if rewards.total > 0:
 		GameData.add_gold(rewards.total)
@@ -220,7 +225,8 @@ func _process_victory_result():
 			"is_best_updated": record_result.is_best_updated,
 			"best_rank": record_result.best_rank,
 			"best_turn": record_result.best_turn,
-			"rewards": rewards
+			"rewards": rewards,
+			"unlocked_items": unlocked_items
 		}
 
 		# 勝利演出
@@ -256,6 +262,10 @@ func _process_defeat_result(reason: String):
 	# バトル戦績更新
 	GameData.record_battle_result(false)
 
+	# アンロックチェック（バトル回数系）
+	var unlocked_items: Array[Dictionary] = []
+	unlocked_items.append_array(UnlockManager.on_battle_finished())
+
 	# 報酬計算（敗北は0G）
 	var rewards = RewardCalculator.calculate_defeat_rewards()
 
@@ -266,7 +276,8 @@ func _process_defeat_result(reason: String):
 			"stage_name": current_stage_data.get("name", ""),
 			"turn_count": _get_current_turn(),
 			"defeat_reason": reason,
-			"rewards": rewards
+			"rewards": rewards,
+			"unlocked_items": unlocked_items
 		}
 
 		# 敗北演出
