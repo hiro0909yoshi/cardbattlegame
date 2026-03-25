@@ -104,7 +104,99 @@
 
 ---
 
-## 2026年3月24日（Session: ナビゲーター方向選択UI修正 + テスト警告全解消）
+## 2026年3月25日（Session: control_type基盤導入 + CPU切り替え機構）
+
+### 完了した作業
+
+#### player_control_types 基盤導入
+- ✅ GFM: `player_is_cpu: Array[bool]` → `_player_control_types: Array[String]`（"local"/"cpu"、将来"remote"）
+- ✅ 互換プロパティ: 外部11ファイルからの `player_is_cpu` 参照を維持（getter/setter変換）
+- ✅ `get_control_type(player_id)` 追加: 制御タイプを文字列で取得
+- ✅ `is_cpu_player()` を `get_control_type()` ベースに書き換え（既存互換維持）
+- ✅ GFM内のインライン判定3箇所を `is_cpu_player()` に統一
+
+#### CPU切り替え機構
+- ✅ `convert_to_cpu(player_id)` / `convert_to_local(player_id)`: フラグ変更のみ、即実行しない
+- ✅ 次のターン/フェーズ開始時に反映される安全設計
+
+#### テスト導線
+- ✅ `DebugSettings.test_cpu_takeover` トグル追加
+  - true時: ソロバトル/クエストでP2をローカル操作で開始
+- ✅ `game_3d.gd` / `quest_game.gd`: test_cpu_takeover時にplayer_is_cpu[1]=falseに上書き
+- ✅ DebugController: `C`キーでP2のcontrol_typeをトグル（cpu↔local、次フェーズから反映）
+
+#### CPU判定のGFM統一化
+- ✅ `tile_action_processor.gd`: インライン判定 → `game_flow_manager.is_cpu_player()` に統一
+- ✅ `board_system_3d.gd`: 同上（ドミニオボタン表示判定）
+- ✅ `discard_handler.gd`: GFM参照追加 + `is_cpu_player()` 統一
+- ✅ `_sync_board_cpu_flags()`: convert時にboard_system_3d/discard_handlerのコピーを同期
+- ✅ `_control_type_overridden`: 明示的convert呼び出しはmanual_control_allより優先
+
+#### 対戦モード通知自動進行
+- ✅ `GlobalCommentUI.battle_auto_advance`: 対戦モードで全コメント3秒自動進行
+- ✅ `SpellCastNotificationUI.battle_auto_advance`: スペル通知も同様に3秒自動進行
+- ✅ ソロバトル開始時に両UIに `battle_auto_advance = true` を設定
+- ✅ クエストモードは従来通り（クリック待ち + 7秒タイムアウト）
+- ✅ `force_click_wait` は対戦モードでは無視される設計
+
+#### バグ修正
+- ✅ `test_spell_player_move.gd`: PlayerData.buffs → direction_choice_pending 直接アクセスに修正（4箇所）
+
+#### CPU引き継ぎ時のデフォルトポリシー統一
+- ✅ `convert_to_cpu()` 時に `_apply_default_cpu_policy()` で "balanced" ポリシーを自動適用
+- ✅ プレイヤーキャラにはCPU設定がないため、統一デフォルトで対応
+- ✅ ネット対戦は全員人間スタート→切断者1人のみCPU化→ポリシー1つで十分
+- ✅ `docs/design/network_design.md` Phase 4 更新（実装済みマーク）
+
+### 設計判断
+- `player_is_remote` 配列は今回追加しない（ネットワーク入力待ちはサーバー実装時に作る）
+- 時間制限タイマーもネット対戦実装時に追加（convert_to_cpuが受け口になる）
+- 入力入口の1本化は将来のリファクタ対象
+- CPU引き継ぎポリシーは統一（"balanced"）: プレイヤーキャラにはCPU AI設定がないため
+
+### 📋 次のステップ
+- ネット対戦: Goリレーサーバー雛形 or NetworkService抽象レイヤー
+
+---
+
+## 2026年3月24日（Session 2: GameLoggerログ拡充 + PlayerData手入れ + MatchSnapshotBuilder）
+
+### 完了した作業
+
+#### GameLoggerログ拡充（STEP 1完了）
+- ✅ スペル使用時にスペル名・ID記録（選択確定はGameLog、選択開始はDebugLog）
+- ✅ バトル開始/結果にクリーチャー名・ID・アイテム名を記録
+- ✅ アイテム使用・合体をバトルログに記録
+- ✅ アルカナアーツ使用を記録（spell_idで識別、id:-1問題修正）
+- ✅ カードドロー名・IDを記録（STEP 2から前倒し）
+- ✅ ドミニオコマンドにレベル情報追加
+- ✅ ゲーム終了ログ追加（勝利/敗北+ラウンド数 — STEP 1最後の欠落）
+- ✅ GameLog/DebugLog分離方針をlogger_system.mdに記載
+- ✅ 構造化ログ・turn・action_idはSTEP 6（ネットワーク対戦時）で対応する方針を記載
+
+#### PlayerData周辺の手入れ（設計書の既知問題3件修正）
+- ✅ `destroyed_count` 削除: PlayerDataでは未使用、LapSystem.destroy_countが正
+- ✅ `magic_power`/`target_magic` デフォルト値を0に変更（initialize_players()で上書きされるため）
+- ✅ `buffs: Dictionary` → `direction_choice_pending: bool` に変更（10箇所書き換え）
+  - PlayerData.buffsは"direction_choice_pending"フラグ専用だった
+  - PlayerBuffSystem.player_buffsとは用途が完全に異なることを確認
+
+#### MatchSnapshotBuilder 作成
+- ✅ `scripts/system_manager/match_snapshot_builder.gd` 新規作成
+  - `get_player_snapshot(player_id)`: PlayerSystem + LapSystem + BuffSystem + SpellState + CardSystem から集約
+  - `get_match_snapshot()`: 全プレイヤー + ボード + ターン + 世界刻印 + 破壊カウント
+  - 各システムからデータを「集めるだけ」。状態変更は一切行わない
+- ✅ GameSystemManager に組み込み（Phase 6後に_setup_snapshot_builder()実行）
+- ✅ player_data_design.md にAPI・データソースマッピング・将来用途を記載
+
+### 📋 次のステップ
+
+- エフェクト作成ブランチの本来タスクへ
+- 残りスペルテスト3件（スペル借用系2、ミリティア1）
+
+---
+
+## 2026年3月24日（Session 1: ナビゲーター方向選択UI修正 + テスト警告全解消）
 
 ### 完了した作業
 

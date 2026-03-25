@@ -25,7 +25,22 @@ var current_phase = GamePhase.SETUP
 
 # 3D用変数
 var board_system_3d: BoardSystem3D = null
-var player_is_cpu = []
+
+# プレイヤー制御タイプ（"local" / "cpu"、将来 "remote" 追加予定）
+var _player_control_types: Array[String] = []
+var _control_type_overridden: Dictionary = {}  # player_id -> true: convert_to_*で明示変更済み
+
+# 互換プロパティ: 外部から player_is_cpu として参照可能
+var player_is_cpu: Array:
+	get:
+		var result: Array = []
+		for ct in _player_control_types:
+			result.append(ct == "cpu")
+		return result
+	set(value):
+		_player_control_types.clear()
+		for is_cpu in value:
+			_player_control_types.append("cpu" if is_cpu else "local")
 
 # チュートリアルモード（CPUは常にバトルを仕掛ける）
 var is_tutorial_mode: bool = false
@@ -236,7 +251,7 @@ func start_game():
 
 	# 全プレイヤーに方向選択権を付与（ゲームスタート時）
 	for player in player_system.players:
-		player.buffs["direction_choice_pending"] = true
+		player.direction_choice_pending = true
 
 	change_phase(GamePhase.DICE_ROLL)
 	start_turn()
@@ -254,8 +269,10 @@ func start_turn():
 	if not _is_tutorial_mode():
 		if spell_container and spell_container.spell_draw:
 			var drawn = spell_container.spell_draw.draw_one(current_player.id)
-			if not drawn.is_empty() and current_player.id == 0:
-				await get_tree().create_timer(0.1).timeout
+			if not drawn.is_empty():
+				GameLogger.info("GFM", "ドロー: P%d %s(id:%d)" % [current_player.id + 1, drawn.get("name", "?"), drawn.get("id", -1)])
+				if current_player.id == 0:
+					await get_tree().create_timer(0.1).timeout
 		else:
 			GameLogger.error("GFM", "ターン開始: spell_draw が初期化されていません (P%d)" % (current_player.id + 1))
 	
@@ -282,7 +299,7 @@ func start_turn():
 		return
 	
 	# CPUターンの場合（デバッグモードでは無効化可能）
-	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not DebugSettings.manual_control_all
+	var is_cpu_turn = is_cpu_player(current_player.id)
 	if is_cpu_turn:
 		if _ui_set_phase_text_cb.is_valid():
 			_ui_set_phase_text_cb.call("CPUのターン...")
@@ -582,7 +599,7 @@ func check_and_handle_bankruptcy():
 		return
 	
 	# CPUかどうか判定
-	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index]
+	var is_cpu = is_cpu_player(current_player_index)
 
 	# Logger埋め込み
 	var player_ep = player_system.players[current_player_index].magic_power if current_player_index < player_system.players.size() else 0
@@ -734,10 +751,7 @@ func _update_camera_mode(phase: GamePhase):
 func _is_current_player_human() -> bool:
 	if not player_system:
 		return true
-	var current_id = player_system.current_player_index
-	if current_id < 0 or current_id >= player_is_cpu.size():
-		return true
-	return not player_is_cpu[current_id]
+	return not is_cpu_player(player_system.current_player_index)
 
 
 # ============================================================
@@ -812,12 +826,54 @@ func _check_turn_limit() -> bool:
 		return game_result_handler.check_turn_limit()
 	return false
 
-## CPUプレイヤーかどうかを判定（統一メソッド）
-func is_cpu_player(player_id: int) -> bool:
+## プレイヤーの制御タイプを取得（"local" / "cpu" / 将来 "remote"）
+## convert_to_*で明示変更された場合はmanual_control_allより優先
+func get_control_type(player_id: int) -> String:
+	if player_id < 0 or player_id >= _player_control_types.size():
+		return "local"
+	# 明示的にconvert_to_*で変更された場合はそちらを優先
+	if _control_type_overridden.has(player_id):
+		return _player_control_types[player_id]
 	if DebugSettings.manual_control_all:
-		return false  # デバッグモードでは全員手動
+		return "local"
+	return _player_control_types[player_id]
 
-	return player_id < player_is_cpu.size() and player_is_cpu[player_id]
+## CPUプレイヤーかどうかを判定（統一メソッド・既存互換）
+func is_cpu_player(player_id: int) -> bool:
+	return get_control_type(player_id) == "cpu"
+
+## 制御タイプをCPUに変更（次のターン/フェーズ開始時に反映）
+## "balanced"ポリシーを自動適用（プレイヤーキャラにはCPU設定がないため）
+func convert_to_cpu(player_id: int) -> void:
+	if player_id >= 0 and player_id < _player_control_types.size():
+		_player_control_types[player_id] = "cpu"
+		_control_type_overridden[player_id] = true
+		_apply_default_cpu_policy()
+		_sync_board_cpu_flags()
+		GameLogger.info("Game", "P%d: control_type → cpu (balanced policy)" % [player_id + 1])
+
+## 制御タイプをローカルに変更（再接続用）
+func convert_to_local(player_id: int) -> void:
+	if player_id >= 0 and player_id < _player_control_types.size():
+		_player_control_types[player_id] = "local"
+		_control_type_overridden[player_id] = true
+		_sync_board_cpu_flags()
+		GameLogger.info("Game", "P%d: control_type → local" % [player_id + 1])
+
+## CPU切り替え時にデフォルトポリシー（balanced）を適用
+## ネット対戦では全員人間スタートなので、切断者のCPU化時に統一ポリシーで上書き
+func _apply_default_cpu_policy() -> void:
+	if board_system_3d and board_system_3d.cpu_ai_handler:
+		board_system_3d.cpu_ai_handler.set_battle_policy_preset("balanced")
+		GameLogger.info("Game", "CPU引き継ぎ: balancedポリシー適用")
+
+## 外部システムのplayer_is_cpuコピーを同期
+func _sync_board_cpu_flags() -> void:
+	var flags = player_is_cpu
+	if board_system_3d:
+		board_system_3d.player_is_cpu = flags
+	if discard_handler and "player_is_cpu" in discard_handler:
+		discard_handler.player_is_cpu = flags
 
 ## Day 3 追加: BoardSystem3D からの creature_updated を受信・リレー
 func _on_creature_updated_from_board(tile_index: int, creature_data: Dictionary):

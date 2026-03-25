@@ -63,6 +63,10 @@ var waiting_for_click: bool = false
 ## クリック待ちの最大時間（秒）
 var click_wait_timeout: float = 7.0
 
+## 対戦モード: 全通知を自動進行（クリック不要）
+var battle_auto_advance: bool = false
+var battle_auto_advance_delay: float = 3.0
+
 ## タイムアウト用タイマー
 var timeout_timer: Timer = null
 
@@ -74,23 +78,27 @@ func show_notification_and_wait(message: String) -> void:
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 	
-	# テキスト設定（中央揃え + クリック待ちの案内）
-	var text = "[center]" + message + "\n\n[color=gray][クリックで次へ][/color][/center]"
+	# テキスト設定（中央揃え + ヒント）
+	var hint = "[color=gray][自動進行][/color]" if battle_auto_advance else "[color=gray][クリックで次へ][/color]"
+	var text = "[center]" + message + "\n\n" + hint + "[/center]"
 	label.text = text
-	
+
 	# 表示
 	modulate.a = 1.0
 	visible = true
 	waiting_for_click = true
-	
+
 	# マウス入力を受け付ける
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	
+
 	# パネルを中央に配置（座標計算）
 	_center_panel()
-	
-	# タイムアウトタイマー開始
-	_start_timeout_timer()
+
+	# 対戦モード: 3秒自動進行、通常: クリック待ち(7秒タイムアウト)
+	if battle_auto_advance:
+		_start_battle_auto_advance_timer()
+	else:
+		_start_timeout_timer()
 
 ## パネルを画面中央に配置
 func _center_panel():
@@ -126,13 +134,22 @@ func show_notification(caster_name: String, target_name: String, effect_name: St
 
 ## タイムアウトタイマーを開始
 func _start_timeout_timer():
-	# 既存タイマーを停止
 	_stop_timeout_timer()
-	
-	# 新しいタイマーを作成
+
 	timeout_timer = Timer.new()
 	timeout_timer.one_shot = true
 	timeout_timer.wait_time = click_wait_timeout
+	timeout_timer.timeout.connect(_on_timeout)
+	add_child(timeout_timer)
+	timeout_timer.start()
+
+## 対戦モード自動進行タイマー（3秒）
+func _start_battle_auto_advance_timer():
+	_stop_timeout_timer()
+
+	timeout_timer = Timer.new()
+	timeout_timer.one_shot = true
+	timeout_timer.wait_time = battle_auto_advance_delay
 	timeout_timer.timeout.connect(_on_timeout)
 	add_child(timeout_timer)
 	timeout_timer.start()

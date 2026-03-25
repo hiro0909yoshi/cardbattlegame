@@ -47,7 +47,8 @@ func _ready():
 
 	# ソロバトル準備画面からの設定があればそちらを使用
 	var stage_data: Dictionary = {}
-	if GameData.has_meta("solo_battle_config"):
+	var is_solo_battle = GameData.has_meta("solo_battle_config")
+	if is_solo_battle:
 		var config = GameData.get_meta("solo_battle_config")
 		GameData.remove_meta("solo_battle_config")
 		var built_stage = _build_stage_from_config(config)
@@ -63,7 +64,12 @@ func _ready():
 	# 設定を取得
 	player_count = stage_loader.get_player_count()
 	player_is_cpu = stage_loader.get_player_is_cpu()
-	
+
+	# CPU切り替えテスト: プレイヤー2をローカル人間として開始
+	if DebugSettings.test_cpu_takeover and player_is_cpu.size() > 1:
+		player_is_cpu[1] = false
+		print("[Game3D] test_cpu_takeover: P2をローカル操作で開始")
+
 	print("[Game3D] ステージ: %s, プレイヤー数: %d" % [stage_id, player_count])
 	
 	# 3Dシーンを事前に構築（GameSystemManager が収集できるように）
@@ -80,6 +86,15 @@ func _ready():
 		DebugSettings.manual_control_all
 	)
 	
+	# ソロバトル（対戦モード）: 全通知を3秒自動進行に設定
+	if is_solo_battle:
+		var ui_mgr = system_manager.ui_manager if system_manager else null
+		if ui_mgr and ui_mgr.global_comment_ui:
+			ui_mgr.global_comment_ui.battle_auto_advance = true
+		var sph = system_manager.game_flow_manager.spell_phase_handler if system_manager and system_manager.game_flow_manager else null
+		if sph and sph.spell_cast_notification_ui:
+			sph.spell_cast_notification_ui.battle_auto_advance = true
+
 	# ステージ固有の設定を適用
 	_apply_stage_settings()
 

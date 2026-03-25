@@ -16,6 +16,7 @@ var cpu_hand_utils = null  # CPU手札ユーティリティ（直接注入）
 
 # CPU判定用
 var player_is_cpu = []
+var game_flow_manager = null  # GFM参照（is_cpu_player統一判定用）
 
 ## セットアップメソッド
 func setup(p_player_system, p_card_system, p_spell_phase_handler, p_player_is_cpu: Array = []):
@@ -46,8 +47,8 @@ func check_and_discard_excess_cards(player_id: int = -1):
 	var cards_to_discard = hand_size - GameConstants.MAX_HAND_SIZE
 	print("手札調整が必要: ", hand_size, "枚 → 6枚（", cards_to_discard, "枚捨てる）")
 
-	# CPUの場合はレートの低いカードから捨てる（デバッグモードでは無効化）
-	var is_cpu = player_id < player_is_cpu.size() and player_is_cpu[player_id] and not DebugSettings.manual_control_all
+	# CPUの場合はレートの低いカードから捨てる
+	var is_cpu = game_flow_manager.is_cpu_player(player_id) if game_flow_manager else (player_id < player_is_cpu.size() and player_is_cpu[player_id] and not DebugSettings.manual_control_all)
 	if is_cpu:
 		if cpu_hand_utils:
 			cpu_hand_utils.discard_excess_cards_by_rate(player_id, GameConstants.MAX_HAND_SIZE)

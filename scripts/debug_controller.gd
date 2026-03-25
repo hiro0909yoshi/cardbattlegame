@@ -33,7 +33,7 @@ var card_id_input: LineEdit = null
 
 func _ready():
 	if enabled and OS.is_debug_build():
-		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4")
+		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4 | C:CPU切替")
 
 	# カード追加ダイアログを作成
 	create_card_input_dialog()
@@ -120,6 +120,20 @@ func _input(event):
 				clear_current_player_down_states()
 			KEY_L:
 				set_current_tile_level_4()
+			KEY_C:
+				toggle_cpu_for_player_2()
+
+# CPU切り替え（P2のcontrol_typeをトグル）
+func toggle_cpu_for_player_2():
+	if not game_flow_manager:
+		return
+	var player_id = 1  # P2
+	if game_flow_manager.get_control_type(player_id) == "cpu":
+		game_flow_manager.convert_to_local(player_id)
+		print("【デバッグ】P2 → ローカル操作（次のフェーズから反映）")
+	else:
+		game_flow_manager.convert_to_cpu(player_id)
+		print("【デバッグ】P2 → CPU操作（次のフェーズから反映）")
 
 # カードID入力ダイアログを表示
 func show_card_input_dialog():

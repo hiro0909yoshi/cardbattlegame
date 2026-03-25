@@ -40,6 +40,11 @@ func _ready():
 	player_count = stage_loader.get_player_count()
 	player_is_cpu = stage_loader.get_player_is_cpu()
 
+	# CPU切り替えテスト: プレイヤー2をローカル人間として開始
+	if DebugSettings.test_cpu_takeover and player_is_cpu.size() > 1:
+		player_is_cpu[1] = false
+		print("[QuestGame] test_cpu_takeover: P2をローカル操作で開始")
+
 	print("[QuestGame] ステージ: %s, プレイヤー数: %d" % [stage_id, player_count])
 
 	# 3Dシーンを事前に構築（GameSystemManager が収集できるように）

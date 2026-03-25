@@ -164,8 +164,8 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 		if special_tile_system:
 			await special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
 
-	# CPUかプレイヤーかで分岐
-	var is_cpu_turn = player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
+	# CPUかプレイヤーかで分岐（GFMの統一判定を使用）
+	var is_cpu_turn = game_flow_manager.is_cpu_player(current_player_index) if game_flow_manager else (player_is_cpu[current_player_index] and not DebugSettings.manual_control_all)
 	if is_cpu_turn:
 		_process_cpu_tile(tile, tile_info, current_player_index)
 	else:
@@ -455,8 +455,7 @@ func _complete_action():
 
 	# カメラを追従モードに戻す（人間プレイヤーのみ）
 	var current_idx = board_system.current_player_index if board_system else 0
-	var cpu_flags = game_flow_manager.player_is_cpu if game_flow_manager else []
-	var is_cpu = cpu_flags[current_idx] if current_idx < cpu_flags.size() else false
+	var is_cpu = game_flow_manager.is_cpu_player(current_idx) if game_flow_manager else false
 	if board_system and not is_cpu:
 		board_system.enable_follow_camera()
 		board_system.return_camera_to_player()

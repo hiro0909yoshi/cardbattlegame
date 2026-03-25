@@ -64,6 +64,9 @@ var cpu_spell_phase_handler: CPUSpellPhaseHandler = null
 # === CPU Spell AI Container ===
 var cpu_spell_ai_container: CPUSpellAIContainerScript = null
 
+# === スナップショットビルダー ===
+var snapshot_builder: MatchSnapshotBuilder = null
+
 # === 設定 ===
 var player_count: int = 2
 var player_is_cpu: Array = [false, true]
@@ -107,6 +110,8 @@ func initialize_all(p_node: Node, p_count: int, p_is_cpu: Array, debug_mode: boo
 	print("[GameSystemManager] Phase 5 完了: シグナル接続")
 	phase_6_prepare_game_start()
 	print("[GameSystemManager] Phase 6 完了: ゲーム開始準備")
+
+	_setup_snapshot_builder()
 
 	is_initialized = true
 	print("[GameSystemManager] 初期化完了")
@@ -964,6 +969,7 @@ func _initialize_phase1a_handlers() -> void:
 	game_flow_manager.add_child(discard_handler)
 	discard_handler.setup(player_system, card_system, spell_phase_handler, player_is_cpu)
 	discard_handler.cpu_hand_utils = cpu_hand_utils  # CPU手札ユーティリティ直接注入（SPHパススルー廃止）
+	discard_handler.game_flow_manager = game_flow_manager
 	game_flow_manager.discard_handler = discard_handler
 
 	# Phase 6-C: DiscardHandler UI Signal接続
@@ -1781,3 +1787,24 @@ func _inject_tap_target_manager() -> void:
 	# SpellMysticArts に注入
 	if game_flow_manager and game_flow_manager.spell_container and game_flow_manager.spell_container.spell_mystic_arts:
 		game_flow_manager.spell_container.spell_mystic_arts._tap_target_manager = ttm
+
+
+## MatchSnapshotBuilder のセットアップ
+func _setup_snapshot_builder() -> void:
+	snapshot_builder = MatchSnapshotBuilder.new()
+
+	var spell_state = null
+	if game_flow_manager and game_flow_manager.spell_phase_handler:
+		spell_state = game_flow_manager.spell_phase_handler.spell_state
+
+	var lap_sys = game_flow_manager.lap_system if game_flow_manager else null
+
+	snapshot_builder.setup(
+		player_system,
+		lap_sys,
+		player_buff_system,
+		spell_state,
+		card_system,
+		board_system_3d,
+		game_flow_manager,
+	)

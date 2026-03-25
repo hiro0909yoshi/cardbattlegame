@@ -608,7 +608,7 @@ func _on_movement_completed(player_id: int, final_tile: int):
 
 	# 移動完了後、ドミニオコマンドボタンを表示（人間プレイヤーのみ）
 	# Item 1: Callable駆動化
-	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
+	var is_cpu = game_flow_manager.is_cpu_player(current_player_index) if game_flow_manager else (current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index])
 	if not is_cpu and _show_dominio_btn_cb.is_valid():
 		_show_dominio_btn_cb.call()
 	elif _hide_dominio_btn_cb.is_valid():

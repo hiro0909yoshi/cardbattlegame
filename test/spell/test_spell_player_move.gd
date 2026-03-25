@@ -246,7 +246,7 @@ func test_warp_to_target_success():
 	# プレイヤー位置が更新されている
 	assert_eq(_player_system.players[0].current_tile, 5, "current_tile更新")
 	# 方向選択権が付与されている
-	assert_true(_player_system.players[0].buffs.has("direction_choice_pending"),
+	assert_true(_player_system.players[0].direction_choice_pending,
 		"方向選択権付与")
 
 
@@ -272,7 +272,7 @@ func test_warp_to_target_same_tile():
 func test_grant_direction_choice():
 	_spell_move.grant_direction_choice(0)
 
-	assert_true(_player_system.players[0].buffs.has("direction_choice_pending"),
+	assert_true(_player_system.players[0].direction_choice_pending,
 		"方向選択権付与")
 
 
@@ -295,7 +295,7 @@ func test_available_directions_normal():
 
 ## 方向選択権あり: 両方向
 func test_available_directions_with_choice():
-	_player_system.players[0].buffs["direction_choice_pending"] = true
+	_player_system.players[0].direction_choice_pending = true
 
 	var dirs = _spell_move.get_available_directions(0)
 	assert_eq(dirs, [1, -1], "選択権あり: 両方向")
@@ -315,12 +315,12 @@ func test_available_directions_reversed():
 
 ## バフが消費される
 func test_consume_direction_choice():
-	_player_system.players[0].buffs["direction_choice_pending"] = true
-	assert_true(_player_system.players[0].buffs.has("direction_choice_pending"), "前提: 選択権あり")
+	_player_system.players[0].direction_choice_pending = true
+	assert_true(_player_system.players[0].direction_choice_pending, "前提: 選択権あり")
 
 	_spell_move.consume_direction_choice(0)
 
-	assert_false(_player_system.players[0].buffs.has("direction_choice_pending"), "消費後: 選択権なし")
+	assert_false(_player_system.players[0].direction_choice_pending, "消費後: 選択権なし")
 
 
 ## 選択権がない状態で消費してもクラッシュしない

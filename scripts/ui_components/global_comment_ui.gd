@@ -26,6 +26,10 @@ var timeout_timer: Timer = null
 var game_flow_manager_ref = null
 var cpu_auto_advance_delay: float = 0.5  # CPUの場合の自動進行遅延（秒）
 
+## 対戦モード: 全コメントを自動進行（クリック待ちなし）
+var battle_auto_advance: bool = false
+var battle_auto_advance_delay: float = 3.0  # 対戦モードの自動進行遅延（秒）
+
 ## チュートリアルモード用
 var is_tutorial_style: bool = false
 
@@ -119,24 +123,28 @@ func show_and_wait(message: String, player_id: int = -1, force_click_wait: bool 
 	
 	# CPUターンかどうかを判定（force_click_waitがtrueなら強制的にクリック待ち）
 	var is_cpu_turn = _is_current_player_cpu(player_id) and not force_click_wait
-	
+	# 対戦モード: force_click_waitも含め全コメントを自動進行
+	var is_auto = is_cpu_turn or battle_auto_advance
+
 	# テキスト設定（中央揃え + クリック待ちの案内）
-	var hint_text = "[color=gray][自動進行][/color]" if is_cpu_turn else "[color=gray][クリックで次へ][/color]"
+	var hint_text = "[color=gray][自動進行][/color]" if is_auto else "[color=gray][クリックで次へ][/color]"
 	var text = "[center]" + message + "\n\n" + hint_text + "[/center]"
 	label.text = text
-	
+
 	modulate.a = 1.0
 	visible = true
 	waiting_for_click = true
-	
+
 	if is_tutorial_style:
 		_position_panel_top()
 	else:
 		_center_panel()
-	
-	# CPUターンの場合は短い遅延後に自動進行、人間の場合は通常のタイムアウト
+
+	# 自動進行: CPU=0.5秒、対戦モード=3秒、人間=クリック待ち(7秒タイムアウト)
 	if is_cpu_turn:
 		_start_cpu_auto_advance_timer()
+	elif battle_auto_advance:
+		_start_battle_auto_advance_timer()
 	else:
 		_start_timeout_timer()
 	
@@ -168,10 +176,21 @@ func _is_current_player_cpu(player_id: int = -1) -> bool:
 ## CPU自動進行タイマーを開始
 func _start_cpu_auto_advance_timer():
 	_stop_timeout_timer()
-	
+
 	timeout_timer = Timer.new()
 	timeout_timer.one_shot = true
 	timeout_timer.wait_time = cpu_auto_advance_delay
+	timeout_timer.timeout.connect(_on_timeout)
+	add_child(timeout_timer)
+	timeout_timer.start()
+
+## 対戦モード自動進行タイマーを開始（3秒）
+func _start_battle_auto_advance_timer():
+	_stop_timeout_timer()
+
+	timeout_timer = Timer.new()
+	timeout_timer.one_shot = true
+	timeout_timer.wait_time = battle_auto_advance_delay
 	timeout_timer.timeout.connect(_on_timeout)
 	add_child(timeout_timer)
 	timeout_timer.start()

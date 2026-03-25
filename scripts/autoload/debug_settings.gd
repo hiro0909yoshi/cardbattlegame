@@ -33,6 +33,9 @@ var signal_registry_debug: bool = true
 ## 課金石を表示する（false=非表示、公開時にtrueに変更）
 var show_premium_stone: bool = true
 
+## CPU切り替えテスト（true=ソロバトルでCPU1を人間操作で開始、途中CPU切り替え可能）
+var test_cpu_takeover: bool = false
+
 func _ready():
 	# デフォルト値を設定（必要に応じて環境変数やコマンドライン引数から読み込み可能）
 	pass
