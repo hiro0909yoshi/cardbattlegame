@@ -171,10 +171,11 @@ theme_override_constants/separation = 5
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="PlayerNameLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
+[node name="PlayerNameButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 72
 text = "プレイヤー名"
+flat = true
 
 [node name="ResetGoldButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2

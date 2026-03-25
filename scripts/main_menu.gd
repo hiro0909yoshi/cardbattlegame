@@ -15,8 +15,7 @@ extends Control
 @onready var _settings_icon_button: Button = $MainVBox/TopBar/TopBarMargin/TopBarHBox/RightIcons/SettingsButton
 
 # 左パネル（タップでステータス画面へ）
-@onready var _left_panel: Control = $MainVBox/ContentArea/LeftPanel
-@onready var _player_name_label: Label = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameLabel
+@onready var _player_name_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameButton
 @onready var _character_rect: TextureRect = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterRect
 
 # 右パネル（メインボタン）
@@ -51,8 +50,8 @@ func _ready():
 	_gold_plus_button.pressed.connect(_on_gold_plus_pressed)
 	_stone_plus_button.pressed.connect(_on_stone_plus_pressed)
 
-	# 左パネルのクリック検出
-	_left_panel.gui_input.connect(_on_left_panel_input)
+	# プレイヤー名タップでステータス画面
+	_player_name_button.pressed.connect(_on_player_name_pressed)
 
 	# ユーザー情報を表示
 	_update_user_info()
@@ -140,8 +139,8 @@ func _setup_top_bar_style():
 
 func _update_user_info():
 	# 左パネル
-	if _player_name_label:
-		_player_name_label.text = GameData.player_data.profile.name
+	if _player_name_button:
+		_player_name_button.text = GameData.player_data.profile.name
 	if _character_rect:
 		var texture = load("res://assets/images/characters/marion.png")
 		if texture:
@@ -369,6 +368,5 @@ func _on_stone_plus_pressed():
 	print("課金石購入（未実装）")
 
 
-func _on_left_panel_input(event: InputEvent):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		print("ステータス画面へ（未実装）")
+func _on_player_name_pressed():
+	get_tree().change_scene_to_file("res://scenes/StatusScreen.tscn")
