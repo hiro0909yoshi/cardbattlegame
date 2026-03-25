@@ -12,51 +12,42 @@
 
 ---
 
-## 2026年3月20日（Session: GUT自動テスト導入 - バトルアイテムテスト）
+## 2026年3月25日（Session: プレイヤーアカウント設計）
 
 ### 完了した作業
 
-#### GUT環境セットアップ
-- ✅ GUT v9.5.0 導入（v9.3.0→v9.6.0試行→v9.5.0に落ち着く。v9.6.0はGodot 4.6専用）
-- ✅ `.gutconfig.json` 設定（test/unit, test/battle ディレクトリ）
-- ✅ Phase 1: `test_rank_calculator.gd` 8テスト全パス確認
+#### CPU AIポリシー統一
+- ✅ `game_flow_manager.gd` に `_apply_default_cpu_policy()` 追加（切断時balancedポリシー自動適用）
+- ✅ `network_design.md` に実装済み基盤の記載追加
 
-#### Phase 2: バトルアイテムテスト（30アイテム確定）
-- ✅ テスト対象アイテム48個を選定（全75アイテムからバニラクリーチャーでテスト可能なものを抽出）
-- ✅ 全48アイテムの結果出力テスト作成・実行（攻撃側・防御側各48バトル）
-- ✅ 出力結果を手動検証し、30アイテムをOK確定
-- ✅ `test_battle_basic.gd` に30アイテム×攻防=60テスト、各6アサート（AP/HP/勝者/付与スキル）=計380アサート
-- ✅ 全68テスト、380アサート、全パス（0.422秒）
-- ✅ `docs/specs/gut_test_spec.md` 更新（Phase 2詳細、保留アイテム一覧、既知の問題点）
+#### プレイヤーアカウント設計（`docs/design/player_account_design.md`）
+- ✅ プレイヤーデータ3層分類（Core/Sub/Local）
+- ✅ アカウント認証設計（ゲスト→登録フロー、DB 7テーブル、API設計）
+- ✅ 外部フィードバック5項目適用:
+  - 楽観ロック（versionフィールド）
+  - match_history肥大化対策（100件制限+ページング）
+  - 一括同期方針（bulk save + 通貨操作のみ個別API）
+  - JWTデュアルトークン（access 30分 + refresh 14日）
+  - device_id利用ルール（識別専用、認証に使わない）
+- ✅ セキュリティ詳細追加:
+  - ログイン時トークン発行フロー（5ステップ）
+  - APIリクエスト検証フロー
+  - 不正状態ハンドリング（5ケース対応表 + クライアント401処理）
+  - 1端末同時ログインポリシー
+  - 将来拡張性（複数端末・セッション一覧・強制ログアウト）
 
-#### MockBoard設計: ボード再現型テスト基盤
-- ✅ `BattleTestConfig` に `board_layout` / `battle_tile_index` 追加（旧 `attacker_board_tiles` 等と後方互換）
-- ✅ `BattleTestExecutor` に `_setup_mock_board()` 実装: ダイアモンドボード20タイルをメモリ上に再現
-  - `DEFAULT_TILE_TYPES` / `TILE_POSITIONS` 定数でボード構造定義
-  - `TileNeighborSystem` の隣接キャッシュ自動構築（座標ベース、距離4.0/閾値4.5）
-  - `MockTile` に `tile_index`, `global_position`, `connections` 追加
-- ✅ `test_battle_basic.gd` を `board_layout` 形式に移行（隣接スキル検証可能な配置）
-- ✅ 全82テスト、464アサート、全パス（0.6秒）
+#### キャラクター選択・カスタマイズ設計
+- ✅ 解放方式3種（初期/クエストクリア/購入）
+- ✅ マスターデータ拡張方針（characters.jsonにplayable_characters追加）
+- ✅ GameData拡張（character.selected_id + character.unlocked）
+- ✅ backend_design.mdの既存テーブル（user_unlocked_characters）と統合
+- ✅ 全16体の3Dモデル一覧記録
 
-#### 検証で発見した問題点（前セッションより引継ぎ）
-- 🐛 `_diff_skill_state()` が `has_item_first_strike` を検出しない → 先制4アイテムのスキル表示欠落
-- 🐛 `same_creature_count_check` 等の条件判定がmock環境で正しく評価されない（2アイテム）
-
-#### 保留アイテム全解決（11アイテム追加、102テスト全パス）
-- ✅ 先制スキル表示修正: `_diff_skill_state()` に `has_first_strike` チェック追加 → 4アイテム（1000,1003,1013,1028）確定
-- ✅ 条件判定アイテム: MockBoardで正常動作確認 → 2アイテム（1015,1022）確定
-- ✅ 連鎖数・手札数依存: MockBoard連鎖数 + MockCardSystem手札5枚 → 2アイテム（1034,1055）確定
-- ✅ 非決定的アイテム: 範囲チェック/変身確認 → 3アイテム（1027,1041,1047）確定
-- ✅ 復帰効果: Executorに `SkillItemReturn.check_and_apply_item_return()` 呼び出し追加 → 3アイテム（1005,1030,1054）復帰先検証
-
-#### バグ修正: グールブラスト変身後の術攻撃AP消失
-- ✅ 原因: `_transform_creature()` がcreature_dataを丸ごと置換→アイテム巻物のAP・術攻撃キーワード消失
-- ✅ 修正: `battle_skill_processor.gd` に `_reapply_scroll_after_transform()` 追加
-- ✅ 変身後もAP50維持、バトルスクリーン表示も更新済み
-
-#### 追加アイテムテスト（6アイテム + 否定テスト、115テスト全パス）
-- ✅ 6アイテム追加: ペトリファクト(1059)、アダマンタイト(1032)、スペクトルワンド(1057)、コモンズブレイド(1056)、カメレオンクローク(1045)、デスペラード(1048)
-- ✅ コモンズブレイド否定テスト: Sレアリティ(エターナガード)使用時に強化が発動しないことを確認
+### 次のステップ
+- サーバー実装（Go リレーサーバー + 認証API）
+- クライアント実装（AuthManager, DataSyncManager）
+- GameData リファクタ（core/sub/local 分離）
+- キャラクター選択UI実装
 
 #### バグ修正: skill_conditions内のuser_rarity条件が付与時チェックされない
 - ✅ 原因: `battle_item_applier._apply_grant_skill()` が `condition`（辞書）のみチェックし `skill_conditions`（配列）を無視
