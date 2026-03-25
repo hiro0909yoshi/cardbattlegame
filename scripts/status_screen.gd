@@ -62,18 +62,18 @@ func _update_display():
 			_character_rect.texture = texture
 
 	# 基本情報
-	_gold_value.text = str(profile.gold)
-	_stone_value.text = str(GameData.get_stone())
+	_gold_value.text = "%d" % int(profile.gold)
+	_stone_value.text = "%d" % int(GameData.get_stone())
 	_stamina_value.text = "%d / %d" % [GameData.get_stamina(), GameData.get_stamina_max()]
 
 	# 戦績
-	_battle_value.text = str(stats.total_battles)
-	_win_loss_value.text = "%d / %d" % [stats.wins, stats.losses]
+	_battle_value.text = "%d" % int(stats.total_battles)
+	_win_loss_value.text = "%d / %d" % [int(stats.wins), int(stats.losses)]
 	var win_rate = 0.0
-	if stats.total_battles > 0:
+	if int(stats.total_battles) > 0:
 		win_rate = float(stats.wins) / float(stats.total_battles) * 100.0
 	_win_rate_value.text = "%.1f%%" % win_rate
-	_story_clear_value.text = str(stats.story_cleared)
+	_story_clear_value.text = "%d" % int(stats.story_cleared)
 
 	# 所持情報
 	var owned_cards = UserCardDB.get_all_obtained_cards()
