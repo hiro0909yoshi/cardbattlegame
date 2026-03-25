@@ -12,6 +12,39 @@
 
 ---
 
+## 2026年3月25日（Session: 統一アンロックシステム実装）
+
+### 完了した作業
+
+#### UnlockManager実装
+- ✅ `scripts/autoload/unlock_manager.gd` 新規作成 — キーベース・イベント駆動の統一アンロック管理
+- ✅ `data/master/unlock_conditions.json` 新規作成 — 12条件（always/stage_clear/purchase）
+- ✅ project.godot にAutoload登録
+
+#### 既存システム移行
+- ✅ `game_data.gd`: character.unlocked廃止 → unlocks.keys移行 + _validate_save_dataマイグレーション
+- ✅ `gacha_system.gd`: UNLOCK_CONDITIONS廃止 → UnlockManager委譲
+- ✅ `shop.gd`: ガチャボタンのロック表示をUnlockManager対応
+- ✅ `world_stage_select.gd`: ワールド解放をUnlockManager対応
+- ✅ `game_result_handler.gd`: 勝敗時にUnlockManager通知追加
+- ✅ `result_screen.gd`: 統一アンロック通知表示
+
+#### マップ・キャラフィルタ
+- ✅ ソロバトル/ネット対戦/設定マッププレビュー — 解放済みマップのみ表示
+- ✅ ソロバトルキャラ選択 — 解放済みキャラのみ表示
+- ✅ ステータス画面 — 所持マップ数表示追加、キャラ変更ダイアログのロック表示
+
+#### キャラクターデータ整備
+- ✅ characters.json にプレイアブルキャラ5体（hero, undead_monk, elf, fighter, necromancer）をCPU対戦相手として追加
+- ✅ undead_monk表示名を「クレリック」に変更（game_data/characters.json/unlock_conditions）
+
+### 未対応（後回し）
+- 未設定キャラの解放条件: clown, old_sage, witch, golem, elf
+- ネット対戦のキャラ選択UI（そもそも未実装）
+- セーブデータリセット機能（次タスク）
+
+---
+
 ## 2026年3月25日（Session: キャラクター3Dプレビュー）
 
 ### 完了した作業

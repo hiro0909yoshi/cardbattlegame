@@ -114,6 +114,12 @@ custom_minimum_size = Vector2(0, 80)
 theme_override_font_sizes/font_size = 36
 text = "キャラクター変更"
 
+[node name="NameChangeButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_font_sizes/font_size = 36
+text = "名前変更"
+
 [node name="RightPanel" type="ScrollContainer" parent="MainVBox/ContentArea"]
 layout_mode = 2
 size_flags_horizontal = 3

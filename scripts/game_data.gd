@@ -185,9 +185,30 @@ func select_character(char_id: String) -> bool:
 	return true
 
 
+## セーブデータを初期状態にリセットする
+func reset_all_data():
+	# セーブファイル削除
+	if FileAccess.file_exists(SAVE_FILE_PATH):
+		DirAccess.remove_absolute(SAVE_FILE_PATH)
+		print("[GameData] セーブファイル削除: %s" % SAVE_FILE_PATH)
+
+	# カードDB初期化
+	if UserCardDB:
+		UserCardDB.reset_database()
+
+	# デフォルトから再読み込み
+	load_from_file()
+
+	# UnlockManagerの再同期（always条件等を再適用）
+	if UnlockManager:
+		UnlockManager._sync_all_conditions()
+
+	print("[GameData] セーブデータをリセットしました")
+
+
 func _ready():
 	load_from_file()
-	
+
 	# デッキ検証（所持していないカードを削除）
 	call_deferred("_validate_decks") 
 
@@ -362,6 +383,9 @@ func _validate_save_data():
 		}
 	if not player_data.has("inventory"):
 		player_data["inventory"] = {}
+	# 名前変更チケット未所持の既存セーブに初回分を付与
+	if not player_data.inventory.has("name_change_ticket"):
+		player_data.inventory["name_change_ticket"] = 1
 	if not player_data.has("character"):
 		player_data["character"] = {
 			"selected_id": "hero"

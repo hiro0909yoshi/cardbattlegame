@@ -6,6 +6,7 @@ extends Control
 @onready var _level_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/LevelLabel
 @onready var _title_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/TitleLabel
 @onready var _character_change_button: Button = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/CharacterChangeButton
+@onready var _name_change_button: Button = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/NameChangeButton
 
 # 右パネル - 基本情報
 @onready var _gold_value: Label = $MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/GoldRow/GoldValue
@@ -44,7 +45,9 @@ func _ready():
 func _connect_buttons():
 	_back_button.pressed.connect(_on_back_pressed)
 	_character_change_button.pressed.connect(_on_character_change_pressed)
+	_name_change_button.pressed.connect(_on_name_change_pressed)
 	_account_button.pressed.connect(_on_account_pressed)
+	_update_name_change_button()
 
 
 func _update_display():
@@ -173,6 +176,68 @@ func _on_character_selected(char_id: String, dialog: AcceptDialog):
 ## 将来追加予定:
 ## - 称号変更ボタン（TitleChangeButton）
 ## - ブック選択ボタン（DeckSelectButton）
+
+
+func _update_name_change_button():
+	var ticket_count = GameData.player_data.inventory.get("name_change_ticket", 0)
+	if ticket_count > 0:
+		_name_change_button.text = "名前変更（残り%d回）" % ticket_count
+		_name_change_button.disabled = false
+	else:
+		_name_change_button.text = "名前変更（チケットなし）"
+		_name_change_button.disabled = true
+
+
+func _on_name_change_pressed():
+	var ticket_count = GameData.player_data.inventory.get("name_change_ticket", 0)
+	if ticket_count <= 0:
+		return
+
+	var dialog = AcceptDialog.new()
+	dialog.title = "名前変更"
+	dialog.ok_button_text = "変更する"
+
+	var ok_btn = dialog.get_ok_button()
+	ok_btn.custom_minimum_size = Vector2(300, 80)
+	ok_btn.add_theme_font_size_override("font_size", 36)
+	ok_btn.disabled = true
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 16)
+
+	var info_label = Label.new()
+	info_label.text = "新しいプレイヤー名を入力してください\n（名前変更チケットを1枚消費します）"
+	info_label.add_theme_font_size_override("font_size", 24)
+	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(info_label)
+
+	var line_edit = LineEdit.new()
+	line_edit.custom_minimum_size = Vector2(500, 60)
+	line_edit.add_theme_font_size_override("font_size", 36)
+	line_edit.placeholder_text = GameData.player_data.profile.name
+	line_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	line_edit.max_length = 20
+	line_edit.text_changed.connect(func(text: String):
+		var trimmed = text.strip_edges()
+		ok_btn.disabled = trimmed.is_empty() or trimmed == GameData.player_data.profile.name
+	)
+	vbox.add_child(line_edit)
+
+	dialog.add_child(vbox)
+	dialog.confirmed.connect(func():
+		var new_name = line_edit.text.strip_edges()
+		if new_name.is_empty() or new_name == GameData.player_data.profile.name:
+			return
+		GameData.player_data.profile.name = new_name
+		GameData.player_data.inventory["name_change_ticket"] = ticket_count - 1
+		GameData.save_to_file()
+		_update_display()
+		_update_name_change_button()
+		print("[StatusScreen] 名前変更: %s" % new_name)
+	)
+
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(600, 300))
 
 
 func _on_account_pressed():
