@@ -374,22 +374,16 @@ func _build_right_panel() -> Control:
 	map_scroll.add_child(map_vbox)
 
 	for map_data in _maps:
+		var map_id = map_data.id
+		var unlock_key = "map." + map_id.trim_prefix("map_")
+		if not UnlockManager.is_unlocked(unlock_key):
+			continue
+
 		var map_button = Button.new()
 		map_button.custom_minimum_size = Vector2(0, 75)
 		map_button.add_theme_font_size_override("font_size", 42)
-		var map_id = map_data.id
-		var unlock_key = "map." + map_id.trim_prefix("map_")
-		var is_unlocked = UnlockManager.is_unlocked(unlock_key)
-
-		if is_unlocked:
-			map_button.text = "%s (%dマス)" % [map_data.name, map_data.tile_count]
-			map_button.pressed.connect(_on_map_selected.bind(map_id))
-		else:
-			var condition = UnlockManager.get_condition_for_key(unlock_key)
-			var lock_text = condition.get("lock_description", "???") if condition else "???"
-			map_button.text = "🔒 %s (%s)" % [map_data.name, lock_text]
-			map_button.disabled = true
-			map_button.modulate = Color(0.5, 0.5, 0.5)
+		map_button.text = "%s (%dマス)" % [map_data.name, map_data.tile_count]
+		map_button.pressed.connect(_on_map_selected.bind(map_id))
 
 		map_vbox.add_child(map_button)
 		_map_buttons.append(map_button)

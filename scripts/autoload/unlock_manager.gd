@@ -191,7 +191,7 @@ func _load_conditions():
 func _build_index():
 	_conditions_by_type.clear()
 	for condition in _conditions:
-		var type = condition.type
-		if not _conditions_by_type.has(type):
-			_conditions_by_type[type] = []
-		_conditions_by_type[type].append(condition)
+		var condition_type = condition.type
+		if not _conditions_by_type.has(condition_type):
+			_conditions_by_type[condition_type] = []
+		_conditions_by_type[condition_type].append(condition)
