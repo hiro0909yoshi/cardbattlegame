@@ -63,22 +63,31 @@
 | データ | 型 | 現在の実装 | 説明 |
 |--------|-----|-----------|------|
 | stages | Array | GameData.unlocks.stages | アンロック済みステージ |
-| modes | Array | GameData.unlocks.modes | アンロック済みモード |
+| keys | Array | GameData.unlocks.keys | UnlockManager管理の解放済みキー（キャラ・マップ・ガチャ・ワールド等） |
 
-### 2-7. インベントリ
+※ 旧`unlocks.modes`は廃止。UnlockManagerのキーベース方式（`"character.hero"`, `"map.diamond_20"`等）に統一済み。
+
+### 2-7. キャラクター・称号
+
+| データ | 型 | 現在の実装 | 説明 |
+|--------|-----|-----------|------|
+| selected_id | String | GameData.character.selected_id | 選択中のプレイアブルキャラクターID |
+| equipped_title | String | GameData.equipped_title | 装備中の称号名 |
+
+### 2-8. インベントリ
 
 | データ | 型 | 現在の実装 | 説明 |
 |--------|-----|-----------|------|
 | inventory | Dictionary | GameData.inventory | アイテム所持数 {item_id: count} |
 
-### 2-8. ネット対戦（未実装）
+### 2-9. ネット対戦（未実装）
 
 | データ | 型 | 説明 |
 |--------|-----|------|
 | rating | int | レーティング（初期値1500） |
 | rank_tier | String | ランク帯 |
 
-### 2-9. コスメ所持（未実装）
+### 2-10. コスメ所持（未実装）
 
 | データ | 型 | 説明 |
 |--------|-----|------|
@@ -158,81 +167,69 @@ GameDataの `player_data` をこの構造に整理する目標形。
 
 ```json
 {
-  "core": {
-    "identity": {
-      "user_id": "uuid-xxxx-xxxx",
-      "name": "プレイヤー",
-      "level": 1,
-      "exp": 0
-    },
-    "currency": {
-      "gold": 100000,
-      "stone": 0
-    },
-    "decks": [],
-    "max_decks": 6,
-    "progression": {
-      "current_stage": 1,
-      "cleared_stages": [],
-      "stage_stars": {},
-      "stage_records": {}
-    },
-    "unlocks": {
-      "stages": [1],
-      "modes": ["story"]
-    },
-    "inventory": {},
-    "pvp": {
-      "rating": 1500,
-      "rank_tier": "bronze"
-    },
-    "cosmetics": {
-      "owned": [],
-      "equipped": {
-        "dice_skin": "default",
-        "card_back": "default",
-        "player_icon": "default",
-        "title": ""
-      }
-    }
+  "user_id": "player1",
+  "profile": {
+    "name": "プレイヤー",
+    "level": 1,
+    "exp": 0,
+    "gold": 100000,
+    "stone": 0,
+    "created_at": "",
+    "last_played": ""
   },
-  "sub": {
-    "stats": {
-      "total_battles": 0,
-      "wins": 0,
-      "losses": 0,
-      "play_time_seconds": 0,
-      "story_cleared": 0,
-      "gacha_count": 0,
-      "cards_obtained": 0
-    },
-    "stamina": {
-      "current": 50,
-      "max": 50,
-      "updated_at": ""
-    },
-    "login_bonus": {
-      "login_streak": 0,
-      "total_login_days": 0,
-      "last_daily_date": "",
-      "claimed_campaigns": []
-    }
+  "decks": [],
+  "max_decks": 6,
+  "story_progress": {
+    "current_stage": 1,
+    "cleared_stages": [],
+    "stage_stars": {},
+    "stage_records": {}
   },
-  "local": {
-    "settings": {
-      "master_volume": 1.0,
-      "bgm_volume": 0.8,
-      "se_volume": 1.0,
-      "language": "ja",
-      "auto_save": true
-    },
-    "device_id": ""
+  "unlocks": {
+    "stages": [1],
+    "keys": []
+  },
+  "character": {
+    "selected_id": "hero"
+  },
+  "equipped_title": "はじまりの一歩",
+  "inventory": {
+    "name_change_ticket": 1
+  },
+  "stats": {
+    "total_battles": 0,
+    "wins": 0,
+    "losses": 0,
+    "play_time_seconds": 0,
+    "story_cleared": 0,
+    "gacha_count": 0,
+    "cards_obtained": 0
+  },
+  "stamina": {
+    "current": 50,
+    "max": 50,
+    "updated_at": ""
+  },
+  "login_bonus": {
+    "claimed_campaigns": [],
+    "last_daily_date": "",
+    "login_streak": 0,
+    "last_login_date": "",
+    "total_login_days": 0
+  },
+  "settings": {
+    "master_volume": 1.0,
+    "bgm_volume": 0.8,
+    "se_volume": 1.0,
+    "language": "ja",
+    "auto_save": true
   }
 }
 ```
 
-※ カード所持（collection）は別管理（UserCardDB）のためこのJSONには含めない。
-　 将来サーバー同期時はAPIで個別に送受信する。
+※ カード所持は別管理（UserCardDB / SQLite）のためこのJSONには含めない。
+※ `unlocks.keys`はUnlockManagerが管理。起動時に`_sync_all_conditions()`で`always`条件を自動適用。
+※ 将来サーバー同期時は3層分類（コア/サブ/ローカル）に基づきAPIで個別に送受信する。
 
 ---
 
