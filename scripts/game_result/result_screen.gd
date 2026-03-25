@@ -4,8 +4,6 @@ extends CanvasLayer
 ## リザルト画面
 ## 勝利/敗北時に表示され、ランクと報酬を表示する
 
-const GachaSystemScript = preload("res://scripts/gacha_system.gd")
-
 signal result_confirmed
 signal _unlock_popup_closed
 
@@ -133,14 +131,14 @@ func show_victory(data: Dictionary):
 	
 	_show_with_animation()
 	
-	# ガチャ解禁ポップアップ（アニメーション後に表示）
-	if data.get("is_first_clear", false):
-		var stage_id = data.get("stage_id", "")
-		var unlocked_list = GachaSystemScript.get_newly_unlocked_gacha_types(stage_id)
-		if not unlocked_list.is_empty():
-			await get_tree().create_timer(0.5).timeout
-			for gacha_name in unlocked_list:
-				await _show_unlock_popup(gacha_name)
+	# 解放通知ポップアップ（統合通知）
+	var unlocked_items = data.get("unlocked_items", [])
+	if not unlocked_items.is_empty():
+		await get_tree().create_timer(0.5).timeout
+		for item in unlocked_items:
+			var notification = item.get("notification", "")
+			if notification != "":
+				await _show_unlock_popup(notification)
 
 
 ## 敗北リザルトを表示
@@ -173,8 +171,17 @@ func show_defeat(data: Dictionary):
 	
 	# 報酬（0G）
 	_build_reward_display(data.get("rewards", {}))
-	
+
 	_show_with_animation()
+
+	# 解放通知ポップアップ（バトル回数系など）
+	var unlocked_items = data.get("unlocked_items", [])
+	if not unlocked_items.is_empty():
+		await get_tree().create_timer(0.5).timeout
+		for item in unlocked_items:
+			var notification = item.get("notification", "")
+			if notification != "":
+				await _show_unlock_popup(notification)
 
 
 ## 報酬表示を構築

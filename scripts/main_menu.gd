@@ -15,9 +15,9 @@ extends Control
 @onready var _settings_icon_button: Button = $MainVBox/TopBar/TopBarMargin/TopBarHBox/RightIcons/SettingsButton
 
 # 左パネル（タップでステータス画面へ）
-@onready var _left_panel: Control = $MainVBox/ContentArea/LeftPanel
-@onready var _player_name_label: Label = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameLabel
-@onready var _character_rect: TextureRect = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterRect
+@onready var _player_name_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameButton
+@onready var _title_label: Label = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/TitleLabel
+@onready var _character_preview: SubViewportContainer = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterPreview
 
 # 右パネル（メインボタン）
 @onready var _right_vbox: VBoxContainer = $MainVBox/ContentArea/RightPanel/RightVBox
@@ -29,6 +29,9 @@ extends Control
 
 
 func _ready():
+	# 背景グラデーション設定（仮）
+	_setup_background()
+
 	# 上部バーの背景色を設定（黒とグレーの中間）
 	_setup_top_bar_style()
 
@@ -51,8 +54,8 @@ func _ready():
 	_gold_plus_button.pressed.connect(_on_gold_plus_pressed)
 	_stone_plus_button.pressed.connect(_on_stone_plus_pressed)
 
-	# 左パネルのクリック検出
-	_left_panel.gui_input.connect(_on_left_panel_input)
+	# プレイヤー名タップでステータス画面
+	_player_name_button.pressed.connect(_on_player_name_pressed)
 
 	# ユーザー情報を表示
 	_update_user_info()
@@ -127,6 +130,21 @@ func _check_login_bonus():
 	dialog.popup_centered()
 
 
+## 背景グラデーション設定（仮：透過テスト用）
+func _setup_background():
+	var bg = $Background
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(0.05, 0.1, 0.25))
+	gradient.set_color(1, Color(0.15, 0.05, 0.2))
+	var tex = GradientTexture2D.new()
+	tex.gradient = gradient
+	tex.fill_from = Vector2(0, 0)
+	tex.fill_to = Vector2(1, 1)
+	tex.width = 512
+	tex.height = 512
+	bg.texture = tex
+
+
 ## 上部バーのスタイル設定
 func _setup_top_bar_style():
 	var style = StyleBoxFlat.new()
@@ -140,12 +158,12 @@ func _setup_top_bar_style():
 
 func _update_user_info():
 	# 左パネル
-	if _player_name_label:
-		_player_name_label.text = GameData.player_data.profile.name
-	if _character_rect:
-		var texture = load("res://assets/images/characters/marion.png")
-		if texture:
-			_character_rect.texture = texture
+	if _player_name_button:
+		_player_name_button.text = GameData.player_data.profile.name
+	if _title_label:
+		_title_label.text = GameData.get_equipped_title()
+	if _character_preview:
+		_character_preview.set_selected_character()
 
 	# 上部バー
 	if _gold_label:
@@ -369,6 +387,5 @@ func _on_stone_plus_pressed():
 	print("課金石購入（未実装）")
 
 
-func _on_left_panel_input(event: InputEvent):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		print("ステータス画面へ（未実装）")
+func _on_player_name_pressed():
+	get_tree().change_scene_to_file("res://scenes/StatusScreen.tscn")

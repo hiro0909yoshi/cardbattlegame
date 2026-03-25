@@ -1,60 +1,11 @@
 {
 	"decks": [
-		{
-			"cards": {
-				"23": 1,
-				"24": 1,
-				"29": 1,
-				"39": 1,
-				"108": 1,
-				"117": 1,
-				"220": 1,
-				"223": 1,
-				"244": 1,
-				"303": 1,
-				"306": 1,
-				"403": 1,
-				"431": 1,
-				"1009": 4,
-				"2005": 2,
-				"2101": 4
-			},
-			"name": "ブック1"
-		},
-		{
-			"cards": {
-				"28": 4,
-				"141": 3,
-				"2005": 1,
-				"2009": 1,
-				"2023": 1,
-				"2026": 1,
-				"2045": 1
-			},
-			"name": "ブック2"
-		},
-		{
-			"cards": {
-				"28": 2,
-				"438": 2,
-				"1003": 2,
-				"2052": 2,
-				"2101": 3
-			},
-			"name": "ブック3"
-		},
-		{
-			"cards": {},
-			"name": "ブック4"
-		},
-		{
-			"cards": {},
-			"name": "ブック5"
-		},
-		{
-			"cards": {},
-			"name": "ブック6"
-		}
+		{ "cards": {}, "name": "ブック1" },
+		{ "cards": {}, "name": "ブック2" },
+		{ "cards": {}, "name": "ブック3" },
+		{ "cards": {}, "name": "ブック4" },
+		{ "cards": {}, "name": "ブック5" },
+		{ "cards": {}, "name": "ブック6" }
 	],
 	"max_decks": 6.0,
 	"profile": {
@@ -87,12 +38,29 @@
 		"stage_stars": {}
 	},
 	"unlocks": {
-		"modes": [
-			"story"
-		],
 		"stages": [
 			1.0
-		]
+		],
+		"keys": []
+	},
+	"inventory": {
+		"name_change_ticket": 1
+	},
+	"character": {
+		"selected_id": "hero"
+	},
+	"equipped_title": "はじまりの一歩",
+	"stamina": {
+		"current": 50,
+		"max": 50,
+		"updated_at": ""
+	},
+	"login_bonus": {
+		"claimed_campaigns": [],
+		"last_daily_date": "",
+		"login_streak": 0,
+		"last_login_date": "",
+		"total_login_days": 0
 	},
 	"user_id": "player1"
 }

@@ -297,6 +297,169 @@
 		"spell_use_rate": 0.9,
 		"dominio_use_rate": 0.9
 	  }
+	},
+	"hero": {
+	  "name": "ヒーロー",
+	  "model_path": "res://scenes/Characters/Hero.tscn",
+	  "portrait_path": "",
+	  "description": "バランス型のプレイアブルキャラクター",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_1"},
+		{"level": 2, "label": "中級", "deck_id": "cpu_deck_2"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.2,
+		  "both_no_item": 0.3,
+		  "vs_enemy_item": 0.4,
+		  "never_battle": 0.1
+		},
+		"defense": {
+		  "no_item": 0.3,
+		  "always_protect": 0.7,
+		  "protect_mystic_arts": false,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 300,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.8,
+		"summon_rate_mismatch": 0.4,
+		"spell_use_rate": 0.7,
+		"dominio_use_rate": 0.6
+	  }
+	},
+	"undead_monk": {
+	  "name": "クレリック",
+	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+	  "portrait_path": "",
+	  "description": "序盤から登場する基本的な敵",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_1"},
+		{"level": 2, "label": "中級", "deck_id": "cpu_deck_2"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.1,
+		  "both_no_item": 0.4,
+		  "vs_enemy_item": 0.4,
+		  "never_battle": 0.1
+		},
+		"defense": {
+		  "no_item": 0.5,
+		  "always_protect": 0.5,
+		  "protect_mystic_arts": false,
+		  "protect_element_match": false,
+		  "protect_by_value": {
+			"enabled": false,
+			"threshold": 200,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.6,
+		"summon_rate_mismatch": 0.3,
+		"spell_use_rate": 0.5,
+		"dominio_use_rate": 0.4
+	  }
+	},
+	"elf": {
+	  "name": "エルフ",
+	  "model_path": "res://scenes/Characters/Elf.tscn",
+	  "portrait_path": "",
+	  "description": "魔法寄りのバランス型",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_5"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "both_no_item": 0.3,
+		  "vs_enemy_item": 0.6,
+		  "never_battle": 0.1
+		},
+		"defense": {
+		  "no_item": 0.2,
+		  "always_protect": 0.8,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 500,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.8,
+		"summon_rate_mismatch": 0.3,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 0.7
+	  }
+	},
+	"fighter": {
+	  "name": "ファイター",
+	  "model_path": "res://scenes/Characters/Fighter.tscn",
+	  "portrait_path": "",
+	  "description": "攻撃的な戦闘スタイル",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_4"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.1,
+		  "both_no_item": 0.3,
+		  "vs_enemy_item": 0.6,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.2,
+		  "always_protect": 0.8,
+		  "protect_mystic_arts": false,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 200,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.9,
+		"summon_rate_mismatch": 0.4,
+		"spell_use_rate": 0.6,
+		"dominio_use_rate": 0.7
+	  }
+	},
+	"necromancer": {
+	  "name": "ネクロマンサー",
+	  "model_path": "res://scenes/Characters/Necromancer.tscn",
+	  "portrait_path": "",
+	  "description": "強力な魔法使い",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_1"},
+		{"level": 2, "label": "中級", "deck_id": "cpu_deck_2"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "both_no_item": 0.2,
+		  "vs_enemy_item": 0.5,
+		  "never_battle": 0.3
+		},
+		"defense": {
+		  "no_item": 0.1,
+		  "always_protect": 0.9,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 500,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.7,
+		"summon_rate_mismatch": 0.2,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 0.8
+	  }
 	}
   }
 }

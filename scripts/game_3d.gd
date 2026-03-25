@@ -219,16 +219,17 @@ func _setup_3d_scene_before_init():
 
 ## プレイヤーキャラクター作成
 func _create_player_characters(container: Node3D):
-	# プレイヤー1（Mario）
-	var mario_scene = load("res://scenes/Characters/Hero.tscn")
-	if mario_scene:
-		var mario = mario_scene.instantiate()
-		mario.name = "Player"
+	# プレイヤー1（選択キャラクター）
+	var player_model_path = GameData.get_selected_character_model_path()
+	var player_scene = load(player_model_path)
+	if player_scene:
+		var player = player_scene.instantiate()
+		player.name = "Player"
 		var movement_script = load("res://scripts/player_movement.gd")
 		if movement_script:
-			mario.set_script(movement_script)
-		container.add_child(mario)
-		_setup_initial_animation(mario)
+			player.set_script(movement_script)
+		container.add_child(player)
+		_setup_initial_animation(player)
 	
 	# CPU敵（新旧形式両対応）
 	var enemies = stage_loader.get_enemies()

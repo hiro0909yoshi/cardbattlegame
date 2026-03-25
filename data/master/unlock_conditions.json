@@ -1,0 +1,108 @@
+{
+  "conditions": [
+    {
+      "id": "c100",
+      "type": "always",
+      "requirement": {},
+      "unlock": ["character.hero", "map.diamond_20", "mode.story", "gacha.normal", "world.world_1"],
+      "notification": "",
+      "lock_description": ""
+    },
+    {
+      "id": "c001",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_1" },
+      "unlock": ["character.undead_monk"],
+      "notification": "クレリックが使えるようになった!",
+      "lock_description": "2-1クリアで解禁"
+    },
+    {
+      "id": "c002",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_1_4" },
+      "unlock": ["map.cross_1"],
+      "notification": "8字路マップが使えるようになった!",
+      "lock_description": "1-4クリアで解禁"
+    },
+    {
+      "id": "c003",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_1_5" },
+      "unlock": ["map.1_5"],
+      "notification": "8の字マップが使えるようになった!",
+      "lock_description": "1-5クリアで解禁"
+    },
+    {
+      "id": "c004",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_1_8" },
+      "unlock": ["character.goblin", "gacha.s_gacha", "world.world_2"],
+      "notification": "ゴブリンとSガチャとワールド2が解禁された!",
+      "lock_description": "1-8クリアで解禁"
+    },
+    {
+      "id": "c005",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_1" },
+      "unlock": ["map.branch_1"],
+      "notification": "ブランチ1マップが使えるようになった!",
+      "lock_description": "2-1クリアで解禁"
+    },
+    {
+      "id": "c006",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_2" },
+      "unlock": ["map.branch_2"],
+      "notification": "ブランチ2マップが使えるようになった!",
+      "lock_description": "2-2クリアで解禁"
+    },
+    {
+      "id": "c007",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_3" },
+      "unlock": ["character.thief"],
+      "notification": "シーフが使えるようになった!",
+      "lock_description": "2-3クリアで解禁"
+    },
+    {
+      "id": "c008",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_5" },
+      "unlock": ["character.fighter"],
+      "notification": "ファイターが使えるようになった!",
+      "lock_description": "2-5クリアで解禁"
+    },
+    {
+      "id": "c009",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_6" },
+      "unlock": ["map.1_6"],
+      "notification": "迷路マップが使えるようになった!",
+      "lock_description": "2-6クリアで解禁"
+    },
+    {
+      "id": "c010",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_2_8" },
+      "unlock": ["character.orc", "gacha.r_gacha", "world.world_3"],
+      "notification": "オークとRガチャとワールド3が解禁された!",
+      "lock_description": "2-8クリアで解禁"
+    },
+    {
+      "id": "c011",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_3_1" },
+      "unlock": ["character.necromancer"],
+      "notification": "ネクロマンサーが使えるようになった!",
+      "lock_description": "3-1クリアで解禁"
+    },
+    {
+      "id": "c012",
+      "type": "purchase",
+      "requirement": { "item_id": "character_dark_elf_pack", "currency": "gold", "price": 50000 },
+      "unlock": ["character.dark_elf"],
+      "notification": "ダークエルフを購入しました!",
+      "lock_description": "ショップで購入(50000G)"
+    }
+  ]
+}

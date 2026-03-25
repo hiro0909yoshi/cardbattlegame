@@ -155,7 +155,10 @@ func _load_map_list():
 		if file_name.ends_with(".json"):
 			var map_data = _load_map_json(MAP_DIR + file_name)
 			if map_data and map_data.has("tiles"):
-				map_list.append(map_data)
+				var map_id = map_data.get("id", "")
+				var unlock_key = "map." + map_id.trim_prefix("map_")
+				if UnlockManager.is_unlocked(unlock_key):
+					map_list.append(map_data)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 

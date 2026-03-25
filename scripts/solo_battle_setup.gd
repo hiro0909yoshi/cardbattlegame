@@ -374,12 +374,17 @@ func _build_right_panel() -> Control:
 	map_scroll.add_child(map_vbox)
 
 	for map_data in _maps:
+		var map_id = map_data.id
+		var unlock_key = "map." + map_id.trim_prefix("map_")
+		if not UnlockManager.is_unlocked(unlock_key):
+			continue
+
 		var map_button = Button.new()
-		map_button.text = "%s (%dマス)" % [map_data.name, map_data.tile_count]
 		map_button.custom_minimum_size = Vector2(0, 75)
 		map_button.add_theme_font_size_override("font_size", 42)
-		var map_id = map_data.id
+		map_button.text = "%s (%dマス)" % [map_data.name, map_data.tile_count]
 		map_button.pressed.connect(_on_map_selected.bind(map_id))
+
 		map_vbox.add_child(map_button)
 		_map_buttons.append(map_button)
 
@@ -398,9 +403,13 @@ func _build_right_panel() -> Control:
 	_map_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	preview_margin.add_child(_map_preview)
 
-	# デフォルトマップ選択
-	if _maps.size() > 0:
-		_selected_map_id = _maps[0].id
+	# デフォルトマップ選択（解放済みの最初のマップ）
+	for map_data in _maps:
+		var unlock_key = "map." + map_data.id.trim_prefix("map_")
+		if UnlockManager.is_unlocked(unlock_key):
+			_selected_map_id = map_data.id
+			break
+	if _selected_map_id != "":
 		_update_map_highlight()
 		_show_map_preview(_selected_map_id)
 
@@ -844,11 +853,15 @@ func _populate_character_option(option: OptionButton, include_none: bool):
 
 	var index = 1 if include_none else 0
 	for char_id in _characters.keys():
-		if _characters[char_id].has("name"):
-			var char_name = _characters[char_id]["name"]
-			option.add_item(char_name, index)
-			id_map[index] = char_id
-			index += 1
+		if not _characters[char_id].has("name"):
+			continue
+		# アンロック済みキャラのみ表示
+		if not UnlockManager.is_unlocked("character." + char_id):
+			continue
+		var char_name = _characters[char_id]["name"]
+		option.add_item(char_name, index)
+		id_map[index] = char_id
+		index += 1
 
 	option.set_meta("id_map", id_map)
 

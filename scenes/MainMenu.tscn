@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://dwp056svuqcek"]
+[gd_scene load_steps=3 format=3 uid="uid://dwp056svuqcek"]
 
 [ext_resource type="Script" uid="uid://ctycprd145t8p" path="res://scripts/main_menu.gd" id="1_yqorp"]
+[ext_resource type="Script" path="res://scripts/ui_components/character_preview.gd" id="2_preview"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -171,10 +172,11 @@ theme_override_constants/separation = 5
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="PlayerNameLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
+[node name="PlayerNameButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 72
 text = "プレイヤー名"
+flat = true
 
 [node name="ResetGoldButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
@@ -201,11 +203,11 @@ text = "はじまりの一歩"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CharacterRect" type="TextureRect" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer"]
-custom_minimum_size = Vector2(300, 400)
+[node name="CharacterPreview" type="SubViewportContainer" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer"]
+custom_minimum_size = Vector2(800, 900)
 layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
+stretch = true
+script = ExtResource("2_preview")
 
 [node name="RightPanel" type="Control" parent="MainVBox/ContentArea"]
 layout_mode = 2

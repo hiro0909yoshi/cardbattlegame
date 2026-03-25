@@ -104,28 +104,26 @@ func _create_gacha_type_buttons():
 	gacha_type_buttons.clear()
 	
 	# 各ガチャタイプのボタンを作成
+	var gacha_keys = ["gacha.normal", "gacha.s_gacha", "gacha.r_gacha"]
 	for type_id in range(3):  # NORMAL, S_GACHA, R_GACHA
 		var button = Button.new()
 		button.custom_minimum_size = Vector2(300, 80)
 		button.add_theme_font_size_override("font_size", 24)
-		
-		var is_unlocked = gacha_system.is_gacha_unlocked(type_id)
+
+		var is_unlocked = UnlockManager.is_unlocked(gacha_keys[type_id])
 		var single_cost = gacha_system.get_single_cost(type_id)
 		var multi_cost = gacha_system.get_multi_10_cost(type_id)
-		
+
 		if is_unlocked:
 			button.text = "%s\n1回: %dG / 10連: %dG" % [GACHA_NAMES[type_id], single_cost, multi_cost]
 			button.pressed.connect(_on_gacha_type_selected.bind(type_id))
 		else:
-			var unlock_stage = ""
-			if type_id == 1:
-				unlock_stage = "1-8"
-			elif type_id == 2:
-				unlock_stage = "2-8"
-			button.text = "%s\n🔒 %sクリアで解禁" % [GACHA_NAMES[type_id], unlock_stage]
+			var condition = UnlockManager.get_condition_for_key(gacha_keys[type_id])
+			var lock_text = condition.get("lock_description", "") if condition else ""
+			button.text = "%s\n🔒 %s" % [GACHA_NAMES[type_id], lock_text]
 			button.disabled = true
 			button.modulate = Color(0.5, 0.5, 0.5)
-		
+
 		gacha_type_container.add_child(button)
 		gacha_type_buttons.append(button)
 	

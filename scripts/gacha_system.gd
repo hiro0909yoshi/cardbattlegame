@@ -30,11 +30,11 @@ const GACHA_COSTS = {
 	GachaType.R_GACHA: { "single": 100, "multi_10": 1000 }
 }
 
-# 解禁条件（ステージID文字列）
-const UNLOCK_CONDITIONS = {
-	GachaType.NORMAL: "",            # 最初から解禁
-	GachaType.S_GACHA: "stage_1_8",  # 1-8クリアで解禁
-	GachaType.R_GACHA: "stage_2_8"   # 2-8クリアで解禁
+# GachaType → UnlockManagerキーのマッピング
+const GACHA_UNLOCK_KEYS = {
+	GachaType.NORMAL: "gacha.normal",
+	GachaType.S_GACHA: "gacha.s_gacha",
+	GachaType.R_GACHA: "gacha.r_gacha"
 }
 
 # 旧API互換用
@@ -55,28 +55,12 @@ func set_gacha_type(type: GachaType) -> void:
 func get_gacha_type() -> GachaType:
 	return current_gacha_type
 
-## ガチャが解禁されているか確認
+## ガチャが解禁されているか確認（UnlockManager委譲）
 func is_gacha_unlocked(type: GachaType) -> bool:
-	var required_stage = UNLOCK_CONDITIONS.get(type, "")
-	if required_stage.is_empty():
-		return true  # 条件なし = 最初から解禁
-	
-	# StageRecordManager経由でクリア状況を確認
-	return StageRecordManager.is_cleared(required_stage)
-
-## 指定ステージクリアで新たに解禁されるガチャタイプを取得
-## 戻り値: 解禁されたガチャタイプ名の配列
-static func get_newly_unlocked_gacha_types(stage_id: String) -> Array:
-	var unlocked = []
-	for type in UNLOCK_CONDITIONS:
-		if UNLOCK_CONDITIONS[type] == stage_id:
-			var type_names = {
-				GachaType.NORMAL: "ノーマルガチャ",
-				GachaType.S_GACHA: "Sガチャ",
-				GachaType.R_GACHA: "Rガチャ"
-			}
-			unlocked.append(type_names.get(type, ""))
-	return unlocked
+	var key = GACHA_UNLOCK_KEYS.get(type, "")
+	if key.is_empty():
+		return false
+	return UnlockManager.is_unlocked(key)
 
 ## 単発ガチャの価格を取得
 func get_single_cost(type: GachaType = current_gacha_type) -> int:

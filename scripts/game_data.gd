@@ -40,7 +40,7 @@ var player_data = {
 	# === アンロック情報 ===
 	"unlocks": {
 		"stages": [1],    # アンロック済みステージ（最初は1だけ）
-		"modes": ["story"] # アンロック済みモード
+		"keys": []        # UnlockManager管理の解放済みキー
 	},
 	
 	# === 統計情報 ===
@@ -73,6 +73,14 @@ var player_data = {
 		"total_login_days": 0         # 累計ログイン日数
 	},
 
+	# === キャラクター ===
+	"character": {
+		"selected_id": "hero"            # 現在選択中のキャラクターID
+	},
+
+	# === 称号 ===
+	"equipped_title": "はじまりの一歩",
+
 	# === 設定 ===
 	"settings": {
 		"master_volume": 1.0,
@@ -83,9 +91,180 @@ var player_data = {
 	}
 }
 
+# プレイアブルキャラクターマスターデータ
+const PLAYABLE_CHARACTERS: Dictionary = {
+	"hero": {
+		"name": "ヒーロー",
+		"model_path": "res://scenes/Characters/Hero.tscn",
+		"portrait_path": "",
+	},
+	"necromancer": {
+		"name": "マリオン",
+		"model_path": "res://scenes/Characters/Necromancer.tscn",
+		"portrait_path": "res://assets/images/characters/marion.png",
+	},
+	"goblin": {
+		"name": "ゴブリン",
+		"model_path": "res://scenes/Characters/Goblin.tscn",
+		"portrait_path": "",
+	},
+	"fighter": {
+		"name": "ファイター",
+		"model_path": "res://scenes/Characters/Fighter.tscn",
+		"portrait_path": "",
+	},
+	"thief": {
+		"name": "シーフ",
+		"model_path": "res://scenes/Characters/Thief.tscn",
+		"portrait_path": "",
+	},
+	"clown": {
+		"name": "クラウン",
+		"model_path": "res://scenes/Characters/Clown.tscn",
+		"portrait_path": "",
+	},
+	"undead_monk": {
+		"name": "クレリック",
+		"model_path": "res://scenes/Characters/UndeadMonk.tscn",
+		"portrait_path": "",
+	},
+	"old_sage": {
+		"name": "オールドセージ",
+		"model_path": "res://scenes/Characters/OldSage.tscn",
+		"portrait_path": "",
+	},
+	"witch": {
+		"name": "ウィッチ",
+		"model_path": "res://scenes/Characters/Witch.tscn",
+		"portrait_path": "",
+	},
+	"elf": {
+		"name": "エルフ",
+		"model_path": "res://scenes/Characters/Elf.tscn",
+		"portrait_path": "",
+	},
+	"dark_elf": {
+		"name": "ダークエルフ",
+		"model_path": "res://scenes/Characters/DarkElf.tscn",
+		"portrait_path": "",
+	},
+	"golem": {
+		"name": "ゴーレム",
+		"model_path": "res://scenes/Characters/Golem.tscn",
+		"portrait_path": "",
+	},
+	"orc": {
+		"name": "オーク",
+		"model_path": "res://scenes/Characters/Orc.tscn",
+		"portrait_path": "",
+	},
+}
+
+# 称号マスターデータ（将来的にはJSON化・実績連動）
+const TITLES: Array[Dictionary] = [
+	{"id": "first_step", "name": "はじまりの一歩", "description": "初期称号", "condition": "always"},
+	{"id": "adventurer", "name": "冒険者", "description": "ワールド1をクリア", "condition": "world_1_clear"},
+	{"id": "warrior", "name": "戦士", "description": "10勝達成", "condition": "win_10"},
+	{"id": "veteran", "name": "百戦錬磨", "description": "100戦達成", "condition": "battle_100"},
+	{"id": "collector", "name": "カードコレクター", "description": "50種のカードを収集", "condition": "card_50"},
+	{"id": "hero_title", "name": "英雄", "description": "全ワールドクリア", "condition": "all_world_clear"},
+]
+
+
+## 選択中キャラクターのデータを取得
+func get_selected_character() -> Dictionary:
+	var char_id = player_data.character.selected_id
+	if PLAYABLE_CHARACTERS.has(char_id):
+		return PLAYABLE_CHARACTERS[char_id]
+	return PLAYABLE_CHARACTERS["hero"]
+
+
+## 選択中キャラクターのモデルパスを取得
+func get_selected_character_model_path() -> String:
+	return get_selected_character().model_path
+
+
+## 選択中キャラクターのポートレートパスを取得
+func get_selected_character_portrait() -> String:
+	return get_selected_character().portrait_path
+
+
+## 取得済みの称号一覧を返す
+func get_available_titles() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for title_data in TITLES:
+		if _is_title_unlocked(title_data):
+			result.append(title_data)
+	return result
+
+
+## 称号の解放判定
+func _is_title_unlocked(title_data: Dictionary) -> bool:
+	match title_data.condition:
+		"always":
+			return true
+		"world_1_clear":
+			return UnlockManager.is_unlocked("world.world_2")
+		"win_10":
+			return player_data.stats.wins >= 10
+		"battle_100":
+			return player_data.stats.total_battles >= 100
+		"card_50":
+			return UserCardDB.get_all_obtained_cards().size() >= 50
+		"all_world_clear":
+			return UnlockManager.is_unlocked("world.world_3")
+		_:
+			return false
+
+
+## 称号を装備する
+func equip_title(title_name: String) -> bool:
+	for title_data in TITLES:
+		if title_data.name == title_name and _is_title_unlocked(title_data):
+			player_data.equipped_title = title_name
+			save_to_file()
+			return true
+	return false
+
+
+## 装備中の称号を取得
+func get_equipped_title() -> String:
+	return player_data.get("equipped_title", "はじまりの一歩")
+
+
+## キャラクターを選択（解放判定はUnlockManager経由）
+func select_character(char_id: String) -> bool:
+	if not UnlockManager.is_unlocked("character." + char_id):
+		return false
+	player_data.character.selected_id = char_id
+	save_to_file()
+	return true
+
+
+## セーブデータを初期状態にリセットする
+func reset_all_data():
+	# セーブファイル削除
+	if FileAccess.file_exists(SAVE_FILE_PATH):
+		DirAccess.remove_absolute(SAVE_FILE_PATH)
+		print("[GameData] セーブファイル削除: %s" % SAVE_FILE_PATH)
+
+	# カードDB初期化
+	if UserCardDB:
+		UserCardDB.reset_database()
+
+	# デフォルトから再読み込み
+	load_from_file()
+
+	# UnlockManagerの再同期（always条件等を再適用）
+	if UnlockManager:
+		UnlockManager._sync_all_conditions()
+
+	print("[GameData] セーブデータをリセットしました")
+
+
 func _ready():
 	load_from_file()
-	
+
 	# デッキ検証（所持していないカードを削除）
 	call_deferred("_validate_decks") 
 
@@ -260,6 +439,32 @@ func _validate_save_data():
 		}
 	if not player_data.has("inventory"):
 		player_data["inventory"] = {}
+	# 名前変更チケット未所持の既存セーブに初回分を付与
+	if not player_data.inventory.has("name_change_ticket"):
+		player_data.inventory["name_change_ticket"] = 1
+	if not player_data.has("character"):
+		player_data["character"] = {
+			"selected_id": "hero"
+		}
+	if not player_data.has("equipped_title"):
+		player_data["equipped_title"] = "はじまりの一歩"
+
+	# unlocks.keys がなければ作成 + 既存データから移行
+	if not player_data.unlocks.has("keys"):
+		player_data.unlocks["keys"] = []
+
+	# character.unlocked → unlocks.keys に移行（旧セーブデータ互換）
+	if player_data.has("character") and player_data.character.has("unlocked"):
+		for char_id in player_data.character.unlocked:
+			var key = "character." + char_id
+			if key not in player_data.unlocks.keys:
+				player_data.unlocks.keys.append(key)
+		player_data.character.erase("unlocked")
+		print("[GameData] character.unlocked を unlocks.keys に移行完了")
+
+	# 旧 unlocks.modes → 削除（不要）
+	if player_data.unlocks.has("modes"):
+		player_data.unlocks.erase("modes")
 	if not player_data.has("login_bonus"):
 		player_data["login_bonus"] = {
 			"claimed_campaigns": [],

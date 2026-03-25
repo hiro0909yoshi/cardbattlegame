@@ -320,8 +320,9 @@ func _build_left_panel() -> Control:
 		_player_preview_viewports.append(sv)
 		_player_preview_char_nodes.append(null)
 
-	# 自分のキャラプレビューを表示（P1 = 現在はNecromancer固定）
-	_update_player_preview(0, "res://scenes/Characters/Necromancer.tscn")
+	# 自分のキャラプレビューを表示
+	var _selected_model = GameData.get_selected_character_model_path()
+	_update_player_preview(0, _selected_model)
 
 	_update_player_display()
 
@@ -380,11 +381,15 @@ func _build_right_panel() -> Control:
 	map_scroll.add_child(map_vbox)
 
 	for map_data in _maps:
+		var map_id = map_data.id
+		var unlock_key = "map." + map_id.trim_prefix("map_")
+		if not UnlockManager.is_unlocked(unlock_key):
+			continue
+
 		var map_button = Button.new()
 		map_button.text = "%s (%dマス)" % [map_data.name, map_data.tile_count]
 		map_button.custom_minimum_size = Vector2(0, 75)
 		map_button.add_theme_font_size_override("font_size", 42)
-		var map_id = map_data.id
 		map_button.pressed.connect(_on_map_selected.bind(map_id))
 		# ゲストはマップ選択不可
 		if not _is_host:
@@ -407,9 +412,13 @@ func _build_right_panel() -> Control:
 	_map_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	preview_margin.add_child(_map_preview)
 
-	# デフォルトマップ選択
-	if _maps.size() > 0:
-		_selected_map_id = _maps[0].id
+	# デフォルトマップ選択（解放済みの最初のマップ）
+	for map_data in _maps:
+		var unlock_key = "map." + map_data.id.trim_prefix("map_")
+		if UnlockManager.is_unlocked(unlock_key):
+			_selected_map_id = map_data.id
+			break
+	if _selected_map_id != "":
 		_update_map_highlight()
 		_show_map_preview(_selected_map_id)
 
@@ -695,7 +704,7 @@ func _setup_dummy_players():
 		"name": player_name,
 		"is_ready": false,
 		"is_local": true,
-		"model_path": "res://scenes/Characters/Necromancer.tscn"
+		"model_path": GameData.get_selected_character_model_path()
 	})
 
 
@@ -775,7 +784,7 @@ func _prepare_players_array() -> Array[Dictionary]:
 # ===== ネットワーク公開メソッド（将来NetworkServiceから呼ばれる） =====
 
 ## プレイヤーが参加した時（ネットワーク経由で呼ばれる）
-func on_player_joined(player_id: String, player_name: String, model_path: String = "res://scenes/Characters/Necromancer.tscn"):
+func on_player_joined(player_id: String, player_name: String, model_path: String = "res://scenes/Characters/Hero.tscn"):
 	var slot_index = _players.size()
 	_players.append({
 		"id": player_id,
@@ -900,7 +909,7 @@ func _rebuild_all_player_previews():
 
 	# 現在のプレイヤーリストから再構築
 	for i in range(_players.size()):
-		var model_path = _players[i].get("model_path", "res://scenes/Characters/Necromancer.tscn")
+		var model_path = _players[i].get("model_path", "res://scenes/Characters/Hero.tscn")
 		if i < _max_players:
 			_update_player_preview(i, model_path)
 
