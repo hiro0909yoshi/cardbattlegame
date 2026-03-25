@@ -197,6 +197,9 @@ func _process_victory_result():
 	# 記録更新
 	var record_result = StageRecordManager.update_record(stage_id, rank, _get_current_turn())
 
+	# バトル戦績更新
+	GameData.record_battle_result(true)
+
 	# ゴールド付与
 	if rewards.total > 0:
 		GameData.add_gold(rewards.total)
@@ -249,6 +252,9 @@ func _process_defeat_result(reason: String):
 			await _show_lose_screen_async_cb.call(0)
 		_return_to_stage_select()
 		return
+
+	# バトル戦績更新
+	GameData.record_battle_result(false)
 
 	# 報酬計算（敗北は0G）
 	var rewards = RewardCalculator.calculate_defeat_rewards()

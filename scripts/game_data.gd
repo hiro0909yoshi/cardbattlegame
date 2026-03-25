@@ -73,6 +73,12 @@ var player_data = {
 		"total_login_days": 0         # 累計ログイン日数
 	},
 
+	# === キャラクター ===
+	"character": {
+		"selected_id": "hero",           # 現在選択中のキャラクターID
+		"unlocked": ["hero"]             # 解放済みキャラクターIDリスト
+	},
+
 	# === 設定 ===
 	"settings": {
 		"master_volume": 1.0,
@@ -82,6 +88,115 @@ var player_data = {
 		"auto_save": true
 	}
 }
+
+# プレイアブルキャラクターマスターデータ
+const PLAYABLE_CHARACTERS: Dictionary = {
+	"hero": {
+		"name": "ヒーロー",
+		"model_path": "res://scenes/Characters/Hero.tscn",
+		"portrait_path": "",
+	},
+	"necromancer": {
+		"name": "マリオン",
+		"model_path": "res://scenes/Characters/Necromancer.tscn",
+		"portrait_path": "res://assets/images/characters/marion.png",
+	},
+	"goblin": {
+		"name": "ゴブリン",
+		"model_path": "res://scenes/Characters/Goblin.tscn",
+		"portrait_path": "",
+	},
+	"fighter": {
+		"name": "ファイター",
+		"model_path": "res://scenes/Characters/Fighter.tscn",
+		"portrait_path": "",
+	},
+	"thief": {
+		"name": "シーフ",
+		"model_path": "res://scenes/Characters/Thief.tscn",
+		"portrait_path": "",
+	},
+	"clown": {
+		"name": "クラウン",
+		"model_path": "res://scenes/Characters/Clown.tscn",
+		"portrait_path": "",
+	},
+	"undead_monk": {
+		"name": "アンデッドモンク",
+		"model_path": "res://scenes/Characters/UndeadMonk.tscn",
+		"portrait_path": "",
+	},
+	"old_sage": {
+		"name": "オールドセージ",
+		"model_path": "res://scenes/Characters/OldSage.tscn",
+		"portrait_path": "",
+	},
+	"witch": {
+		"name": "ウィッチ",
+		"model_path": "res://scenes/Characters/Witch.tscn",
+		"portrait_path": "",
+	},
+	"elf": {
+		"name": "エルフ",
+		"model_path": "res://scenes/Characters/Elf.tscn",
+		"portrait_path": "",
+	},
+	"dark_elf": {
+		"name": "ダークエルフ",
+		"model_path": "res://scenes/Characters/DarkElf.tscn",
+		"portrait_path": "",
+	},
+	"golem": {
+		"name": "ゴーレム",
+		"model_path": "res://scenes/Characters/Golem.tscn",
+		"portrait_path": "",
+	},
+	"orc": {
+		"name": "オーク",
+		"model_path": "res://scenes/Characters/Orc.tscn",
+		"portrait_path": "",
+	},
+}
+
+
+## 選択中キャラクターのデータを取得
+func get_selected_character() -> Dictionary:
+	var char_id = player_data.character.selected_id
+	if PLAYABLE_CHARACTERS.has(char_id):
+		return PLAYABLE_CHARACTERS[char_id]
+	return PLAYABLE_CHARACTERS["hero"]
+
+
+## 選択中キャラクターのモデルパスを取得
+func get_selected_character_model_path() -> String:
+	return get_selected_character().model_path
+
+
+## 選択中キャラクターのポートレートパスを取得
+func get_selected_character_portrait() -> String:
+	return get_selected_character().portrait_path
+
+
+## キャラクターが解放済みか
+func is_character_unlocked(char_id: String) -> bool:
+	return char_id in player_data.character.unlocked
+
+
+## キャラクターを解放
+func unlock_character(char_id: String) -> void:
+	if not is_character_unlocked(char_id):
+		player_data.character.unlocked.append(char_id)
+		save_to_file()
+
+
+## キャラクターを選択
+func select_character(char_id: String) -> bool:
+	if not is_character_unlocked(char_id):
+		return false
+	player_data.character.selected_id = char_id
+	save_to_file()
+	return true
+
 
 func _ready():
 	load_from_file()
@@ -260,6 +375,11 @@ func _validate_save_data():
 		}
 	if not player_data.has("inventory"):
 		player_data["inventory"] = {}
+	if not player_data.has("character"):
+		player_data["character"] = {
+			"selected_id": "hero",
+			"unlocked": ["hero"]
+		}
 	if not player_data.has("login_bonus"):
 		player_data["login_bonus"] = {
 			"claimed_campaigns": [],
