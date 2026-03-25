@@ -13,7 +13,8 @@ var selected_stage_id = "stage_1_1"
 # プレイヤーデータの構造
 var player_data = {
 	# === 基本情報 ===
-	"user_id": "player1",
+	"user_id": "",
+	"has_initialized": false,
 	"profile": {
 		"name": "プレイヤー",
 		"level": 1,
@@ -255,6 +256,9 @@ func reset_all_data():
 	# デフォルトから再読み込み
 	load_from_file()
 
+	# UUID再生成 + UserCardDB連携
+	_ensure_user_id()
+
 	# UnlockManagerの再同期（always条件等を再適用）
 	if UnlockManager:
 		UnlockManager._sync_all_conditions()
@@ -264,9 +268,42 @@ func reset_all_data():
 
 func _ready():
 	load_from_file()
+	_ensure_user_id()
 
 	# デッキ検証（所持していないカードを削除）
-	call_deferred("_validate_decks") 
+	call_deferred("_validate_decks")
+
+
+## user_idが未設定ならUUID v4を生成して即保存
+func _ensure_user_id():
+	if player_data.user_id == "" or player_data.user_id == "player1":
+		player_data.user_id = _generate_uuid_v4()
+		save_to_file()
+		# UserCardDBのuser_idも統一
+		if UserCardDB:
+			UserCardDB.update_user_id(player_data.user_id)
+		print("[GameData] UUID生成: %s" % player_data.user_id)
+
+
+## UUID v4を生成
+static func _generate_uuid_v4() -> String:
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	var hex = ""
+	for i in range(16):
+		var byte = rng.randi_range(0, 255)
+		if i == 6:
+			byte = (byte & 0x0F) | 0x40  # version 4
+		elif i == 8:
+			byte = (byte & 0x3F) | 0x80  # variant 1
+		hex += "%02x" % byte
+	return "%s-%s-%s-%s-%s" % [
+		hex.substr(0, 8),
+		hex.substr(8, 4),
+		hex.substr(12, 4),
+		hex.substr(16, 4),
+		hex.substr(20, 12)
+	]
 
 # ==========================================
 # セーブ/ロード
@@ -448,6 +485,9 @@ func _validate_save_data():
 		}
 	if not player_data.has("equipped_title"):
 		player_data["equipped_title"] = "はじまりの一歩"
+	if not player_data.has("has_initialized"):
+		# 既存セーブデータは初期化済みとみなす
+		player_data["has_initialized"] = true
 
 	# unlocks.keys がなければ作成 + 既存データから移行
 	if not player_data.unlocks.has("keys"):

@@ -401,3 +401,22 @@ func reset_database():
 		return
 	db.query("DELETE FROM user_cards")
 	print("[UserCardDB] データベースをリセットしました")
+
+
+## user_idを更新（UUID統一用）
+func update_user_id(new_user_id: String):
+	if _is_web:
+		var new_data = {}
+		for key in _web_data:
+			var entry = _web_data[key]
+			entry["user_id"] = new_user_id
+			var new_key = "%s:%s" % [new_user_id, entry["card_id"]]
+			new_data[new_key] = entry
+		_web_data = new_data
+		_save_web_data()
+		print("[UserCardDB] user_id更新（Web）: %s" % new_user_id)
+		return
+	if not db:
+		return
+	db.query_with_bindings("UPDATE user_cards SET user_id = ?", [new_user_id])
+	print("[UserCardDB] user_id更新: %s" % new_user_id)

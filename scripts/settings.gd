@@ -112,7 +112,7 @@ func _on_reset_pressed():
 	dialog.add_child(vbox)
 	dialog.confirmed.connect(func():
 		GameData.reset_all_data()
-		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+		get_tree().change_scene_to_file("res://scenes/TitleScreen.tscn")
 	)
 
 	add_child(dialog)

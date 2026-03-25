@@ -62,5 +62,6 @@
 		"last_login_date": "",
 		"total_login_days": 0
 	},
-	"user_id": "player1"
+	"has_initialized": false,
+	"user_id": ""
 }
