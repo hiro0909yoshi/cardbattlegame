@@ -78,6 +78,9 @@ var player_data = {
 		"selected_id": "hero"            # 現在選択中のキャラクターID
 	},
 
+	# === 称号 ===
+	"equipped_title": "はじまりの一歩",
+
 	# === 設定 ===
 	"settings": {
 		"master_volume": 1.0,
@@ -157,6 +160,16 @@ const PLAYABLE_CHARACTERS: Dictionary = {
 	},
 }
 
+# 称号マスターデータ（将来的にはJSON化・実績連動）
+const TITLES: Array[Dictionary] = [
+	{"id": "first_step", "name": "はじまりの一歩", "description": "初期称号", "condition": "always"},
+	{"id": "adventurer", "name": "冒険者", "description": "ワールド1をクリア", "condition": "world_1_clear"},
+	{"id": "warrior", "name": "戦士", "description": "10勝達成", "condition": "win_10"},
+	{"id": "veteran", "name": "百戦錬磨", "description": "100戦達成", "condition": "battle_100"},
+	{"id": "collector", "name": "カードコレクター", "description": "50種のカードを収集", "condition": "card_50"},
+	{"id": "hero_title", "name": "英雄", "description": "全ワールドクリア", "condition": "all_world_clear"},
+]
+
 
 ## 選択中キャラクターのデータを取得
 func get_selected_character() -> Dictionary:
@@ -174,6 +187,49 @@ func get_selected_character_model_path() -> String:
 ## 選択中キャラクターのポートレートパスを取得
 func get_selected_character_portrait() -> String:
 	return get_selected_character().portrait_path
+
+
+## 取得済みの称号一覧を返す
+func get_available_titles() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for title_data in TITLES:
+		if _is_title_unlocked(title_data):
+			result.append(title_data)
+	return result
+
+
+## 称号の解放判定
+func _is_title_unlocked(title_data: Dictionary) -> bool:
+	match title_data.condition:
+		"always":
+			return true
+		"world_1_clear":
+			return UnlockManager.is_unlocked("world.world_2")
+		"win_10":
+			return player_data.stats.wins >= 10
+		"battle_100":
+			return player_data.stats.total_battles >= 100
+		"card_50":
+			return UserCardDB.get_all_obtained_cards().size() >= 50
+		"all_world_clear":
+			return UnlockManager.is_unlocked("world.world_3")
+		_:
+			return false
+
+
+## 称号を装備する
+func equip_title(title_name: String) -> bool:
+	for title_data in TITLES:
+		if title_data.name == title_name and _is_title_unlocked(title_data):
+			player_data.equipped_title = title_name
+			save_to_file()
+			return true
+	return false
+
+
+## 装備中の称号を取得
+func get_equipped_title() -> String:
+	return player_data.get("equipped_title", "はじまりの一歩")
 
 
 ## キャラクターを選択（解放判定はUnlockManager経由）
@@ -390,6 +446,8 @@ func _validate_save_data():
 		player_data["character"] = {
 			"selected_id": "hero"
 		}
+	if not player_data.has("equipped_title"):
+		player_data["equipped_title"] = "はじまりの一歩"
 
 	# unlocks.keys がなければ作成 + 既存データから移行
 	if not player_data.unlocks.has("keys"):

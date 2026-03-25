@@ -16,6 +16,7 @@ extends Control
 
 # 左パネル（タップでステータス画面へ）
 @onready var _player_name_button: Button = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox/PlayerNameButton
+@onready var _title_label: Label = $MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/TitleLabel
 @onready var _character_preview: SubViewportContainer = $MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer/CharacterPreview
 
 # 右パネル（メインボタン）
@@ -159,6 +160,8 @@ func _update_user_info():
 	# 左パネル
 	if _player_name_button:
 		_player_name_button.text = GameData.player_data.profile.name
+	if _title_label:
+		_title_label.text = GameData.get_equipped_title()
 	if _character_preview:
 		_character_preview.set_selected_character()
 

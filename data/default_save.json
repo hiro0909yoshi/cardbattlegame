@@ -49,6 +49,7 @@
 	"character": {
 		"selected_id": "hero"
 	},
+	"equipped_title": "はじまりの一歩",
 	"stamina": {
 		"current": 50,
 		"max": 50,

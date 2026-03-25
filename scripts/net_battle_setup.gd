@@ -320,8 +320,9 @@ func _build_left_panel() -> Control:
 		_player_preview_viewports.append(sv)
 		_player_preview_char_nodes.append(null)
 
-	# 自分のキャラプレビューを表示（P1 = 現在はNecromancer固定）
-	_update_player_preview(0, "res://scenes/Characters/Necromancer.tscn")
+	# 自分のキャラプレビューを表示
+	var _selected_model = GameData.get_selected_character_model_path()
+	_update_player_preview(0, _selected_model)
 
 	_update_player_display()
 
@@ -703,7 +704,7 @@ func _setup_dummy_players():
 		"name": player_name,
 		"is_ready": false,
 		"is_local": true,
-		"model_path": "res://scenes/Characters/Necromancer.tscn"
+		"model_path": GameData.get_selected_character_model_path()
 	})
 
 
@@ -783,7 +784,7 @@ func _prepare_players_array() -> Array[Dictionary]:
 # ===== ネットワーク公開メソッド（将来NetworkServiceから呼ばれる） =====
 
 ## プレイヤーが参加した時（ネットワーク経由で呼ばれる）
-func on_player_joined(player_id: String, player_name: String, model_path: String = "res://scenes/Characters/Necromancer.tscn"):
+func on_player_joined(player_id: String, player_name: String, model_path: String = "res://scenes/Characters/Hero.tscn"):
 	var slot_index = _players.size()
 	_players.append({
 		"id": player_id,
@@ -908,7 +909,7 @@ func _rebuild_all_player_previews():
 
 	# 現在のプレイヤーリストから再構築
 	for i in range(_players.size()):
-		var model_path = _players[i].get("model_path", "res://scenes/Characters/Necromancer.tscn")
+		var model_path = _players[i].get("model_path", "res://scenes/Characters/Hero.tscn")
 		if i < _max_players:
 			_update_player_preview(i, model_path)
 

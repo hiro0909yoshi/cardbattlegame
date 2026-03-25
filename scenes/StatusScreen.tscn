@@ -108,6 +108,12 @@ theme_override_font_sizes/font_size = 36
 theme_override_colors/font_color = Color(0.7, 0.7, 0.3, 1)
 horizontal_alignment = 1
 
+[node name="TitleChangeButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+theme_override_font_sizes/font_size = 28
+text = "称号変更"
+
 [node name="CharacterChangeButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 80)

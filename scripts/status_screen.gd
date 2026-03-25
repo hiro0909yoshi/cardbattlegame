@@ -5,6 +5,7 @@ extends Control
 @onready var _player_name_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/PlayerNameLabel
 @onready var _level_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/LevelLabel
 @onready var _title_label: Label = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/TitleLabel
+@onready var _title_change_button: Button = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/TitleChangeButton
 @onready var _character_change_button: Button = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/CharacterChangeButton
 @onready var _name_change_button: Button = $MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox/NameChangeButton
 
@@ -44,6 +45,7 @@ func _ready():
 
 func _connect_buttons():
 	_back_button.pressed.connect(_on_back_pressed)
+	_title_change_button.pressed.connect(_on_title_change_pressed)
 	_character_change_button.pressed.connect(_on_character_change_pressed)
 	_name_change_button.pressed.connect(_on_name_change_pressed)
 	_account_button.pressed.connect(_on_account_pressed)
@@ -58,7 +60,7 @@ func _update_display():
 	# 左パネル
 	_player_name_label.text = profile.name
 	_level_label.text = "Lv. %d  (EXP: %d)" % [profile.level, profile.exp]
-	_title_label.text = "はじまりの一歩"
+	_title_label.text = GameData.get_equipped_title()
 
 	if _character_preview:
 		_character_preview.set_selected_character()
@@ -114,6 +116,64 @@ func _setup_left_panel_style():
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
+func _on_title_change_pressed():
+	var dialog = AcceptDialog.new()
+	dialog.title = "称号変更"
+	dialog.ok_button_text = "閉じる"
+
+	var ok_btn = dialog.get_ok_button()
+	ok_btn.custom_minimum_size = Vector2(400, 80)
+	ok_btn.add_theme_font_size_override("font_size", 36)
+
+	var scroll = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(600, 400)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+
+	var current_title = GameData.get_equipped_title()
+	var available_titles = GameData.get_available_titles()
+
+	for title_data in available_titles:
+		var is_equipped = title_data.name == current_title
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(0, 80)
+		btn.add_theme_font_size_override("font_size", 28)
+
+		if is_equipped:
+			btn.text = "%s\n[装備中]" % title_data.name
+			btn.disabled = true
+		else:
+			btn.text = "%s\n%s" % [title_data.name, title_data.description]
+			btn.pressed.connect(_on_title_selected.bind(title_data.name, dialog))
+
+		vbox.add_child(btn)
+
+	# 未解放の称号も表示（ロック状態）
+	for title_data in GameData.TITLES:
+		if not GameData._is_title_unlocked(title_data):
+			var btn = Button.new()
+			btn.custom_minimum_size = Vector2(0, 80)
+			btn.add_theme_font_size_override("font_size", 28)
+			btn.text = "🔒 ???\n%s" % title_data.description
+			btn.disabled = true
+			btn.modulate = Color(0.5, 0.5, 0.5)
+			vbox.add_child(btn)
+
+	scroll.add_child(vbox)
+	dialog.add_child(scroll)
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _on_title_selected(title_name: String, dialog: AcceptDialog):
+	if GameData.equip_title(title_name):
+		_update_display()
+		if dialog and is_instance_valid(dialog):
+			dialog.queue_free()
+		print("[StatusScreen] 称号変更: %s" % title_name)
 
 
 func _on_character_change_pressed():
