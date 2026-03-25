@@ -264,47 +264,66 @@ GameData (Autoload)
 アプリ起動
   │
   ▼
-タイトル画面表示（ロゴ + タップでスタート）
-  │
-  ▼
 GameData.load_from_file()
   │
-  ├── user_id が存在する → メイン画面へ（通常起動）
+  ▼
+user_id が空 or "player1" → UUID v4 生成 + 保存
   │
-  └── user_id が未設定 or "player1" → 初回起動フロー
+  ▼
+UserCardDB の user_id を GameData.user_id に統一
+  │
+  ▼
+UnlockManager._sync_all_conditions()
+  │
+  ▼
+タイトル画面表示（ロゴ + 「タップしてスタート」）
+  │
+  ▼
+タップ
+  │
+  ├── has_initialized == true → メイン画面へ
+  │
+  └── has_initialized == false → 初回起動フロー
         │
         ▼
-      UUID v4 を生成してセーブ
+      名前入力画面を表示（1〜20文字）
         │
         ▼
-      名前入力画面を表示（1〜20文字、デフォルト空欄）
-        │
-        ▼
-      名前を保存 + 名前変更チケット1枚付与済み（default_save）
-        │
-        ▼
-      UnlockManager._sync_all_conditions()（always条件適用）
+      名前を保存 + has_initialized = true + セーブ
         │
         ▼
       メイン画面へ
 ```
 
-### 7-2. UUID生成
+### 7-2. 設計原則
+
+- **IDと状態を分離**: `user_id`は識別用、`has_initialized`は初回判定用。`user_id == "player1"`での初回判定は禁止
+- **UUIDはUI無関係に生成**: 起動時にGameDataロード直後に生成。タップやUI操作に依存させない（クラッシュ耐性）
+- **UserCardDB即時連携**: UUID確定直後にUserCardDBの`user_id`も統一（孤立データ防止）
+
+### 7-3. UUID生成
 
 - **フォーマット**: UUID v4（ランダム生成）
-- **生成タイミング**: 初回起動時にローカルで生成
+- **生成タイミング**: GameData.load_from_file()直後、`_ready()`内で自動実行
 - **保存先**: `GameData.player_data.user_id`（player_save.json）
-- **UserCardDB連携**: UserCardDBの`user_id`カラムもGameDataの`user_id`を参照するように変更
+- **UserCardDB連携**: 生成直後にUserCardDBのuser_idカラムも更新
 - **将来**: サーバー登録時にサーバー側でもこのUUIDをキーとして使用
 
-### 7-3. 名前入力
+### 7-4. 初回判定
+
+- **フラグ**: `GameData.player_data.has_initialized`（bool）
+- **初期値**: false（default_save.json）
+- **trueになるタイミング**: 名前入力完了時
+- **判定場所**: タイトル画面のタップ時
+
+### 7-5. 名前入力
 
 - **最大文字数**: 20文字
 - **最小文字数**: 1文字（空欄不可）
 - **禁止文字**: なし（将来的にNGワードフィルタ追加）
 - **変更**: 名前変更チケット消費で後から変更可能（ステータス画面）
 
-### 7-4. タイトル画面の構成
+### 7-6. タイトル画面の構成
 
 - ゲームロゴ（画面中央上部）
 - 「タップしてスタート」テキスト（画面下部、点滅アニメーション）
