@@ -574,10 +574,27 @@ func clear_navigation_saved_state():
 func restore_current_phase():
 	if _navigation_service and _navigation_service.is_nav_state_saved():
 		restore_navigation_state()
+		# スペルターゲット選択中の場合、ターゲット選択UIも復元
+		_restore_target_selection_ui_if_needed()
 		return
 	# Fallback: save が無効化されている場合、フェーズ固有の復元
+	# info_panel_back_lockedが残っている場合はクリア（fallbackパスではrestoreが走らないため）
+	if _navigation_service:
+		_navigation_service.unlock_info_panel_back()
 	if card_selection_ui and card_selection_ui.is_active:
 		card_selection_ui.restore_navigation()
+	# Fallback でもスペルターゲット選択中なら復元
+	_restore_target_selection_ui_if_needed()
+
+## スペルターゲット選択中であれば、ターゲット選択UIを復元
+func _restore_target_selection_ui_if_needed():
+	if not game_flow_manager_ref or not game_flow_manager_ref.spell_phase_handler:
+		return
+	var sph = game_flow_manager_ref.spell_phase_handler
+	if not sph.spell_state or sph.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
+		return
+	if sph.spell_target_selection_handler:
+		sph.spell_target_selection_handler._update_target_selection()
 
 func register_confirm_action(callback: Callable, _text: String = ""):
 	if _navigation_service:

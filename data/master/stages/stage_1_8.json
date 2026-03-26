@@ -24,7 +24,7 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "goblin",
+		"character_id": "gold_goblin",
 		"deck_id": "cpu_deck_3",
 		"ai_level": 5,
 		"start_tile": 0

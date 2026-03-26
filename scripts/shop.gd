@@ -34,6 +34,7 @@ const ITEM_SHOP_PRICES: Array[Dictionary] = [
 @onready var gacha_type_container = $VBoxContainer/ContentPanel/GachaSection/GachaTypeContainer
 @onready var single_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/SingleGachaButton
 @onready var multi_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/MultiGachaButton
+@onready var multi_100_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/Multi100GachaButton
 @onready var result_label = $VBoxContainer/ContentPanel/GachaSection/ResultSection/ResultLabel
 @onready var result_grid = $VBoxContainer/ContentPanel/GachaSection/ResultSection/ScrollContainer/ResultGrid
 
@@ -76,6 +77,7 @@ func _ready():
 	# ガチャボタン接続
 	single_button.pressed.connect(_on_single_gacha)
 	multi_button.pressed.connect(_on_multi_gacha)
+	multi_100_button.pressed.connect(_on_multi_100_gacha)
 	
 	# 売却ボタン接続
 	manual_sell_button.pressed.connect(_on_manual_sell)
@@ -146,8 +148,10 @@ func _on_gacha_type_selected(type_id: int):
 	# ガチャボタンのテキストを更新
 	var single_cost = gacha_system.get_single_cost(type_id)
 	var multi_cost = gacha_system.get_multi_10_cost(type_id)
+	var multi_100_cost = gacha_system.get_multi_100_cost(type_id)
 	single_button.text = "1回引く\n%dG" % single_cost
 	multi_button.text = "10連\n%dG" % multi_cost
+	multi_100_button.text = "100連\n%dG" % multi_100_cost
 	
 	result_label.text = "%s を選択中" % GACHA_NAMES[type_id]
 
@@ -203,6 +207,14 @@ func _on_single_gacha():
 
 func _on_multi_gacha():
 	var result = gacha_system.pull_multi_10()
+	if result.success:
+		_show_gacha_result(result.cards)
+	else:
+		result_label.text = result.error
+	_update_gold_display()
+
+func _on_multi_100_gacha():
+	var result = gacha_system.pull_multi_100()
 	if result.success:
 		_show_gacha_result(result.cards)
 	else:

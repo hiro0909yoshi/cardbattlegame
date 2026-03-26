@@ -72,9 +72,9 @@
 		"summon_rate": 1.0
 	  }
 	},
-	"zako_1": {
-	  "name": "雑魚1",
-	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+	"goblin": {
+	  "name": "ゴブリン",
+	  "model_path": "res://scenes/Characters/Goblin.tscn",
 	  "portrait_path": "",
 	  "description": "雑魚敵1",
 	  "difficulties": [
@@ -105,9 +105,9 @@
 		"dominio_use_rate": 0.0
 	  }
 	},
-	"zako_2": {
-	  "name": "雑魚2",
-	  "model_path": "res://scenes/Characters/UndeadMonk.tscn",
+	"red_goblin": {
+	  "name": "レッドゴブリン",
+	  "model_path": "res://scenes/Characters/RedGoblin.tscn",
 	  "portrait_path": "",
 	  "description": "雑魚敵2",
 	  "difficulties": [
@@ -234,9 +234,9 @@
 		"dominio_use_rate": 0.8
 	  }
 	},
-	"goblin": {
-	  "name": "ゴブリン",
-	  "model_path": "res://scenes/Characters/Goblin.tscn",
+	"gold_goblin": {
+	  "name": "ゴールドゴブリン",
+	  "model_path": "res://scenes/Characters/GoldGoblin.tscn",
 	  "portrait_path": "",
 	  "description": "ワールド1-8のボス",
 	  "difficulties": [

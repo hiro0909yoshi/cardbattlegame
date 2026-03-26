@@ -12,6 +12,55 @@
 
 ---
 
+## 2026年3月26日（Session: タイトル画面 + プレイヤーデータ整備）
+
+### 完了した作業
+
+#### タイトル画面
+- ✅ `TitleScreen.tscn` / `title_screen.gd` 新規作成 — ロゴ + Tap to Start + バージョン表記
+- ✅ 初回起動時に名前入力ダイアログ表示（`has_initialized`フラグで判定）
+- ✅ project.godot 起動シーンをTitleScreenに変更
+
+#### UUID自動生成
+- ✅ GameData._ensure_user_id() — 起動時にUUID v4を即生成+保存（UI無関係）
+- ✅ UserCardDB.update_user_id() — UUID確定直後にDBのuser_idも統一
+- ✅ `has_initialized`フラグ導入（IDと状態の分離）
+
+#### セーブデータリセット機能
+- ✅ 設定画面に赤い「セーブデータリセット」ボタン追加（プレイヤー名入力で誤操作防止）
+- ✅ GameData.reset_all_data() — 全データ初期化+UUID再生成+UnlockManager再同期
+- ✅ リセット後はタイトル画面に遷移（名前入力からやり直し）
+
+#### 名前変更チケット
+- ✅ ステータス画面に名前変更ボタン（チケット消費で変更、初回1枚付与）
+
+#### 称号システム
+- ✅ GameDataにequipped_title + TITLESマスターデータ(6種)追加
+- ✅ ステータス画面に称号変更ダイアログ（解放済み選択/未解放ロック表示）
+- ✅ メイン画面・ステータス画面のハードコード称号をデータ駆動に変更
+
+#### ネット対戦修正
+- ✅ 自分のキャラ表示をGameData.get_selected_character_model_path()から取得
+
+#### ドキュメント
+- ✅ player_account_design.md — 初回起動フロー設計追加、データ構造を現状に更新
+- ✅ default_save.json — 現行データ構造に完全整備
+
+### feature/player-system → main マージ済み
+
+### 未対応（後回し）
+- 未設定キャラの解放条件: clown, old_sage, witch, golem, elf
+- ネット対戦のキャラ選択UI
+- 名前変更チケットの追加入手経路
+- タイトル画面の動作確認（次セッション）
+
+### 次のステップ
+- タイトル画面の動作確認・調整
+- feature/title-screen → main マージ
+- バックエンド設計・実装（ネットワーク対戦の前提）
+
+---
+
 ## 2026年3月25日（Session: 統一アンロックシステム実装）
 
 ### 完了した作業

@@ -115,6 +115,13 @@ theme_override_font_sizes/font_size = 24
 text = "10連
 450 G"
 
+[node name="Multi100GachaButton" type="Button" parent="VBoxContainer/ContentPanel/GachaSection/ButtonsHBox"]
+custom_minimum_size = Vector2(250, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "100連
+5000 G"
+
 [node name="ResultSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel/GachaSection"]
 layout_mode = 2
 

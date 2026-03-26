@@ -28,7 +28,9 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	
 	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
-	
+
+	GameLogger.info("Dominio", "コマンド確定: P%d level_up タイル%d Lv%d→%d (EP-%d)" % [current_player.id + 1, handler.selected_tile_index, tile.level, target_level, cost])
+
 	# レベルアップ実行
 	tile.level = target_level
 
@@ -351,12 +353,14 @@ static func confirm_move(handler, dest_tile_index: int):
 	# バウダーイーターチェック（分裂移動）
 	var is_boulder_eater = SkillCreatureSpawn.is_boulder_eater(creature_data)
 	
+	GameLogger.info("Dominio", "コマンド確定: P%d move_creature タイル%d→%d %s(id:%d)" % [current_player_index + 1, handler.move_source_tile, dest_tile_index, creature_data.get("name", "?"), creature_data.get("id", -1)])
+
 	# 1. 移動元のクリーチャーを削除し、空き地にする（バウダーイーター以外）
 	if not is_boulder_eater:
 		# board_system経由で削除（スキルインデックスも更新される）
 		handler.board_system.remove_creature(handler.move_source_tile)
 		handler.board_system.set_tile_owner(handler.move_source_tile, -1)  # 空き地化
-	
+
 	# 2. 移動先の状況を確認
 	var dest_owner = dest_tile.owner_id
 
@@ -634,9 +638,11 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# TileActionProcessorに処理中フラグを設定（EPチェック通過後）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.begin_action_processing()
-	
+
 	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
+
+	GameLogger.info("Dominio", "コマンド確定: P%d terrain_change タイル%d →%s (EP-%d)" % [current_player.id + 1, tile_index, new_element, cost])
 	
 	# 地形変化実行（SpellLand経由でインペリアルガードチェックも行う）
 	var success = handler.spell_land.change_element(tile_index, new_element)

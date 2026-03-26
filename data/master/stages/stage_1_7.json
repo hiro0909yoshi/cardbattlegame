@@ -24,13 +24,13 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "zako_1",
+		"character_id": "goblin",
 		"deck_id": "cpu_deck_1",
 		"ai_level": 3,
 		"start_tile": 0
 	  },
 	  {
-		"character_id": "zako_2",
+		"character_id": "red_goblin",
 		"deck_id": "cpu_deck_2",
 		"ai_level": 3,
 		"start_tile": 0

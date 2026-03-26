@@ -25,9 +25,9 @@ const RARITY_RATES = {
 
 # ガチャ価格（タイプ別）
 const GACHA_COSTS = {
-	GachaType.NORMAL: { "single": 50, "multi_10": 500 },
-	GachaType.S_GACHA: { "single": 80, "multi_10": 800 },
-	GachaType.R_GACHA: { "single": 100, "multi_10": 1000 }
+	GachaType.NORMAL: { "single": 50, "multi_10": 500, "multi_100": 5000 },
+	GachaType.S_GACHA: { "single": 80, "multi_10": 800, "multi_100": 8000 },
+	GachaType.R_GACHA: { "single": 100, "multi_10": 1000, "multi_100": 10000 }
 }
 
 # GachaType → UnlockManagerキーのマッピング
@@ -125,26 +125,38 @@ func pull_single() -> Dictionary:
 func pull_multi_10() -> Dictionary:
 	return pull_multi_10_typed(current_gacha_type)
 
-## ガチャを100連で引く（旧API互換）
-func pull_multi_100() -> Dictionary:
-	if not _can_afford(MULTI_100_COST):
-		return {"success": false, "error": "ゴールドが足りません"}
-	
+## 100連ガチャの価格を取得
+func get_multi_100_cost(type: GachaType = current_gacha_type) -> int:
+	return GACHA_COSTS[type]["multi_100"]
+
+## ガチャを100連で引く（タイプ指定版）
+func pull_multi_100_typed(type: GachaType) -> Dictionary:
+	var cost = get_multi_100_cost(type)
+	if not _can_afford(cost):
+		return {"success": false, "error": "ゴールドが足りません（必要: %dG）" % cost}
+
+	if not is_gacha_unlocked(type):
+		return {"success": false, "error": "このガチャはまだ解禁されていません"}
+
 	# ゴールド消費
-	GameData.player_data.profile.gold -= MULTI_100_COST
+	GameData.player_data.profile.gold -= cost
 	GameData.save_to_file()
-	
+
 	# カード抽選（100回）
-	var cards = []
-	for i in range(MULTI_100_COUNT):
-		var card = _pull_one_typed(current_gacha_type)
+	var cards: Array[Dictionary] = []
+	for i in range(100):
+		var card = _pull_one_typed(type)
 		cards.append(card)
 		UserCardDB.add_card(card.id, 1)
-	
+
 	# DBをフラッシュ
 	UserCardDB.flush()
-	
+
 	return {"success": true, "cards": cards}
+
+## ガチャを100連で引く（旧API互換）
+func pull_multi_100() -> Dictionary:
+	return pull_multi_100_typed(current_gacha_type)
 
 ## 1枚抽選（タイプ指定版）
 func _pull_one_typed(type: GachaType) -> Dictionary:

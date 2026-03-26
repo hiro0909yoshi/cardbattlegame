@@ -21,7 +21,7 @@ func _ready():
 		_setup_dev_mode()
 	
 	# ネイティブ版で全カード所持状態にする場合はコメント解除
-	_setup_dev_mode()
+	#_setup_dev_mode()
 
 ## 開発用：全カード4枚ずつ登録
 func _setup_dev_mode():

@@ -228,6 +228,13 @@ func show_summon_ui_disabled():
 		_card_selection_service.card_selection_filter = "disabled"
 		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
 
+func show_special_tile_ui():
+	if _message_service:
+		_message_service.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "disabled"
+		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
+
 func show_level_up_ui(tile_info: Dictionary):
 	if ui_manager:
 		var current_player_index = board_system.current_player_index

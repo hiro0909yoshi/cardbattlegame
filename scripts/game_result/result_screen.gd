@@ -249,8 +249,9 @@ func _show_unlock_popup(gacha_name: String) -> void:
 	var popup = PanelContainer.new()
 	popup.name = "UnlockPopup"
 	popup.set_anchors_preset(Control.PRESET_CENTER)
+	popup.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	popup.grow_vertical = Control.GROW_DIRECTION_BOTH
 	popup.custom_minimum_size = Vector2(700, 280)
-	popup.position = Vector2(-350, -140)
 	
 	var popup_style = StyleBoxFlat.new()
 	popup_style.bg_color = Color(0.12, 0.08, 0.2, 0.95)

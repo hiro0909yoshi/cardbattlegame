@@ -9,6 +9,14 @@
       "lock_description": ""
     },
     {
+      "id": "c014",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_1_1" },
+      "unlock": ["character.goblin"],
+      "notification": "ゴブリンが使えるようになった!",
+      "lock_description": "1-1クリアで解禁"
+    },
+    {
       "id": "c001",
       "type": "stage_clear",
       "requirement": { "stage_id": "stage_2_1" },
@@ -33,11 +41,19 @@
       "lock_description": "1-5クリアで解禁"
     },
     {
+      "id": "c013",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_1_6" },
+      "unlock": ["character.red_goblin"],
+      "notification": "レッドゴブリンが使えるようになった!",
+      "lock_description": "1-6クリアで解禁"
+    },
+    {
       "id": "c004",
       "type": "stage_clear",
       "requirement": { "stage_id": "stage_1_8" },
-      "unlock": ["character.goblin", "gacha.s_gacha", "world.world_2"],
-      "notification": "ゴブリンとSガチャとワールド2が解禁された!",
+      "unlock": ["character.gold_goblin", "gacha.s_gacha", "world.world_2"],
+      "notification": "ゴールドゴブリンとSガチャとワールド2が解禁された!",
       "lock_description": "1-8クリアで解禁"
     },
     {

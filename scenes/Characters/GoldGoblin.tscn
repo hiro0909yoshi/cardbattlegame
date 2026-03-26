@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/shared/Walking.fbx" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/goblin/Idle.fbx" id="2_idle"]
+[ext_resource type="Script" path="res://scripts/characters/gold_tint.gd" id="3_script"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_001"]
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("3_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 1.2, 0)
+shape = SubResource("CapsuleShape3D_001")
+
+[node name="WalkModel" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, 0, 0, 0)
+
+[node name="IdleModel" parent="." instance=ExtResource("2_idle")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, 0, 0, 0)
+visible = false

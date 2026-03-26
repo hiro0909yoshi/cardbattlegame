@@ -279,6 +279,11 @@ func test_destroy_deck_card():
 
 ## デッキリセット
 func test_reset_deck():
+	# GameDataのデッキに元カードを設定（reset_deck_to_originalが参照する）
+	var original_cards = {2016: 1, 2023: 1, 2031: 1}
+	var deck_index = GameData.player_data.get("selected_deck_index", 0)
+	if deck_index < GameData.player_data.decks.size():
+		GameData.player_data.decks[deck_index]["cards"] = original_cards
 	_set_deck(0, [2016])
 	_card_system.player_discards[0] = [2023, 2031]
 	var result = _spell_draw.reset_deck_to_original(0)

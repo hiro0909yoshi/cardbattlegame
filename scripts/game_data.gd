@@ -109,6 +109,16 @@ const PLAYABLE_CHARACTERS: Dictionary = {
 		"model_path": "res://scenes/Characters/Goblin.tscn",
 		"portrait_path": "",
 	},
+	"red_goblin": {
+		"name": "レッドゴブリン",
+		"model_path": "res://scenes/Characters/RedGoblin.tscn",
+		"portrait_path": "",
+	},
+	"gold_goblin": {
+		"name": "ゴールドゴブリン",
+		"model_path": "res://scenes/Characters/GoldGoblin.tscn",
+		"portrait_path": "",
+	},
 	"fighter": {
 		"name": "ファイター",
 		"model_path": "res://scenes/Characters/Fighter.tscn",
@@ -337,13 +347,8 @@ func load_from_file():
 			file.close()
 			var json = JSON.new()
 			if json.parse(json_string) == OK:
-				var data = json.data
-				# デッキが有効かチェック
-				if _has_valid_deck(data):
-					player_data = data
-					loaded_from_user = true
-				else:
-					print("[GameData] user://のデッキが空、default_save.jsonを試行")
+				player_data = json.data
+				loaded_from_user = true
 	
 	# user://がない or デッキが空の場合、default_save.jsonを試す
 	if not loaded_from_user:
@@ -383,23 +388,8 @@ func _initialize_new_save():
 			"cards": {}
 		})
 	
-	# テスト用データ
-	_initialize_test_data()
+	# テスト用データ（設定画面の「全カード追加」ボタンで手動実行可能）
 
-func _initialize_test_data():
-	await get_tree().process_frame
-	
-	print("\n=== テストデータ初期化 ===")
-	
-	# DBに全カードを登録
-	if UserCardDB:
-		UserCardDB.reset_database()
-		UserCardDB.import_all_cards_from_json()
-		print("✅ テストデータ: DBに全カード登録完了")
-	else:
-		print("❌ UserCardDBが見つかりません")
-	
-	print("=========================\n")
 
 ## デッキに有効なカードがあるかチェック
 func _has_valid_deck(data: Dictionary) -> bool:

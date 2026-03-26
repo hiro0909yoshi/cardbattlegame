@@ -264,7 +264,8 @@ func execute_action(action_type: String) -> bool:
 	var creature_name = tile_info.get("creature", {}).get("name", "?") if not tile_info.is_empty() else "?"
 	var creature_id = tile_info.get("creature", {}).get("id", -1) if not tile_info.is_empty() else -1
 	var tile_level = tile_info.get("level", 1) if not tile_info.is_empty() else 1
-	GameLogger.info("Dominio", "コマンド: P%d %s タイル%d Lv%d %s(id:%d)" % [board_system.current_player_index + 1 if board_system else 0, action_type, selected_tile_index, tile_level, creature_name, creature_id])
+	var _log_suffix = "P%d %s タイル%d Lv%d %s(id:%d)" % [board_system.current_player_index + 1 if board_system else 0, action_type, selected_tile_index, tile_level, creature_name, creature_id]
+	GameLogger.info("Dominio", "アクション選択: %s" % _log_suffix)
 
 	var success = false
 	match action_type:
@@ -700,6 +701,8 @@ func on_card_selected_for_swap(card_index: int):
 	swap_old_creature = {}
 	swap_tile_index = -1
 	
+	GameLogger.info("Dominio", "コマンド確定: P%d swap_creature タイル%d %s→カード%d" % [board_system.current_player_index + 1 if board_system else 0, tile_index, old_creature.get("name", "?"), card_index])
+
 	# TileActionProcessorの交換処理を呼び出す
 	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if board_system and board_system.tile_action_processor:

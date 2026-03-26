@@ -24,7 +24,7 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "zako_1",
+		"character_id": "goblin",
 		"deck_id": "cpu_deck_2",
 		"ai_level": 3,
 		"start_tile": 0

@@ -683,11 +683,24 @@ func _reinitialize_card_selection():
 		if board_system_3d and board_system_3d.tile_action_processor:
 			board_system_3d.tile_action_processor.begin_action_processing()
 
+		# 特殊タイル上の場合は専用UI復元（召喚不可状態）
+		var current_tile = board_system_3d.get_player_tile(current_player.id) if board_system_3d else -1
+		var is_special = false
+		if current_tile >= 0 and board_system_3d.tile_nodes.has(current_tile):
+			var tile = board_system_3d.tile_nodes[current_tile]
+			is_special = TileHelper.is_special_type(tile.tile_type)
+
 		# カード選択UIを完全に再初期化（一度非表示にしてから再表示）
 		if _ui_hide_card_selection_cb.is_valid():
 			_ui_hide_card_selection_cb.call()
-		if _ui_show_card_selection_cb.is_valid():
-			_ui_show_card_selection_cb.call(current_player)
+
+		if is_special:
+			# 特殊タイル: TileActionProcessorの特殊タイル用UI表示を使用
+			if board_system_3d.tile_action_processor:
+				board_system_3d.tile_action_processor.show_special_tile_ui()
+		else:
+			if _ui_show_card_selection_cb.is_valid():
+				_ui_show_card_selection_cb.call(current_player)
 
 		# ドミニオコマンドボタンも再表示
 		if _ui_show_dominio_btn_cb.is_valid():
