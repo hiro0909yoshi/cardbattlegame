@@ -155,6 +155,8 @@ func initialize_with_systems(system_manager):
 			player_system = game_flow_manager.player_system
 		if game_flow_manager.dominio_command_handler:
 			dominio_command_handler = game_flow_manager.dominio_command_handler
+		if game_flow_manager.spell_phase_handler:
+			spell_phase_handler = game_flow_manager.spell_phase_handler
 
 	_setup_ui()
 	_setup_explanation_mode()
@@ -345,9 +347,17 @@ func _on_dice_rolled(_value: int):
 	# dice_promptフェーズ → diceへ進む
 	# dice_prompt（番号なし）は分岐選択があるのでdirectionへも進む
 	# dice_prompt2以降は分岐なしなので移動完了後に次へ進む
-	elif phase.begins_with("dice_prompt"):
+	elif phase == "dice_prompt":
+		# dice_prompt（番号なし）は方向選択あり → dice → direction と2つ進む
 		_exit_explanation_mode_if_active()
-		advance_step()  # 次のステップ（directionなど）へ
+		advance_step()  # diceへ
+		var next_phase = get_current_step().get("phase", "")
+		if next_phase.begins_with("dice") and not next_phase.begins_with("dice_prompt") and get_current_step().get("message", "") == "":
+			advance_step()  # directionへ
+	elif phase.begins_with("dice_prompt"):
+		# dice_prompt2以降は分岐なし → diceステップまで進み、移動完了を待つ
+		_exit_explanation_mode_if_active()
+		advance_step()  # dice2等へ
 	# diceフェーズでは次のフェーズがcheckpointなら待機、そうでなければ進む
 	elif phase.begins_with("dice") and not phase.begins_with("dice_prompt"):
 		var next_step_index = current_step + 1
@@ -445,9 +455,11 @@ func _on_item_phase_started():
 	if not is_active:
 		return
 	var phase = get_current_step().get("phase", "")
-	# クリーチャー選択後、アイテムフェーズ開始 → battle_info1へ
+	# クリーチャー選択後、アイテムフェーズ開始 → 次のステップへ
 	if phase == "battle_select_creature":
 		advance_step()  # battle_info1へ
+	elif phase == "battle_statue_select":
+		advance_step()  # battle_statue_item_explainへ
 
 func _on_item_used(_item_card: Dictionary):
 	if not is_active:
@@ -552,6 +564,12 @@ func _on_action_completed():
 	# phaseは最初に取得して保持（awaitで変わる可能性があるため）
 	var initial_phase = get_current_step().get("phase", "")
 	
+	# レベル選択フェーズならlevelup_completeへ進む
+	if initial_phase == "level_select":
+		_exit_explanation_mode_if_active()
+		advance_step()
+		return
+
 	# プレイヤーの召喚関連フェーズなら_completeステップまで進む
 	# summon_select, summon_confirm, summon_execute, summon_sakuya_select, etc.
 	if initial_phase.begins_with("summon"):
