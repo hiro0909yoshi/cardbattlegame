@@ -201,10 +201,18 @@ func _setup_ui():
 
 ## ゲームシステムのシグナルを接続
 func _connect_signals():
-	# ターン開始・ダイス
+	print("[TutorialManager] _connect_signals() 開始")
+	# ターン開始
 	if game_flow_manager:
 		game_flow_manager.turn_started.connect(_on_turn_started)
-		game_flow_manager.dice_rolled.connect(_on_dice_rolled)
+
+	# ダイス（player_systemのdice_rolled_doubleに接続 - 現在のダイスシステム）
+	if player_system:
+		if not player_system.dice_rolled_double.is_connected(_on_dice_rolled_double):
+			player_system.dice_rolled_double.connect(_on_dice_rolled_double)
+		print("[TutorialManager] dice_rolled_double シグナル接続完了（player_system）")
+	else:
+		print("[TutorialManager] WARNING: player_system is null, dice未接続")
 	
 	# 移動完了（BoardSystem3Dの転送シグナル経由）
 	if board_system_3d:
@@ -242,9 +250,11 @@ func _connect_action_signals():
 		if not spell_phase_handler.spell_phase_completed.is_connected(_on_spell_phase_completed):
 			spell_phase_handler.spell_phase_completed.connect(_on_spell_phase_completed)
 	
-	# アイテム使用シグナル（バトル時）
+	# アイテムフェーズシグナル（バトル時）
 	if game_flow_manager and game_flow_manager.item_phase_handler:
 		var iph = game_flow_manager.item_phase_handler
+		if not iph.item_phase_started.is_connected(_on_item_phase_started):
+			iph.item_phase_started.connect(_on_item_phase_started)
 		if not iph.item_used.is_connected(_on_item_used):
 			iph.item_used.connect(_on_item_used)
 	
@@ -321,7 +331,11 @@ func _on_turn_started(player_id: int):
 	
 	_last_player_id = player_id
 
+func _on_dice_rolled_double(_value1: int, _value2: int, total: int):
+	_on_dice_rolled(total)
+
 func _on_dice_rolled(_value: int):
+	print("[TutorialManager] _on_dice_rolled called: value=%d, is_active=%s, phase=%s" % [_value, is_active, get_current_step().get("phase", "")])
 	if not is_active:
 		return
 	var phase = get_current_step().get("phase", "")
@@ -333,10 +347,7 @@ func _on_dice_rolled(_value: int):
 	# dice_prompt2以降は分岐なしなので移動完了後に次へ進む
 	elif phase.begins_with("dice_prompt"):
 		_exit_explanation_mode_if_active()
-		advance_step()  # diceへ
-		# dice_prompt（番号なし、最初のダイス）の場合のみdirectionへ進む
-		if phase == "dice_prompt":
-			advance_step()  # directionへ
+		advance_step()  # 次のステップ（directionなど）へ
 	# diceフェーズでは次のフェーズがcheckpointなら待機、そうでなければ進む
 	elif phase.begins_with("dice") and not phase.begins_with("dice_prompt"):
 		var next_step_index = current_step + 1
@@ -429,6 +440,14 @@ func _on_spell_phase_completed():
 	if phase == "spell_target" or phase.ends_with("_target"):
 		_exit_explanation_mode_if_active()
 		advance_step()  # *_completeへ
+
+func _on_item_phase_started():
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# クリーチャー選択後、アイテムフェーズ開始 → battle_info1へ
+	if phase == "battle_select_creature":
+		advance_step()  # battle_info1へ
 
 func _on_item_used(_item_card: Dictionary):
 	if not is_active:

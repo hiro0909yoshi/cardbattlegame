@@ -19,7 +19,7 @@
 	{
 	  "id": 2,
 	  "turn": 1,
-	  "phase": "dice",
+	  "phase": "dice_prompt",
 	  "message": "✓ボタンを押してダイスを振りましょう！",
 	  "wait_for_click": false,
 	  "highlight": ["confirm"]
@@ -30,6 +30,7 @@
 	  "phase": "direction",
 	  "message": "進む方向を選んでください\n\n▲▼ボタンで方向を選び\n✓ボタンで決定します",
 	  "wait_for_click": false,
+	  "exit_trigger": "signal",
 	  "highlight": ["up", "down", "confirm"]
 	},
 	{
@@ -81,7 +82,7 @@
 	  "id": 9,
 	  "turn": 1,
 	  "phase": "land_value_info",
-	  "message": "支配地の精霊力は召喚したクリーチャーカードの\n下に出ている30EPという数字です\n\n支配地の精霊力は連鎖数や土地のレベルで決まります",
+	  "message": "支配地の精霊力は召喚したクリーチャーカードの\n下に出ている24EPという数字です\n\n支配地の精霊力は連鎖数や土地のレベルで決まります",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,

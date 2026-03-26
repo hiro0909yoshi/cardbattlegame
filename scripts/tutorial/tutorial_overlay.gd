@@ -256,7 +256,13 @@ func _update_button_states():
 func _restore_button_states():
 	if not global_action_buttons:
 		return
-	
+
+	# ボタンの表示状態を復元（disable_all_buttonsでvisible=falseにされた場合の対策）
+	for button in [global_action_buttons.up_button, global_action_buttons.down_button,
+				   global_action_buttons.confirm_button, global_action_buttons.back_button]:
+		if button:
+			button.visible = true
+
 	# GlobalActionButtonsの通常の更新を呼び出す
 	if global_action_buttons.has_method("update_button_states"):
 		global_action_buttons.update_button_states()
