@@ -16,8 +16,11 @@ var stage_id: String = "stage_1_1"
 # 設定（StageLoaderから取得）
 var player_count: int = 2
 var player_is_cpu: Array = [false, true]
+var _fps_label: Label = null
+var _fps_log_timer: float = 0.0
 
 func _ready():
+	_setup_fps_counter()
 	# クエストモードでは常にCPUはAI任せ
 	DebugSettings.manual_control_all = false
 
@@ -450,3 +453,29 @@ func _setup_cpu_battle_policies():
 			cpu_movement_evaluator.set_cpu_ai_handler(cpu_ai_handler)
 		else:
 			print("[QuestGame] cpu_movement_evaluator が見つかりません")
+
+func _setup_fps_counter() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	add_child(canvas)
+	_fps_label = Label.new()
+	_fps_label.text = "FPS: --"
+	_fps_label.set_anchors_preset(Control.PRESET_CENTER)
+	_fps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fps_label.add_theme_font_size_override("font_size", 96)
+	_fps_label.add_theme_color_override("font_color", Color.YELLOW)
+	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(_fps_label)
+
+func _process(delta: float) -> void:
+	if _fps_label:
+		var fps := Engine.get_frames_per_second()
+		var objects := int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))
+		var draw_calls := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+		var verts := int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
+		var mem := int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576)
+		_fps_label.text = "FPS:%d\nOBJ:%d DRAW:%d\nVERT:%d\nMEM:%dMB" % [fps, objects, draw_calls, verts, mem]
+		_fps_log_timer += delta
+		if _fps_log_timer >= 1.0:
+			_fps_log_timer = 0.0
+			print("[PERF] FPS:%d OBJ:%d DRAW:%d VERT:%d MEM:%dMB" % [fps, objects, draw_calls, verts, mem])

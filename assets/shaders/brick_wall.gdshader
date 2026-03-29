@@ -14,9 +14,7 @@ uniform float mortar_thickness : hint_range(0.005, 0.1) = 0.025;
 // ディテール
 uniform float color_variation : hint_range(0.0, 0.3) = 0.08;
 uniform float roughness_base : hint_range(0.5, 1.0) = 0.88;
-uniform float normal_strength : hint_range(0.0, 2.0) = 0.6;
 uniform float edge_wear : hint_range(0.0, 0.05) = 0.018;
-uniform float stain_intensity : hint_range(0.0, 0.3) = 0.1;
 
 // 苔・カビ
 uniform vec3 moss_color : source_color = vec3(0.22, 0.35, 0.15);
@@ -59,19 +57,6 @@ float noise(vec2 p) {
 	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// FBMノイズ
-float fbm(vec2 p) {
-	float v = 0.0;
-	float a = 0.5;
-	mat2 rot = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8));
-	for (int i = 0; i < 4; i++) {
-		v += a * noise(p);
-		p = rot * p * 2.0;
-		a *= 0.5;
-	}
-	return v;
-}
-
 // 指定UVでレンガパターンを計算（色 + ラフネス + モルタルフラグ）
 // .rgb = 色, .a = ラフネス
 vec4 calc_brick(vec2 uv, out float mortar_flag) {
@@ -111,8 +96,8 @@ vec4 calc_brick(vec2 uv, out float mortar_flag) {
 	}
 
 	base_color += (brick_rand2 - 0.5) * color_variation;
-	base_color += noise(uv * 12.0) * 0.06;
-	base_color -= fbm(uv * 3.0) * stain_intensity;
+	// ざらつきのみ（fbmによるシミ・汚れは削除）
+	base_color += (noise(uv * 12.0) - 0.5) * 0.06;
 
 	vec3 final_color;
 	float rough;
@@ -128,56 +113,38 @@ vec4 calc_brick(vec2 uv, out float mortar_flag) {
 }
 
 void fragment() {
-	// トライプラナーブレンド
+	// トライプラナーブレンド（2方向に簡略化: X面 + Z面のみ）
 	vec3 n = abs(normalize(world_normal));
-	vec3 blend = pow(n, vec3(triplanar_sharpness));
-	blend /= (blend.x + blend.y + blend.z);
+	float blend_x = n.x;
+	float blend_z = n.z;
+	float blend_sum = blend_x + blend_z + 0.001; // ゼロ除算防止
+	blend_x /= blend_sum;
+	blend_z /= blend_sum;
 
-	float mf_x, mf_y, mf_z;
+	float mf_x, mf_z;
 	vec4 brick_x = calc_brick(world_pos.zy, mf_x);
-	vec4 brick_y = calc_brick(world_pos.xz, mf_y);
 	vec4 brick_z = calc_brick(world_pos.xy, mf_z);
 
-	vec3 brick_col = brick_x.rgb * blend.x + brick_y.rgb * blend.y + brick_z.rgb * blend.z;
-	float brick_rough = brick_x.a * blend.x + brick_y.a * blend.y + brick_z.a * blend.z;
-	float mortar_f = mf_x * blend.x + mf_y * blend.y + mf_z * blend.z;
+	vec3 brick_col = brick_x.rgb * blend_x + brick_z.rgb * blend_z;
+	float brick_rough = brick_x.a * blend_x + brick_z.a * blend_z;
+	float mortar_f = mf_x * blend_x + mf_z * blend_z;
 
-	// --- 苔・カビ ---
+	// --- 苔・カビ（簡略化: noise 1回のみ） ---
 	float height_01 = clamp(world_pos.y / 4.0, 0.0, 1.0);
-	// 下部ほど苔が多い
 	float bottom_factor = pow(1.0 - height_01, moss_bottom_bias);
-	// モルタル部分（目地の隙間）に苔が生えやすい
 	float mortar_factor = mix(1.0, 1.0 + moss_mortar_bias, mortar_f);
-	// ノイズでパッチ状に
-	float moss_noise = fbm(world_pos.xz * 1.5 + world_pos.yy * 0.5);
-	float moss_detail = noise(world_pos.xz * 8.0) * 0.3;
-	float moss_mask = bottom_factor * mortar_factor * (moss_noise + moss_detail);
+	float moss_noise = noise(world_pos.xz * 1.5 + world_pos.yy * 0.5);
+	float moss_mask = bottom_factor * mortar_factor * moss_noise;
 	moss_mask = smoothstep(1.0 - moss_amount, 1.0 - moss_amount + 0.3, moss_mask);
 
-	// 苔の色（2色ブレンド）
-	float moss_var = noise(world_pos.xz * 4.0 + vec2(100.0, 200.0));
+	// 苔の色（hash で簡易バリエーション）
+	float moss_var = hash(floor(world_pos.xz * 4.0));
 	vec3 moss_col = mix(moss_color, mold_color, moss_var);
-	// 苔がある部分は少し暗め・緑寄り
-	moss_col += (noise(world_pos.xz * 12.0) - 0.5) * 0.06;
 
 	vec3 final_color = mix(brick_col, moss_col, moss_mask);
 	float final_rough = mix(brick_rough, 0.95, moss_mask);
 
 	ALBEDO = final_color;
 	ROUGHNESS = final_rough;
-
-	// 法線の凹凸
-	vec2 bump_uv = world_pos.xy * 8.0;
-	if (n.x > n.y && n.x > n.z) {
-		bump_uv = world_pos.zy * 8.0;
-	} else if (n.y > n.z) {
-		bump_uv = world_pos.xz * 8.0;
-	}
-	float bump_strength = mix(normal_strength, normal_strength * 0.5, moss_mask);
-	vec3 perturb = vec3(
-		(noise(bump_uv + vec2(0.1, 0.0)) - 0.5) * bump_strength * 0.3,
-		(noise(bump_uv + vec2(0.0, 0.1)) - 0.5) * bump_strength * 0.3,
-		0.0
-	);
-	NORMAL = normalize(NORMAL + perturb);
+	// 法線バンプは削除（モバイル負荷軽減）
 }

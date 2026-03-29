@@ -65,23 +65,42 @@ func _get_environment_margin() -> float:
 	return GROUND_MARGIN
 
 
-## 地面を生成（floor3.glb をタイリング）
+## 地面を生成（MultiMeshInstance3Dで統合）
 func _create_ground(extra_margin: float = 0.0) -> void:
 	var floor_scene: PackedScene = load(FLOOR_MODEL_PATH) as PackedScene
 	if not floor_scene:
-		GameLogger.error("Quest", "floor3.glb not found, falling back to simple ground in %s" % name)
 		_create_ground_fallback(extra_margin)
 		return
 
+	# 1つインスタンス化してサイズを計測
 	var sample: Node3D = floor_scene.instantiate()
-	add_child(sample)
-	var real_size := _get_real_world_size(sample)
-	remove_child(sample)
+	var real_size: Vector3 = _get_real_world_size(sample)
+	if real_size == Vector3.ZERO:
+		real_size = Vector3(3.0, 0.1, 3.0)
+	# メッシュとスケールを取得
+	var sample_mesh: Mesh = null
+	var sample_material: Material = null
+	var mesh_scale := Vector3.ONE
+	for child in sample.get_children():
+		if child is MeshInstance3D:
+			sample_mesh = child.mesh
+			sample_material = child.material_override if child.material_override else child.get_active_material(0)
+			mesh_scale = child.scale
+			# GLBルートのスケールも考慮
+			if child.get_parent() and child.get_parent() is Node3D:
+				mesh_scale *= child.get_parent().scale
+			break
+	# メッシュAABBから実際のスケールを算出
+	if sample_mesh:
+		var mesh_aabb := sample_mesh.get_aabb()
+		var mesh_size := mesh_aabb.size * mesh_scale
+		if mesh_size.x > 0.01 and real_size.x > 0.01:
+			mesh_scale = real_size / mesh_size * mesh_scale
 	sample.queue_free()
 
-	var ground_container: Node3D = Node3D.new()
-	ground_container.name = "Ground"
-	add_child(ground_container)
+	if not sample_mesh:
+		_create_ground_fallback(extra_margin)
+		return
 
 	var total_area: float = _map_half_size * 2.0 + (_get_environment_margin() + GROUND_MARGIN + extra_margin) * 2.0
 	var cx: float = _map_center.x
@@ -89,15 +108,30 @@ func _create_ground(extra_margin: float = 0.0) -> void:
 	var start_x: float = cx - total_area / 2.0 + real_size.x / 2.0
 	var start_z: float = cz - total_area / 2.0 + real_size.z / 2.0
 
+	# 配置位置を計算
+	var transforms: Array[Transform3D] = []
 	var x: float = start_x
 	while x < cx + total_area / 2.0:
 		var z: float = start_z
 		while z < cz + total_area / 2.0:
-			var tile: Node3D = floor_scene.instantiate()
-			tile.position = Vector3(x, GROUND_Y, z)
-			ground_container.add_child(tile)
+			transforms.append(Transform3D(Basis.from_scale(mesh_scale), Vector3(x, GROUND_Y, z)))
 			z += real_size.z
 		x += real_size.x
+
+	# MultiMeshで一括描画
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = sample_mesh
+	mm.instance_count = transforms.size()
+	for i in range(transforms.size()):
+		mm.set_instance_transform(i, transforms[i])
+
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "Ground"
+	mmi.multimesh = mm
+	if sample_material:
+		mmi.material_override = sample_material
+	add_child(mmi)
 
 
 ## フォールバック: MeshInstance3Dの単色地面

@@ -3,6 +3,9 @@ extends Node
 # ソロバトル用ゲーム管理スクリプト
 # StageLoaderからデータを読み込み、動的にゲームを構築
 
+# パフォーマンスモニター（モバイルデバッグ用）
+var _fps_label: Label = null
+
 # システム参照
 var system_manager: GameSystemManager
 var stage_loader: StageLoader
@@ -22,6 +25,9 @@ var player_count: int = 2
 var player_is_cpu: Array = [false, true]
 
 func _ready():
+	print("[PERF] game_3d._ready() started")
+	_setup_fps_counter()
+	print("[PERF] FPS counter setup done, label=%s" % str(_fps_label))
 	# 🔧 デバッグ設定: trueにするとCPUも手動操作できる
 	DebugSettings.manual_control_all = true
 
@@ -195,11 +201,13 @@ func _setup_3d_scene_before_init():
 		add_child(world_env)
 
 	# 城壁・地面を作成（タイル範囲から動的にサイズ決定、45度回転）
-	var castle_env = CastleEnvironment.new()
-	castle_env.name = "CastleEnvironment"
-	castle_env.rotation.y = deg_to_rad(45)
-	add_child(castle_env)
-	castle_env.setup_from_tiles(tiles_container)
+	# TODO: パフォーマンステスト後に復元
+	if not OS.has_feature("mobile"):
+		var castle_env = CastleEnvironment.new()
+		castle_env.name = "CastleEnvironment"
+		castle_env.rotation.y = deg_to_rad(45)
+		add_child(castle_env)
+		castle_env.setup_from_tiles(tiles_container)
 
 	# プレイヤーコンテナを確認・作成
 	var players_container = get_node_or_null("Players")
@@ -533,3 +541,31 @@ func _setup_cpu_battle_policies():
 	else:
 		cpu_ai_handler.load_battle_policy_from_json(policy_data)
 		print("[Game3D] CPUバトルポリシー: JSONから読み込み")
+
+
+# ========================================
+# パフォーマンスモニター
+# ========================================
+
+func _setup_fps_counter() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 100
+	add_child(canvas)
+	_fps_label = Label.new()
+	_fps_label.text = "FPS: --"
+	_fps_label.position = Vector2(20, 20)
+	_fps_label.add_theme_font_size_override("font_size", 48)
+	_fps_label.add_theme_color_override("font_color", Color.YELLOW)
+	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(_fps_label)
+
+var _fps_log_timer: float = 0.0
+
+func _process(delta: float) -> void:
+	if _fps_label:
+		var fps := Engine.get_frames_per_second()
+		_fps_label.text = "FPS:%d" % fps
+		_fps_log_timer += delta
+		if _fps_log_timer >= 1.0:
+			_fps_log_timer = 0.0
+			print("[PERF] FPS:%d" % fps)

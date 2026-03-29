@@ -38,7 +38,7 @@ const IVY_WIDTH_MIN := 1.5
 const IVY_WIDTH_MAX := 3.5
 
 # 草パラメータ
-const GRASS_PATCH_COUNT := 120
+const GRASS_PATCH_COUNT := 30
 const GRASS_BLADE_HEIGHT := 0.4
 const GRASS_BLADE_WIDTH := 0.08
 
@@ -117,8 +117,7 @@ func _create_walls() -> void:
 	_create_gate("GateEast", Vector3(center_x + half_n - gate_offset, 0, center_z), true, true)
 
 	# 胸壁（バトルメント）
-	_create_battlements_north_south(center_x, center_z, half_n, half_s, cap_mat)
-	_create_battlements_east_west(center_x, center_z, half_n, half_s, cap_mat)
+	_create_battlements(center_x, center_z, half_n, half_s, cap_mat)
 
 
 ## 重厚な門を生成（GLBモデル扉 + 装飾枠）
@@ -232,13 +231,17 @@ func _create_wall_cap(cap_name: String, pos: Vector3, cap_size: Vector3, mat: Ma
 
 # --- 胸壁 ---
 
-## 北壁・南壁の胸壁
-func _create_battlements_north_south(cx: float, cz: float, half_n: float, half_s: float, cap_mat: Material) -> void:
+## 全胸壁を高度に最適化されたMultiMeshInstance3Dで生成
+func _create_battlements(cx: float, cz: float, half_n: float, half_s: float, cap_mat: Material) -> void:
 	var step: float = BATTLEMENT_WIDTH + BATTLEMENT_GAP
-	var start_x: float = cx - half_n
-	var end_x: float = cx + half_n
 	var top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT / 2.0
 	var cap_top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT
+
+	# NS胸壁（北・南）
+	var ns_battlements: Array[Transform3D] = []
+	var ns_caps: Array[Transform3D] = []
+	var ns_start_x: float = cx - half_n
+	var ns_end_x: float = cx + half_n
 
 	var z_data: Array[Dictionary] = [
 		{"sign": -1.0, "half": half_n},
@@ -246,52 +249,95 @@ func _create_battlements_north_south(cx: float, cz: float, half_n: float, half_s
 	]
 	for data in z_data:
 		var z_pos: float = cz + data.half * data.sign
-		var x: float = start_x
-		var idx := 0
-		while x < end_x:
+		var x: float = ns_start_x
+		while x < ns_end_x:
 			var bx: float = x + BATTLEMENT_WIDTH / 2.0
-			var b: MeshInstance3D = MeshInstance3D.new()
-			b.name = "BattlementNS_%d_%d" % [int(data.sign), idx]
-			var b_mesh: BoxMesh = BoxMesh.new()
-			b_mesh.size = Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)
-			b.mesh = b_mesh
-			b.position = Vector3(bx, top_y, z_pos)
-			b.material_override = _brick_material
-			add_child(b)
-			_create_wall_cap("BattCapNS_%d_%d" % [int(data.sign), idx],
-				Vector3(bx, cap_top_y, z_pos),
-				Vector3(BATTLEMENT_WIDTH + 0.1, 0.1, WALL_THICKNESS + 0.4), cap_mat)
+			ns_battlements.append(Transform3D(Basis.IDENTITY, Vector3(bx, top_y, z_pos)))
+			ns_caps.append(Transform3D(Basis.IDENTITY, Vector3(bx, cap_top_y, z_pos)))
 			x += step
-			idx += 1
 
-
-## 東壁・西壁の胸壁
-func _create_battlements_east_west(cx: float, cz: float, half_n: float, half_s: float, cap_mat: Material) -> void:
-	var step: float = BATTLEMENT_WIDTH + BATTLEMENT_GAP
-	var start_z: float = cz - half_n
-	var end_z: float = cz + half_s
-	var top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT / 2.0
-	var cap_top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT
+	# EW胸壁（東・西）
+	var ew_battlements: Array[Transform3D] = []
+	var ew_caps: Array[Transform3D] = []
+	var ew_start_z: float = cz - half_n
+	var ew_end_z: float = cz + half_s
 
 	for x_sign in [-1.0, 1.0]:
 		var x_pos: float = cx + half_n * x_sign
-		var z: float = start_z
-		var idx := 0
-		while z < end_z:
+		var z: float = ew_start_z
+		while z < ew_end_z:
 			var bz: float = z + BATTLEMENT_WIDTH / 2.0
-			var b: MeshInstance3D = MeshInstance3D.new()
-			b.name = "BattlementEW_%d_%d" % [int(x_sign), idx]
-			var b_mesh: BoxMesh = BoxMesh.new()
-			b_mesh.size = Vector3(WALL_THICKNESS + 0.3, BATTLEMENT_HEIGHT, BATTLEMENT_WIDTH)
-			b.mesh = b_mesh
-			b.position = Vector3(x_pos, top_y, bz)
-			b.material_override = _brick_material
-			add_child(b)
-			_create_wall_cap("BattCapEW_%d_%d" % [int(x_sign), idx],
-				Vector3(x_pos, cap_top_y, bz),
-				Vector3(WALL_THICKNESS + 0.4, 0.1, BATTLEMENT_WIDTH + 0.1), cap_mat)
+			ew_battlements.append(Transform3D(Basis.IDENTITY, Vector3(x_pos, top_y, bz)))
+			ew_caps.append(Transform3D(Basis.IDENTITY, Vector3(x_pos, cap_top_y, bz)))
 			z += step
-			idx += 1
+
+	# NS用MultiMesh: 胸壁
+	if not ns_battlements.is_empty():
+		var ns_batt_mesh: BoxMesh = BoxMesh.new()
+		ns_batt_mesh.size = Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)
+		var ns_batt_mm: MultiMesh = MultiMesh.new()
+		ns_batt_mm.mesh = ns_batt_mesh
+		ns_batt_mm.transform_format = MultiMesh.TRANSFORM_3D
+		ns_batt_mm.instance_count = ns_battlements.size()
+		for i in range(ns_battlements.size()):
+			ns_batt_mm.set_instance_transform(i, ns_battlements[i])
+
+		var ns_batt_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+		ns_batt_mmi.name = "BattlementsNS"
+		ns_batt_mmi.multimesh = ns_batt_mm
+		ns_batt_mmi.material_override = _brick_material
+		add_child(ns_batt_mmi)
+
+	# NS用MultiMesh: キャップ
+	if not ns_caps.is_empty():
+		var ns_cap_mesh: BoxMesh = BoxMesh.new()
+		ns_cap_mesh.size = Vector3(BATTLEMENT_WIDTH + 0.1, 0.1, WALL_THICKNESS + 0.4)
+		var ns_cap_mm: MultiMesh = MultiMesh.new()
+		ns_cap_mm.mesh = ns_cap_mesh
+		ns_cap_mm.transform_format = MultiMesh.TRANSFORM_3D
+		ns_cap_mm.instance_count = ns_caps.size()
+		for i in range(ns_caps.size()):
+			ns_cap_mm.set_instance_transform(i, ns_caps[i])
+
+		var ns_cap_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+		ns_cap_mmi.name = "BattlementCapsNS"
+		ns_cap_mmi.multimesh = ns_cap_mm
+		ns_cap_mmi.material_override = cap_mat
+		add_child(ns_cap_mmi)
+
+	# EW用MultiMesh: 胸壁
+	if not ew_battlements.is_empty():
+		var ew_batt_mesh: BoxMesh = BoxMesh.new()
+		ew_batt_mesh.size = Vector3(WALL_THICKNESS + 0.3, BATTLEMENT_HEIGHT, BATTLEMENT_WIDTH)
+		var ew_batt_mm: MultiMesh = MultiMesh.new()
+		ew_batt_mm.mesh = ew_batt_mesh
+		ew_batt_mm.transform_format = MultiMesh.TRANSFORM_3D
+		ew_batt_mm.instance_count = ew_battlements.size()
+		for i in range(ew_battlements.size()):
+			ew_batt_mm.set_instance_transform(i, ew_battlements[i])
+
+		var ew_batt_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+		ew_batt_mmi.name = "BattlementsEW"
+		ew_batt_mmi.multimesh = ew_batt_mm
+		ew_batt_mmi.material_override = _brick_material
+		add_child(ew_batt_mmi)
+
+	# EW用MultiMesh: キャップ
+	if not ew_caps.is_empty():
+		var ew_cap_mesh: BoxMesh = BoxMesh.new()
+		ew_cap_mesh.size = Vector3(WALL_THICKNESS + 0.4, 0.1, BATTLEMENT_WIDTH + 0.1)
+		var ew_cap_mm: MultiMesh = MultiMesh.new()
+		ew_cap_mm.mesh = ew_cap_mesh
+		ew_cap_mm.transform_format = MultiMesh.TRANSFORM_3D
+		ew_cap_mm.instance_count = ew_caps.size()
+		for i in range(ew_caps.size()):
+			ew_cap_mm.set_instance_transform(i, ew_caps[i])
+
+		var ew_cap_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+		ew_cap_mmi.name = "BattlementCapsEW"
+		ew_cap_mmi.multimesh = ew_cap_mm
+		ew_cap_mmi.material_override = cap_mat
+		add_child(ew_cap_mmi)
 
 
 # --- 塔 ---

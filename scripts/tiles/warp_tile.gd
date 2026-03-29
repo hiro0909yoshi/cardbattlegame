@@ -16,10 +16,10 @@ var _frame_skip_counter: int = 0
 
 const MAGIC_CIRCLE_SCENE := preload("res://models/magic_circle.glb")
 
-# 炎オーラシェーダー（リング外周から立ち上がる炎のような揺らぎ）
+# 炎オーラシェーダー（モバイル簡略版: ノイズ1回 + depth_test有効）
 const AURA_SHADER_CODE := "
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_test_disabled, blend_mix;
+render_mode unshaded, cull_disabled, blend_mix;
 
 uniform vec4 color_bottom : source_color = vec4(1.0, 0.85, 0.3, 0.8);
 uniform vec4 color_top : source_color = vec4(1.0, 0.5, 0.1, 0.0);
@@ -27,7 +27,6 @@ uniform float emission_strength = 4.0;
 uniform float aura_speed = 1.5;
 uniform float flame_intensity = 1.0;
 
-// 疑似ノイズ関数
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -44,24 +43,15 @@ float noise(vec2 p) {
 }
 
 void fragment() {
-	// UV.x = 円周方向(0~1), UV.y = 高さ方向(0=下, 1=上)
 	float height = UV.y;
+	float flame_noise = noise(vec2(UV.x * 8.0, height * 3.0 - TIME * aura_speed));
 
-	// 複数スケールのノイズで炎の揺らぎ
-	float n1 = noise(vec2(UV.x * 8.0, height * 3.0 - TIME * aura_speed));
-	float n2 = noise(vec2(UV.x * 16.0 + 5.0, height * 5.0 - TIME * aura_speed * 1.3));
-	float n3 = noise(vec2(UV.x * 4.0 + 10.0, height * 2.0 - TIME * aura_speed * 0.7));
-	float flame_noise = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
-
-	// 高さに応じたフェード（下=明るい、上=消える）
 	float height_fade = 1.0 - height;
 	height_fade = height_fade * height_fade;
 
-	// ノイズで炎の形を作る（上部を不規則にカット）
 	float flame_shape = height_fade * (0.5 + flame_noise * flame_intensity);
 	flame_shape = clamp(flame_shape, 0.0, 1.0);
 
-	// 色のグラデーション（下=黄色、上=オレンジ→透明）
 	vec3 col = mix(color_top.rgb, color_bottom.rgb, height_fade);
 
 	ALBEDO = col;
