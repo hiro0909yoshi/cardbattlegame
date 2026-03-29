@@ -770,11 +770,12 @@ func show_secret_back():
 
 	is_showing_secret_back = true
 
+	var card_back = get_node_or_null("CardBackOverlay")
+
 	# 軽量モード: TextureRectを非表示にしてCardBackOverlayを有効化
 	if _is_lightweight_mode:
 		if _cached_texture_rect:
 			_cached_texture_rect.visible = false
-		var card_back = get_node_or_null("CardBackOverlay")
 		if card_back:
 			card_back.visible = true
 			card_back.process_mode = Node.PROCESS_MODE_INHERIT
@@ -787,7 +788,6 @@ func show_secret_back():
 			child.visible = false
 
 	# 裏面を表示
-	var card_back = get_node_or_null("CardBackOverlay")
 	if card_back:
 		card_back.visible = true
 		move_child(card_back, get_child_count() - 1)
@@ -799,9 +799,10 @@ func show_card_front():
 
 	is_showing_secret_back = false
 
+	var card_back = get_node_or_null("CardBackOverlay")
+
 	# 軽量モード: CardBackOverlayを非表示にしてTextureRectを復帰
 	if _is_lightweight_mode:
-		var card_back = get_node_or_null("CardBackOverlay")
 		if card_back:
 			card_back.visible = false
 			card_back.process_mode = Node.PROCESS_MODE_DISABLED
@@ -810,7 +811,6 @@ func show_card_front():
 		return
 
 	# 通常モード: 裏面を非表示
-	var card_back = get_node_or_null("CardBackOverlay")
 	if card_back:
 		card_back.visible = false
 

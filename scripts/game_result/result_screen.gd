@@ -136,9 +136,9 @@ func show_victory(data: Dictionary):
 	if not unlocked_items.is_empty():
 		await get_tree().create_timer(0.5).timeout
 		for item in unlocked_items:
-			var notification = item.get("notification", "")
-			if notification != "":
-				await _show_unlock_popup(notification)
+			var unlock_msg = item.get("notification", "")
+			if unlock_msg != "":
+				await _show_unlock_popup(unlock_msg)
 
 
 ## 敗北リザルトを表示
@@ -179,9 +179,9 @@ func show_defeat(data: Dictionary):
 	if not unlocked_items.is_empty():
 		await get_tree().create_timer(0.5).timeout
 		for item in unlocked_items:
-			var notification = item.get("notification", "")
-			if notification != "":
-				await _show_unlock_popup(notification)
+			var unlock_msg = item.get("notification", "")
+			if unlock_msg != "":
+				await _show_unlock_popup(unlock_msg)
 
 
 ## 報酬表示を構築

@@ -78,7 +78,7 @@ func _process(delta: float) -> void:
 	if _frame_skip_counter % 2 != 0:
 		return
 	# パーティクル浮遊（不規則な動き）
-	var doubled_delta := delta * 2.0  # スキップ分を補正（見た目の速度維持）
+	var _doubled_delta := delta * 2.0  # スキップ分を補正（見た目の速度維持）
 	for i in range(_particles.size()):
 		var p := _particles[i]
 		var phase := (float(i) / float(PARTICLE_COUNT)) * TAU
