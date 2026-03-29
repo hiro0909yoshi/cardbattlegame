@@ -131,6 +131,10 @@ func _cleanup_old_logs() -> void:
 ## クラッシュ検知
 
 func _check_previous_session() -> void:
+	# エディタ実行時は停止ボタンで終了するため正常終了ログが残らない → スキップ
+	if OS.has_feature("editor"):
+		return
+
 	var prev_log := _get_latest_existing_log()
 	if prev_log == "":
 		return
