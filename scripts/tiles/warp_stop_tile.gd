@@ -3,7 +3,7 @@ extends BaseTile
 ## ワープタイル（停止型）- 魔法陣 + 発光 + 浮遊パーティクル + 炎オーラ（赤色）
 
 const AURA_RADIUS := 1.6
-const PARTICLE_COUNT := 12
+const PARTICLE_COUNT := 6
 const PARTICLE_HEIGHT := 3.5
 const AURA_HEIGHT := 1.5
 
@@ -12,6 +12,7 @@ var _particle_mats: Array[StandardMaterial3D] = []
 var _aura_ring: MeshInstance3D
 var _magic_circle_model: Node3D
 var _time := 0.0
+var _frame_skip_counter: int = 0
 
 const MAGIC_CIRCLE_SCENE := preload("res://models/magic_circle.glb")
 
@@ -75,6 +76,10 @@ func _ready():
 
 func _process(delta: float) -> void:
 	_time += delta
+	# 2フレームに1回だけ更新（モバイル負荷軽減）
+	_frame_skip_counter += 1
+	if _frame_skip_counter % 2 != 0:
+		return
 	for i in range(_particles.size()):
 		var p := _particles[i]
 		var phase := (float(i) / float(PARTICLE_COUNT)) * TAU

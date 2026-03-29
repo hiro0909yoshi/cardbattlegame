@@ -83,7 +83,6 @@
 	  "phase": "direction",
 	  "message": "進む方向を選んでください",
 	  "wait_for_click": false,
-	  "exit_trigger": "signal",
 	  "highlight": [
 		"up",
 		"down",
@@ -94,7 +93,7 @@
 	  "id": 5,
 	  "turn": 1,
 	  "phase": "summon_select",
-	  "message": "アースオーガを召喚しましょう\n\nサクラシャーマンは「地属性土地が1つ必要」\nという召喚条件があり、今は召喚できません",
+	  "message": "グリーンオーガを召喚しましょう\n\nサクヤは「地属性土地が1つ必要」\nという召喚条件があり、今は召喚できません",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "210",
@@ -153,7 +152,7 @@
 	  "id": 12,
 	  "turn": 1,
 	  "phase": "cpu_summon_complete",
-	  "message": "相手がマミーを召喚しました\n\nマミーは「堅守」クリーチャーです\n堅守は高いHPと引き換えに移動ができません\n\n堅守はスキルの一種です",
+	  "message": "相手がスタチューを召喚しました\n\nスタチューは「堅守」クリーチャーです\n堅守は高いHPと引き換えに移動ができません\n\n堅守はスキルの一種です",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -170,7 +169,7 @@
 	  "id": 14,
 	  "turn": 2,
 	  "phase": "spell_explain",
-	  "message": "アースフォージを使って\nアースオーガの土地を地属性に変えます\n\nスペルの効果は様々です。\nカードを手に入れたら使用してみましょう",
+	  "message": "アースシフトを使って\nグリーンオーガの土地を地属性に変えます\n\nスペルの効果は様々です。\nカードを手に入れたら使用してみましょう",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -178,7 +177,7 @@
 	  "id": 15,
 	  "turn": 2,
 	  "phase": "spell_select",
-	  "message": "アースフォージをタップしてください",
+	  "message": "アースシフトをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "2001"
@@ -196,7 +195,7 @@
 	  "id": 17,
 	  "turn": 2,
 	  "phase": "spell_target",
-	  "message": "スペルの対象を選んでください\n\nアースオーガの土地をタップして✓ボタンで決定",
+	  "message": "スペルの対象を選んでください\n\nグリーンオーガの土地をタップして✓ボタンで決定",
 	  "wait_for_click": false,
 	  "highlight": [
         "confirm"
@@ -206,7 +205,7 @@
 	  "id": 18,
 	  "turn": 2,
 	  "phase": "spell_complete",
-	  "message": "土地が地属性に変わりました！\n\nこれでサクラシャーマンの召喚条件を満たしました",
+	  "message": "土地が地属性に変わりました！\n\nこれでサクヤの召喚条件を満たしました",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -232,7 +231,7 @@
 	  "id": 21,
 	  "turn": 2,
 	  "phase": "summon_sakuya_prompt",
-	  "message": "地属性の土地に止まりました\n\nサクラシャーマンを召喚しましょう！先ほどのスペルで\n地属性の土地を保有したので\n召喚条件を満たし召喚可能になっています",
+	  "message": "地属性の土地に止まりました\n\nサクヤを召喚しましょう！先ほどのスペルで\n地属性の土地を保有したので\n召喚条件を満たし召喚可能になっています",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -240,7 +239,7 @@
 	  "id": 22,
 	  "turn": 2,
 	  "phase": "summon_sakuya_select",
-	  "message": "サクラシャーマンをタップしてください",
+	  "message": "サクヤをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "216"
@@ -265,7 +264,7 @@
 	  "id": 25,
 	  "turn": 2,
 	  "phase": "chain_explain",
-	  "message": "サクラシャーマンを召喚しました！\n\n地属性の土地が2つになり「連鎖2」になりました\n連鎖が増えると土地の価値（EP）が上昇します",
+	  "message": "サクヤを召喚しました！\n\n地属性の土地が2つになり「連鎖2」になりました\n連鎖が増えると土地の価値（EP）が上昇します",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -314,7 +313,7 @@
 	  "id": 31,
 	  "turn": 3,
 	  "phase": "curse_explain",
-	  "message": "続いてエンハンスを使ってみましょう\n\nこのスペルはクリーチャーに\n「刻印」をかけることができます",
+	  "message": "続いてバイタリティを使ってみましょう\n\nこのスペルはクリーチャーに\n「刻印」をかけることができます",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -322,7 +321,7 @@
 	  "id": 32,
 	  "turn": 3,
 	  "phase": "vitality_select",
-	  "message": "エンハンスをタップしてください",
+	  "message": "バイタリティをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "2066"
@@ -340,23 +339,22 @@
 	  "id": 34,
 	  "turn": 3,
 	  "phase": "vitality_target",
-	  "message": "刻印をかけるクリーチャーを選んでください\n他のクリーチャーも選べますが\n今回はアースオーガにかけましょう",
+	  "message": "刻印をかけるクリーチャーを選んでください\n他のクリーチャーも選べますが\n今回はグリーンオーガにかけましょう",
 	  "wait_for_click": false,
 	  "disable_all_buttons": true,
-	  "pause_game": false,
 	  "highlight": [
 		"up",
 		"down",
         "confirm"
 	  ],
 	  "exit_trigger": "signal",
-	  "allowed_target_tile": "creature:アースオーガ"
+	  "allowed_target_tile": "creature:グリーンオーガ"
 	},
 	{
 	  "id": 35,
 	  "turn": 3,
 	  "phase": "vitality_complete",
-	  "message": "アースオーガに刻印「暁光」がかかりました！\n\n刻印は戦闘中にAP・HPが+20されます",
+	  "message": "グリーンオーガに刻印「暁光」がかかりました！\n\n刻印は戦闘中にAP・HPが+20されます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -403,7 +401,7 @@
 	  "id": 40,
 	  "turn": 3,
 	  "phase": "levelup_select",
-	  "message": "他の土地も選べますが\n今回はアースオーガの土地を選び\n土地をレベルアップしましょう",
+	  "message": "他の土地も選べますが\n今回はグリーンオーガの土地を選び\n土地をレベルアップしましょう",
 	  "wait_for_click": false,
 	  "disable_all_buttons": true,
 	  "highlight": [
@@ -412,7 +410,7 @@
         "confirm"
 	  ],
 	  "exit_trigger": "signal",
-	  "allowed_target_tile": "creature:アースオーガ"
+	  "allowed_target_tile": "creature:グリーンオーガ"
 	},
 	{
 	  "id": 41,
@@ -499,7 +497,7 @@
 	  "id": 49,
 	  "turn": 4,
 	  "phase": "curse_overwrite_explain",
-	  "message": "プライスを使います\n\nこのスペルは「通行料1.5倍」の刻印をかけます\n\n同じクリーチャーに別の刻印をかけると\n前の刻印は上書きされます",
+	  "message": "グリードを使います\n\nこのスペルは「通行料1.5倍」の刻印をかけます\n\n同じクリーチャーに別の刻印をかけると\n前の刻印は上書きされます",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -507,7 +505,7 @@
 	  "id": 50,
 	  "turn": 4,
 	  "phase": "greed_select",
-	  "message": "プライスをタップしてください",
+	  "message": "グリードをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "2024"
@@ -525,7 +523,7 @@
 	  "id": 52,
 	  "turn": 4,
 	  "phase": "greed_target",
-	  "message": "使用するクリーチャーを選んでください\n他のクリーチャーも選べますが\n今回はアースオーガを選びましょう",
+	  "message": "使用するクリーチャーを選んでください\n他のクリーチャーも選べますが\n今回はグリーンオーガを選びましょう",
 	  "wait_for_click": false,
 	  "disable_all_buttons": true,
 	  "highlight": [
@@ -534,7 +532,7 @@
         "confirm"
 	  ],
 	  "exit_trigger": "signal",
-	  "allowed_target_tile": "creature:アースオーガ"
+	  "allowed_target_tile": "creature:グリーンオーガ"
 	},
 	{
 	  "id": 53,
@@ -549,7 +547,7 @@
 	  "id": 54,
 	  "turn": 4,
 	  "phase": "camera_check_greed",
-	  "message": "画面をスワイプしてカメラを動かし\nアースオーガをタップして\n刻印効果を確認してみましょう",
+	  "message": "画面をスワイプしてカメラを動かし\nグリーンオーガをタップして\n刻印効果を確認してみましょう",
 	  "wait_for_click": true,
 	  "pause_game": false,
 	  "disable_all_buttons": true
@@ -575,7 +573,7 @@
 	  "id": 57,
 	  "turn": 4,
 	  "phase": "summon_ogre3_prompt",
-	  "message": "空き地に止まりました\n\nアースオーガを召喚しましょう",
+	  "message": "空き地に止まりました\n\nグリーンオーガを召喚しましょう",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -583,7 +581,7 @@
 	  "id": 58,
 	  "turn": 4,
 	  "phase": "summon_ogre3_select",
-	  "message": "アースオーガをタップしてください",
+	  "message": "グリーンオーガをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "210"
@@ -647,7 +645,7 @@
 	  "id": 66,
 	  "turn": 5,
 	  "phase": "mystic_arts_explain",
-	  "message": "サクラシャーマンは「アルカナアーツ」を持っています\nアルカナアーツは配置中のクリーチャーが\nEPコストを払って使える特別なスペルです\n\nサクラシャーマンのアルカナアーツは\n自ドミニオ（支配地）の土地を地属性に変えます",
+	  "message": "サクヤは「アルカナアーツ」を持っています\nアルカナアーツは配置中のクリーチャーが\nEPコストを払って使える特別なスペルです\n\nサクヤのアルカナアーツは\n自ドミニオ（支配地）の土地を地属性に変えます",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -655,7 +653,7 @@
 	  "id": 67,
 	  "turn": 5,
 	  "phase": "mystic_arts_explain",
-	  "message": "ではサクラシャーマンのアルカナアーツを使いましょう\n\n左下の点灯しているアルカナアーツボタンを押してください",
+	  "message": "ではサクヤのアルカナアーツを使いましょう\n\n左下の点灯しているアルカナアーツボタンを押してください",
 	  "wait_for_click": false,
 	  "disable_all_buttons": true,
 	  "highlight": [
@@ -667,7 +665,7 @@
 	  "id": 68,
 	  "turn": 5,
 	  "phase": "mystic_arts_select",
-	  "message": "アルカナを使用するクリチャーを選びます\nサクラシャーマンの土地をタップしてください",
+	  "message": "アルカナを使用するクリチャーを選びます\nサクヤの土地をタップしてください",
 	  "wait_for_click": false,
 	  "disable_all_buttons": true,
 	  "highlight": [
@@ -681,7 +679,7 @@
 	  "id": 69,
 	  "turn": 5,
 	  "phase": "mystic_arts_target",
-	  "message": "アルカナアーツの対象を選んでください\n\n属性の合っていないアースオーガがいますね。\nその土地をタップして土地属性を変化させましょう",
+	  "message": "アルカナアーツの対象を選んでください\n\n属性の合っていないグリーンオーガがいますね。\nその土地をタップして土地属性を変化させましょう",
 	  "wait_for_click": false,
 	  "disable_all_buttons": true,
 	  "highlight": [
@@ -690,13 +688,13 @@
         "confirm"
 	  ],
 	  "exit_trigger": "signal",
-	  "allowed_target_tile": "mismatched_creature:アースオーガ"
+	  "allowed_target_tile": "mismatched_creature:グリーンオーガ"
 	},
 	{
 	  "id": 70,
 	  "turn": 5,
 	  "phase": "mystic_arts_complete",
-	  "message": "アースオーガの土地が地属性になりました！\n\nこれで地属性の連鎖が3になり\n土地の価値（EP）が大幅に上昇しました",
+	  "message": "グリーンオーガの土地が地属性になりました！\n\nこれで地属性の連鎖が3になり\n土地の価値（EP）が大幅に上昇しました",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -723,7 +721,7 @@
 	  "id": 73,
 	  "turn": 5,
 	  "phase": "summon_ogre2_prompt",
-	  "message": "空き地に止まりました\n\nアースオーガを召喚しましょう",
+	  "message": "空き地に止まりました\n\nグリーンオーガを召喚しましょう",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -731,7 +729,7 @@
 	  "id": 74,
 	  "turn": 5,
 	  "phase": "summon_ogre2_select",
-	  "message": "アースオーガをタップしてください",
+	  "message": "グリーンオーガをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "113"
@@ -751,7 +749,7 @@
 	  "id": 76,
 	  "turn": 5,
 	  "phase": "summon_ogre2_complete",
-	  "message": "アースオーガを召喚しました！\n\nこれで地属性の連鎖が4になりました",
+	  "message": "グリーンオーガを召喚しました！\n\nこれで地属性の連鎖が4になりました",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -774,7 +772,7 @@
 	  "id": 79,
 	  "turn": 5,
 	  "phase": "cpu_turn5_complete",
-	  "message": "相手がマミーを召喚しました",
+	  "message": "相手がスタチューを召喚しました",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -791,7 +789,7 @@
 	  "id": 81,
 	  "turn": 6,
 	  "phase": "holyword_explain",
-	  "message": "フェイト1を使います\n\nこのスペルは対象のプレイヤーの\n次のダイスを1に固定します\n\n相手をあなたの高レベル領地に誘導しましょう！",
+	  "message": "ホーリーワード1を使います\n\nこのスペルは対象のプレイヤーの\n次のダイスを1に固定します\n\n相手をあなたの高レベル領地に誘導しましょう！",
 	  "wait_for_click": true,
 	  "disable_all_buttons": true
 	},
@@ -799,7 +797,7 @@
 	  "id": 82,
 	  "turn": 6,
 	  "phase": "holyword_select",
-	  "message": "フェイト1をタップしてください",
+	  "message": "ホーリーワード1をタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "2098"
@@ -858,7 +856,7 @@
 	  "id": 88,
 	  "turn": 6,
 	  "phase": "battle_statue_arrival",
-	  "message": "相手の支配地に止まりました！\n\nシールブレイカーが召喚できます！\n非常に強力なスキル[強化]を持っています\n",
+	  "message": "相手の支配地に止まりました！\n\nブラックナイトが召喚できます！\n非常に強力なスキル[強化]を持っています\n",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -878,7 +876,7 @@
 	  "id": 90,
 	  "turn": 6,
 	  "phase": "battle_statue_item_explain",
-	  "message": "マミーは堅守なので\n防具・武器・巻物が使えません\n\nこのようにアイテム制限を持つ\nクリーチャーがいます",
+	  "message": "スタチューは堅守なので\n防具・武器・巻物が使えません\n\nこのようにアイテム制限を持つ\nクリーチャーがいます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -888,7 +886,7 @@
 	  "id": 91,
 	  "turn": 6,
 	  "phase": "battle_statue_weapon_prompt",
-	  "message": "十分倒せますが今回はどの程度強力なスキルか\n見て欲しいので武器を使って攻撃しましょう\n\nウォーハンマーをタップしてください",
+	  "message": "十分倒せますが今回はどの程度強力なスキルか\n見て欲しいので武器を使って攻撃しましょう\n\nロングソードをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
 	  "highlight_card_filter": "1073",
@@ -907,7 +905,7 @@
 	  "id": 93,
 	  "turn": 6,
 	  "phase": "battle_statue_win",
-	  "message": "マミーを倒しました！\n\n堅守は攻撃力が0なので\n反撃ダメージを受けません",
+	  "message": "スタチューを倒しました！\n\n堅守は攻撃力が0なので\n反撃ダメージを受けません",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -940,7 +938,7 @@
 	  "id": 97,
 	  "turn": 7,
 	  "phase": "cpu_toll_explain",
-	  "message": "通行料を支払いします\n\n高レベル領地の通行料は非常に高額です！",
+	  "message": "相手は攻撃できるクリーチャーがいないため\n通行料を支払って通過します\n\n高レベル領地の通行料は非常に高額です！",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true

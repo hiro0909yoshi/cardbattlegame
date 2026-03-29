@@ -61,6 +61,7 @@ var frame_original_material: Material = null  # 元のマテリアル保存用
 var frame_mesh_instance: MeshInstance3D = null  # 枠のMeshInstance3D参照
 var _blink_active: bool = false  # 点滅中フラグ
 var _blink_time: float = 0.0  # 点滅用タイマー
+var _blink_frame_counter: int = 0  # フレームスキップカウンター
 
 # クリーチャーカード3D表示
 var creature_card_3d: Node3D = null  # 3Dカード表示ノード
@@ -327,41 +328,46 @@ func _stop_frame_blink():
 	_blink_time = 0.0
 	set_process(false)
 
-# 点滅処理（_processで実行）
+# 点滅処理（_processで実行、3フレームに1回更新でモバイル負荷軽減）
 func _process(delta):
+	_blink_frame_counter += 1
+
 	# 到着予測ハイライト処理（優先）
 	if _destination_highlight_active and frame_mesh_instance:
 		_destination_highlight_time += delta
-		
+		if _blink_frame_counter % 3 != 0:
+			return
 		# sin波で0〜1を滑らかに変化（周期1.0秒 - 速めの点滅）
 		var ht = (sin(_destination_highlight_time * TAU / 1.0) + 1.0) / 2.0
-		
+
 		# 黄色でハイライト
 		var highlight_color = Color(1.0, 0.9, 0.2)  # 黄色
 		var dim_color = Color(0.3, 0.27, 0.06)  # 暗い黄色
-		
+
 		_destination_highlight_material.albedo_color = dim_color.lerp(highlight_color, ht)
 		_destination_highlight_material.emission = dim_color.lerp(highlight_color, ht)
 		_destination_highlight_material.emission_energy_multiplier = 0.5 + ht * 1.5  # 0.5〜2.0（明るめ）
-		
+
 		frame_mesh_instance.material_override = _destination_highlight_material
 		return  # 到着予測ハイライト中は通常点滅を行わない
-	
+
 	# 通常の所有者点滅処理
 	if not _blink_active or not frame_mesh_instance:
 		return
 	_blink_time += delta
-	
+	if _blink_frame_counter % 3 != 0:
+		return
+
 	# sin波で0〜1を滑らかに変化（周期2.5秒）
 	var t = (sin(_blink_time * TAU / 2.5) + 1.0) / 2.0  # 0〜1
-	
+
 	# 常にmaterial_overrideを使用
 	frame_mesh_instance.material_override = frame_material
-	
+
 	# プレイヤー色と元の色（グレー）を補間
 	var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]
 	var original_color = Color(0.15, 0.15, 0.15)  # 元の枠の色（暗めグレー）
-	
+
 	frame_material.albedo_color = original_color.lerp(player_color, t)
 	frame_material.emission = original_color.lerp(player_color.darkened(0.3), t)  # 発光色を少し暗めに
 	frame_material.emission_energy_multiplier = 0.3 + t * 0.7  # 0.3〜1.0（控えめに）

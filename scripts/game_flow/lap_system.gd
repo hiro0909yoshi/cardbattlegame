@@ -38,6 +38,9 @@ var signal_display_label: Label = null
 ## 処理中フラグ（通知ポップアップ表示中等）
 var is_showing_notification: bool = false
 
+## シグナル表示用Tween参照
+var _signal_display_tween: Tween = null
+
 ## 初期化
 func setup(p_system, b_system, p_ui_manager = null, _p_game_flow_manager = null, p_game_3d_ref = null):
 	player_system = p_system
@@ -96,16 +99,20 @@ func setup_ui():
 func _show_signal_display(signal_type: String):
 	if not signal_display_label:
 		return
-	
+
 	signal_display_label.text = signal_type
 	signal_display_label.visible = true
 	signal_display_label.modulate.a = 1.0
-	
+
+	# 前回のTweenをkill（連続呼び出し対策）
+	if _signal_display_tween and _signal_display_tween.is_valid():
+		_signal_display_tween.kill()
+
 	# フェードアウトアニメーション
-	var tween = create_tween()
-	tween.tween_interval(0.8)  # 0.8秒表示
-	tween.tween_property(signal_display_label, "modulate:a", 0.0, 0.3)  # 0.3秒でフェードアウト
-	tween.tween_callback(func(): signal_display_label.visible = false)
+	_signal_display_tween = create_tween()
+	_signal_display_tween.tween_interval(0.8)  # 0.8秒表示
+	_signal_display_tween.tween_property(signal_display_label, "modulate:a", 0.0, 0.3)  # 0.3秒でフェードアウト
+	_signal_display_tween.tween_callback(func(): signal_display_label.visible = false)
 
 ## コメントを表示してクリック待ち（MessageServiceに委譲）
 ## player_id: 明示的にプレイヤーIDを指定（CPU判定に使用）

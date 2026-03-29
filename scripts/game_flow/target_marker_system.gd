@@ -284,9 +284,13 @@ static func _animate_marker(marker: Node3D, delta: float) -> void:
 
 ## 赤マーカーのTweenアニメーション開始（Y軸回転 + ボビング）
 static func _start_marker_tween(marker: Node3D, parent: Node) -> void:
+	# 既存Tweenがあればkill（連続呼び出し対策）
+	_kill_marker_tweens(marker)
+
 	# Y軸回転（0.8秒で1回転）
 	var rotate_tween: Tween = parent.create_tween()
 	rotate_tween.tween_property(marker, "rotation:y", TAU, 0.8)
+	marker.set_meta("_rotate_tween", rotate_tween)
 
 	# ボビング（上下）
 	var bob_tween: Tween = parent.create_tween()
@@ -294,6 +298,21 @@ static func _start_marker_tween(marker: Node3D, parent: Node) -> void:
 	var bob_bottom: float = MARKER_BOB_BASE_Y - MARKER_BOB_AMPLITUDE
 	bob_tween.tween_property(marker, "position:y", bob_top, 0.4).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	bob_tween.tween_property(marker, "position:y", bob_bottom, 0.4).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	marker.set_meta("_bob_tween", bob_tween)
+
+
+## マーカーに紐づくTweenをkill
+static func _kill_marker_tweens(marker: Node3D) -> void:
+	if marker.has_meta("_rotate_tween"):
+		var tw: Tween = marker.get_meta("_rotate_tween")
+		if tw and tw.is_valid():
+			tw.kill()
+		marker.remove_meta("_rotate_tween")
+	if marker.has_meta("_bob_tween"):
+		var tw: Tween = marker.get_meta("_bob_tween")
+		if tw and tw.is_valid():
+			tw.kill()
+		marker.remove_meta("_bob_tween")
 
 
 # ============================================
@@ -332,6 +351,7 @@ static func show_effect_marker(handler, tile_index: int, target_type: String = "
 ## skip_restore: trueなら半透明復元をスキップ（全体スペルで一括復元する場合）
 static func hide_effect_marker(handler, marker: Node3D, skip_restore: bool = false) -> void:
 	if marker and is_instance_valid(marker):
+		_kill_marker_tweens(marker)
 		if marker.get_parent():
 			marker.get_parent().remove_child(marker)
 		marker.queue_free()

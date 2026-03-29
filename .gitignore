@@ -14,3 +14,4 @@ data/*test*.json
 # Build artifacts
 web_build/
 web_build.zip
+android/build/
