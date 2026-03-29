@@ -68,170 +68,181 @@ func _get_environment_margin() -> float:
 func _build() -> void:
 	_brick_material = _create_brick_material()
 	_create_ground()
-	_create_walls()
-	_create_corner_towers()
-	#_create_torches()  # モバイル負荷対策で無効化（OmniLight3Dが重い）
+	_create_castle_structure()  # 壁・塔・門・胸壁を全てMultiMeshで一括生成
 	_create_ivy()
 	_create_grass()
 
 
-# --- 壁 ---
+# --- 城壁構造（全パーツMultiMesh化） ---
 
-## 四方の壁を生成
-func _create_walls() -> void:
-	var half_n: float = _map_half_size + WALL_MARGIN       # 北・東・西
-	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH  # 南（カメラ干渉回避のため広め）
-	var center_x: float = _map_center.x
-	var center_z: float = _map_center.z
+## 壁・塔・門・胸壁を全てMultiMeshで一括生成
+func _create_castle_structure() -> void:
+	var half_n: float = _map_half_size + WALL_MARGIN
+	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH
+	var cx: float = _map_center.x
+	var cz: float = _map_center.z
 	var wall_y: float = WALL_HEIGHT / 2.0
 	var cap_mat: StandardMaterial3D = _create_cap_material()
+	var tower_mat: ShaderMaterial = _create_tower_brick_material()
+	var roof_mat: StandardMaterial3D = StandardMaterial3D.new()
+	roof_mat.albedo_color = Color(0.3, 0.32, 0.35)
+	roof_mat.roughness = 0.8
 
-	# 北壁 (Z-) — 東西の広い方に合わせる
 	var ns_width: float = half_n * 2.0 + WALL_THICKNESS
-	var ns_size: Vector3 = Vector3(ns_width, WALL_HEIGHT, WALL_THICKNESS)
-	_create_single_wall("WallNorth", Vector3(center_x, wall_y, center_z - half_n), ns_size, _brick_material)
-	_create_wall_cap("WallCapNorth", Vector3(center_x, WALL_HEIGHT, center_z - half_n),
-		Vector3(ns_size.x + 0.2, 0.15, WALL_THICKNESS + 0.2), cap_mat)
-
-	# 南壁 (Z+) — 同じ幅で南側マージン位置に配置
-	_create_single_wall("WallSouth", Vector3(center_x, wall_y, center_z + half_s), ns_size, _brick_material)
-	_create_wall_cap("WallCapSouth", Vector3(center_x, WALL_HEIGHT, center_z + half_s),
-		Vector3(ns_size.x + 0.2, 0.15, WALL_THICKNESS + 0.2), cap_mat)
-
-	# 東西壁は北端〜南端を繋ぐ（非対称）
 	var ew_length: float = half_n + half_s + WALL_THICKNESS
-	var ew_center_z: float = center_z + (half_s - half_n) / 2.0
-	var ew_size: Vector3 = Vector3(WALL_THICKNESS, WALL_HEIGHT, ew_length)
-
-	# 西壁 (X-) - 1枚壁 + 門を貼り付け
-	_create_single_wall("WallWest", Vector3(center_x - half_n, wall_y, ew_center_z), ew_size, _brick_material)
-	_create_wall_cap("WallCapWest", Vector3(center_x - half_n, WALL_HEIGHT, ew_center_z),
-		Vector3(WALL_THICKNESS + 0.2, 0.15, ew_size.z + 0.2), cap_mat)
+	var ew_center_z: float = cz + (half_s - half_n) / 2.0
 	var gate_offset: float = WALL_THICKNESS / 2.0 + GATE_THICKNESS / 2.0
-	_create_gate("GateWest", Vector3(center_x - half_n + gate_offset, 0, center_z), true, false)
-
-	# 東壁 (X+) - 1枚壁 + 門を貼り付け
-	_create_single_wall("WallEast", Vector3(center_x + half_n, wall_y, ew_center_z), ew_size, _brick_material)
-	_create_wall_cap("WallCapEast", Vector3(center_x + half_n, WALL_HEIGHT, ew_center_z),
-		Vector3(WALL_THICKNESS + 0.2, 0.15, ew_size.z + 0.2), cap_mat)
-	_create_gate("GateEast", Vector3(center_x + half_n - gate_offset, 0, center_z), true, true)
-
-	# 胸壁（バトルメント）
-	_create_battlements(center_x, center_z, half_n, half_s, cap_mat)
-
-
-## 重厚な門を生成（GLBモデル扉 + 装飾枠）
-## is_ew: 東西壁の門（true）か南北壁の門（false）か
-func _create_gate(gate_name: String, base_pos: Vector3, is_ew: bool, flip: bool = false) -> void:
-	var gate_root: Node3D = Node3D.new()
-	gate_root.name = gate_name
-	gate_root.position = base_pos
-	add_child(gate_root)
-
 	var door_half: float = GATE_WIDTH / 2.0
+	var pillar_w: float = 0.5
 	var arch_radius: float = 3.0
+	var frame_thickness: float = 0.6
 	var rect_h: float = GATE_HEIGHT - arch_radius
 
-	# GLBモデルの扉を配置
+	# ===== レンガBoxMesh（壁4 + 門柱4）→ 1 MultiMesh =====
+	var brick_box_unit: BoxMesh = BoxMesh.new()
+	brick_box_unit.size = Vector3(1, 1, 1)
+	var brick_transforms: Array[Transform3D] = []
+	# 北壁・南壁
+	brick_transforms.append(Transform3D(Basis.from_scale(Vector3(ns_width, WALL_HEIGHT, WALL_THICKNESS)),
+		Vector3(cx, wall_y, cz - half_n)))
+	brick_transforms.append(Transform3D(Basis.from_scale(Vector3(ns_width, WALL_HEIGHT, WALL_THICKNESS)),
+		Vector3(cx, wall_y, cz + half_s)))
+	# 西壁・東壁
+	brick_transforms.append(Transform3D(Basis.from_scale(Vector3(WALL_THICKNESS, WALL_HEIGHT, ew_length)),
+		Vector3(cx - half_n, wall_y, ew_center_z)))
+	brick_transforms.append(Transform3D(Basis.from_scale(Vector3(WALL_THICKNESS, WALL_HEIGHT, ew_length)),
+		Vector3(cx + half_n, wall_y, ew_center_z)))
+	# 門柱（西門2本 + 東門2本）
+	var gate_x_west: float = cx - half_n + gate_offset
+	var gate_x_east: float = cx + half_n - gate_offset
+	for gx in [gate_x_west, gate_x_east]:
+		for side in [-1.0, 1.0]:
+			brick_transforms.append(Transform3D(
+				Basis.from_scale(Vector3(GATE_THICKNESS + 0.15, GATE_HEIGHT + 0.5, pillar_w)),
+				Vector3(gx, (GATE_HEIGHT + 0.5) / 2.0, cz + (door_half + pillar_w * 0.3) * side)))
+	_build_multimesh("BrickWalls", brick_box_unit, brick_transforms, _brick_material)
+
+	# ===== キャップBoxMesh（壁キャップ4 + 門柱キャップ4 + キーストーン2）→ 1 MultiMesh =====
+	var cap_box_unit: BoxMesh = BoxMesh.new()
+	cap_box_unit.size = Vector3(1, 1, 1)
+	var cap_transforms: Array[Transform3D] = []
+	# 壁キャップ（北・南）
+	cap_transforms.append(Transform3D(Basis.from_scale(Vector3(ns_width + 0.2, 0.15, WALL_THICKNESS + 0.2)),
+		Vector3(cx, WALL_HEIGHT, cz - half_n)))
+	cap_transforms.append(Transform3D(Basis.from_scale(Vector3(ns_width + 0.2, 0.15, WALL_THICKNESS + 0.2)),
+		Vector3(cx, WALL_HEIGHT, cz + half_s)))
+	# 壁キャップ（西・東）
+	cap_transforms.append(Transform3D(Basis.from_scale(Vector3(WALL_THICKNESS + 0.2, 0.15, ew_length + 0.2)),
+		Vector3(cx - half_n, WALL_HEIGHT, ew_center_z)))
+	cap_transforms.append(Transform3D(Basis.from_scale(Vector3(WALL_THICKNESS + 0.2, 0.15, ew_length + 0.2)),
+		Vector3(cx + half_n, WALL_HEIGHT, ew_center_z)))
+	# 門柱キャップ
+	for gx in [gate_x_west, gate_x_east]:
+		for side in [-1.0, 1.0]:
+			cap_transforms.append(Transform3D(
+				Basis.from_scale(Vector3(GATE_THICKNESS + 0.3, 0.15, 0.7)),
+				Vector3(gx, GATE_HEIGHT + 0.5, cz + (door_half + 0.15) * side)))
+	# キーストーン
+	for gx in [gate_x_west, gate_x_east]:
+		cap_transforms.append(Transform3D(
+			Basis.from_scale(Vector3(GATE_THICKNESS + 0.15, 0.4, 0.35)),
+			Vector3(gx, rect_h + arch_radius + frame_thickness * 0.5, cz)))
+	_build_multimesh("CapStones", cap_box_unit, cap_transforms, cap_mat)
+
+	# ===== 塔本体（4基）→ 1 MultiMesh =====
+	var tower_mesh: CylinderMesh = CylinderMesh.new()
+	tower_mesh.top_radius = TOWER_RADIUS
+	tower_mesh.bottom_radius = TOWER_RADIUS
+	tower_mesh.height = TOWER_HEIGHT
+	tower_mesh.radial_segments = TOWER_SIDES
+	var tower_y: float = TOWER_HEIGHT / 2.0
+	var tower_transforms: Array[Transform3D] = []
+	for corner in _get_corner_positions(cx, cz, half_n, half_s, tower_y):
+		tower_transforms.append(Transform3D(Basis.IDENTITY, corner))
+	_build_multimesh("TowerBodies", tower_mesh, tower_transforms, tower_mat)
+
+	# ===== 塔トップ（4基）→ 1 MultiMesh =====
+	var top_mesh: CylinderMesh = CylinderMesh.new()
+	top_mesh.top_radius = TOWER_RADIUS + 0.4
+	top_mesh.bottom_radius = TOWER_RADIUS + 0.4
+	top_mesh.height = 0.6
+	top_mesh.radial_segments = TOWER_SIDES
+	var top_transforms: Array[Transform3D] = []
+	for corner in _get_corner_positions(cx, cz, half_n, half_s, TOWER_HEIGHT + 0.3):
+		top_transforms.append(Transform3D(Basis.IDENTITY, corner))
+	_build_multimesh("TowerTops", top_mesh, top_transforms, tower_mat)
+
+	# ===== 塔屋根（4基）→ 1 MultiMesh =====
+	var roof_mesh: CylinderMesh = CylinderMesh.new()
+	roof_mesh.top_radius = 0.01
+	roof_mesh.bottom_radius = TOWER_RADIUS + 0.6
+	roof_mesh.height = 3.0
+	roof_mesh.radial_segments = TOWER_SIDES
+	var roof_transforms: Array[Transform3D] = []
+	for corner in _get_corner_positions(cx, cz, half_n, half_s, TOWER_HEIGHT + 0.6 + 1.5):
+		roof_transforms.append(Transform3D(Basis.IDENTITY, corner))
+	_build_multimesh("TowerRoofs", roof_mesh, roof_transforms, roof_mat)
+
+	# ===== アーチ枠（2門）→ 1 MultiMesh =====
+	var arch_mesh: ArrayMesh = _create_arch_frame_mesh(arch_radius, frame_thickness, GATE_THICKNESS + 0.1, true, door_half)
+	var arch_transforms: Array[Transform3D] = []
+	arch_transforms.append(Transform3D(Basis.IDENTITY, Vector3(gate_x_west, rect_h, cz)))
+	arch_transforms.append(Transform3D(Basis.IDENTITY, Vector3(gate_x_east, rect_h, cz)))
+	_build_multimesh("ArchFrames", arch_mesh, arch_transforms, _brick_material)
+
+	# ===== 門扉GLB（2個、MultiMesh不可）=====
+	_create_door_glb(Vector3(gate_x_west, 0, cz), false)
+	_create_door_glb(Vector3(gate_x_east, 0, cz), true)
+
+	# ===== 胸壁（既存MultiMesh方式を維持）=====
+	_create_battlements(cx, cz, half_n, half_s, cap_mat)
+
+
+## 四隅の座標を返すヘルパー
+func _get_corner_positions(cx: float, cz: float, half_n: float, half_s: float, y: float) -> Array[Vector3]:
+	return [
+		Vector3(cx - half_n, y, cz - half_n),
+		Vector3(cx + half_n, y, cz - half_n),
+		Vector3(cx - half_n, y, cz + half_s),
+		Vector3(cx + half_n, y, cz + half_s),
+	]
+
+
+## MultiMesh生成の共通ヘルパー
+func _build_multimesh(mm_name: String, mesh: Mesh, transforms: Array[Transform3D], mat: Material) -> void:
+	if transforms.is_empty():
+		return
+	var mm: MultiMesh = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = transforms.size()
+	for i in range(transforms.size()):
+		mm.set_instance_transform(i, transforms[i])
+	var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+	mmi.name = mm_name
+	mmi.multimesh = mm
+	mmi.material_override = mat
+	add_child(mmi)
+
+
+## 門扉GLBモデルを配置（MultiMesh不可のため個別）
+func _create_door_glb(pos: Vector3, flip: bool) -> void:
 	var door_scene: PackedScene = load("res://assets/models/gate_door.glb")
-	if door_scene:
-		var door_instance: Node3D = door_scene.instantiate()
-		door_instance.name = "DoorModel"
-		# モデルサイズ: 3.550 x 4.0 x 0.382 → GATE: 4.0 x 4.5 x 0.3
-		var scale_x: float = GATE_WIDTH / 3.550
-		var scale_y: float = GATE_HEIGHT / 4.0
-		var scale_z: float = GATE_THICKNESS / 0.382
-		door_instance.scale = Vector3(scale_x, scale_y, scale_z)
-		if is_ew:
-			door_instance.rotation.y = PI / 2.0
-		if flip:
-			door_instance.rotation.y += PI
-		gate_root.add_child(door_instance)
-
-	# アーチ枠（半円リング状のレンガ枠）
-	var frame_thickness := 0.6
-	var arch_frame: MeshInstance3D = MeshInstance3D.new()
-	arch_frame.name = "ArchFrame"
-	arch_frame.mesh = _create_arch_frame_mesh(arch_radius, frame_thickness, GATE_THICKNESS + 0.1, is_ew, door_half)
-	arch_frame.position = Vector3(0, rect_h, 0)
-	arch_frame.material_override = _brick_material
-	gate_root.add_child(arch_frame)
-
-	# 門柱（左右の太い柱）
-	var pillar_mat: ShaderMaterial = _brick_material
-	for side in [-1.0, 1.0]:
-		var pillar: MeshInstance3D = MeshInstance3D.new()
-		pillar.name = "GatePillar_%d" % int(side)
-		var pillar_mesh: BoxMesh = BoxMesh.new()
-		var pillar_w := 0.5
-		if is_ew:
-			pillar_mesh.size = Vector3(GATE_THICKNESS + 0.15, GATE_HEIGHT + 0.5, pillar_w)
-			pillar.position = Vector3(0, (GATE_HEIGHT + 0.5) / 2.0, (door_half + pillar_w * 0.3) * side)
-		else:
-			pillar_mesh.size = Vector3(pillar_w, GATE_HEIGHT + 0.5, GATE_THICKNESS + 0.15)
-			pillar.position = Vector3((door_half + pillar_w * 0.3) * side, (GATE_HEIGHT + 0.5) / 2.0, 0)
-		pillar.mesh = pillar_mesh
-		pillar.material_override = pillar_mat
-		gate_root.add_child(pillar)
-
-	# 門柱の上のキャップストーン
-	var cap_mat: StandardMaterial3D = _create_cap_material()
-	for side in [-1.0, 1.0]:
-		var pcap: MeshInstance3D = MeshInstance3D.new()
-		pcap.name = "PillarCap_%d" % int(side)
-		var pcap_mesh: BoxMesh = BoxMesh.new()
-		if is_ew:
-			pcap_mesh.size = Vector3(GATE_THICKNESS + 0.3, 0.15, 0.7)
-			pcap.position = Vector3(0, GATE_HEIGHT + 0.5, (door_half + 0.15) * side)
-		else:
-			pcap_mesh.size = Vector3(0.7, 0.15, GATE_THICKNESS + 0.3)
-			pcap.position = Vector3((door_half + 0.15) * side, GATE_HEIGHT + 0.5, 0)
-		pcap.mesh = pcap_mesh
-		pcap.material_override = cap_mat
-		gate_root.add_child(pcap)
-
-	# アーチの頂点のキーストーン（楔石）
-	var keystone: MeshInstance3D = MeshInstance3D.new()
-	keystone.name = "Keystone"
-	var keystone_mesh: BoxMesh = BoxMesh.new()
-	if is_ew:
-		keystone_mesh.size = Vector3(GATE_THICKNESS + 0.15, 0.4, 0.35)
-		keystone.position = Vector3(0, rect_h + arch_radius + frame_thickness * 0.5, 0)
-	else:
-		keystone_mesh.size = Vector3(0.35, 0.4, GATE_THICKNESS + 0.15)
-		keystone.position = Vector3(0, rect_h + arch_radius + frame_thickness * 0.5, 0)
-	keystone.mesh = keystone_mesh
-	keystone.material_override = cap_mat
-	gate_root.add_child(keystone)
-
-
-## 壁1枚を生成
-func _create_single_wall(wall_name: String, pos: Vector3, wall_size: Vector3, mat: Material) -> void:
-	var wall: MeshInstance3D = MeshInstance3D.new()
-	wall.name = wall_name
-	var box: BoxMesh = BoxMesh.new()
-	box.size = wall_size
-	wall.mesh = box
-	wall.position = pos
-	wall.material_override = mat
-	add_child(wall)
-
-
-## 壁の上の笠石（キャップストーン）を生成
-func _create_wall_cap(cap_name: String, pos: Vector3, cap_size: Vector3, mat: Material) -> void:
-	var cap: MeshInstance3D = MeshInstance3D.new()
-	cap.name = cap_name
-	var box: BoxMesh = BoxMesh.new()
-	box.size = cap_size
-	cap.mesh = box
-	cap.position = pos
-	cap.material_override = mat
-	add_child(cap)
+	if not door_scene:
+		return
+	var door: Node3D = door_scene.instantiate()
+	door.name = "DoorModel"
+	door.scale = Vector3(GATE_WIDTH / 3.550, GATE_HEIGHT / 4.0, GATE_THICKNESS / 0.382)
+	door.position = pos
+	door.rotation.y = PI / 2.0
+	if flip:
+		door.rotation.y += PI
+	add_child(door)
 
 
 # --- 胸壁 ---
 
-## 全胸壁を高度に最適化されたMultiMeshInstance3Dで生成
+## 全胸壁をMultiMeshInstance3Dで生成
 func _create_battlements(cx: float, cz: float, half_n: float, half_s: float, cap_mat: Material) -> void:
 	var step: float = BATTLEMENT_WIDTH + BATTLEMENT_GAP
 	var top_y: float = WALL_HEIGHT + BATTLEMENT_HEIGHT / 2.0
@@ -271,134 +282,25 @@ func _create_battlements(cx: float, cz: float, half_n: float, half_s: float, cap
 			ew_caps.append(Transform3D(Basis.IDENTITY, Vector3(x_pos, cap_top_y, bz)))
 			z += step
 
-	# NS用MultiMesh: 胸壁
-	if not ns_battlements.is_empty():
-		var ns_batt_mesh: BoxMesh = BoxMesh.new()
-		ns_batt_mesh.size = Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)
-		var ns_batt_mm: MultiMesh = MultiMesh.new()
-		ns_batt_mm.mesh = ns_batt_mesh
-		ns_batt_mm.transform_format = MultiMesh.TRANSFORM_3D
-		ns_batt_mm.instance_count = ns_battlements.size()
-		for i in range(ns_battlements.size()):
-			ns_batt_mm.set_instance_transform(i, ns_battlements[i])
-
-		var ns_batt_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
-		ns_batt_mmi.name = "BattlementsNS"
-		ns_batt_mmi.multimesh = ns_batt_mm
-		ns_batt_mmi.material_override = _brick_material
-		add_child(ns_batt_mmi)
-
-	# NS用MultiMesh: キャップ
-	if not ns_caps.is_empty():
-		var ns_cap_mesh: BoxMesh = BoxMesh.new()
-		ns_cap_mesh.size = Vector3(BATTLEMENT_WIDTH + 0.1, 0.1, WALL_THICKNESS + 0.4)
-		var ns_cap_mm: MultiMesh = MultiMesh.new()
-		ns_cap_mm.mesh = ns_cap_mesh
-		ns_cap_mm.transform_format = MultiMesh.TRANSFORM_3D
-		ns_cap_mm.instance_count = ns_caps.size()
-		for i in range(ns_caps.size()):
-			ns_cap_mm.set_instance_transform(i, ns_caps[i])
-
-		var ns_cap_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
-		ns_cap_mmi.name = "BattlementCapsNS"
-		ns_cap_mmi.multimesh = ns_cap_mm
-		ns_cap_mmi.material_override = cap_mat
-		add_child(ns_cap_mmi)
-
-	# EW用MultiMesh: 胸壁
-	if not ew_battlements.is_empty():
-		var ew_batt_mesh: BoxMesh = BoxMesh.new()
-		ew_batt_mesh.size = Vector3(WALL_THICKNESS + 0.3, BATTLEMENT_HEIGHT, BATTLEMENT_WIDTH)
-		var ew_batt_mm: MultiMesh = MultiMesh.new()
-		ew_batt_mm.mesh = ew_batt_mesh
-		ew_batt_mm.transform_format = MultiMesh.TRANSFORM_3D
-		ew_batt_mm.instance_count = ew_battlements.size()
-		for i in range(ew_battlements.size()):
-			ew_batt_mm.set_instance_transform(i, ew_battlements[i])
-
-		var ew_batt_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
-		ew_batt_mmi.name = "BattlementsEW"
-		ew_batt_mmi.multimesh = ew_batt_mm
-		ew_batt_mmi.material_override = _brick_material
-		add_child(ew_batt_mmi)
-
-	# EW用MultiMesh: キャップ
-	if not ew_caps.is_empty():
-		var ew_cap_mesh: BoxMesh = BoxMesh.new()
-		ew_cap_mesh.size = Vector3(WALL_THICKNESS + 0.4, 0.1, BATTLEMENT_WIDTH + 0.1)
-		var ew_cap_mm: MultiMesh = MultiMesh.new()
-		ew_cap_mm.mesh = ew_cap_mesh
-		ew_cap_mm.transform_format = MultiMesh.TRANSFORM_3D
-		ew_cap_mm.instance_count = ew_caps.size()
-		for i in range(ew_caps.size()):
-			ew_cap_mm.set_instance_transform(i, ew_caps[i])
-
-		var ew_cap_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
-		ew_cap_mmi.name = "BattlementCapsEW"
-		ew_cap_mmi.multimesh = ew_cap_mm
-		ew_cap_mmi.material_override = cap_mat
-		add_child(ew_cap_mmi)
+	_build_multimesh("BattlementsNS",
+		_create_box_mesh(Vector3(BATTLEMENT_WIDTH, BATTLEMENT_HEIGHT, WALL_THICKNESS + 0.3)),
+		ns_battlements, _brick_material)
+	_build_multimesh("BattlementCapsNS",
+		_create_box_mesh(Vector3(BATTLEMENT_WIDTH + 0.1, 0.1, WALL_THICKNESS + 0.4)),
+		ns_caps, cap_mat)
+	_build_multimesh("BattlementsEW",
+		_create_box_mesh(Vector3(WALL_THICKNESS + 0.3, BATTLEMENT_HEIGHT, BATTLEMENT_WIDTH)),
+		ew_battlements, _brick_material)
+	_build_multimesh("BattlementCapsEW",
+		_create_box_mesh(Vector3(WALL_THICKNESS + 0.4, 0.1, BATTLEMENT_WIDTH + 0.1)),
+		ew_caps, cap_mat)
 
 
-# --- 塔 ---
-
-## 四隅の塔を生成
-func _create_corner_towers() -> void:
-	var half_n: float = _map_half_size + WALL_MARGIN
-	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH
-	var cx: float = _map_center.x
-	var cz: float = _map_center.z
-	var tower_y: float = TOWER_HEIGHT / 2.0
-
-	var tower_mat: ShaderMaterial = _create_tower_brick_material()
-
-	var corners: Array[Vector3] = [
-		Vector3(cx - half_n, tower_y, cz - half_n),
-		Vector3(cx + half_n, tower_y, cz - half_n),
-		Vector3(cx - half_n, tower_y, cz + half_s),
-		Vector3(cx + half_n, tower_y, cz + half_s),
-	]
-
-	var roof_mat: StandardMaterial3D = StandardMaterial3D.new()
-	roof_mat.albedo_color = Color(0.3, 0.32, 0.35)
-	roof_mat.roughness = 0.8
-
-	for i in range(corners.size()):
-		var tower: MeshInstance3D = MeshInstance3D.new()
-		tower.name = "Tower_%d" % i
-		var tower_mesh: CylinderMesh = CylinderMesh.new()
-		tower_mesh.top_radius = TOWER_RADIUS
-		tower_mesh.bottom_radius = TOWER_RADIUS
-		tower_mesh.height = TOWER_HEIGHT
-		tower_mesh.radial_segments = TOWER_SIDES
-		tower.mesh = tower_mesh
-		tower.position = corners[i]
-		tower.material_override = tower_mat
-		add_child(tower)
-
-		var tower_top: MeshInstance3D = MeshInstance3D.new()
-		tower_top.name = "TowerTop_%d" % i
-		var top_mesh: CylinderMesh = CylinderMesh.new()
-		top_mesh.top_radius = TOWER_RADIUS + 0.4
-		top_mesh.bottom_radius = TOWER_RADIUS + 0.4
-		top_mesh.height = 0.6
-		top_mesh.radial_segments = TOWER_SIDES
-		tower_top.mesh = top_mesh
-		tower_top.position = Vector3(corners[i].x, TOWER_HEIGHT + 0.3, corners[i].z)
-		tower_top.material_override = tower_mat
-		add_child(tower_top)
-
-		var roof: MeshInstance3D = MeshInstance3D.new()
-		roof.name = "TowerRoof_%d" % i
-		var roof_mesh: CylinderMesh = CylinderMesh.new()
-		roof_mesh.top_radius = 0.01
-		roof_mesh.bottom_radius = TOWER_RADIUS + 0.6
-		roof_mesh.height = 3.0
-		roof_mesh.radial_segments = TOWER_SIDES
-		roof.mesh = roof_mesh
-		roof.position = Vector3(corners[i].x, TOWER_HEIGHT + 0.6 + 1.5, corners[i].z)
-		roof.material_override = roof_mat
-		add_child(roof)
+## BoxMesh生成ヘルパー
+func _create_box_mesh(box_size: Vector3) -> BoxMesh:
+	var box: BoxMesh = BoxMesh.new()
+	box.size = box_size
+	return box
 
 
 # --- 松明（現在無効） ---

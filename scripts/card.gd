@@ -35,6 +35,11 @@ var owner_player_id: int = -1      # このカードの所有者
 var viewing_player_id: int = -1    # 現在表示を見ているプレイヤー
 var is_showing_secret_back: bool = false  # 裏面（真っ黒）表示中か
 
+# 軽量モード（手札表示用: 47子ノードを非表示にしてTextureRect1枚で描画）
+var _is_lightweight_mode: bool = false
+var _cached_texture_rect: TextureRect = null
+var _cached_card_texture: ImageTexture = null  # 表面テクスチャ保持（密命切替用）
+
 # CardFrame.tscnのサイズ定義
 const CARDFRAME_WIDTH = 220.0   # CardFrame.tscnの設計サイズ
 const CARDFRAME_HEIGHT = 293.0
@@ -46,6 +51,41 @@ func set_references(css, csui, gfm) -> void:
 	_card_selection_service_ref = css
 	_card_selection_ui_ref = csui
 	_game_flow_manager_ref = gfm
+
+## 軽量モードを有効化（手札表示用）
+## 47個の子ノードを停止・非表示にし、キャッシュテクスチャ1枚で描画する
+func enable_lightweight_mode(texture: ImageTexture) -> void:
+	if not texture:
+		return
+
+	_is_lightweight_mode = true
+	_cached_card_texture = texture
+
+	# 既存の子ノードを非表示＋処理停止（DRAW/OBJ大幅削減）
+	for child in get_children():
+		child.visible = false
+		child.process_mode = Node.PROCESS_MODE_DISABLED
+
+	# TextureRectを作成してキャッシュテクスチャを表示
+	_cached_texture_rect = TextureRect.new()
+	_cached_texture_rect.name = "CachedCardTexture"
+	_cached_texture_rect.texture = texture
+	_cached_texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_cached_texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_cached_texture_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_cached_texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_cached_texture_rect)
+
+	# 制限マーク（動的生成済み）を再表示（z_index=10/11で上に来る）
+	var e_container = get_node_or_null("RestrictionEContainer")
+	if e_container:
+		e_container.visible = true
+		e_container.process_mode = Node.PROCESS_MODE_INHERIT
+	var overlay_container = get_node_or_null("RestrictionOverlayContainer")
+	if overlay_container:
+		overlay_container.visible = true
+		overlay_container.process_mode = Node.PROCESS_MODE_INHERIT
+
 
 func _ready():
 	# 元のサイズを記録
@@ -730,7 +770,18 @@ func show_secret_back():
 
 	is_showing_secret_back = true
 
-	# 表面の子ノードを全て非表示にする
+	# 軽量モード: TextureRectを非表示にしてCardBackOverlayを有効化
+	if _is_lightweight_mode:
+		if _cached_texture_rect:
+			_cached_texture_rect.visible = false
+		var card_back = get_node_or_null("CardBackOverlay")
+		if card_back:
+			card_back.visible = true
+			card_back.process_mode = Node.PROCESS_MODE_INHERIT
+			move_child(card_back, get_child_count() - 1)
+		return
+
+	# 通常モード: 表面の子ノードを全て非表示にする
 	for child in get_children():
 		if child.name != "CardBackOverlay":
 			child.visible = false
@@ -748,7 +799,17 @@ func show_card_front():
 
 	is_showing_secret_back = false
 
-	# 裏面を非表示
+	# 軽量モード: CardBackOverlayを非表示にしてTextureRectを復帰
+	if _is_lightweight_mode:
+		var card_back = get_node_or_null("CardBackOverlay")
+		if card_back:
+			card_back.visible = false
+			card_back.process_mode = Node.PROCESS_MODE_DISABLED
+		if _cached_texture_rect:
+			_cached_texture_rect.visible = true
+		return
+
+	# 通常モード: 裏面を非表示
 	var card_back = get_node_or_null("CardBackOverlay")
 	if card_back:
 		card_back.visible = false

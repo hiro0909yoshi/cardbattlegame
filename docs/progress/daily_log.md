@@ -12,6 +12,51 @@
 
 ---
 
+## 2026年3月30日（Session: レンダリング最適化実施）
+
+### 完了した作業
+
+#### レンダリング最適化（OBJ: 2204→490, DRAW: 942→310）
+- ✅ 城壁MultiMesh化 — 296個のMeshInstance3D → 4個のMultiMeshInstance3D
+- ✅ 床タイルMultiMesh化 — 個別instantiation → MultiMeshInstance3D 1個（影破綻も解消）
+- ✅ CardTextureCache新規作成 — Card.tscnをSubViewportでオフスクリーンレンダリング→ImageTexture化
+- ✅ creature_card_3d_quad.gd — 内蔵SubViewport廃止、CardTextureCache使用に変更
+- ✅ card.gd 軽量モード — `enable_lightweight_mode()` 追加、47子ノードを停止+TextureRect 1枚で描画
+- ✅ hand_display.gd — キャッシュテクスチャ取得→軽量モード自動適用
+- ✅ 密命カード対応（show_secret_back/show_card_front の軽量モード分岐）
+
+#### デバッグ・計測
+- ✅ quest_game.gd にFPSカウンター移設（game_3d.gdから。CanvasLayer layer=100、画面中央、font_size=96）
+
+#### 失敗・リバート
+- ❌ CardHandView方式（card.gd代替クラス）→ 入力処理の複雑さでフリーズ発生、方針転換
+
+### 次のステップ
+- Huawei Mate 20 Lite 実機でFPS計測（APKインストール）
+- 実機結果に基づきビューポート移行の要否判断
+
+---
+
+## 2026年3月29日（Session: Androidパフォーマンス最適化）
+
+### 完了した作業
+
+#### モバイル最適化
+- ✅ ワープタイル（warp_tile, warp_stop_tile）パーティクル数 12→6、_process 2フレームスキップ
+- ✅ BaseTile ブリンク処理 3フレームスキップ
+- ✅ brick_wall.gdshader 大幅簡略化（fbm削除、トライプラナー3→2方向、法線バンプ削除）
+- ✅ castle_environment 草パッチ 120→30、モバイルでは城環境ごと無効化
+- ✅ Tweenリーク修正（target_marker_system, lap_system）
+
+#### デバッグ・計測
+- ✅ game_3d.gd にFPSカウンター追加（画面表示 + logcat出力、1秒間隔）
+- ✅ android_export_guide.md にUSB実機デバッグ手順・パフォーマンス判断基準を追記
+
+#### Git
+- ✅ .gitignore に `android/build/` 追加（100MB+ビルド成果物除外）
+
+---
+
 ## 2026年3月26日（Session: タイトル画面 + プレイヤーデータ整備）
 
 ### 完了した作業

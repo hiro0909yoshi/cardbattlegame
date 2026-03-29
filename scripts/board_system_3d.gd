@@ -52,6 +52,8 @@ var tile_nodes: Dictionary = {}        # tile_index -> BaseTile
 var player_nodes: Array[Node] = []      # 3D駒のノード配列
 var camera: Camera3D = null
 var camera_controller: CameraController = null
+var _tiles_container: Node = null       # タイルコンテナ（MultiMesh再構築用）
+var _element_multimeshes: Dictionary = {}  # element_name -> MultiMeshInstance3D
 
 # システム参照
 var player_system: PlayerSystem
@@ -245,15 +247,18 @@ func collect_tiles(tiles_container: Node):
 	# サブシステムに渡す
 	tile_data_manager.set_tile_nodes(tile_nodes, player_system)
 	movement_controller.tile_nodes = tile_nodes
-	
+
 	if tile_info_display:
 		tile_info_display.setup_labels(tile_nodes, self)
-	
+
 	# 隣接システムの初期化
 	if tile_neighbor_system:
 		tile_neighbor_system.setup(tile_nodes)
-	
+
 	tile_data_manager.update_all_displays()
+
+	# タイルelement meshをMultiMesh化（DRAW削減）
+	_optimize_tile_element_meshes(tiles_container)
 
 func collect_players(players_container: Node):
 	player_nodes = players_container.get_children()
@@ -501,7 +506,11 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 		tile_data_manager.update_all_displays()
 	
 	print("[地形変化] タイル%d: %s → %s (Lv%d)" % [tile_index, old_element, new_element, old_level])
-	
+
+	# タイルelement MultiMesh再構築
+	if _tiles_container:
+		_optimize_tile_element_meshes(_tiles_container)
+
 	# イベント発火（永続バフ更新用）
 	terrain_changed.emit(tile_index, old_element, new_element)
 	
@@ -525,6 +534,98 @@ func _apply_terrain_change_buff(creature_data: Dictionary):
 	if creature_id == 328:
 		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] 地形変化 MHP-10 (合計: %d)" % creature_data["base_up_hp"])
+
+# === タイルelement mesh MultiMesh最適化 ===
+
+## element名→GLBノード名の対応
+const ELEMENT_NODE_NAMES: Dictionary = {
+	"fire": "fire2", "water": "water2", "earth": "earth2",
+	"wind": "air2", "neutral": "natural2"
+}
+
+## タイルのelement meshをMultiMesh化してDRAW削減
+func _optimize_tile_element_meshes(tiles_container: Node) -> void:
+	_tiles_container = tiles_container
+
+	# 既存のMultiMeshを削除
+	for key in _element_multimeshes:
+		if is_instance_valid(_element_multimeshes[key]):
+			_element_multimeshes[key].queue_free()
+	_element_multimeshes.clear()
+
+	# element種別ごとにMeshInstance3Dを収集
+	# {element: {mesh: Mesh, material: Material, transforms: Array[Transform3D]}}
+	var element_data: Dictionary = {}
+
+	for tile_index in tile_nodes:
+		var tile: BaseTile = tile_nodes[tile_index]
+		var element: String = tile.tile_type
+		if element.is_empty() or element not in ELEMENT_NODE_NAMES:
+			continue
+
+		var node_name: String = ELEMENT_NODE_NAMES[element]
+		var element_node: Node3D = tile.get_node_or_null(node_name)
+		if not element_node:
+			continue
+
+		# GLBノード内のMeshInstance3Dを取得
+		var mesh_inst: MeshInstance3D = _find_first_mesh_instance(element_node)
+		if not mesh_inst or not mesh_inst.mesh:
+			continue
+
+		# メッシュを記録（初回のみ）
+		if element not in element_data:
+			element_data[element] = {
+				"mesh": mesh_inst.mesh,
+				"transforms": [] as Array[Transform3D]
+			}
+
+		# ワールド座標でのTransformを計算
+		var world_transform: Transform3D = mesh_inst.global_transform
+		element_data[element]["transforms"].append(world_transform)
+
+		# 元のelement meshを非表示＋停止
+		element_node.visible = false
+		element_node.process_mode = Node.PROCESS_MODE_DISABLED
+
+	# MultiMesh生成
+	for element in element_data:
+		var data: Dictionary = element_data[element]
+		var transforms: Array = data["transforms"]
+		if transforms.is_empty():
+			continue
+
+		var mm: MultiMesh = MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = data["mesh"]
+		mm.instance_count = transforms.size()
+		for i in range(transforms.size()):
+			mm.set_instance_transform(i, transforms[i])
+
+		var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+		mmi.name = "TileElements_%s" % element
+		mmi.multimesh = mm
+		# material_overrideは設定しない（メッシュ内蔵のサーフェスマテリアルを使用）
+		tiles_container.add_child(mmi)
+		_element_multimeshes[element] = mmi
+
+	var total_instances := 0
+	for element in element_data:
+		total_instances += element_data[element]["transforms"].size()
+	if total_instances > 0:
+		print("[BoardSystem3D] タイルelement MultiMesh化: %d個 → %d MultiMesh" % [total_instances, element_data.size()])
+
+
+## ノード内の最初のMeshInstance3Dを再帰的に探す
+func _find_first_mesh_instance(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D:
+		return node
+	for child in node.get_children():
+		var result := _find_first_mesh_instance(child)
+		if result:
+			return result
+	return null
+
 
 ## 地形変化可能かチェック
 func can_change_terrain(tile_index: int) -> bool:

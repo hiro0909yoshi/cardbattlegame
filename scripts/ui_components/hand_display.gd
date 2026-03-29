@@ -21,6 +21,7 @@ const CARD_SPACING = 30
 # システム参照
 var card_system_ref = null
 var player_system_ref = null
+var _card_texture_cache = null  # CardTextureCache参照（軽量モード用）
 var _card_selection_service = null  # CardSelectionService参照（フィルター取得用、Phase 8-M）
 var _card_selection_ui_ref = null  # CardSelectionUI参照（カード参照注入用）
 var _game_flow_manager_ref = null  # GameFlowManager参照（カード参照注入用）
@@ -42,9 +43,24 @@ func initialize(ui_parent: Node, card_sys, player_sys):
 	hand_container.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウス入力を透過させる
 	ui_parent.add_child(hand_container)
 
+	# CardTextureCacheを取得または作成
+	_card_texture_cache = _get_or_create_texture_cache()
+
 	# プレイヤーごとのカードノード配列を初期化
 	for i in range(4):
 		player_card_nodes[i] = []
+
+
+## CardTextureCacheインスタンスを取得（なければ作成）
+func _get_or_create_texture_cache() -> CardTextureCache:
+	var scene_root = get_tree().root
+	for child in scene_root.get_children():
+		if child is CardTextureCache:
+			return child
+	var cache = CardTextureCache.new()
+	cache.name = "CardTextureCache"
+	scene_root.add_child(cache)
+	return cache
 
 ## カードコールバックを設定（UIManagerから呼ばれる）
 func set_card_callbacks(on_confirmed: Callable, on_info: Callable) -> void:
@@ -112,16 +128,16 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 	if not is_instance_valid(hand_container):
 		print("[HandDisplay] ERROR: 手札コンテナが無効です")
 		return null
-	
+
 	if not card_scene:
 		print("[HandDisplay] ERROR: card_sceneがロードされていません")
 		return null
-		
+
 	var card = card_scene.instantiate()
 	if not card:
 		print("[HandDisplay] ERROR: カードのインスタンス化に失敗")
 		return null
-	
+
 	card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 	card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 	
@@ -220,26 +236,36 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			is_selectable_card = false
 		
 	hand_container.add_child(card)
-	
+
 	# 位置は後でrearrange_hand()で設定するので仮配置
 	var viewport_size = get_viewport().get_visible_rect().size
 	var card_y = viewport_size.y - CARD_HEIGHT - 20
 	card.position = Vector2(0, card_y)
-	
-	# まず従来の方法でカードを表示
+
+	# まず従来の方法でカードを表示（子ノードにデータをセット）
 	if card.has_method("load_card_data"):
 		card.load_card_data(card_data.get("id", 0))
-	
+
+	# 軽量モード: キャッシュテクスチャがあれば47子ノードを停止してTextureRect1枚で描画
+	if _card_texture_cache and card.has_method("enable_lightweight_mode"):
+		var card_id = card_data.get("id", 0)
+		var cached_tex = _card_texture_cache.get_card_texture_sync(card_id)
+		if cached_tex:
+			card.enable_lightweight_mode(cached_tex)
+		else:
+			# キャッシュ未生成の場合は非同期レンダリング後に適用
+			_apply_lightweight_deferred(card, card_id)
+
 	# 密命カード対応: card_dataを上書きして密命情報を含める
 	card.card_data = card_data
 	card.owner_player_id = player_id
 	# 重要: 常にプレイヤー0（人間）が見ている
 	card.viewing_player_id = 0
-	
+
 	# 密命カードの表示判定
 	if card.has_method("update_secret_display"):
 		card.update_secret_display()
-	
+
 	# フィルターモードに応じて選択可能/不可を設定
 	card.is_selectable = is_selectable_card
 
@@ -253,6 +279,15 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			card.card_info_requested.connect(_on_card_info_requested_cb)
 
 	return card
+
+## キャッシュ未生成時の非同期軽量モード適用
+func _apply_lightweight_deferred(card: Node, card_id: int) -> void:
+	if not _card_texture_cache:
+		return
+	var tex = await _card_texture_cache.prerender_card_async(card_id)
+	if tex and is_instance_valid(card) and card.has_method("enable_lightweight_mode"):
+		card.enable_lightweight_mode(tex)
+
 
 ## 手札を再配置（動的スケール対応）
 func rearrange_hand(player_id: int):
