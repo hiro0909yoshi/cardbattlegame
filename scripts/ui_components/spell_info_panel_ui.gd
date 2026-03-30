@@ -13,14 +13,14 @@ signal panel_closed
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
-@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/NameLabel
-@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/RarityLabel
-@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostLabel
-@onready var cost_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostIcons
-@onready var spell_type_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SpellTypeContainer/SpellTypeLabel
-@onready var spell_type_icon: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SpellTypeContainer/SpellTypeIcon
-@onready var effect_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer
-@onready var effect_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer/EffectLabel
+@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer/NameLabel
+@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer/RarityLabel
+@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostContainer/CostLabel
+@onready var cost_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostContainer/CostIcons
+@onready var spell_type_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/SpellTypeContainer/SpellTypeLabel
+@onready var spell_type_icon: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/SpellTypeContainer/SpellTypeIcon
+@onready var effect_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/EffectContainer
+@onready var effect_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/EffectContainer/EffectLabel
 
 # UIManager参照（グローバルボタン用）
 var ui_manager_ref = null

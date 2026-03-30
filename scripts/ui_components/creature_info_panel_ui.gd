@@ -14,20 +14,20 @@ signal panel_closed
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
-@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/NameLabel
-@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/RarityLabel
-@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostLabel
-@onready var cost_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostElementIcons
-@onready var hp_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer/HpLabel
-@onready var ap_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer/ApLabel
-@onready var restriction_text_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/RestrictionTextLabel
-@onready var restriction_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/RestrictionElementIcons
-@onready var item_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/ItemLabel
-@onready var curse_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CurseLabel
-@onready var skill_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer
-@onready var skill_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer/SkillLabel
-@onready var mystic_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/MysticContainer
-@onready var mystic_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/MysticContainer/MysticLabel
+@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer/NameLabel
+@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer/RarityLabel
+@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostContainer/CostLabel
+@onready var cost_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostContainer/CostElementIcons
+@onready var hp_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/HpApContainer/HpLabel
+@onready var ap_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/HpApContainer/ApLabel
+@onready var restriction_text_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/RestrictionContainer/RestrictionTextLabel
+@onready var restriction_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/RestrictionContainer/RestrictionElementIcons
+@onready var item_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/RestrictionContainer/ItemLabel
+@onready var curse_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CurseLabel
+@onready var skill_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/SkillContainer
+@onready var skill_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/SkillContainer/SkillLabel
+@onready var mystic_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/MysticContainer
+@onready var mystic_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/MysticContainer/MysticLabel
 
 # UIManager参照（グローバルボタン用）
 var ui_manager_ref = null
@@ -43,6 +43,9 @@ var current_confirmation_text: String = ""
 
 # 参照
 var card_system = null
+
+# ゲーム画面用レイアウト調整済みフラグ
+var _game_layout_applied: bool = false
 
 
 func _ready():
@@ -61,13 +64,38 @@ func set_ui_manager(manager) -> void:
 	ui_manager_ref = manager
 
 
+## ゲーム画面用レイアウト調整（tscnのアルバム用レイアウトを上書き）
+## ui_manager_refがある場合のみ適用（アルバムには影響しない）
+func _apply_game_layout():
+	if _game_layout_applied or not ui_manager_ref:
+		return
+	_game_layout_applied = true
+
+	# MainContainer: 右に寄せ（position/sizeで直接指定）
+	if main_container:
+		main_container.position = Vector2(135, 105)
+		main_container.size = Vector2(500, 255)
+
+	# ParchmentBg・ContentMargin: 上下を縮小（左右はそのまま）
+	var parchment = right_panel.get_node_or_null("ParchmentBg") if right_panel else null
+	if parchment:
+		parchment.offset_top = 55
+		parchment.offset_bottom = 460
+
+	var content_margin = right_panel.get_node_or_null("ContentMargin") if right_panel else null
+	if content_margin:
+		content_margin.offset_top = 100
+		content_margin.offset_bottom = 450
+
+
 ## 閲覧モードで表示（タイル配置クリーチャー）
 func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_buttons: bool = true):
+	_apply_game_layout()
 	current_creature_data = creature_data
 	current_tile_index = tile_index
 	is_selection_mode = false
 	is_info_only_mode = false
-	
+
 	_update_display()
 	
 	visible = true
@@ -84,11 +112,12 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 ## 選択モードで表示（召喚/バトル時）
 ## restriction_reason: ""=制限なし, "ep"=EP不足/土地条件, "restriction"=配置制限等
 func show_selection_mode(creature_data: Dictionary, confirmation_text: String = "召喚しますか？", restriction_reason: String = ""):
+	_apply_game_layout()
 	current_creature_data = creature_data
 	current_confirmation_text = confirmation_text
 	is_selection_mode = true
 	is_info_only_mode = false
-	
+
 	_update_display()
 	
 	visible = true

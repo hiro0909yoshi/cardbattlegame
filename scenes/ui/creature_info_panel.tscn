@@ -8,10 +8,10 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 90.0
-offset_top = -165.0
-offset_right = 90.0
-offset_bottom = -165.0
+offset_left = 45.0
+offset_top = -80.0
+offset_right = 45.0
+offset_bottom = -80.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -19,15 +19,15 @@ script = ExtResource("2_script")
 
 [node name="MainContainer" type="HBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 137.0
-offset_top = 149.0
-offset_right = 937.0
-offset_bottom = 549.0
-theme_override_constants/separation = 30
+offset_left = 70.0
+offset_top = 75.0
+offset_right = 570.0
+offset_bottom = 350.0
+theme_override_constants/separation = 15
 alignment = 1
 
 [node name="RightPanel" type="Control" parent="MainContainer"]
-custom_minimum_size = Vector2(400, 300)
+custom_minimum_size = Vector2(250, 200)
 layout_mode = 2
 
 [node name="ParchmentBg" type="TextureRect" parent="MainContainer/RightPanel"]
@@ -35,10 +35,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -142.0
-offset_top = 137.0
-offset_right = 771.0
-offset_bottom = 867.0
+offset_left = -70.0
+offset_top = 70.0
+offset_right = 450.0
+offset_bottom = 530.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_bg")
@@ -52,131 +52,143 @@ anchor_left = -0.401
 anchor_top = -0.219
 anchor_right = 0.755
 anchor_bottom = 1.065
-offset_left = 70.399994
-offset_top = 194.6
-offset_right = 812.0
-offset_bottom = 841.0
+offset_left = 55.0
+offset_top = 120.0
+offset_right = 500.0
+offset_bottom = 520.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 25
-theme_override_constants/margin_top = 35
-theme_override_constants/margin_right = 25
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 13
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 13
+theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin"]
+[node name="OuterVBox" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
 
-[node name="NameContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="NameContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer"]
+[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.2, 0.1, 1)
-theme_override_font_sizes/font_size = 80
+theme_override_font_sizes/font_size = 48
 text = "クリーチャー名"
 
-[node name="RarityLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer"]
+[node name="RarityLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.3, 0.1, 1)
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 36
 text = "[R]"
 vertical_alignment = 1
 
-[node name="Control" type="Control" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
-custom_minimum_size = Vector2(0, 40)
+[node name="Control" type="Control" parent="MainContainer/RightPanel/ContentMargin/OuterVBox"]
+custom_minimum_size = Vector2(0, 15)
 layout_mode = 2
 
-[node name="CostContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CostContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CostLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer"]
+[node name="CostLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 28
 text = "コスト: 100G"
 
-[node name="CostElementIcons" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer"]
+[node name="CostElementIcons" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostContainer"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HpApContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="HpApContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 15
 
-[node name="HpLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer"]
+[node name="HpLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/HpApContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 36
 text = "HP: 60 / 60"
 
-[node name="ApLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer"]
+[node name="ApLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/HpApContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 36
 text = "AP: 70"
 
-[node name="RestrictionContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="RestrictionTextLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.4, 0.3, 1)
-theme_override_font_sizes/font_size = 40
-text = "配置不可:"
-
-[node name="RestrictionElementIcons" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer"]
+[node name="RestrictionContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ItemLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer"]
+[node name="RestrictionTextLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/RestrictionContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.4, 0.3, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 28
+text = "配置不可:"
+
+[node name="RestrictionElementIcons" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/RestrictionContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ItemLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/RestrictionContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.4, 0.3, 1)
+theme_override_font_sizes/font_size = 28
 text = "アイテム制限: なし"
 
-[node name="HSeparator" type="HSeparator" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="CurseLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="CurseLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 36
 text = "【刻印】なし"
 autowrap_mode = 3
 
-[node name="SkillContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="SkillContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="SkillHeader" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer"]
+[node name="SkillHeader" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/SkillContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.4, 0.5, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 28
 text = "【スキル】"
 
-[node name="SkillLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer"]
+[node name="SkillLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/SkillContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
-theme_override_font_sizes/font_size = 80
+theme_override_font_sizes/font_size = 48
 text = "先制; 強打[水]; 土地変性[火]"
 autowrap_mode = 3
 
-[node name="MysticContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="MysticContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="MysticHeader" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/MysticContainer"]
+[node name="MysticHeader" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/MysticContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.3, 0.4, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 28
 text = "【アルカナアーツ】"
 
-[node name="MysticLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/MysticContainer"]
+[node name="MysticLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/MysticContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
-theme_override_font_sizes/font_size = 80
+theme_override_font_sizes/font_size = 48
 text = "アルカナアーツの説明テキスト"
 autowrap_mode = 3

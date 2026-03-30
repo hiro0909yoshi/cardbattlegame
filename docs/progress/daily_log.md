@@ -12,7 +12,92 @@
 
 ---
 
-## 2026年3月30日（Session: レンダリング最適化実施）
+## 2026年3月31日（Session 1: ビューポート移行 - インフォパネル・プレイヤーステータス）
+
+### 完了した作業
+
+#### インフォパネル3種: 名前固定+スクロール化
+- ✅ creature_info_panel.tscn — OuterVBox挿入: NameContainer+スペーサーをScrollContainer外に固定配置
+- ✅ spell_info_panel.tscn — 同様のOuterVBox構造に変更
+- ✅ item_info_panel.tscn — 同様のOuterVBox構造に変更
+- ✅ 3つのUI GDScript（creature/spell/item_info_panel_ui.gd）— @onreadyパス更新（OuterVBox挿入に対応）
+
+#### プレイヤーステータスダイアログ（player_status_dialog）
+- ✅ player_status_dialog.tscn — MainPanel 1691×1129→1000×680に縮小、画面中央配置
+- ✅ BackgroundRect offset除去（画面全体を隙間なく覆うように）
+- ✅ ParchmentBg/ContentMargin左右対称化、位置微調整
+- ✅ フォント縮小: Title 60→38、StatusLabel 40/44→32/35、手札 55→38
+- ✅ player_status_dialog.gd — 手札font_size 55→38
+
+### 次のステップ
+- Step 2残り: game_menu.gd, debug_panel.gd, level_up_ui.gd, surrender_dialog.gd, magic_tile_ui.gd, base_tile_ui.gd, card_buy_ui.gd, card_give_ui.gd
+- Step 3: バトル画面
+- Step 5残り: special_tile_info_dialog, map_preview_dialog, result_screen
+- Step 6: チュートリアル
+
+---
+
+## 2026年3月30日（Session 3: ビューポート移行 - ゲーム画面・ステータス・クエスト）
+
+### 完了した作業
+
+#### Step 4（追加）: ソロバトル・ネット対戦画面
+- ✅ solo_battle_setup.gd — 全フォント・サイズ比率変換、対戦開始ボタン350×80/font36
+- ✅ ルール設定拡大（ラベル34、スピンボタン44、矢印26）
+- ✅ CPU枠をHBoxContainer/slot方式に再構造化（ネット対戦と統一、行ずれ解消）
+- ✅ マップ選択をダイヤルボックス形式（ScrollContainer+スワイプ、ボタン60px/font30）に変更
+- ✅ net_battle_setup.gd — 同様の比率変換＋右パネル拡大＋対戦ボタン拡大
+
+#### Step 4（追加）: ステータス画面
+- ✅ StatusScreen.tscn — TopBar 42px、CharacterPreview 310×362、全フォント拡大調整
+- ✅ status_screen.gd — ダイアログサイズ変換、ボタン高さ55/65、VBox separation 18
+- ✅ character_preview.gd — SubViewport 276×310
+
+#### Step 4（追加）: クエスト画面
+- ✅ WorldStageSelect.tscn — マージン21、DetailPanel内ScrollContainer挿入
+- ✅ world_stage_select.gd — STAGE_BUTTON_SIZE 85、ワールドボタン155×42/font17
+- ✅ ブック選択: 固定高さ→SIZE_EXPAND_FILL（切れ防止）、ブックボタン207×78
+
+#### Step 2（一部）: メインゲーム画面
+- ✅ global_action_buttons.gd — BUTTON_SIZE 280→145、フォント100→52/120→62、マージン・ボーダー全変換
+- ✅ player_info_panel.gd — 75%縮小（panel 195×143、font 21、spacing 11）
+- ✅ phase_display.gd — アクション指示をCenterContainer方式に変更（手動配置→自動中央配置）
+- ✅ FONT_SIZE_ACTION_PROMPT — 33→40に拡大（ユーザー指示）
+- ✅ card.gd — GAME_CARD_WIDTH 290→150、GAME_CARD_HEIGHT 390→202
+- ✅ hand_display.gd — CARD_WIDTH 150、CARD_HEIGHT 200、CARD_SPACING 20、viewport size取得をcontent_scale_size対応
+- ✅ card_ui_helper.gd — 定数をhand_displayに統一（150×200、BASE_SCALE=1.0）
+- ✅ card_texture_cache.gd — レンダリングサイズを220×293に戻す（CardFrame設計サイズで高品質維持）
+
+### 次のステップ
+- Step 2残り: game_menu.gd, debug_panel.gd, level_up_ui.gd, surrender_dialog.gd, dominio_order_ui.gd, magic_tile_ui.gd, base_tile_ui.gd, card_buy_ui.gd, card_give_ui.gd
+- Step 3: バトル画面（battle_status_overlay.gd, card.gd battle view, ui_win_screen.gd）
+- Step 5残り: special_tile_info_dialog, map_preview_dialog, result_screen, player_status_dialog
+- Step 6: チュートリアル
+
+---
+
+## 2026年3月30日（Session 2: ビューポート移行 - アルバム・デッキエディタ・インフォパネル）
+
+### 完了した作業
+
+#### Step 4（一部）: Album画面のビューポート移行
+- ✅ Album.tscn — ボタン高さ400→268、VBox separation 29→19、GridContainer h_sep 100→67 / v_sep 20→13
+- ✅ album.gd — ステータスパネル660×240 SIZE_EXPAND_FILL、カードサムネイル161×235（画像160×160）、10列グリッド
+- ✅ ブック選択 — ダイヤルボックス形式（1列ScrollContainer + スワイプ入力対応）に変更、将来のブック数増加に対応
+
+#### Step 4（一部）: DeckEditor画面のビューポート移行
+- ✅ DeckEditor.tscn — タブボタン高さ85・フォント22、右パネルアンカーベースレイアウト化、Spacer+底部ボタン配置
+- ✅ deck_editor.gd — カード263×420（画像190×190・フォント24）、枚数ボタン80×70、カードタイプカウントBBCode font_size=50
+- ✅ InfoPanelContainer — offset_left=200, offset_right=-15 でカード表示と重複解消
+
+#### Step 5（一部）: インフォパネル3種のビューポート移行
+- ✅ creature/item/spell_info_panel.tscn — フォントサイズ統一（Name=48, Rarity=36, Headers=28, Content=48）
+- ✅ 位置調整 — ContentMargin offset 55/120/500/520、ParchmentBg offset -70/70/450/530
+- ✅ テキストはみ出し対策 — ContentMargin内にScrollContainer挿入（全3パネル＋スクリプトパス更新）
+
+---
+
+## 2026年3月30日（Session 1: レンダリング最適化実施）
 
 ### 完了した作業
 

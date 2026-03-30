@@ -1,7 +1,7 @@
 # マルチデバイス対応リファクタリング（ビューポート移行）
 
 **最終更新**: 2026-03-30
-**ステータス**: レンダリング最適化完了 / ビューポート移行は計画段階
+**ステータス**: ビューポート移行進行中（Step 0/1/4/5一部/2一部 完了）
 **優先度**: 高（モバイル実機テストのブロッカー）
 
 ---
@@ -112,7 +112,7 @@
 | FONT_SIZE_COMMENT | 60 | 31 |
 | FONT_SIZE_COMMENT_LARGE | 120 | 62 |
 | FONT_SIZE_DICE | 64 | 33 |
-| FONT_SIZE_ACTION_PROMPT | 64 | 33 |
+| FONT_SIZE_ACTION_PROMPT | 64 | 40（ユーザー指示で拡大） |
 | FONT_SIZE_RESULT_TITLE | 96 | 50 |
 | FONT_SIZE_RESULT_RANK | 72 | 37 |
 | FONT_SIZE_RESULT_INFO | 48 | 25 |
@@ -147,18 +147,36 @@
 
 ## Step 2: メインゲーム画面（14ファイル / 約65箇所）
 
+### ✅ `scripts/ui_components/global_action_buttons.gd`（完了）
+- BUTTON_SIZE 280→145、SPACING 42→22、MARGIN 70→36
+- フォント 100→52/120→62、ボーダー・シャドウ縮小
+
+### ✅ `scripts/ui_components/player_info_panel.gd`（完了）
+- 75%縮小: panel 260→195、height 190→143、spacing 14→11、start 28→21
+- フォント 28→21、世界刻印 22→17
+
+### ✅ `scripts/ui_components/phase_display.gd`（完了）
+- action_prompt: 手動位置計算→CenterContainer方式に変更（自動中央配置）
+- FONT_SIZE_ACTION_PROMPT: 33→40（ユーザー指示で拡大）
+- _position_panel_center/_position_panel_right 削除
+
+### ✅ `scripts/card.gd`（完了 - 手札表示サイズ）
+- GAME_CARD_WIDTH 290→150、GAME_CARD_HEIGHT 390→202
+- CARDFRAME_WIDTH/HEIGHT 220/293は維持（レンダリング品質）
+
+### ✅ `scripts/ui_components/hand_display.gd`（完了）
+- CARD_WIDTH 150、CARD_HEIGHT 200、CARD_SPACING 20
+- viewport size取得をcontent_scale_size対応（canvas_items stretch対応）
+
+### ✅ `scripts/ui_components/card_ui_helper.gd`（完了）
+- 定数をhand_displayに統一: 150×200、BASE_SCALE=1.0、SPACING=20
+
+### ✅ `scripts/autoload/card_texture_cache.gd`（完了）
+- レンダリングサイズ: 220×293（CardFrame設計サイズで高品質維持）
+
 ### `scripts/game_3d.gd`（2箇所）
 - L556: FPS位置 Vector2(20, 20) → Vector2(10, 10)
 - L557: font_size=48 → 25
-
-### `scripts/ui_components/hand_display.gd`（3箇所）
-- L17: CARD_WIDTH=220 → 114
-- L18: CARD_HEIGHT=293 → 152
-- L19: CARD_SPACING=30 → 16
-
-### `scripts/autoload/card_texture_cache.gd`（2箇所）
-- L13: CARDFRAME_WIDTH=220 → 114
-- L14: CARDFRAME_HEIGHT=293 → 152
 
 ### `scripts/ui_components/game_menu_button.gd`（3箇所）
 - L14: BUTTON_SIZE=180 → 93
@@ -262,46 +280,26 @@
 
 ## Step 4: サブ画面（6ファイル / 約60箇所）
 
-### `scripts/album.gd`（約15箇所）
-- L64: custom_minimum_size Vector2(1000, 400) → Vector2(518, 252)
-- L75: font_size=48 → 25
-- L94: font_size=42 → 22
-- L152: custom_minimum_size Vector2(200, 80) → Vector2(104, 50)
-- L179: custom_minimum_size Vector2(1350, 350) → Vector2(699, 221)
-- L225: font_size=60 → 31
-- L379: custom_minimum_size Vector2(300, 380) → Vector2(155, 240)
-- L407: custom_minimum_size Vector2(280, 280) → Vector2(145, 177)
-- L419: font_size=26 → 14
-- L440: font_size=24 → 13
-- 他ボタン・ラベル約5箇所
+### ✅ `scripts/album.gd` + `scenes/Album.tscn`（完了）
+- ボタン高さ268、ステータスパネル660×240、カード161×235（画像160×160）、10列グリッド
+- ブック選択をダイヤルボックス形式（1列ScrollContainer+スワイプ）に変更
 
-### `scripts/solo_battle_setup.gd`（約20箇所）
-- L73: custom_minimum_size Vector2(0, 100) → Vector2(0, 63)
-- L79: custom_minimum_size Vector2(180, 80) → Vector2(93, 50)
-- L80: font_size=42 → 22
-- L87: font_size=72 → 37
-- L149: font_size=48 → 25
-- L178: custom_minimum_size Vector2(390, 176) → Vector2(202, 111)
-- L186: custom_minimum_size Vector2(400, 0) → Vector2(207, 0)
-- L283/289: SubViewport Vector2i(320, 230) → Vector2i(166, 145)
-- L419: font_size=60 → 31
-- L437/441-442: font_size=54→28, button Vector2(340, 80)→Vector2(176, 50)
-- L526: custom_minimum_size Vector2(0, 100) → Vector2(0, 63)
-- L531-532: start button Vector2(450, 100)→Vector2(233, 63), font_size=54→28
-- L920: SubViewport Vector2i(900, 700) → Vector2i(466, 442)
-- 他約5箇所
+### ✅ `scripts/deck_editor.gd` + `scenes/DeckEditor.tscn`（完了）
+- カード263×420（画像190×190）、タブボタン高さ85、右パネルアンカーベースレイアウト化
+- InfoPanelContainer位置調整でカード重複解消
 
-### `scripts/net_battle_setup.gd`（約20箇所）
-- solo_battle_setup.gdと同構造、約20箇所の修正
+### ✅ `scripts/solo_battle_setup.gd`（完了）
+- 全フォント・サイズ比率変換、対戦開始ボタン350×80/font36
+- ルール設定拡大（ラベル34、スピンボタン44、矢印26）
+- CPU枠をHBoxContainer/slot方式に再構造化（行ずれ解消）
+- マップ選択をダイヤルボックス形式（ScrollContainer+スワイプ）に変更
 
-### `scripts/quest/world_stage_select.gd`（約12箇所）
-- L103-104: custom_minimum_size Vector2(300, 80), font_size=32
-- L171/173: STAGE_BUTTON_SIZE, font_size=54
-- L351/357-358: font_size=36/32, button Vector2(240, 60)
-- L411: SubViewport Vector2i(600, 500) → Vector2i(310, 315)
-- L655/662/673/681-682: ColorRect 48×48, font_size, button Vector2(200, 60)
-- L735/743: font_size=48, scroll Vector2(0, 400)
-- L758-759: button Vector2(400, 150)
+### ✅ `scripts/net_battle_setup.gd`（完了）
+- solo同様の比率変換＋右パネル拡大＋対戦ボタン350×80/font36
+
+### ✅ `scripts/quest/world_stage_select.gd` + `scenes/WorldStageSelect.tscn`（完了）
+- STAGE_BUTTON_SIZE 85、ワールドボタン155×42/font17、SubViewport 310×260
+- DetailPanel内ScrollContainer挿入、ブック選択SIZE_EXPAND_FILL化
 
 ### `scripts/settings.gd`（6箇所）
 - L77/82: custom_minimum_size Vector2(300, 80) → Vector2(155, 50)
@@ -310,15 +308,10 @@
 - L103: custom_minimum_size Vector2(400, 60) → Vector2(207, 38)
 - L119: popup_centered Vector2i(600, 350) → Vector2i(310, 221)
 
-### `scripts/status_screen.gd`（約12箇所）
-- L127: custom_minimum_size Vector2(400, 80) → Vector2(207, 50)
-- L131: custom_minimum_size Vector2(600, 400) → Vector2(310, 252)
-- L186: custom_minimum_size Vector2(400, 100) → Vector2(207, 63)
-- L190: custom_minimum_size Vector2(800, 500) → Vector2(414, 315)
-- L205: custom_minimum_size Vector2(240, 100) → Vector2(124, 63)
-- L261: custom_minimum_size Vector2(300, 80) → Vector2(155, 50)
-- L275: custom_minimum_size Vector2(500, 60) → Vector2(259, 38)
-- 各font_size約5箇所
+### ✅ `scripts/status_screen.gd` + `scenes/StatusScreen.tscn`（完了）
+- TopBar 42px、CharacterPreview 310×362、全フォント拡大調整
+- ダイアログサイズ変換、ボタン高さ55/65、VBox separation 18
+- character_preview.gd SubViewport 276×310
 
 **確認ポイント**: 全画面遷移、スクロール、ダイアログ表示
 
@@ -343,8 +336,8 @@
 - L136: font_size=18 → 10
 - L239: container_size Vector2(900, 700) → Vector2(466, 442)
 
-### `scripts/ui_components/character_preview.gd`（1箇所）
-- L20: SubViewport size Vector2i(800, 900) → Vector2i(414, 568)
+### ✅ `scripts/ui_components/character_preview.gd`（完了）
+- SubViewport 276×310（ステータス画面用）
 
 ### `scripts/creatures/creature_card_3d_quad.gd`（変更不要）
 - SubViewport 220×293はカードテクスチャレンダリング用 → 出力品質のため維持
@@ -357,19 +350,22 @@
 - L254: custom_minimum_size Vector2(700, 280) → Vector2(362, 177)
 - L278/286/294: font_size=40→21, 48→25, 24→13
 
-### `scenes/ui/creature_info_panel.tscn`（12箇所）
-- font_size: 80→41, 60→31, 40→21 の各箇所
+### ✅ `scenes/ui/creature_info_panel.tscn` + `scripts/ui_components/creature_info_panel_ui.gd`（完了）
+- フォント統一（Name=48, Rarity=36, Headers=28, Content=48）、ScrollContainer挿入でテキストはみ出し対策
+- OuterVBox挿入: NameContainer+スペーサーをScrollContainer外に固定配置（名前固定+スクロール化）
 
-### `scenes/ui/spell_info_panel.tscn`（8箇所）
-- font_size: 80→41, 60→31, 40→21 の各箇所
+### ✅ `scenes/ui/spell_info_panel.tscn` + `scripts/ui_components/spell_info_panel_ui.gd`（完了）
+- creature同様のフォント・ScrollContainer対応
+- OuterVBox挿入: 名前固定+スクロール化（creature同様）
 
-### `scenes/ui/item_info_panel.tscn`（10箇所）
-- font_size: 80→41, 60→31, 40→21 の各箇所
+### ✅ `scenes/ui/item_info_panel.tscn` + `scripts/ui_components/item_info_panel_ui.gd`（完了）
+- creature同様のフォント・ScrollContainer対応
+- OuterVBox挿入: 名前固定+スクロール化（creature同様）
 
-### `scenes/ui/player_status_dialog.tscn`（3箇所）
-- L81: font_size=60 → 31
-- L92: normal_font_size=40 → 21
-- L93: bold_font_size=44 → 23
+### ✅ `scenes/ui/player_status_dialog.tscn` + `scripts/ui_components/player_status_dialog.gd`（完了）
+- MainPanel 1691×1129→1000×680に縮小、画面中央配置
+- BackgroundRect offset除去（画面全体カバー）、ParchmentBg/ContentMargin左右対称化
+- Title font 60→38、StatusLabel 40/44→32/35、手札font_size 55→38
 
 **確認ポイント**: 情報パネル表示、マッププレビュー、キャラクタープレビュー
 

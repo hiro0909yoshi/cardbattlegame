@@ -203,7 +203,7 @@ func build_hand_text(player_id: int) -> String:
 	var viewer_id = 0
 	var is_enemy_hand = (player_id != viewer_id)
 
-	var text = "[font_size=55]"
+	var text = "[font_size=38]"
 	for card in hand:
 		if card is Dictionary:
 			if is_enemy_hand and _is_secret_card(card):

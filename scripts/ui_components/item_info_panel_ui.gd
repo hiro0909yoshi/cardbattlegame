@@ -13,15 +13,15 @@ signal panel_closed
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
-@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/NameLabel
-@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/RarityLabel
-@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostLabel
-@onready var item_type_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeContainer/ItemTypeLabel
-@onready var item_type_icon: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeContainer/ItemTypeIcon
-@onready var stat_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/StatContainer
-@onready var stat_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/StatContainer/StatLabel
-@onready var effect_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer
-@onready var effect_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer/EffectLabel
+@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer/NameLabel
+@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/NameContainer/RarityLabel
+@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/CostLabel
+@onready var item_type_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/ItemTypeContainer/ItemTypeLabel
+@onready var item_type_icon: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/ItemTypeContainer/ItemTypeIcon
+@onready var stat_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/StatContainer
+@onready var stat_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/StatContainer/StatLabel
+@onready var effect_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/EffectContainer
+@onready var effect_label: Label = $MainContainer/RightPanel/ContentMargin/OuterVBox/ScrollContainer/VBoxContainer/EffectContainer/EffectLabel
 
 # UIManager参照（グローバルボタン用）
 var ui_manager_ref = null
