@@ -50,7 +50,7 @@ func _setup_ui():
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.7)
+	style.bg_color = Color(1, 1, 1, 0.85)
 	style.corner_radius_top_left = 8
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
@@ -60,7 +60,7 @@ func _setup_ui():
 	style.content_margin_top = 15
 	style.content_margin_bottom = 15
 	panel.add_theme_stylebox_override("panel", style)
-	
+
 	# RichTextLabel
 	label = RichTextLabel.new()
 	label.name = "CommentLabel"
@@ -70,7 +70,7 @@ func _setup_ui():
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("normal_font_size", GC.FONT_SIZE_COMMENT)
-	label.add_theme_color_override("default_color", Color.WHITE)
+	label.add_theme_color_override("default_color", Color.BLACK)
 	# ラベルのサイズも内容に合わせる
 	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -127,8 +127,8 @@ func show_and_wait(message: String, player_id: int = -1, force_click_wait: bool 
 	var is_auto = is_cpu_turn or battle_auto_advance
 
 	# テキスト設定（中央揃え + クリック待ちの案内）
-	var hint_text = "[color=gray][自動進行][/color]" if is_auto else "[color=gray][クリックで次へ][/color]"
-	var text = "[center]" + message + "\n\n" + hint_text + "[/center]"
+	var hint_text = "[color=#555555][自動進行][/color]" if is_auto else "[color=#555555]click >>>[/color]"
+	var text = "[center]" + message + "\n" + hint_text + "[/center]"
 	label.text = text
 
 	modulate.a = 1.0
@@ -205,7 +205,7 @@ func _center_panel():
 	var panel_size = panel.size
 	panel.position = Vector2(
 		(viewport_size.x - panel_size.x) / 2,
-		(viewport_size.y - panel_size.y) / 2
+		(viewport_size.y - panel_size.y) / 2 - 100
 	)
 
 ## パネルを画面上部に配置（チュートリアル用）
@@ -228,7 +228,7 @@ func set_tutorial_style():
 	
 	# パネルのマージンをコンパクトに
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.8)
+	style.bg_color = Color(1, 1, 1, 0.85)
 	style.corner_radius_top_left = 12
 	style.corner_radius_top_right = 12
 	style.corner_radius_bottom_left = 12
@@ -244,17 +244,17 @@ func set_normal_style():
 	is_tutorial_style = false
 	label.add_theme_font_size_override("normal_font_size", GC.FONT_SIZE_COMMENT)
 	
-	# パネルのマージンを通常に
+	# パネルのマージンを通常に（_setup_uiと統一）
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.7)
+	style.bg_color = Color(1, 1, 1, 0.85)
 	style.corner_radius_top_left = 8
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 40
-	style.content_margin_right = 40
-	style.content_margin_top = 25
-	style.content_margin_bottom = 25
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
 	panel.add_theme_stylebox_override("panel", style)
 
 func _start_timeout_timer():

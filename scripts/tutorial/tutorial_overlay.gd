@@ -141,13 +141,13 @@ func _get_button_info(button_name: String) -> Dictionary:
 	
 	var viewport_size = viewport.get_visible_rect().size
 	
-	# GlobalActionButtonsの定数
-	const BUTTON_SIZE = 280
-	const BUTTON_SPACING = 42
-	const MARGIN_RIGHT = 70
-	const MARGIN_BOTTOM = 70
-	const MARGIN_LEFT = 70
-	
+	# GlobalActionButtonsと同じ定数を使用
+	const BUTTON_SIZE = 175
+	const BUTTON_SPACING = 27
+	const MARGIN_RIGHT = 44
+	const MARGIN_BOTTOM = 44
+	const MARGIN_LEFT = 44
+
 	var radius = BUTTON_SIZE / 2.0
 	var base_x = viewport_size.x - MARGIN_RIGHT - BUTTON_SIZE + radius
 	var back_y = viewport_size.y - MARGIN_BOTTOM - BUTTON_SIZE + radius

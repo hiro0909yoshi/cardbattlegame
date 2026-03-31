@@ -1,5 +1,6 @@
 extends Control
 class_name SpellCastNotificationUI
+const GC = preload("res://scripts/game_constants.gd")
 
 ## 画面中央にスペル/アルカナアーツ発動を通知するUI
 ## 「Aは、BにCを使った」形式で表示
@@ -24,17 +25,17 @@ func _setup_ui():
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.7)
+	style.bg_color = Color(1, 1, 1, 0.85)
 	style.corner_radius_top_left = 8
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 40
-	style.content_margin_right = 40
-	style.content_margin_top = 25
-	style.content_margin_bottom = 25
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
 	panel.add_theme_stylebox_override("panel", style)
-	
+
 	# RichTextLabelを作成
 	label = RichTextLabel.new()
 	label.name = "NotificationLabel"
@@ -43,10 +44,10 @@ func _setup_ui():
 	label.scroll_active = false
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
 	# スタイル設定
-	label.add_theme_font_size_override("normal_font_size", 60)
-	label.add_theme_color_override("default_color", Color.WHITE)
+	label.add_theme_font_size_override("normal_font_size", GC.FONT_SIZE_COMMENT)
+	label.add_theme_color_override("default_color", Color.BLACK)
 	
 	panel.add_child(label)
 	add_child(panel)
@@ -113,13 +114,13 @@ func _center_panel():
 	var panel_size = panel.size
 	panel.position = Vector2(
 		(viewport_size.x - panel_size.x) / 2,
-		(viewport_size.y - panel_size.y) / 2
+		(viewport_size.y - panel_size.y) / 2 - 100
 	)
 
 ## スペル発動通知を表示してクリック待ち
 ## 「AはBにCを使った」形式
 func show_spell_cast_and_wait(caster_name: String, target_name: String, effect_name: String) -> void:
-	var text = "%s は、%s に [color=yellow]%s[/color] を使った！" % [
+	var text = "%s は、%s に %s を使った！" % [
 		caster_name,
 		target_name,
 		effect_name

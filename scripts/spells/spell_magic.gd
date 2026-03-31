@@ -110,7 +110,7 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			# レディビジョン: 全プレイヤーEP平均化
 			result = balance_all_magic()
 			if result.get("success", false):
-				notification_text = "【レディビジョン】\n全プレイヤーEPを[color=yellow]%dEP[/color]に平均化" % result.get("average", 0)
+				notification_text = "【レディビジョン】\n全プレイヤーEPを%dEPに平均化" % result.get("average", 0)
 		
 		"gain_magic_from_land_chain":
 			# ロングライン: 連続ドミニオ×5EP00、未達成ならドロー
@@ -638,7 +638,7 @@ func apply_bounty_reward_with_notification(loser_creature: Dictionary, winner_cr
 	
 	if result["success"]:
 		var loser_name = loser_creature.get("name", "クリーチャー")
-		var notification_text = "【バウンティハント】\n賞金「%s」撃破！\n[color=yellow]+%dEP[/color] 獲得！" % [loser_name, result["reward"]]
+		var notification_text = "【バウンティハント】\n賞金「%s」撃破！\n+%dEP 獲得！" % [loser_name, result["reward"]]
 		await _show_notification_and_wait(notification_text)
 	
 	return result
@@ -660,7 +660,7 @@ func _format_gain_notification(player_id: int, amount: int, source: String = "")
 	if player_system_ref and player_id >= 0 and player_id < player_system_ref.players.size():
 		_player_name = player_system_ref.players[player_id].name
 	
-	var text = "[color=yellow]+%dEP[/color] 獲得！" % amount
+	var text = "+%dEP 獲得！" % amount
 	if source != "":
 		text = "%s\n%s" % [source, text]
 	return text
@@ -676,7 +676,7 @@ func _format_drain_notification(from_id: int, to_id: int, amount: int, source: S
 		if to_id >= 0 and to_id < player_system_ref.players.size():
 			_to_name = player_system_ref.players[to_id].name
 	
-	var text = "%sから[color=yellow]%dEP[/color]奪取！" % [from_name, amount]
+	var text = "%sから%dEP奪取！" % [from_name, amount]
 	if source != "":
 		text = "%s\n%s" % [source, text]
 	return text

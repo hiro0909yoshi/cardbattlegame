@@ -241,7 +241,7 @@ func _show_direction_change_selection() -> Dictionary:
 	
 	# 通知ポップアップで表示
 	if _message_service:
-		var message = "分岐タイル\n現在タイル%dが開\n\n[color=yellow]✓変更する / ✕変更しない[/color]" % open_branch
+		var message = "分岐タイル\n現在タイル%dが開\n\n✓変更する / ✕変更しない" % open_branch
 		_message_service.show_comment_message(message)
 	
 	# グローバルボタンを設定

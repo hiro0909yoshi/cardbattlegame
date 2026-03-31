@@ -259,7 +259,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	_show_signal_display(checkpoint_type)
 	
 	# UI表示: EPボーナスのコメント（クリック待ち）
-	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\nEP +%d" % [checkpoint_type, checkpoint_bonus], player_id)
+	await _show_comment_and_wait("シグナル %s 取得！\nEP +%d" % [checkpoint_type, checkpoint_bonus], player_id)
 	
 	# 勝利判定（シグナル取得時にEPが目標以上なら勝利）
 	# チュートリアルモードではスキップ
@@ -390,14 +390,14 @@ func complete_lap(player_id: int):
 	
 	# UI表示: 3段階の通知ポップアップ
 	# 1. O周完了
-	await _show_comment_and_wait("[color=yellow]%d周完了[/color]" % current_lap, player_id)
+	await _show_comment_and_wait("%d周完了" % current_lap, player_id)
 	
 	# 2. 周回ボーナス（基礎＋追加）
-	var bonus_text = "[color=cyan]周回ボーナス %d EP[/color]\n（基礎 %d EP + 追加 %d EP）" % [lap_total_bonus, base_bonus, additional_bonus]
+	var bonus_text = "周回ボーナス %d EP\n（基礎 %d EP + 追加 %d EP）" % [lap_total_bonus, base_bonus, additional_bonus]
 	await _show_comment_and_wait(bonus_text, player_id)
 	
 	# 3. ダウン解除＋HP回復
-	await _show_comment_and_wait("[color=lime]ダウン解除 ＋ HP回復 +10[/color]", player_id)
+	await _show_comment_and_wait("ダウン解除 ＋ HP回復 +10", player_id)
 	
 	# 全クリーチャーに周回ボーナスを適用
 	if board_system_3d:

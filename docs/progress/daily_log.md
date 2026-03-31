@@ -12,6 +12,37 @@
 
 ---
 
+## 2026年3月31日（Session 2: UI統一 - グローバルコメント・インフォパネル・チュートリアル）
+
+### 完了した作業
+
+#### グローバルコメントUI改善
+- ✅ global_comment_ui.gd — BBCodeカラータグ除去（白背景に黒文字統一）
+- ✅ 「クリックで次へ」→「click >>>」に変更、色を`#555555`に
+- ✅ コメント下の空行除去（`\n\n` → `\n`）
+
+#### BBCodeカラータグ除去（コメント表示箇所）
+- ✅ spell_cast_notification_ui.gd — yellow除去
+- ✅ lap_system.gd — yellow, cyan, lime除去
+- ✅ spell_magic.gd — yellow除去（4箇所）
+- ✅ branch_tile.gd — yellow除去
+
+#### アイテム/スペルインフォパネル: ゲーム画面レイアウト統一
+- ✅ item_info_panel_ui.gd — `_apply_game_layout()` 追加（クリーチャーパネルと同じ位置・サイズに統一）
+- ✅ spell_info_panel_ui.gd — 同様に`_apply_game_layout()` 追加
+
+#### チュートリアルUI修正
+- ✅ tutorial_popup.gd — フォントサイズ 100→60px（グローバルコメントと統一）
+- ✅ tutorial_popup.gd — 「タップで次へ」→「click >>>」(36px, #555555)
+- ✅ tutorial_overlay.gd — ハイライト定数をGlobalActionButtonsと統一（SIZE 280→175, SPACING 42→27, MARGIN 70→44）
+
+### 次のステップ
+- Step 2残り: game_menu.gd, debug_panel.gd, level_up_ui.gd, surrender_dialog.gd, magic_tile_ui.gd, base_tile_ui.gd, card_buy_ui.gd, card_give_ui.gd
+- Step 3: バトル画面
+- Step 5残り: special_tile_info_dialog, map_preview_dialog, result_screen
+
+---
+
 ## 2026年3月31日（Session 1: ビューポート移行 - インフォパネル・プレイヤーステータス）
 
 ### 完了した作業

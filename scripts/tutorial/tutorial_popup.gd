@@ -46,7 +46,7 @@ func _setup_ui():
 	label.scroll_active = false
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("normal_font_size", 100)
+	label.add_theme_font_size_override("normal_font_size", 60)
 	label.add_theme_color_override("default_color", Color.WHITE)
 	
 	panel.add_child(label)
@@ -77,7 +77,7 @@ func show_and_wait(message: String, pos_name: String = "top", offset_y: float = 
 	_current_wait_id += 1
 	var my_wait_id = _current_wait_id
 	
-	label.text = "[center]" + message + "\n[color=gray][font_size=50]タップで次へ[/font_size][/color][/center]"
+	label.text = "[center]" + message + "\n[color=#555555][font_size=36]click >>>[/font_size][/color][/center]"
 	visible = true
 	waiting_for_click = true
 	apply_position(pos_name, offset_y)

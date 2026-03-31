@@ -31,10 +31,34 @@ var is_info_only_mode: bool = false  # 閲覧専用モード（キャンセル�
 var current_spell_data: Dictionary = {}
 var current_hand_index: int = -1
 
+# ゲーム画面用レイアウト調整済みフラグ
+var _game_layout_applied: bool = false
+
 
 func _ready():
 	# 初期状態は非表示
 	hide_panel()
+
+
+## ゲーム画面用レイアウト調整（tscnのアルバム用レイアウトを上書き）
+func _apply_game_layout():
+	if _game_layout_applied or not ui_manager_ref:
+		return
+	_game_layout_applied = true
+
+	if main_container:
+		main_container.position = Vector2(135, 105)
+		main_container.size = Vector2(500, 255)
+
+	var parchment = right_panel.get_node_or_null("ParchmentBg") if right_panel else null
+	if parchment:
+		parchment.offset_top = 55
+		parchment.offset_bottom = 460
+
+	var content_margin = right_panel.get_node_or_null("ContentMargin") if right_panel else null
+	if content_margin:
+		content_margin.offset_top = 100
+		content_margin.offset_bottom = 450
 
 
 # === 公開メソッド ===
@@ -48,10 +72,11 @@ func set_ui_manager(manager) -> void:
 ## restriction_reason: ""=制限なし, "ep"=EP不足, "restriction"=刻印等
 ## current_selection_mode: 選択モード（spell, sacrifice, discard等）
 func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_reason: String = "", current_selection_mode: String = "spell", custom_confirmation: String = ""):
+	_apply_game_layout()
 	current_spell_data = spell_data
 	current_hand_index = hand_index
 	is_info_only_mode = false
-	
+
 	_update_display()
 	
 	visible = true
@@ -112,6 +137,7 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 ## 閲覧モードで表示
 ## setup_buttons=trueの場合は×ボタンで「閉じる」を登録
 func show_view_mode(spell_data: Dictionary, setup_buttons: bool = false):
+	_apply_game_layout()
 	current_spell_data = spell_data
 	current_hand_index = -1
 	is_info_only_mode = true
