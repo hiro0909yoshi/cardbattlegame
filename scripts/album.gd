@@ -1,5 +1,7 @@
 extends Control
 
+const GC = preload("res://scripts/game_constants.gd")
+
 @onready var left_panel = $MarginContainer/HBoxContainer/LeftPanel
 @onready var left_vbox = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer
 @onready var right_panel = $MarginContainer/HBoxContainer/RightPanel
@@ -14,6 +16,8 @@ var _current_category: String = ""
 var _current_page: int = 0
 var _cards_per_page: int = 40
 var _filtered_cards: Array[Dictionary] = []
+var _thumbnail_width: int = 161
+var _thumbnail_height: int = 235
 
 func _ready():
 	# GameDataから起動モードを取得（メタデータを使用）
@@ -51,18 +55,30 @@ func _on_deck_edit_pressed():
 	# ブック選択画面を表示
 	_show_book_selection()
 
-## ブック選択画面を表示
+## ブック選択画面を表示（ダイヤルボックス形式）
 func _show_book_selection():
 	# GridContainerをクリア
 	for child in grid_container.get_children():
 		child.queue_free()
-	
-	# ブックボタンを再作成（6個）
-	for i in range(6):
+
+	# 1列の縦スクロールリストに変更
+	grid_container.columns = 1
+	grid_container.add_theme_constant_override("h_separation", 0)
+	grid_container.add_theme_constant_override("v_separation", 15)
+	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# スワイプ用の入力ハンドリング設定
+	if not scroll_container.is_connected("gui_input", _on_book_scroll_input):
+		scroll_container.gui_input.connect(_on_book_scroll_input)
+
+	# ブックボタンを再作成
+	var book_count = max(6, GameData.player_data.decks.size())
+	for i in range(book_count):
 		var book_button = Button.new()
 		book_button.name = "book" + str(i + 1)
-		book_button.custom_minimum_size = Vector2(1000, 400)
-		
+		book_button.custom_minimum_size = Vector2(0, 150)
+		book_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 		# デッキ名を取得
 		var deck_name = "ブック" + str(i + 1)
 		if i < GameData.player_data.decks.size():
@@ -71,10 +87,43 @@ func _show_book_selection():
 			book_button.text = deck_name + "\n(" + str(card_count) + "種類)"
 		else:
 			book_button.text = deck_name
-		
-		book_button.add_theme_font_size_override("font_size", 48)
+
+		book_button.add_theme_font_size_override("font_size", 32)
 		book_button.pressed.connect(_on_book_selected.bind(i))
+
+		# スタイル
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
+		style.border_color = Color(0.4, 0.4, 0.5, 0.6)
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(12)
+		book_button.add_theme_stylebox_override("normal", style)
+
+		var hover = style.duplicate()
+		hover.bg_color = Color(0.25, 0.25, 0.35, 0.95)
+		book_button.add_theme_stylebox_override("hover", hover)
+
 		grid_container.add_child(book_button)
+
+
+## スワイプ用変数
+var _book_swipe_start_y: float = 0.0
+var _book_is_swiping: bool = false
+
+
+## ブックスクロールのスワイプ入力処理
+func _on_book_scroll_input(event: InputEvent):
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				_book_swipe_start_y = event.position.y
+				_book_is_swiping = true
+			else:
+				_book_is_swiping = false
+	elif event is InputEventMouseMotion and _book_is_swiping:
+		var delta = event.position.y - _book_swipe_start_y
+		scroll_container.scroll_vertical -= int(delta)
+		_book_swipe_start_y = event.position.y
 
 func _on_book_selected(book_index: int):
 	# 選択したブックを保存
@@ -91,15 +140,15 @@ func _on_book_selected(book_index: int):
 
 ## 左パネルボタンにスタイルを適用
 func _apply_left_button_style(btn: Button):
-	btn.add_theme_font_size_override("font_size", 42)
+	btn.add_theme_font_size_override("font_size", 28)
 
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.15, 0.15, 0.15, 0.85)
 	style.border_color = Color(0.4, 0.4, 0.4, 0.6)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(12)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
+	style.content_margin_left = 13
+	style.content_margin_right = 13
 	btn.add_theme_stylebox_override("normal", style)
 
 	var hover = style.duplicate()
@@ -142,15 +191,16 @@ func _show_collection_stats():
 	var categories = ["fire", "water", "earth", "wind", "neutral", "item", "spell"]
 
 	# GridContainerをコンテナ幅に合わせて配置
+	grid_container.columns = 2
 	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid_container.add_theme_constant_override("h_separation", 60)
-	grid_container.add_theme_constant_override("v_separation", 60)
+	grid_container.add_theme_constant_override("h_separation", 30)
+	grid_container.add_theme_constant_override("v_separation", 13)
 
 	# 戻るボタンを追加
 	var back_btn = Button.new()
 	back_btn.text = "← 戻る"
-	back_btn.custom_minimum_size = Vector2(200, 80)
-	back_btn.add_theme_font_size_override("font_size", 32)
+	back_btn.custom_minimum_size = Vector2(134, 54)
+	back_btn.add_theme_font_size_override("font_size", 21)
 	back_btn.pressed.connect(_show_collection_stats)
 	back_btn.visible = false
 	back_btn.name = "CategoryBackButton"
@@ -176,7 +226,8 @@ var _category_names = {
 ## カテゴリ別の統計パネルを作成（ボタンとして）
 func _create_stats_panel(title: String, data: Dictionary, category: String) -> Control:
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(1350, 350)
+	button.custom_minimum_size = Vector2(660, 240)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 	# 属性色のグラデーション背景
@@ -186,9 +237,9 @@ func _create_stats_panel(title: String, data: Dictionary, category: String) -> C
 	style.border_color = Color(element_color.r * 0.8, element_color.g * 0.8, element_color.b * 0.8, 0.7)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(10)
-	style.content_margin_left = 20
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	style.content_margin_left = 13
+	style.content_margin_top = 7
+	style.content_margin_bottom = 7
 	style.shadow_color = Color(element_color.r * 0.15, element_color.g * 0.15, element_color.b * 0.15, 0.5)
 	style.shadow_size = 6
 	button.add_theme_stylebox_override("normal", style)
@@ -222,7 +273,7 @@ func _create_stats_panel(title: String, data: Dictionary, category: String) -> C
 	text += "%s　　%s" % [rarity_texts[2], rarity_texts[3]]
 
 	button.text = text
-	button.add_theme_font_size_override("font_size", 60)
+	button.add_theme_font_size_override("font_size", 30)
 
 	# クリックでカード一覧を表示
 	button.pressed.connect(_show_category_cards.bind(category))
@@ -256,8 +307,18 @@ func _show_category_cards(category: String):
 
 ## 現在のページを描画
 func _render_card_page():
-	# 左パネルを非表示にしてフル幅使用
-	left_panel.visible = false
+	# ScrollContainerをAlbumルートに移動してフル幅使用
+	if scroll_container.get_parent() != self:
+		scroll_container.reparent(self)
+
+	# HBoxContainerを非表示にしてフル画面モードに切替
+	$MarginContainer/HBoxContainer.visible = false
+
+	# フル画面サイズで配置（ビューポートサイズから動的計算）
+	var vp_size = get_viewport().get_visible_rect().size
+	scroll_container.position = Vector2(20, 60)
+	scroll_container.size = Vector2(vp_size.x - 40, vp_size.y - 60)
+	scroll_container.visible = true
 
 	# 属性色のグラデーション背景を設定
 	var element_color = _get_element_color_for_category(_current_category)
@@ -268,10 +329,17 @@ func _render_card_page():
 		child.queue_free()
 
 	# グリッドを10列に変更（画像タイル用）
+	var h_sep = 20
 	grid_container.columns = 10
-	grid_container.add_theme_constant_override("h_separation", 40)
-	grid_container.add_theme_constant_override("v_separation", 20)
+	grid_container.add_theme_constant_override("h_separation", h_sep)
+	grid_container.add_theme_constant_override("v_separation", 12)
 	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# カードサイズをScrollContainer幅から動的計算（スクロールバー分も考慮）
+	var scrollbar_width = 30
+	var content_width = scroll_container.size.x - scrollbar_width
+	_thumbnail_width = int((content_width - (9 * h_sep)) / 10.0)
+	_thumbnail_height = int(_thumbnail_width * 1.33)
 
 	# スクロール位置をリセット
 	scroll_container.scroll_vertical = 0
@@ -281,8 +349,8 @@ func _render_card_page():
 	# ヘッダー行（GridContainerの外にHBoxContainerで配置）
 	var header = HBoxContainer.new()
 	header.name = "CardListHeader"
-	header.custom_minimum_size = Vector2(0, 80)
-	header.add_theme_constant_override("separation", 20)
+	header.custom_minimum_size = Vector2(0, 54)
+	header.add_theme_constant_override("separation", 13)
 	header.anchor_left = 0.0
 	header.anchor_right = 1.0
 	header.offset_left = 0
@@ -290,8 +358,8 @@ func _render_card_page():
 
 	var back_btn = Button.new()
 	back_btn.text = "← 戻る"
-	back_btn.custom_minimum_size = Vector2(200, 80)
-	back_btn.add_theme_font_size_override("font_size", 36)
+	back_btn.custom_minimum_size = Vector2(134, 54)
+	back_btn.add_theme_font_size_override("font_size", 24)
 	back_btn.pressed.connect(_on_card_list_back)
 	header.add_child(back_btn)
 
@@ -301,30 +369,30 @@ func _render_card_page():
 
 	var prev_btn = Button.new()
 	prev_btn.text = "◀ 前"
-	prev_btn.custom_minimum_size = Vector2(160, 80)
-	prev_btn.add_theme_font_size_override("font_size", 36)
+	prev_btn.custom_minimum_size = Vector2(107, 54)
+	prev_btn.add_theme_font_size_override("font_size", 24)
 	prev_btn.disabled = (_current_page == 0)
 	prev_btn.pressed.connect(_on_page_prev)
 	header.add_child(prev_btn)
 
 	var title_label = Label.new()
 	title_label.text = "%s (%d種)" % [_category_names.get(_current_category, _current_category), _filtered_cards.size()]
-	title_label.add_theme_font_size_override("font_size", 48)
+	title_label.add_theme_font_size_override("font_size", 32)
 	title_label.add_theme_color_override("font_color", Color.WHITE)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.add_child(title_label)
 
 	var page_label = Label.new()
 	page_label.text = "%d / %d" % [_current_page + 1, total_pages]
-	page_label.add_theme_font_size_override("font_size", 42)
+	page_label.add_theme_font_size_override("font_size", 28)
 	page_label.add_theme_color_override("font_color", Color.WHITE)
 	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.add_child(page_label)
 
 	var next_btn = Button.new()
 	next_btn.text = "次 ▶"
-	next_btn.custom_minimum_size = Vector2(160, 80)
-	next_btn.add_theme_font_size_override("font_size", 36)
+	next_btn.custom_minimum_size = Vector2(107, 54)
+	next_btn.add_theme_font_size_override("font_size", 24)
 	next_btn.disabled = (_current_page >= total_pages - 1)
 	next_btn.pressed.connect(_on_page_next)
 	header.add_child(next_btn)
@@ -335,12 +403,13 @@ func _render_card_page():
 
 	# 既存ヘッダーを全て削除してから追加
 	_remove_all_headers()
-	right_panel.add_child(header)
+	self.add_child(header)
 
 	# ScrollContainerの位置調整（ヘッダー分 + 左右マージン）
-	scroll_container.offset_top = 90
-	scroll_container.offset_left = 30
-	scroll_container.offset_right = -30
+	scroll_container.offset_top = 60
+	scroll_container.offset_left = 20
+	scroll_container.offset_right = -20
+	scroll_container.offset_bottom = 0
 
 	# カードサムネイルを表示（現在ページ分）
 	var start_index = _current_page * _cards_per_page
@@ -376,7 +445,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 
 	# 属性色のグラデーション背景付きパネル
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(300, 380)
+	panel.custom_minimum_size = Vector2(_thumbnail_width, _thumbnail_height)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var element_color = _get_element_color(element, card_type)
@@ -387,8 +456,8 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 	style.set_corner_radius_all(8)
 	style.content_margin_left = 6
 	style.content_margin_right = 6
-	style.content_margin_top = 6
-	style.content_margin_bottom = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
 	# 上部から下部へ暗くなるスカート（疑似グラデーション）
 	style.shadow_color = Color(element_color.r * 0.3, element_color.g * 0.3, element_color.b * 0.3, 0.4)
 	style.shadow_size = 4
@@ -404,7 +473,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 	# カード画像
 	var image_path = _get_card_image_path(card_id, card_type, element)
 	var tex_rect = TextureRect.new()
-	tex_rect.custom_minimum_size = Vector2(280, 280)
+	tex_rect.custom_minimum_size = Vector2(_thumbnail_width - 12, _thumbnail_width - 12)
 	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 
@@ -541,13 +610,15 @@ func _setup_category_background(element_color: Color):
 
 ## right_panel内の全ヘッダーを削除
 func _remove_all_headers():
-	var to_remove: Array[Node] = []
-	for child in right_panel.get_children():
-		if child.name.begins_with("CardListHeader"):
-			to_remove.append(child)
-	for node in to_remove:
-		right_panel.remove_child(node)
-		node.queue_free()
+	# selfとright_panel両方からヘッダーを削除
+	for parent_node in [self, right_panel]:
+		var to_remove: Array[Node] = []
+		for child in parent_node.get_children():
+			if child.name.begins_with("CardListHeader"):
+				to_remove.append(child)
+		for node in to_remove:
+			parent_node.remove_child(node)
+			node.queue_free()
 
 
 ## 背景を削除
@@ -592,14 +663,23 @@ func _get_card_image_path(card_id: int, card_type: String, element: String) -> S
 
 ## カード一覧から統計画面に戻る（グリッド設定を復元）
 func _on_card_list_back():
-	left_panel.visible = true
 	_remove_category_background()
 	# ヘッダー全削除
 	_remove_all_headers()
-	scroll_container.offset_top = 60
-	scroll_container.offset_left = 60
-	scroll_container.offset_right = -60
-	scroll_container.offset_bottom = -60
+
+	# ScrollContainerをRightPanelに戻す
+	if scroll_container.get_parent() != right_panel:
+		scroll_container.reparent(right_panel)
+	scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scroll_container.offset_top = 40
+	scroll_container.offset_left = 40
+	scroll_container.offset_right = -40
+	scroll_container.offset_bottom = -40
+
+	# HBoxContainerを再表示
+	$MarginContainer/HBoxContainer.visible = true
+	left_panel.visible = true
+
 	grid_container.size_flags_horizontal = Control.SIZE_FILL
 	grid_container.columns = 2
 	_show_collection_stats()

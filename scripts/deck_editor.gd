@@ -1,5 +1,7 @@
 extends Control
 
+const GC = preload("res://scripts/game_constants.gd")
+
 var _current_deck: Dictionary = {}  # 現在編集中のデッキ
 var _current_filter: String = "all"  # フィルター状態
 var _card_dialog: VBoxContainer = null
@@ -7,7 +9,6 @@ var _selected_card_id: int = 0
 var _count_buttons: Array[Button] = []  # 枚数選択ボタンの配列
 
 @onready var _button_container: HBoxContainer = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer
-@onready var _scroll_container: ScrollContainer = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer
 @onready var _grid_container: GridContainer = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer/GridContainer
 @onready var _info_panel_container: Control = $MarginContainer/HBoxContainer/LeftPanel/InfoPanelContainer
 @onready var _right_vbox: VBoxContainer = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer
@@ -82,39 +83,44 @@ func _create_card_dialog():
 	# _info_panel_container 内に直接配置（Popup不使用でスクロールをブロックしない）
 	_card_dialog = VBoxContainer.new()
 	_card_dialog.name = "CardDialog"
-	_card_dialog.add_theme_constant_override("separation", 25)
+	_card_dialog.add_theme_constant_override("separation", 13)
 	_card_dialog.visible = false
 
 	# 所持枚数/デッキ内枚数ラベル
 	var info_label = Label.new()
 	info_label.name = "InfoLabel"
-	info_label.add_theme_font_size_override("font_size", 60)
+	info_label.add_theme_font_size_override("font_size", 30)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_card_dialog.add_child(info_label)
 
 	# 枚数選択ボタン（横並び）
 	var hbox = HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 20)
+	hbox.add_theme_constant_override("separation", 10)
 
 	_count_buttons.clear()
 	for i in range(5):
 		var btn = Button.new()
 		btn.text = str(i) + "枚"
-		btn.custom_minimum_size = Vector2(140, 120)
+		btn.custom_minimum_size = Vector2(80, 70)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", 40)
+		btn.add_theme_font_size_override("font_size", 22)
 		btn.pressed.connect(_on_count_selected.bind(i))
 		hbox.add_child(btn)
 		_count_buttons.append(btn)
 
 	_card_dialog.add_child(hbox)
 
+	# スペーサー（枚数ボタンと閉じるボタンの間）
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 35)
+	_card_dialog.add_child(spacer)
+
 	# 閉じるボタン
 	var close_btn = Button.new()
 	close_btn.text = "閉じる"
-	close_btn.custom_minimum_size = Vector2(300, 120)
-	close_btn.add_theme_font_size_override("font_size", 45)
+	close_btn.custom_minimum_size = Vector2(160, 70)
+	close_btn.add_theme_font_size_override("font_size", 22)
 	close_btn.pressed.connect(_on_dialog_closed)
 	_card_dialog.add_child(close_btn)
 
@@ -197,7 +203,7 @@ func _create_card_button(card_data: Dictionary):
 
 	# ボタン（テキストは空、子要素で構成）
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(420, 700)
+	button.custom_minimum_size = Vector2(263, 420)
 	button.set_meta("card_id", card_data.id)
 	button.clip_contents = true
 
@@ -208,7 +214,7 @@ func _create_card_button(card_data: Dictionary):
 
 	# カード画像
 	var image_rect = TextureRect.new()
-	image_rect.custom_minimum_size = Vector2(300, 300)
+	image_rect.custom_minimum_size = Vector2(190, 190)
 	image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	var image_path = _get_card_image_path(card_data)
@@ -219,7 +225,7 @@ func _create_card_button(card_data: Dictionary):
 	# テキスト情報
 	var label = Label.new()
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 30)
+	label.add_theme_font_size_override("font_size", 24)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	var card_name = card_data.get("name", "???")
@@ -256,6 +262,27 @@ func _create_card_button(card_data: Dictionary):
 		"C":
 			label.modulate = Color(0.9, 0.9, 0.9)
 
+	# 属性色の背景スタイル
+	var element_color = _get_element_color(card_data.get("element", ""), card_type)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(element_color.r * 0.5, element_color.g * 0.5, element_color.b * 0.5, 0.9)
+	style.border_color = Color(element_color.r * 0.8, element_color.g * 0.8, element_color.b * 0.8, 0.7)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 5
+	style.content_margin_bottom = 5
+	button.add_theme_stylebox_override("normal", style)
+
+	var hover_style = style.duplicate()
+	hover_style.bg_color = Color(element_color.r * 0.6, element_color.g * 0.6, element_color.b * 0.6, 0.95)
+	button.add_theme_stylebox_override("hover", hover_style)
+
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = Color(element_color.r * 0.7, element_color.g * 0.7, element_color.b * 0.7, 1.0)
+	button.add_theme_stylebox_override("pressed", pressed_style)
+
 	button.pressed.connect(_on_card_button_pressed.bind(card_data.id))
 	_grid_container.add_child(button)
 
@@ -274,6 +301,25 @@ func _get_card_image_path(card_data: Dictionary) -> String:
 		"item":
 			return "res://assets/images/items/%d.png" % card_id
 	return ""
+
+func _get_element_color(element: String, card_type: String) -> Color:
+	match element:
+		"fire":
+			return Color(0.9, 0.3, 0.1)
+		"water":
+			return Color(0.1, 0.4, 0.9)
+		"earth":
+			return Color(0.5, 0.35, 0.1)
+		"wind":
+			return Color(0.1, 0.7, 0.3)
+		"neutral":
+			return Color(0.6, 0.6, 0.6)
+	match card_type:
+		"item":
+			return Color(0.7, 0.6, 0.2)
+		"spell":
+			return Color(0.5, 0.2, 0.7)
+	return Color(0.4, 0.4, 0.4)
 
 func _on_card_button_pressed(card_id: int):
 	_selected_card_id = card_id
@@ -348,11 +394,13 @@ func _show_info_in_right_panel(card: Dictionary, card_type: String):
 	_set_mouse_filter_ignore(_current_info_panel)
 
 	# コンテナ基準で配置
+	var info_scale = 0.88
 	_current_info_panel.position = Vector2(0, 0)
-	_current_info_panel.scale = Vector2(1.0, 1.0)
+	_current_info_panel.scale = Vector2(info_scale, info_scale)
+	_current_info_panel.size = _info_panel_container.size / info_scale
 	var main_container = _current_info_panel.get_node_or_null("MainContainer")
 	if main_container:
-		main_container.position = Vector2(-120, -140)
+		main_container.position = Vector2(-80, -90)
 
 ## 枚数選択ダイアログを表示
 func _show_count_dialog():
@@ -478,14 +526,14 @@ func _update_card_count():
 				_: neutral_count += count
 	
 	# 種別カウント表示
-	var type_text = "[font_size=48]"
-	type_text += "[color=#ff4545]●[/color] %d\n" % fire_count
-	type_text += "[color=#4587ff]●[/color] %d\n" % water_count
-	type_text += "[color=#87cc45]●[/color] %d\n" % earth_count
-	type_text += "[color=#ffcc45]●[/color] %d\n" % wind_count
-	type_text += "[color=#aaaaaa]●[/color] %d\n" % neutral_count
-	type_text += "[color=#aaaaaa]▲[/color] %d\n" % item_count
-	type_text += "[color=#aaaaaa]◆[/color] %d" % spell_count
+	var type_text = "[font_size=50]"
+	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["fire"], fire_count]
+	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["water"], water_count]
+	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["earth"], earth_count]
+	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["wind"], wind_count]
+	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["neutral"], neutral_count]
+	type_text += "[color=#222222]▲[/color] %d\n" % item_count
+	type_text += "[color=#731999]◆[/color] %d" % spell_count
 	type_text += "[/font_size]"
 	_card_type_count.text = type_text
 	
@@ -509,8 +557,9 @@ func _on_back_pressed():
 func _create_debug_reset_button():
 	var debug_button = Button.new()
 	debug_button.text = "🔧 全データリセット"
-	debug_button.custom_minimum_size = Vector2(280, 200)
-	debug_button.add_theme_font_size_override("font_size", 28)
+	debug_button.custom_minimum_size = Vector2(0, 70)
+	debug_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	debug_button.add_theme_font_size_override("font_size", 17)
 	debug_button.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))  # オレンジ色
 	
 	_right_vbox.add_child(debug_button)
@@ -527,7 +576,7 @@ func _on_debug_reset_pressed():
 	confirm.title = "全データリセット"
 	confirm.ok_button_text = "リセットする"
 	confirm.cancel_button_text = "キャンセル"
-	confirm.size = Vector2(500, 250)
+	confirm.size = Vector2(335, 170)
 	
 	confirm.confirmed.connect(_on_debug_reset_confirmed)
 	add_child(confirm)
@@ -549,8 +598,9 @@ func _on_debug_reset_confirmed():
 func _create_reset_button():
 	_reset_button = Button.new()
 	_reset_button.text = "リセット"
-	_reset_button.custom_minimum_size = Vector2(280, 200)
-	_reset_button.add_theme_font_size_override("font_size", 36)
+	_reset_button.custom_minimum_size = Vector2(0, 80)
+	_reset_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_reset_button.add_theme_font_size_override("font_size", 22)
 	
 	# 警告色（赤っぽく）
 	_reset_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
@@ -575,7 +625,7 @@ func _on_reset_pressed():
 	confirm_dialog.cancel_button_text = "キャンセル"
 	
 	# ダイアログサイズ調整
-	confirm_dialog.size = Vector2(500, 200)
+	confirm_dialog.size = Vector2(335, 140)
 	
 	# OKボタン押下時の処理
 	confirm_dialog.confirmed.connect(_on_reset_confirmed)
