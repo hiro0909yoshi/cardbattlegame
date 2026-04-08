@@ -143,6 +143,21 @@ func _on_filter_pressed(filter_type: String):
 	# フィルターに応じた属性色で背景更新
 	_setup_space_background(_get_filter_color(filter_type))
 	_display_cards(filter_type)
+	_update_filter_button_styles()
+
+func _update_filter_button_styles():
+	var filter_map: Array[String] = ["deck", "無", "火", "水", "地", "風", "item", "spell"]
+	var buttons = _button_container.get_children()
+	for i in range(min(buttons.size(), filter_map.size())):
+		var btn = buttons[i]
+		var is_selected = (_current_filter == filter_map[i])
+		var style = StyleBoxFlat.new()
+		if is_selected:
+			style.bg_color = Color(0.35, 0.35, 0.4, 1.0)
+		else:
+			style.bg_color = Color(0.15, 0.15, 0.15, 0.85)
+		style.set_corner_radius_all(8)
+		btn.add_theme_stylebox_override("normal", style)
 
 func _display_cards(filter: String):
 	_clear_card_list()
@@ -309,9 +324,9 @@ func _get_element_color(element: String, card_type: String) -> Color:
 		"water":
 			return Color(0.1, 0.4, 0.9)
 		"earth":
-			return Color(0.5, 0.35, 0.1)
+			return Color(0.1, 0.55, 0.2)
 		"wind":
-			return Color(0.1, 0.7, 0.3)
+			return Color(0.8, 0.7, 0.1)
 		"neutral":
 			return Color(0.6, 0.6, 0.6)
 	match card_type:
@@ -525,19 +540,55 @@ func _update_card_count():
 				"wind": wind_count += count
 				_: neutral_count += count
 	
-	# 種別カウント表示
-	var type_text = "[font_size=50]"
-	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["fire"], fire_count]
-	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["water"], water_count]
-	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["earth"], earth_count]
-	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["wind"], wind_count]
-	type_text += "[color=%s]●[/color] %d\n" % [GC.ELEMENT_HTML_COLORS["neutral"], neutral_count]
-	type_text += "[color=#222222]▲[/color] %d\n" % item_count
-	type_text += "[color=#731999]◆[/color] %d" % spell_count
-	type_text += "[/font_size]"
-	_card_type_count.text = type_text
+	# フィルターボタンにアイコン+枚数を反映
+	var buttons = _button_container.get_children()
+	if buttons.size() >= 8:
+		buttons[0].text = "%d/50" % total
+		buttons[0].add_theme_font_size_override("font_size", 36)
+		buttons[1].text = "● %d" % neutral_count
+		buttons[2].text = "● %d" % fire_count
+		buttons[3].text = "● %d" % water_count
+		buttons[4].text = "● %d" % earth_count
+		buttons[5].text = "● %d" % wind_count
+		buttons[6].text = "▲ %d" % item_count
+		buttons[7].text = "◆ %d" % spell_count
+
+		# ボタン文字色を属性色に設定 + ホバー時も文字色維持
+		var btn_colors: Array[Color] = [
+			Color.WHITE,
+			Color.html(GC.ELEMENT_HTML_COLORS["neutral"]),
+			Color.html(GC.ELEMENT_HTML_COLORS["fire"]),
+			Color.html(GC.ELEMENT_HTML_COLORS["water"]),
+			Color.html(GC.ELEMENT_HTML_COLORS["earth"]),
+			Color.html(GC.ELEMENT_HTML_COLORS["wind"]),
+			Color("#e8832a"),
+			Color("#a855c8"),
+		]
+		for i in range(buttons.size()):
+			if i >= btn_colors.size():
+				break
+			var btn = buttons[i]
+			var col = btn_colors[i]
+			btn.add_theme_color_override("font_color", col)
+			btn.add_theme_color_override("font_hover_color", col)
+			btn.add_theme_color_override("font_pressed_color", col)
+			btn.add_theme_color_override("font_focus_color", col)
+			# ホバー時のボタン背景
+			var normal_style = StyleBoxFlat.new()
+			normal_style.bg_color = Color(0.15, 0.15, 0.15, 0.85)
+			normal_style.set_corner_radius_all(8)
+			btn.add_theme_stylebox_override("normal", normal_style)
+			var hover_style = StyleBoxFlat.new()
+			hover_style.bg_color = Color(0.3, 0.3, 0.35, 0.95)
+			hover_style.set_corner_radius_all(8)
+			btn.add_theme_stylebox_override("hover", hover_style)
+			var pressed_style = StyleBoxFlat.new()
+			pressed_style.bg_color = Color(0.35, 0.35, 0.4, 1.0)
+			pressed_style.set_corner_radius_all(8)
+			btn.add_theme_stylebox_override("pressed", pressed_style)
 	
-	_card_count_label.text = "現在: " + str(total) + "/50"
+	_card_type_count.visible = false
+	_card_count_label.visible = false
 	
 	# 50枚以下なら保存可能
 	if total <= 50:

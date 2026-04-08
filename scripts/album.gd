@@ -523,13 +523,13 @@ func _get_element_color_for_category(category: String) -> Color:
 		"water":
 			return Color(0.1, 0.4, 0.9)
 		"earth":
-			return Color(0.5, 0.35, 0.1)
+			return Color(0.1, 0.55, 0.2)
 		"wind":
-			return Color(0.1, 0.7, 0.3)
+			return Color(0.8, 0.7, 0.1)
 		"neutral":
 			return Color(0.6, 0.6, 0.6)
 		"item":
-			return Color(0.7, 0.6, 0.2)
+			return Color(0.91, 0.51, 0.16)
 		"spell":
 			return Color(0.5, 0.2, 0.7)
 	return Color(0.4, 0.4, 0.4)
@@ -636,9 +636,9 @@ func _get_element_color(element: String, card_type: String) -> Color:
 		"water":
 			return Color(0.1, 0.4, 0.9)
 		"earth":
-			return Color(0.5, 0.35, 0.1)
+			return Color(0.1, 0.55, 0.2)
 		"wind":
-			return Color(0.1, 0.7, 0.3)
+			return Color(0.8, 0.7, 0.1)
 		"neutral":
 			return Color(0.6, 0.6, 0.6)
 	# アイテム・スペル

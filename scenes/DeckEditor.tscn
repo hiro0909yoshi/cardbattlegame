@@ -61,7 +61,7 @@ alignment = 1
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "本
 "
 
@@ -69,56 +69,56 @@ text = "本
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "無"
 
 [node name="FireButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "火"
 
 [node name="WaterButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "水"
 
 [node name="EarthButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "地"
 
 [node name="WindButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "風"
 
 [node name="ItemButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "具"
 
 [node name="SpellButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "魔"
 
 [node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
 custom_minimum_size = Vector2(50, 85)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 40
 text = "戻る"
 
 [node name="ContentHBox" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]

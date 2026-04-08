@@ -26,6 +26,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 10
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
 layout_mode = 2
@@ -43,7 +44,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 29
+theme_override_constants/separation = 19
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
 layout_mode = 2
@@ -53,20 +54,20 @@ text = "アルバム"
 layout_mode = 2
 
 [node name="DeckEditButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 268)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "デッキ編集"
 
 [node name="CardListButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 268)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "所持カード一覧
 "
 
 [node name="ResetCardsButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 134)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
@@ -74,7 +75,7 @@ text = "🗑️ カードリセット
 (デバッグ用)"
 
 [node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 268)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "戻る"
@@ -89,46 +90,46 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 60.0
-offset_top = 60.0
-offset_right = -60.0
-offset_bottom = -60.0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
 [node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer"]
 layout_mode = 2
-theme_override_constants/h_separation = 100
-theme_override_constants/v_separation = 20
+theme_override_constants/h_separation = 67
+theme_override_constants/v_separation = 13
 columns = 2
 
 [node name="book1" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(1000, 400)
+custom_minimum_size = Vector2(670, 268)
 layout_mode = 2
 text = "初ブック"
 
 [node name="book2" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(1000, 400)
+custom_minimum_size = Vector2(670, 268)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book3" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(1000, 400)
+custom_minimum_size = Vector2(670, 268)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book4" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(1000, 400)
+custom_minimum_size = Vector2(670, 268)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book5" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(1000, 400)
+custom_minimum_size = Vector2(670, 268)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book6" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(1000, 400)
+custom_minimum_size = Vector2(670, 268)
 layout_mode = 2
 text = "ブック１"
