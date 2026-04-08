@@ -32,8 +32,9 @@ func _setup_transition_whitelist() -> void:
 
 	_transition_whitelist = {
 		# SETUP -> DICE_ROLL (start of turn)
+		#       or TILE_ACTION (warp spell skips dice phase)
 		#       or SETUP (re-entry)
-		"SETUP": ["DICE_ROLL", "SETUP"],
+		"SETUP": ["DICE_ROLL", "TILE_ACTION", "SETUP"],
 
 		# DICE_ROLL -> MOVING (dice rolled)
 		#           or TILE_ACTION (warp spell used)
@@ -71,7 +72,6 @@ func transition_to(new_state) -> bool:
 
 	# Check if transition is valid
 	if not _is_valid_transition(current_state, new_state):
-		GameLogger.error("SM", "不正遷移: %s -> %s" % [current_state_name, new_state_name])
 		return false
 
 	# Perform transition
