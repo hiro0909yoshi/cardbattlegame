@@ -47,7 +47,7 @@ func _apply_game_layout():
 	_game_layout_applied = true
 
 	if main_container:
-		main_container.position = Vector2(135, 105)
+		main_container.position = Vector2(10, 105)
 		main_container.size = Vector2(500, 255)
 
 	var parchment = right_panel.get_node_or_null("ParchmentBg") if right_panel else null

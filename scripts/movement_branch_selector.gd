@@ -97,6 +97,11 @@ func _update_ui():
 			var destinations = controller.destination_predictor.predict_all_destinations(selected_tile, steps_after_branch, current_branch_tile)
 			controller.destination_predictor.update_hand_restriction_for_destinations(destinations)
 
+	# プレイヤーを選択中の分岐方向に向ける
+	if not available_branches.is_empty() and controller.current_moving_player >= 0:
+		var target_tile = available_branches[selected_branch_index]
+		controller.face_player_toward_tile(controller.current_moving_player, target_tile)
+
 	# カメラを選択中の分岐方向にずらす
 	if not available_branches.is_empty() and current_branch_tile >= 0 and controller.board_system:
 		var target_tile = available_branches[selected_branch_index]

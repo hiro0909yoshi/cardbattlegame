@@ -71,9 +71,9 @@ func _apply_game_layout():
 		return
 	_game_layout_applied = true
 
-	# MainContainer: 右に寄せ（position/sizeで直接指定）
+	# MainContainer: position/sizeで直接指定
 	if main_container:
-		main_container.position = Vector2(135, 105)
+		main_container.position = Vector2(10, 105)
 		main_container.size = Vector2(500, 255)
 
 	# ParchmentBg・ContentMargin: 上下を縮小（左右はそのまま）

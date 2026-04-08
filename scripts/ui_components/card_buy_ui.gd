@@ -29,7 +29,7 @@ func setup_ui():
 	
 	# メインパネル（magic_tile_uiと同じサイズ）
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(1800, 1050)
+	panel.custom_minimum_size = Vector2(932, 662)
 	add_child(panel)
 	
 	# パネルスタイル
@@ -49,28 +49,28 @@ func setup_ui():
 	# VBoxContainer
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 30)
+	vbox.add_theme_constant_override("separation", 16)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 40)
-	margin.add_theme_constant_override("margin_bottom", 40)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 21)
+	margin.add_theme_constant_override("margin_bottom", 21)
+	margin.add_theme_constant_override("margin_left", 21)
+	margin.add_theme_constant_override("margin_right", 21)
 	panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# タイトル
 	title_label = Label.new()
 	title_label.text = "カードを購入（価格: コストの50%）"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 48)
+	title_label.add_theme_font_size_override("font_size", 25)
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
 	vbox.add_child(title_label)
 	
 	# カード表示エリア
 	cards_container = HBoxContainer.new()
 	cards_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	cards_container.add_theme_constant_override("separation", 80)
+	cards_container.add_theme_constant_override("separation", 41)
 	vbox.add_child(cards_container)
 	
 	# 3つのカードパネルを作成
@@ -82,8 +82,8 @@ func setup_ui():
 	# 買わないボタン
 	cancel_button = Button.new()
 	cancel_button.text = "買わない"
-	cancel_button.custom_minimum_size = Vector2(400, 100)
-	cancel_button.add_theme_font_size_override("font_size", 36)
+	cancel_button.custom_minimum_size = Vector2(207, 52)
+	cancel_button.add_theme_font_size_override("font_size", 19)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	
 	var button_container = HBoxContainer.new()
@@ -93,7 +93,7 @@ func setup_ui():
 
 func _create_card_panel(index: int) -> Panel:
 	var card_panel = Panel.new()
-	card_panel.custom_minimum_size = Vector2(500, 680)
+	card_panel.custom_minimum_size = Vector2(259, 429)
 	
 	var card_style = StyleBoxFlat.new()
 	card_style.bg_color = Color(0.15, 0.15, 0.25, 1.0)
@@ -110,44 +110,44 @@ func _create_card_panel(index: int) -> Panel:
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 20)
+	vbox.add_theme_constant_override("separation", 10)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 30)
-	margin.add_theme_constant_override("margin_bottom", 30)
-	margin.add_theme_constant_override("margin_left", 25)
-	margin.add_theme_constant_override("margin_right", 25)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	margin.add_theme_constant_override("margin_left", 13)
+	margin.add_theme_constant_override("margin_right", 13)
 	card_panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# カードタイプ
 	var type_label = Label.new()
 	type_label.name = "TypeLabel"
 	type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	type_label.add_theme_font_size_override("font_size", 32)
+	type_label.add_theme_font_size_override("font_size", 17)
 	vbox.add_child(type_label)
 	
 	# カード名
 	var name_label = Label.new()
 	name_label.name = "NameLabel"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 44)
+	name_label.add_theme_font_size_override("font_size", 23)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(name_label)
 	
 	# 名前と効果説明の間のスペーサー
 	var name_effect_spacer = Control.new()
-	name_effect_spacer.custom_minimum_size = Vector2(0, 20)
+	name_effect_spacer.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(name_effect_spacer)
 	
 	# 効果説明
 	var effect_label = Label.new()
 	effect_label.name = "EffectLabel"
 	effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	effect_label.add_theme_font_size_override("font_size", 40)
+	effect_label.add_theme_font_size_override("font_size", 21)
 	effect_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 	effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	effect_label.custom_minimum_size = Vector2(0, 180)
+	effect_label.custom_minimum_size = Vector2(0, 93)
 	vbox.add_child(effect_label)
 	
 	# スペーサー
@@ -159,7 +159,7 @@ func _create_card_panel(index: int) -> Panel:
 	var price_label = Label.new()
 	price_label.name = "PriceLabel"
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label.add_theme_font_size_override("font_size", 48)
+	price_label.add_theme_font_size_override("font_size", 25)
 	price_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
 	vbox.add_child(price_label)
 	
@@ -167,8 +167,8 @@ func _create_card_panel(index: int) -> Panel:
 	var buy_button = Button.new()
 	buy_button.name = "BuyButton"
 	buy_button.text = "購入"
-	buy_button.custom_minimum_size = Vector2(300, 90)
-	buy_button.add_theme_font_size_override("font_size", 36)
+	buy_button.custom_minimum_size = Vector2(155, 47)
+	buy_button.add_theme_font_size_override("font_size", 19)
 	buy_button.pressed.connect(_on_buy_pressed.bind(index))
 	vbox.add_child(buy_button)
 	
@@ -256,7 +256,7 @@ func _center_panel():
 	var viewport_size = get_viewport_rect().size
 	panel.position = Vector2(
 		(viewport_size.x - panel.size.x) / 2,
-		(viewport_size.y - panel.size.y) / 2 - 150  # 150ピクセル上に
+		(viewport_size.y - panel.size.y) / 2 - 78
 	)
 
 func hide_selection():

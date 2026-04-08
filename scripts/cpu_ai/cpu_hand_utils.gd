@@ -162,7 +162,12 @@ func _filter_summonable_cards(player_id: int, card_indices: Array, tile_element:
 		if not disable_cannot_summon and not tile_element.is_empty() and not check_cannot_summon(card, tile_element):
 			print("[CPU HandUtils] 配置制限: %s は%s属性の土地に配置不可" % [card.get("name", "?"), tile_element])
 			continue
-		
+
+		# 種族依存ステータス置換チェック（同種族0体なら召喚しない）
+		if not _check_race_stat_replace_viable(card, player_id):
+			print("[CPU HandUtils] 種族依存ステータス不足: %s（同種族が盤面にいない）" % card.get("name", "?"))
+			continue
+
 		result.append(index)
 	
 	return result
@@ -252,43 +257,94 @@ func check_cannot_summon(card_data: Dictionary, tile_element: String) -> bool:
 	return true
 
 
-## リストからレートが最も高いカードを選択
+## 種族依存ステータス置換が有効かチェック
+## race_creature_stat_replace を持つクリーチャーで、同種族が盤面に0体なら false
+func _check_race_stat_replace_viable(card: Dictionary, player_id: int) -> bool:
+	var ability_parsed = card.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+
+	for effect in effects:
+		if effect.get("effect_type") == "race_creature_stat_replace":
+			var target_race = effect.get("target_race", "")
+			if target_race.is_empty():
+				continue
+			# 盤面の同種族数を確認（自身はまだ配置されていないのでカウント外）
+			var race_count = 0
+			if board_system and board_system.has_method("count_creatures_by_race"):
+				race_count = board_system.count_creatures_by_race(player_id, target_race)
+			if race_count == 0:
+				return false
+
+	return true
+
+
+## 召喚時の盤面状況を考慮したレート補正を取得
+func _get_context_adjusted_rate(card: Dictionary, player_id: int) -> int:
+	var base_rate = CardRateEvaluator.get_rate(card)
+
+	# race_creature_stat_replace 持ちは実際の配置数でレート補正
+	var ability_parsed = card.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+
+	for effect in effects:
+		if effect.get("effect_type") == "race_creature_stat_replace":
+			var target_race = effect.get("target_race", "")
+			if target_race.is_empty():
+				continue
+			var race_count = 0
+			if board_system and board_system.has_method("count_creatures_by_race"):
+				race_count = board_system.count_creatures_by_race(player_id, target_race)
+			# 実際のHP/AP = (race_count + 1) × multiplier （自身含む）
+			var multiplier = effect.get("multiplier", 20)
+			var actual_stat = (race_count + 1) * multiplier
+			# ベースのAP/HPから計算された分を差し引き、実際の値で再計算
+			var base_ap = card.get("ap", 0)
+			var base_hp = card.get("hp", 0)
+			var base_avg = (base_ap + base_hp) / 2
+			var actual_avg = actual_stat  # AP=HP=actual_stat
+			base_rate += (actual_avg - base_avg)
+			break
+
+	return base_rate
+
+
+## リストからレートが最も高いカードを選択（盤面状況考慮）
 func _select_highest_rate_from_list(player_id: int, card_indices: Array) -> int:
 	if card_indices.is_empty():
 		return -1
-	
+
 	var highest_rate = -999999
 	var best_index = -1
-	
+
 	for index in card_indices:
 		var card = card_system.get_card_data_for_player(player_id, index)
 		if card.is_empty():
 			continue
-		var rate = CardRateEvaluator.get_rate(card)
+		var rate = _get_context_adjusted_rate(card, player_id)
 		if rate > highest_rate:
 			highest_rate = rate
 			best_index = index
-	
+
 	return best_index
 
 
-## リストからレートが最も低いカードを選択
+## リストからレートが最も低いカードを選択（盤面状況考慮）
 func _select_lowest_rate_from_list(player_id: int, card_indices: Array) -> int:
 	if card_indices.is_empty():
 		return -1
-	
+
 	var lowest_rate = 999999
 	var best_index = -1
-	
+
 	for index in card_indices:
 		var card = card_system.get_card_data_for_player(player_id, index)
 		if card.is_empty():
 			continue
-		var rate = CardRateEvaluator.get_rate(card)
+		var rate = _get_context_adjusted_rate(card, player_id)
 		if rate < lowest_rate:
 			lowest_rate = rate
 			best_index = index
-	
+
 	return best_index
 
 

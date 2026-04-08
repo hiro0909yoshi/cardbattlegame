@@ -12,13 +12,7 @@ var _defender_labels: Dictionary = {}
 var _current_side: String = "attacker"
 
 # 属性色
-const ELEMENT_COLORS = {
-	"fire": Color(1.0, 0.3, 0.2),
-	"water": Color(0.2, 0.5, 1.0),
-	"earth": Color(0.6, 0.4, 0.2),
-	"wind": Color(0.2, 0.8, 0.4),
-	"neutral": Color(0.7, 0.7, 0.7)
-}
+const GC = preload("res://scripts/game_constants.gd")
 
 const ELEMENT_NAMES = {
 	"fire": "火",
@@ -28,10 +22,10 @@ const ELEMENT_NAMES = {
 	"neutral": "無"
 }
 
-# パネルサイズ
-const PANEL_WIDTH = 1100
-const PANEL_HEIGHT = 1100
-const PANEL_MARGIN = 40
+# パネルサイズ（viewport 1920×1080）
+const PANEL_WIDTH = 570
+const PANEL_HEIGHT = 694
+const PANEL_MARGIN = 25
 
 # 土地ボーナス色（HPバーと同じ）
 const COLOR_LAND_BONUS = Color("#FFC107")
@@ -65,56 +59,56 @@ func _setup_ui() -> void:
 	
 	# 攻撃側セクション
 	_attacker_labels = _create_creature_section(0, "▼ 攻撃側")
-	
+
 	# 区切り線
 	var separator = ColorRect.new()
 	separator.color = Color(0.5, 0.5, 0.5, 0.5)
-	separator.position = Vector2(45, 520)
-	separator.size = Vector2(PANEL_WIDTH - 90, 4)
+	separator.position = Vector2(28, 328)
+	separator.size = Vector2(PANEL_WIDTH - 56, 3)
 	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(separator)
-	
+
 	# 防御側セクション
-	_defender_labels = _create_creature_section(540, "▼ 防御側")
+	_defender_labels = _create_creature_section(341, "▼ 防御側")
 	
 	_update_panel_position()
 
 
 func _create_creature_section(y_start: int, header_text: String) -> Dictionary:
 	var labels = {}
-	var y_offset = y_start + 36
-	var line_height = 100
-	
+	var y_offset = y_start + 23
+	var line_height = 63
+
 	# ヘッダー
-	labels["header"] = _create_label(Vector2(45, y_offset), 64, Color(0.9, 0.9, 0.5))
+	labels["header"] = _create_label(Vector2(28, y_offset), 40, Color(0.9, 0.9, 0.5))
 	labels["header"].text = header_text
 	y_offset += line_height
-	
+
 	# 名前
-	labels["name"] = _create_label(Vector2(45, y_offset), 88, Color.WHITE)
-	y_offset += line_height + 16
-	
+	labels["name"] = _create_label(Vector2(28, y_offset), 56, Color.WHITE)
+	y_offset += line_height + 10
+
 	# 属性
-	labels["element"] = _create_label(Vector2(45, y_offset), 64, Color.WHITE)
+	labels["element"] = _create_label(Vector2(28, y_offset), 40, Color.WHITE)
 	y_offset += line_height
-	
+
 	# HP（緑）+ 土地ボーナス（黄）+ AP（深めの赤）- 横並び
-	labels["hp"] = _create_label(Vector2(45, y_offset), 88, Color(0.4, 1.0, 0.4))
-	labels["hp_bonus"] = _create_label(Vector2(320, y_offset), 88, COLOR_LAND_BONUS)
-	labels["ap"] = _create_label(Vector2(580, y_offset), 88, Color(0.85, 0.2, 0.2))
-	
+	labels["hp"] = _create_label(Vector2(28, y_offset), 56, Color(0.4, 1.0, 0.4))
+	labels["hp_bonus"] = _create_label(Vector2(202, y_offset), 56, COLOR_LAND_BONUS)
+	labels["ap"] = _create_label(Vector2(366, y_offset), 56, Color(0.85, 0.2, 0.2))
+
 	return labels
 
 
 func _create_label(pos: Vector2, font_size: int, color: Color) -> Label:
 	var label = Label.new()
 	label.position = pos
-	label.size = Vector2(PANEL_WIDTH - 90, 100)
+	label.size = Vector2(PANEL_WIDTH - 56, 63)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 6)
+	label.add_theme_constant_override("outline_size", 4)
 	_panel.add_child(label)
 	return label
 
@@ -123,8 +117,8 @@ func _update_panel_position() -> void:
 	var viewport_size = Vector2(1920, 1080)
 	if get_viewport():
 		viewport_size = get_viewport().get_visible_rect().size
-	# 画面中央から右に200ピクセル、上から120ピクセル
-	_panel.position = Vector2(viewport_size.x / 2 + 200, 120)
+	# 画面右端からパネル幅+マージン分左、上から76ピクセル
+	_panel.position = Vector2(viewport_size.x - PANEL_WIDTH - PANEL_MARGIN, 76)
 
 
 ## アイテムフェーズ開始時に表示
@@ -141,7 +135,7 @@ func _update_creature_data(labels: Dictionary, data: Dictionary) -> void:
 	
 	var element = data.get("element", "neutral")
 	labels["element"].text = "属性: " + ELEMENT_NAMES.get(element, element)
-	labels["element"].add_theme_color_override("font_color", ELEMENT_COLORS.get(element, Color.WHITE))
+	labels["element"].add_theme_color_override("font_color", GC.ELEMENT_COLORS.get(element, Color.WHITE))
 	
 	# HP表示（カレントHP + 土地ボーナス）
 	var hp = data.get("current_hp", data.get("hp", 0))

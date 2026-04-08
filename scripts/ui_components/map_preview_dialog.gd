@@ -10,8 +10,8 @@ const MAP_DIR = "res://data/master/maps/"
 const TILE_COLORS = {
 	"Fire": Color(1.0, 0.4, 0.4),
 	"Water": Color(0.4, 0.6, 1.0),
-	"Earth": Color(0.8, 0.6, 0.3),
-	"Wind": Color(0.4, 1.0, 0.6),
+	"Earth": Color(0.1, 0.5, 0.15),
+	"Wind": Color(0.8, 0.7, 0.1),
 	"Neutral": Color(0.6, 0.6, 0.6),
 	"Checkpoint": Color(1.0, 0.9, 0.3),
 	"Warp": Color(1.0, 0.5, 0.0),

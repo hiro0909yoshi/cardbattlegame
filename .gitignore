@@ -15,3 +15,11 @@ data/*test*.json
 web_build/
 web_build.zip
 android/build/
+ios_build/
+
+# Blender
+*.blend
+*.blend1
+assets/models/castle_wall_diffuse.png
+assets/models/castle_wall_normal.png
+assets/models/castle_wall_roughness.png

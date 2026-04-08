@@ -200,15 +200,17 @@ static func _find_creature_targets(sys_board, current_player_id: int, target_inf
 		
 		# has_summon_condition チェック
 		if target_info.get("has_summon_condition", false):
-			var has_lands = creature.has("cost_lands_required")
-			var has_sacrifice = creature.has("cost_cards_sacrifice")
+			var cost = creature.get("cost", {})
+			var has_lands = not cost.get("lands_required", []).is_empty()
+			var has_sacrifice = cost.get("cards_sacrifice", 0) > 0
 			if not has_lands and not has_sacrifice:
 				continue
-		
+
 		# no_summon_condition チェック
 		if target_info.get("no_summon_condition", false):
-			var has_lands = creature.has("cost_lands_required") and creature.cost_lands_required > 0
-			var has_sacrifice = creature.has("cost_cards_sacrifice") and creature.cost_cards_sacrifice > 0
+			var cost = creature.get("cost", {})
+			var has_lands = not cost.get("lands_required", []).is_empty()
+			var has_sacrifice = cost.get("cards_sacrifice", 0) > 0
 			if has_lands or has_sacrifice:
 				continue
 		

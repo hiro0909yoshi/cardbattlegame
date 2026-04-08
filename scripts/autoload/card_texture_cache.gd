@@ -9,7 +9,7 @@ var _texture_cache: Dictionary[int, ImageTexture] = {}
 ## Reference to Card.tscn for rendering
 var _card_scene = preload("res://scenes/Card.tscn")
 
-## Card rendering dimensions (matches CardFrame.tscn)
+## Card rendering dimensions (CardFrame.tscn設計サイズで高品質レンダリング)
 const CARDFRAME_WIDTH = 220
 const CARDFRAME_HEIGHT = 293
 

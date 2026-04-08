@@ -9,9 +9,9 @@ signal damage_animation_completed
 
 const CARD_SCENE_PATH = "res://scenes/Card.tscn"
 const CARD_DISPLAY_SIZE = Vector2(220, 293)  # Card.tscnの元サイズ
-const CARD_SCALE = 3.9  # バトル画面での表示スケール（3.0 * 1.3）
-const ATTACK_MOVE_DISTANCE = 80.0
-const SHAKE_AMOUNT = 10.0
+const CARD_SCALE = 2.5  # バトル画面での表示スケール（viewport 1920×1080）
+const ATTACK_MOVE_DISTANCE = 50.0
+const SHAKE_AMOUNT = 6.0
 
 var creature_data: Dictionary = {}
 var is_attacker: bool = true
@@ -50,10 +50,10 @@ func _setup_ui() -> void:
 	
 	# HP/APバー（カード下部）- 5.2倍サイズ対応
 	_hp_ap_bar = HpApBar.new()
-	_hp_ap_bar.position = Vector2((scaled_size.x - 1040) / 2, scaled_size.y + 30)
+	_hp_ap_bar.position = Vector2((scaled_size.x - 656) / 2, scaled_size.y + 19)
 	add_child(_hp_ap_bar)
-	
-	custom_minimum_size = Vector2(scaled_size.x, scaled_size.y + 260)
+
+	custom_minimum_size = Vector2(scaled_size.x, scaled_size.y + 164)
 
 
 ## クリーチャーデータを設定
@@ -93,20 +93,41 @@ func _create_card_instance(data: Dictionary) -> void:
 	# カードをインスタンス化
 	_card_instance = _card_scene.instantiate()
 	_card_container.add_child(_card_instance)
-	
+
 	# スケール設定
 	_card_instance.scale = Vector2(CARD_SCALE, CARD_SCALE)
-	
+
 	# マウスイベントを無効化（バトル画面では選択不要）
 	_card_instance.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_mouse_filter_recursive(_card_instance, Control.MOUSE_FILTER_IGNORE)
-	
+
 	# クリーチャーデータを設定
 	if _card_instance.has_method("load_dynamic_creature_data"):
 		_card_instance.load_dynamic_creature_data(data)
 	elif _card_instance.has_method("load_card_data"):
 		var card_id = data.get("id", 0)
 		_card_instance.load_card_data(card_id)
+
+	# 軽量モード: キャッシュテクスチャがあれば47子ノードをテクスチャ1枚に置換
+	var card_id_for_cache: int = data.get("id", 0)
+	if card_id_for_cache > 0 and _card_instance.has_method("enable_lightweight_mode"):
+		var cache := _find_card_texture_cache()
+		if cache:
+			var cached_tex: ImageTexture = cache.get_card_texture_sync(card_id_for_cache)
+			if cached_tex:
+				_card_instance.enable_lightweight_mode(cached_tex)
+
+
+## シーンツリーからCardTextureCacheインスタンスを探す
+func _find_card_texture_cache() -> CardTextureCache:
+	var root := get_tree().root
+	for child in root.get_children():
+		if child is CardTextureCache:
+			return child
+		for grandchild in child.get_children():
+			if grandchild is CardTextureCache:
+				return grandchild
+	return null
 
 
 ## 子ノードのマウスフィルターを再帰的に設定
@@ -266,6 +287,6 @@ func play_defeat_animation():
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.tween_property(self, "position:y", position.y + 100, 0.5).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "position:y", position.y + 63, 0.5).set_ease(Tween.EASE_IN)
 	tween.tween_property(self, "rotation", deg_to_rad(-15 if is_attacker else 15), 0.5)
 	await tween.finished

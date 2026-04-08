@@ -2,5 +2,5 @@ extends BaseTile
 
 func _ready():
 	tile_type = "earth"
-	base_color = Color(0.8, 0.6, 0.3)  # 茶系
+	base_color = Color(0.1, 0.5, 0.15)  # 濃い緑系
 	super._ready()

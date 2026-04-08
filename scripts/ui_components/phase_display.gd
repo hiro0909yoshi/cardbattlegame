@@ -35,14 +35,14 @@ func create_phase_label():
 	phase_label.text = "セットアップ中..."
 	
 	# フォントサイズ2.5倍（34 → 85）、半透明
-	phase_label.add_theme_font_size_override("font_size", 85)
+	phase_label.add_theme_font_size_override("font_size", 44)
 	phase_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.3))  # 白、薄め
 	
 	# 画面幅いっぱいに広げて中央揃え
 	phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	phase_label.set_anchors_preset(Control.PRESET_TOP_WIDE)  # 上部全幅
-	phase_label.offset_top = 150
-	phase_label.offset_bottom = 250
+	phase_label.offset_top = 78
+	phase_label.offset_bottom = 130
 	
 	# マウス入力を透過（クリック不可）
 	phase_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -82,8 +82,8 @@ func show_dice_result(value: int):
 	# 新しいダイスラベルを作成
 	current_dice_label = Label.new()
 	current_dice_label.text = "🎲 " + str(value)
-	current_dice_label.add_theme_font_size_override("font_size", 67)  # 1.4倍
-	current_dice_label.position = Vector2(530, 90)
+	current_dice_label.add_theme_font_size_override("font_size", 35)
+	current_dice_label.position = Vector2(275, 47)
 	current_dice_label.add_theme_color_override("font_color", Color(1, 1, 0))
 	current_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))
 	
@@ -106,7 +106,7 @@ func show_big_dice_result(value: int, duration: float = 1.5):
 	# 新しいラベルを作成
 	_big_dice_label = Label.new()
 	_big_dice_label.text = str(value)
-	_big_dice_label.add_theme_font_size_override("font_size", 200)  # 大きなフォント
+	_big_dice_label.add_theme_font_size_override("font_size", 104)
 	_big_dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_big_dice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	
@@ -153,14 +153,14 @@ func show_dice_result_double(dice1: int, dice2: int, total: int):
 	# 新しいダイスラベルを作成
 	current_dice_label = Label.new()
 	current_dice_label.text = display_text
-	current_dice_label.add_theme_font_size_override("font_size", 60)
-	
+	current_dice_label.add_theme_font_size_override("font_size", 31)
+
 	# 画面中央上部に配置
 	current_dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	current_dice_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	current_dice_label.offset_top = 80
-	current_dice_label.offset_bottom = 160
-	
+	current_dice_label.offset_top = 42
+	current_dice_label.offset_bottom = 83
+
 	# 両方0の場合はゴールド色、それ以外は黄色
 	if dice1 == 0 and dice2 == 0:
 		current_dice_label.add_theme_color_override("font_color", Color(1, 0.84, 0))  # ゴールド
@@ -203,13 +203,13 @@ func show_dice_result_triple(dice1: int, dice2: int, dice3: int, total: int):
 	# 新しいダイスラベルを作成
 	current_dice_label = Label.new()
 	current_dice_label.text = display_text
-	current_dice_label.add_theme_font_size_override("font_size", 55)  # 3個なので少し小さめ
-	
+	current_dice_label.add_theme_font_size_override("font_size", 29)
+
 	# 画面中央上部に配置
 	current_dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	current_dice_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	current_dice_label.offset_top = 80
-	current_dice_label.offset_bottom = 160
+	current_dice_label.offset_top = 42
+	current_dice_label.offset_bottom = 83
 	
 	# dice1とdice2が両方0の場合はゴールド色、それ以外は黄色
 	if dice1 == 0 and dice2 == 0:
@@ -281,15 +281,19 @@ func _create_action_prompt_ui():
 	action_prompt_layer.layer = 50
 	ui_layer.get_parent().add_child(action_prompt_layer)
 	
-	# 中央配置用コンテナ（画面幅の3/5位置）
-	action_prompt_center_container = Control.new()
-	action_prompt_center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# 中央配置用コンテナ（CenterContainerで確実に水平中央）
+	action_prompt_center_container = CenterContainer.new()
+	action_prompt_center_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	action_prompt_center_container.offset_top = 10
+	action_prompt_center_container.offset_bottom = 70
 	action_prompt_center_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	action_prompt_layer.add_child(action_prompt_center_container)
 	
-	# 右側配置用コンテナ（FULL_RECTで配置し、子の位置は動的に計算）
-	action_prompt_right_container = Control.new()
-	action_prompt_right_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# 右側配置用コンテナ（CenterContainerで中央配置）
+	action_prompt_right_container = CenterContainer.new()
+	action_prompt_right_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	action_prompt_right_container.offset_top = 10
+	action_prompt_right_container.offset_bottom = 70
 	action_prompt_right_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	action_prompt_layer.add_child(action_prompt_right_container)
 	
@@ -346,49 +350,11 @@ func show_action_prompt(message: String, position: String = "center"):
 			current_parent.remove_child(action_prompt_panel)
 			target_parent.add_child(action_prompt_panel)
 		
-		# 位置を動的に計算（両方とも3/5位置）
-		if position == "right":
-			call_deferred("_position_panel_right")
-		else:
-			call_deferred("_position_panel_center")
-		
 		action_prompt_panel.visible = true
 	
 	# フェーズラベルは薄く（中央表示時のみ）
 	if phase_label and position == "center":
 		phase_label.modulate.a = 0.1
-
-
-## パネルを中央に配置（フェーズコメント・確認コメント共通）
-func _position_panel_center():
-	if not action_prompt_panel or not action_prompt_panel.is_inside_tree():
-		return
-	
-	var viewport_size = action_prompt_panel.get_viewport().get_visible_rect().size
-	
-	# 画面中央
-	var center_x = viewport_size.x * 0.5
-	var panel_size = action_prompt_panel.size
-	var panel_x = center_x - panel_size.x / 2
-	var panel_y = 15  # 上からのマージン
-	
-	action_prompt_panel.position = Vector2(panel_x, panel_y)
-
-
-## パネルを右側に配置（インフォパネル表示時用：画面中央）
-func _position_panel_right():
-	if not action_prompt_panel or not action_prompt_panel.is_inside_tree():
-		return
-	
-	var viewport_size = action_prompt_panel.get_viewport().get_visible_rect().size
-	
-	# 画面中央
-	var center_x = viewport_size.x * 0.5
-	var panel_size = action_prompt_panel.size
-	var panel_x = center_x - panel_size.x / 2
-	var panel_y = 15  # 上からのマージン
-	
-	action_prompt_panel.position = Vector2(panel_x, panel_y)
 
 
 ## アクション指示を非表示

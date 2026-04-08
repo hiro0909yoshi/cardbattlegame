@@ -14,7 +14,7 @@ var count_buttons = []  # 枚数選択ボタンの配列
 @onready var button_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer
 @onready var scroll_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer
 @onready var grid_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer/GridContainer
-@onready var info_panel_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/InfoPanelContainer
+@onready var info_panel_container = $MarginContainer/HBoxContainer/LeftPanel/InfoPanelContainer
 @onready var right_vbox = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer
 @onready var card_type_count = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardTypeCount
 @onready var card_count_label = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardCountLabel
@@ -43,6 +43,9 @@ func _ready():
 		buttons[7].pressed.connect(_on_filter_pressed.bind("item"))     # ItemButton
 		buttons[8].pressed.connect(_on_filter_pressed.bind("spell"))    # SpellButton
 	
+	# InfoPanelContainerのマウスフィルターを設定
+	info_panel_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 	# 右側ボタン接続
 	save_button.pressed.connect(_on_save_pressed)
 	rename_button.pressed.connect(_on_rename_pressed)
@@ -68,63 +71,66 @@ func load_deck():
 	update_card_count()
 
 func create_card_dialog():
-	card_dialog = Popup.new()
-	card_dialog.size = Vector2(1183, 500)
-	
-	# シンプルなVBox
+	card_dialog = VBoxContainer.new()
+	card_dialog.name = "CardDialog"
+	card_dialog.add_theme_constant_override("separation", 10)
+	card_dialog.visible = false
+
+	# 背景パネル
+	var bg = PanelContainer.new()
+	var bg_style = StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.15, 0.15, 0.2, 0.95)
+	bg_style.set_corner_radius_all(8)
+	bg.add_theme_stylebox_override("panel", bg_style)
+
 	var vbox = VBoxContainer.new()
-	vbox.name = "DialogVBox"
-	vbox.position = Vector2(30, 30)
-	vbox.size = Vector2(1123, 440)
-	vbox.add_theme_constant_override("separation", 30)
-	card_dialog.add_child(vbox)
-	
+	vbox.add_theme_constant_override("separation", 10)
+	bg.add_child(vbox)
+
 	# 所持枚数/デッキ内枚数ラベル
 	var info_label = Label.new()
 	info_label.name = "InfoLabel"
-	info_label.add_theme_font_size_override("font_size", 70)
+	info_label.add_theme_font_size_override("font_size", 30)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(info_label)
-	
+
 	# 枚数選択ボタン（横並び）
 	var hbox = HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 30)
-	
+	hbox.add_theme_constant_override("separation", 15)
+
 	count_buttons.clear()
 	for i in range(5):
 		var btn = Button.new()
 		btn.text = str(i) + "枚"
-		btn.custom_minimum_size = Vector2(180, 100)
+		btn.custom_minimum_size = Vector2(80, 70)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", 50)
+		btn.add_theme_font_size_override("font_size", 22)
 		btn.pressed.connect(_on_count_selected.bind(i))
 		hbox.add_child(btn)
 		count_buttons.append(btn)
-	
+
 	vbox.add_child(hbox)
-	
+
 	# スペーサー
 	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(0, 20)
-	vbox.add_child(spacer)
-	
+	spacer.custom_minimum_size = Vector2(0, 10)
 	# 閉じるボタン
 	var close_btn = Button.new()
 	close_btn.text = "閉じる"
-	close_btn.custom_minimum_size = Vector2(375, 125)
-	close_btn.add_theme_font_size_override("font_size", 55)
+	close_btn.custom_minimum_size = Vector2(160, 70)
+	close_btn.add_theme_font_size_override("font_size", 22)
 	close_btn.pressed.connect(_on_dialog_closed)
 	vbox.add_child(close_btn)
-	
-	# ダイアログが非表示になったときの処理
-	card_dialog.popup_hide.connect(_on_dialog_closed)
-	
-	add_child(card_dialog)
+
+	card_dialog.add_child(bg)
+
+	# InfoPanelContainer内に配置（Popup不使用でスクロールをブロックしない）
+	info_panel_container.add_child(card_dialog)
 
 ## ダイアログが閉じられたとき（インフォパネルも閉じる）
 func _on_dialog_closed():
-	card_dialog.hide()
+	card_dialog.visible = false
 	_close_info_panel()
 
 ## インフォパネルを閉じる
@@ -198,7 +204,7 @@ func create_card_button(card_data: Dictionary):
 	
 	# ボタン
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(420, 700)
+	button.custom_minimum_size = Vector2(263, 420)
 	button.set_meta("card_id", card_data.id)
 	
 	# テキスト表示
@@ -223,8 +229,8 @@ func create_card_button(card_data: Dictionary):
 		var hp = card_data.get("hp", 0)
 		button.text += "\nAP:%d / HP:%d" % [ap, hp]
 	
-	button.add_theme_font_size_override("font_size", 32)
-	
+	button.add_theme_font_size_override("font_size", 24)
+
 	# レアリティで背景色
 	match rarity:
 		"R":
@@ -266,7 +272,7 @@ func _show_info_in_right_panel(card: Dictionary, card_type: String):
 	if current_info_panel and is_instance_valid(current_info_panel):
 		current_info_panel.queue_free()
 		current_info_panel = null
-	
+
 	# タイプに応じたパネルをインスタンス化
 	match card_type:
 		"creature":
@@ -275,20 +281,25 @@ func _show_info_in_right_panel(card: Dictionary, card_type: String):
 			current_info_panel = ItemInfoPanelScene.instantiate()
 		"spell":
 			current_info_panel = SpellInfoPanelScene.instantiate()
-	
+
 	if not current_info_panel:
 		return
-	
+
 	# InfoPanelContainerに追加
 	info_panel_container.add_child(current_info_panel)
-	
-	# アンカーをリセット（左上基準に）
+
+	# マウスイベントを透過させてスクロールを妨げない
+	_set_mouse_filter_ignore(current_info_panel)
+
+	# アンカーをリセットし、サイズをコンテナに制限
 	current_info_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	current_info_panel.anchor_left = 0
 	current_info_panel.anchor_top = 0
 	current_info_panel.anchor_right = 0
 	current_info_panel.anchor_bottom = 0
-	
+	current_info_panel.size = info_panel_container.size
+	current_info_panel.clip_contents = true
+
 	# データを読み込む
 	match card_type:
 		"creature":
@@ -297,46 +308,44 @@ func _show_info_in_right_panel(card: Dictionary, card_type: String):
 			current_info_panel.show_item_info(card)
 		"spell":
 			current_info_panel.show_spell_info(card)
-	
+
 	await get_tree().process_frame
-	
-	# await中にパネルが解放された場合のガード
-	if not current_info_panel or not is_instance_valid(current_info_panel):
+
+	if not info_panel_container or not is_instance_valid(info_panel_container):
 		return
-	
-	# スケール調整
-	var scale_factor = 0.95
-	current_info_panel.scale = Vector2(scale_factor, scale_factor)
-	
-	# 位置を調整
+
+	# データ読み込み後に再度マウスフィルター設定（動的追加ノード対応）
+	_set_mouse_filter_ignore(current_info_panel)
+
+	# コンテナ基準で配置
 	current_info_panel.position = Vector2(0, 0)
-	
-	# 中のMainContainerの位置を調整
+	current_info_panel.scale = Vector2(1.0, 1.0)
 	var main_container = current_info_panel.get_node_or_null("MainContainer")
 	if main_container:
-		main_container.position.x -= 265
-		main_container.position.y -= 210
+		main_container.position = Vector2(-80, -90)
 
 ## 枚数選択ダイアログを表示
 func _show_count_dialog():
 	var owned = CpuDeckData.MAX_COPIES_PER_CARD
 	var in_deck = current_deck.get(selected_card_id, 0)
-	
+
 	# 情報ラベルを更新
-	var info_label = card_dialog.get_node_or_null("DialogVBox/InfoLabel")
+	var info_label = card_dialog.find_child("InfoLabel", true, false)
 	if info_label:
 		info_label.text = "使用可: %d枚 / デッキ内: %d枚" % [owned, in_deck]
-	
+
 	# ボタンの有効/無効を設定（全て有効）
 	for i in range(count_buttons.size()):
 		count_buttons[i].disabled = false
 		count_buttons[i].modulate = Color(1, 1, 1)
-	
-	# インフォパネルの下に配置
-	await get_tree().process_frame
-	var info_rect = info_panel_container.get_global_rect()
-	card_dialog.position = Vector2(info_rect.position.x, info_rect.end.y + 10)
-	card_dialog.popup()
+
+	# インフォパネルの下に配置（コンテナ下部）
+	var container_h = info_panel_container.size.y
+	card_dialog.position = Vector2(0, container_h - card_dialog.size.y - 10)
+	card_dialog.size.x = info_panel_container.size.x
+	card_dialog.visible = true
+	# 最前面に表示
+	info_panel_container.move_child(card_dialog, -1)
 
 func _on_count_selected(count: int):
 	# デッキに設定
@@ -353,7 +362,7 @@ func _on_count_selected(count: int):
 	else:
 		update_single_card_button(selected_card_id)
 	
-	card_dialog.hide()
+	card_dialog.visible = false
 
 func update_single_card_button(card_id: int):
 	var card = CardLoader.get_card_by_id(card_id)
@@ -498,3 +507,10 @@ func _on_reset_confirmed():
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/CpuDeckSelect.tscn")
+
+## マウスフィルターを再帰的にIGNOREに設定
+func _set_mouse_filter_ignore(node: Control):
+	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		if child is Control:
+			_set_mouse_filter_ignore(child)

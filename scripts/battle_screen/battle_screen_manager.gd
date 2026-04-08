@@ -46,6 +46,9 @@ func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_da
 	# トランジション（フェードアウト）
 	await _transition_layer.fade_out(true)
 
+	# モバイル: バトル中は裏の3Dシーンを非表示にしてGPU負荷を削減
+	_set_3d_scene_visible(false)
+
 	# Object Pool からバトル画面を取得
 	_battle_screen = _battle_screen_pool.get_instance()
 	if not _battle_screen:
@@ -174,7 +177,10 @@ func close_battle_screen():
 		_is_battle_active = false
 		battle_screen_closed.emit()
 		return
-	
+
+	# 3Dシーンを復元（フェードアウト前に戻す）
+	_set_3d_scene_visible(true)
+
 	# トランジション（フェードアウト）
 	await _transition_layer.quick_fade_out()
 
@@ -205,9 +211,23 @@ func force_close() -> void:
 			_battle_screen_pool.return_instance(_battle_screen)
 		_battle_screen = null
 
-	_transition_layer.quick_fade_in()
+	_set_3d_scene_visible(true)
+	await _transition_layer.quick_fade_in()
 	_is_battle_active = false
 	battle_screen_closed.emit()
+
+
+## バトル中は裏の3Dシーンを非表示にしてGPU負荷を削減
+func _set_3d_scene_visible(visible_flag: bool) -> void:
+	var root := get_tree().current_scene
+	if not root:
+		return
+	var count := 0
+	for child in root.get_children():
+		if child is Node3D:
+			child.visible = visible_flag
+			count += 1
+	print("[BattleScreenManager] 3D visible=%s: %d nodes" % [visible_flag, count])
 
 
 ## BattleParticipantからHP表示用データを作成

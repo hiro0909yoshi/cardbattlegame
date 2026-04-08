@@ -79,23 +79,25 @@ static func apply(participant: BattleParticipant, context: Dictionary, silent: b
 		for key in power_strike_config:
 			scroll_config[key] = power_strike_config[key]
 	
-	# scroll_typeに基づいてAPを設定
+	# アイテム巻物の場合はアイテムの攻撃力のみ（base_up_ap反映しない）
+	# クリーチャー術攻撃の場合はbase_up_ap（刻印等）を反映する
 	var scroll_type = scroll_config.get("scroll_type", "base_ap")
-	var calculated_ap = base_ap  # デフォルトは基本AP
-	
+	var up_ap = 0 if participant.is_item_scroll else participant.base_up_ap
+	var calculated_ap = base_ap + up_ap  # デフォルトは基本AP + 刻印補正
+
 	match scroll_type:
 		"fixed_ap":
-			# 固定値
-			calculated_ap = scroll_config.get("value", base_ap)
+			# 固定値 + 刻印補正
+			calculated_ap = scroll_config.get("value", base_ap) + up_ap
 			if not silent:
 				print("【術攻撃】", participant.creature_data.get("name", "?"), " AP固定:", calculated_ap)
 		"base_ap":
-			# 基本APのまま
-			calculated_ap = base_ap
+			# 基本AP + 刻印補正
+			calculated_ap = base_ap + up_ap
 			if not silent:
 				print("【術攻撃】", participant.creature_data.get("name", "?"), " AP=基本AP:", calculated_ap)
 		"land_count":
-			# 土地数比例
+			# 土地数比例 + 刻印補正
 			var elements = scroll_config.get("elements", [])
 			var multiplier = scroll_config.get("multiplier", 1)
 			var player_lands = context.get("player_lands", {})
@@ -104,15 +106,18 @@ static func apply(participant: BattleParticipant, context: Dictionary, silent: b
 			for element in elements:
 				total_count += player_lands.get(element, 0)
 
-			calculated_ap = total_count * multiplier
+			calculated_ap = total_count * multiplier + up_ap
 			if not silent:
 				print("【術攻撃】", participant.creature_data.get("name", "?"),
 					  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
 		_:
-			# デフォルトは基本ST
-			calculated_ap = base_ap
+			# デフォルトは基本AP + 刻印補正
+			calculated_ap = base_ap + up_ap
 			if not silent:
 				print("【術攻撃】", participant.creature_data.get("name", "?"), " AP=基本AP:", calculated_ap)
+
+	# APが0未満にならないようにクランプ
+	calculated_ap = max(0, calculated_ap)
 	
 	# 強化術の場合、APを1.5倍にする
 	if is_power_strike:

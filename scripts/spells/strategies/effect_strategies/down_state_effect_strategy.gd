@@ -1,5 +1,5 @@
 ## DownStateEffectStrategy - ダウン状態操作効果の戦略実装
-## down_clear, set_down (2個)
+## clear_down, set_down (2個)
 class_name DownStateEffectStrategy
 extends SpellStrategy
 
@@ -35,8 +35,8 @@ func validate(context: Dictionary) -> bool:
 		return false
 
 	# effect_type の有効性確認（2個）
-	if effect_type not in ["down_clear", "set_down"]:
-		_log_error("無効な effect_type: %s（down_clear/set_down のみ対応）" % effect_type)
+	if effect_type not in ["clear_down", "set_down"]:
+		_log_error("無効な effect_type: %s（clear_down/set_down のみ対応）" % effect_type)
 		return false
 
 	_log("バリデーション成功 (effect_type: %s)" % effect_type)
@@ -61,7 +61,7 @@ func execute(context: Dictionary) -> Dictionary:
 
 	# effect_type に応じて処理を分岐（元のロジックを再現）
 	match effect_type:
-		"down_clear":
+		"clear_down":
 			board_system.clear_down_state_for_player(current_player_id)
 			effect_message = "ダウン状態をクリア"
 

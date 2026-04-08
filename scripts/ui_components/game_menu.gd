@@ -17,8 +17,8 @@ var panel: Panel
 var button_container: VBoxContainer
 var is_open: bool = false
 
-const PANEL_WIDTH = 1200
-const PANEL_HEIGHT = 1100
+const PANEL_WIDTH = 620
+const PANEL_HEIGHT = 694
 
 
 func _ready():
@@ -52,8 +52,8 @@ func _build_ui():
 	
 	# ボタンコンテナ
 	button_container = VBoxContainer.new()
-	button_container.add_theme_constant_override("separation", 60)
-	button_container.position = Vector2(80, 80)
+	button_container.add_theme_constant_override("separation", 31)
+	button_container.position = Vector2(41, 50)
 	panel.add_child(button_container)
 	
 	# メニュー項目
@@ -68,7 +68,7 @@ func _build_ui():
 func _add_menu_button(text: String, callback: Callable, color: Color = Color.WHITE):
 	var button = Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(1040, 240)
+	button.custom_minimum_size = Vector2(538, 151)
 	button.add_theme_font_size_override("font_size", GC.FONT_SIZE_MENU_BUTTON)
 	button.add_theme_color_override("font_color", color)
 	button.pressed.connect(callback)
@@ -77,7 +77,7 @@ func _add_menu_button(text: String, callback: Callable, color: Color = Color.WHI
 
 func _add_separator():
 	var sep = HSeparator.new()
-	sep.custom_minimum_size = Vector2(1040, 40)
+	sep.custom_minimum_size = Vector2(538, 25)
 	button_container.add_child(sep)
 
 
@@ -94,7 +94,7 @@ func _update_position():
 	# パネルを画面中央より少し上に
 	panel.position = Vector2(
 		(viewport_size.x - PANEL_WIDTH) / 2,
-		(viewport_size.y - PANEL_HEIGHT) / 2 - 200
+		(viewport_size.y - PANEL_HEIGHT) / 2 - 100
 	)
 
 

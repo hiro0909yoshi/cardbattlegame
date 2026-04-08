@@ -26,12 +26,12 @@ var world_curse_label: RichTextLabel = null
 var panel_count = 2       # 表示するパネル数
 var current_turn_player = -1  # 現在のターンプレイヤー
 
-# パネルサイズ（固定値）※1.4倍
-var panel_width = 260
-var panel_height = 190
-var panel_spacing = 14
-var start_x = 28
-var start_y = 28
+# パネルサイズ（固定値）※viewport migration 75%
+var panel_width = 250
+var panel_height = 145
+var panel_spacing = 11
+var start_x = 21
+var start_y = 21
 
 func _ready():
 	pass
@@ -77,11 +77,11 @@ func create_world_curse_label():
 	# プレイヤーパネルの下に配置
 	var label_y = start_y + (panel_height + panel_spacing) * panel_count
 	world_curse_label.position = Vector2(start_x, label_y)
-	world_curse_label.size = Vector2(panel_width, 42)
+	world_curse_label.size = Vector2(panel_width, 32)
 	world_curse_label.bbcode_enabled = true
 	world_curse_label.scroll_active = false
 	world_curse_label.fit_content = false
-	world_curse_label.add_theme_font_size_override("normal_font_size", 22)
+	world_curse_label.add_theme_font_size_override("normal_font_size", 17)
 	world_curse_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	world_curse_label.visible = false  # 初期は非表示
 	
@@ -121,8 +121,8 @@ func create_single_panel(player_id: int) -> Panel:
 	
 	# 情報ラベル作成
 	var info_label = RichTextLabel.new()
-	info_label.position = Vector2(11, 11)
-	info_label.size = Vector2(panel_width - 22, panel_height - 22)
+	info_label.position = Vector2(8, 2)
+	info_label.size = Vector2(panel_width - 16, panel_height - 16)
 	info_label.bbcode_enabled = true
 	
 	# マウスイベントを親に渡す（パネルクリックを優先）
@@ -133,8 +133,8 @@ func create_single_panel(player_id: int) -> Panel:
 	info_label.fit_content = false
 	info_label.clip_contents = true
 	
-	# フォントサイズを固定値に（EP・TEP表示用に大きめに）※1.4倍
-	info_label.add_theme_font_size_override("normal_font_size", 28)
+	# フォントサイズ: EP/TEP用に24px基準、名前はBBCodeで個別指定
+	info_label.add_theme_font_size_override("normal_font_size", 24)
 	info_label.visible = true
 	info_panel.add_child(info_label)
 	info_labels.append(info_label)
@@ -191,20 +191,19 @@ func update_single_panel(player_id: int):
 func build_player_info_text(player, player_id: int) -> String:
 	var text = ""
 	
-	# 順位を取得して表示
+	# 順位 + EP/TEP
 	var ranking = get_player_ranking(player_id)
 	text += "[b]" + str(ranking) + "[/b] "
-	
-	# 現在のターンならハイライト
 	if player_id == current_turn_player:
 		text += "[color=yellow]● [/color]"
-	
-	text += "[b]" + player.name + "[/b]\n"
 	text += "EP: " + str(player.magic_power) + "EP\n"
 	text += "TEP: " + str(calculate_total_assets(player_id)) + "EP\n"
+
+	# 名前
+	text += "[font_size=20][b]" + player.name + "[/b][/font_size]\n"
 	
 	# 取得済みシグナル表示
-	text += _build_signal_text(player_id)
+	text += "[font_size=20]" + _build_signal_text(player_id) + "[/font_size]"
 	
 	# プレイヤー刻印があれば別行で表示
 	if player.curse and not player.curse.is_empty():

@@ -197,8 +197,9 @@ func use_spell(spell_card: Dictionary):
 	if _spell_synthesis and _spell_synthesis.requires_sacrifice(spell_card) and not disable_sacrifice:
 		# 手札選択UIを表示
 		if _card_sacrifice_helper:
+			var spell_id = str(spell_card.get("id", ""))
 			var sacrifice_card = await _card_sacrifice_helper.show_hand_selection(
-				_spell_state.current_player_id, "", "犠牲にするカードを選択"
+				_spell_state.current_player_id, "", "犠牲にするカードを選択", spell_id
 			)
 
 			if sacrifice_card.is_empty():

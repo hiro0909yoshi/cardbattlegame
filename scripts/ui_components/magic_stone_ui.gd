@@ -29,12 +29,7 @@ const ELEMENT_NAMES = {
 	"earth": "土の石",
 	"wind": "風の石"
 }
-const ELEMENT_COLORS = {
-	"fire": Color(0.9, 0.3, 0.2),
-	"water": Color(0.2, 0.5, 0.9),
-	"earth": Color(0.7, 0.5, 0.2),
-	"wind": Color(0.3, 0.8, 0.4)
-}
+const GC = preload("res://scripts/game_constants.gd")
 
 func _ready():
 	setup_ui()
@@ -132,7 +127,7 @@ func _create_stone_panel(element: String) -> Panel:
 	stone_panel.custom_minimum_size = Vector2(480, 850)
 	stone_panel.name = element + "_panel"
 	
-	var color = ELEMENT_COLORS[element]
+	var color = GC.ELEMENT_COLORS[element]
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(color.r * 0.2, color.g * 0.2, color.b * 0.2, 0.9)
 	panel_style.border_color = color

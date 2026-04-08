@@ -147,8 +147,7 @@ const SPELL_EFFECT_BONUS = {
 	"stat_boost": 40,                    # バイタリティ
 	"stat_reduce": 40,                   # ディジーズ
 	"purify_all": 40,                    # ピュアリファイ
-	"clear_down": 50,                    # リストア
-	"down_clear": 60,                    # アラーム
+	"clear_down": 50,                    # リストア/アラーム
 	"indomitable": 40,                   # ライズアップ
 	"metal_form": 40,                    # メタルフォーム
 	"magic_barrier": 60,                 # エナジーフィールド

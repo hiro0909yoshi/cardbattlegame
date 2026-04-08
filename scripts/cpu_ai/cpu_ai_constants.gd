@@ -60,6 +60,10 @@ const SCORE_CHECKPOINT_DIRECTION_BONUS = 700
 ## 足止めペナルティ基礎値
 const SCORE_FORCED_STOP_PENALTY = -200
 
+## 高額通行料ペナルティ（通行料1000以上の敵領地）
+const SCORE_HIGH_TOLL_PENALTY = -900
+const HIGH_TOLL_THRESHOLD = 1000
+
 ## 経路評価の最大距離
 const PATH_EVALUATION_DISTANCE = 10
 

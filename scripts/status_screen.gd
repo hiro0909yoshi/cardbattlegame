@@ -124,11 +124,11 @@ func _on_title_change_pressed():
 	dialog.ok_button_text = "閉じる"
 
 	var ok_btn = dialog.get_ok_button()
-	ok_btn.custom_minimum_size = Vector2(400, 80)
-	ok_btn.add_theme_font_size_override("font_size", 36)
+	ok_btn.custom_minimum_size = Vector2(207, 42)
+	ok_btn.add_theme_font_size_override("font_size", 19)
 
 	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(600, 400)
+	scroll.custom_minimum_size = Vector2(310, 207)
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 12)
@@ -139,8 +139,8 @@ func _on_title_change_pressed():
 	for title_data in available_titles:
 		var is_equipped = title_data.name == current_title
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(0, 80)
-		btn.add_theme_font_size_override("font_size", 28)
+		btn.custom_minimum_size = Vector2(0, 42)
+		btn.add_theme_font_size_override("font_size", 15)
 
 		if is_equipped:
 			btn.text = "%s\n[装備中]" % title_data.name
@@ -183,11 +183,11 @@ func _on_character_change_pressed():
 	dialog.exclusive = true
 
 	var ok_btn = dialog.get_ok_button()
-	ok_btn.custom_minimum_size = Vector2(400, 100)
-	ok_btn.add_theme_font_size_override("font_size", 48)
+	ok_btn.custom_minimum_size = Vector2(207, 52)
+	ok_btn.add_theme_font_size_override("font_size", 25)
 
 	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(800, 500)
+	scroll.custom_minimum_size = Vector2(414, 260)
 
 	var grid = GridContainer.new()
 	grid.columns = 3
@@ -202,8 +202,8 @@ func _on_character_change_pressed():
 		var is_selected = char_id == current_id
 
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(240, 100)
-		btn.add_theme_font_size_override("font_size", 32)
+		btn.custom_minimum_size = Vector2(124, 52)
+		btn.add_theme_font_size_override("font_size", 17)
 
 		if is_selected:
 			btn.text = "%s\n[装備中]" % char_data.name
@@ -258,8 +258,8 @@ func _on_name_change_pressed():
 	dialog.ok_button_text = "変更する"
 
 	var ok_btn = dialog.get_ok_button()
-	ok_btn.custom_minimum_size = Vector2(300, 80)
-	ok_btn.add_theme_font_size_override("font_size", 36)
+	ok_btn.custom_minimum_size = Vector2(155, 42)
+	ok_btn.add_theme_font_size_override("font_size", 19)
 	ok_btn.disabled = true
 
 	var vbox = VBoxContainer.new()
@@ -267,13 +267,13 @@ func _on_name_change_pressed():
 
 	var info_label = Label.new()
 	info_label.text = "新しいプレイヤー名を入力してください\n（名前変更チケットを1枚消費します）"
-	info_label.add_theme_font_size_override("font_size", 24)
+	info_label.add_theme_font_size_override("font_size", 13)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(info_label)
 
 	var line_edit = LineEdit.new()
-	line_edit.custom_minimum_size = Vector2(500, 60)
-	line_edit.add_theme_font_size_override("font_size", 36)
+	line_edit.custom_minimum_size = Vector2(260, 31)
+	line_edit.add_theme_font_size_override("font_size", 19)
 	line_edit.placeholder_text = GameData.player_data.profile.name
 	line_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	line_edit.max_length = 20
@@ -297,7 +297,7 @@ func _on_name_change_pressed():
 	)
 
 	add_child(dialog)
-	dialog.popup_centered(Vector2i(600, 300))
+	dialog.popup_centered(Vector2i(310, 155))
 
 
 func _on_account_pressed():

@@ -201,13 +201,11 @@ func _setup_3d_scene_before_init():
 		add_child(world_env)
 
 	# 城壁・地面を作成（タイル範囲から動的にサイズ決定、45度回転）
-	# TODO: パフォーマンステスト後に復元
-	if not OS.has_feature("mobile"):
-		var castle_env = CastleEnvironment.new()
-		castle_env.name = "CastleEnvironment"
-		castle_env.rotation.y = deg_to_rad(45)
-		add_child(castle_env)
-		castle_env.setup_from_tiles(tiles_container)
+	var castle_env = CastleEnvironment.new()
+	castle_env.name = "CastleEnvironment"
+	castle_env.rotation.y = deg_to_rad(45)
+	add_child(castle_env)
+	castle_env.setup_from_tiles(tiles_container)
 
 	# プレイヤーコンテナを確認・作成
 	var players_container = get_node_or_null("Players")
@@ -553,8 +551,8 @@ func _setup_fps_counter() -> void:
 	add_child(canvas)
 	_fps_label = Label.new()
 	_fps_label.text = "FPS: --"
-	_fps_label.position = Vector2(20, 20)
-	_fps_label.add_theme_font_size_override("font_size", 48)
+	_fps_label.position = Vector2(10, 10)
+	_fps_label.add_theme_font_size_override("font_size", 25)
 	_fps_label.add_theme_color_override("font_color", Color.YELLOW)
 	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(_fps_label)

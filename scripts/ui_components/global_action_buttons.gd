@@ -35,11 +35,11 @@ var game_flow_manager_ref = null
 var explanation_mode_active: bool = false
 
 # 定数
-const BUTTON_SIZE = 280
-const BUTTON_SPACING = 42
-const MARGIN_RIGHT = 70
-const MARGIN_BOTTOM = 70
-const MARGIN_LEFT = 70
+const BUTTON_SIZE = 175
+const BUTTON_SPACING = 27
+const MARGIN_RIGHT = 44
+const MARGIN_BOTTOM = 44
+const MARGIN_LEFT = 44
 
 
 func _ready():
@@ -52,22 +52,22 @@ func _setup_ui():
 	z_index = 1000
 
 	# 上ボタン（▲）
-	up_button = _create_button("▲", Color(0.3, 0.4, 0.6), 100)
+	up_button = _create_button("▲", Color(0.3, 0.4, 0.6), 63)
 	up_button.pressed.connect(_on_up_pressed)
 	add_child(up_button)
 
 	# 下ボタン（▼）
-	down_button = _create_button("▼", Color(0.3, 0.4, 0.6), 100)
+	down_button = _create_button("▼", Color(0.3, 0.4, 0.6), 63)
 	down_button.pressed.connect(_on_down_pressed)
 	add_child(down_button)
 
 	# 決定ボタン（✓）
-	confirm_button = _create_button("✓", Color(0.2, 0.6, 0.3), 120)
+	confirm_button = _create_button("✓", Color(0.2, 0.6, 0.3), 76)
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	add_child(confirm_button)
 
 	# 戻るボタン（×）
-	back_button = _create_button("×", Color(0.6, 0.3, 0.3), 100)
+	back_button = _create_button("×", Color(0.6, 0.3, 0.3), 63)
 	back_button.pressed.connect(_on_back_pressed)
 	add_child(back_button)
 
@@ -143,14 +143,14 @@ func _create_special_button(text: String, _color: Color) -> Button:
 	style.corner_radius_top_right = corner_radius
 	style.corner_radius_bottom_left = corner_radius
 	style.corner_radius_bottom_right = corner_radius
-	style.border_width_top = 5
-	style.border_width_bottom = 5
-	style.border_width_left = 5
-	style.border_width_right = 5
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_width_left = 3
+	style.border_width_right = 3
 	style.border_color = Color(1, 0.85, 0.4, 0.9)  # ゴールドの縁取り
 	style.shadow_color = Color(0.2, 0.0, 0.3, 0.6)
-	style.shadow_size = 8
-	style.shadow_offset = Vector2(4, 4)
+	style.shadow_size = 5
+	style.shadow_offset = Vector2(3, 3)
 	button.add_theme_stylebox_override("normal", style)
 
 	var hover_style = style.duplicate()
@@ -175,7 +175,7 @@ func _create_special_button(text: String, _color: Color) -> Button:
 	button.add_theme_color_override("font_color", Color(1, 0.95, 0.7))  # クリーム色
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
 	button.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
-	button.add_theme_constant_override("outline_size", 4)  # 文字のアウトライン
+	button.add_theme_constant_override("outline_size", 3)  # 文字のアウトライン
 
 	return button
 

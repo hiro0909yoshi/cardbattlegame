@@ -330,6 +330,7 @@ func _stop_frame_blink():
 
 # 点滅処理（_processで実行、3フレームに1回更新でモバイル負荷軽減）
 func _process(delta):
+	if DebugSettings.disable_all_process: return
 	_blink_frame_counter += 1
 
 	# 到着予測ハイライト処理（優先）

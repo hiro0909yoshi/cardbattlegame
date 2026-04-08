@@ -43,8 +43,8 @@ var _cached_card_texture: ImageTexture = null  # 表面テクスチャ保持（�
 # CardFrame.tscnのサイズ定義
 const CARDFRAME_WIDTH = 220.0   # CardFrame.tscnの設計サイズ
 const CARDFRAME_HEIGHT = 293.0
-const GAME_CARD_WIDTH = 290.0   # ゲーム内表示サイズ
-const GAME_CARD_HEIGHT = 390.0
+const GAME_CARD_WIDTH = 150.0   # ゲーム内表示サイズ（viewport migration 0.518）
+const GAME_CARD_HEIGHT = 202.0
 
 ## 参照を設定（hand_display から呼ばれる）
 func set_references(css, csui, gfm) -> void:
@@ -379,27 +379,25 @@ func set_element_color():
 	var element = card_data.get("element", "")
 	var card_type = card_data.get("type", "")
 	
-	# アイテム、スペル、無属性クリーチャーは全てグレー
-	var is_gray = (card_type == "item" or card_type == "spell" or element == "neutral" or element == "")
-	
+	# カードタイプ・属性に応じた色を ELEMENT_CARD_COLORS から取得
+	var color_key: String
+	if card_type in ["item", "spell"]:
+		color_key = card_type
+	elif element in GC.ELEMENT_CARD_COLORS:
+		color_key = element
+	else:
+		color_key = "neutral"
+	var colors: Dictionary = GC.ELEMENT_CARD_COLORS[color_key]
+	var bg_color: Color = colors["bg"]
+	var shader_dark: Color = colors["dark"]
+	var shader_mid: Color = colors["mid"]
+	var shader_light: Color = colors["light"]
+
 	# StyleBoxFlatの背景色を変更
 	var style = outer_frame.get_theme_stylebox("panel")
 	if style and style is StyleBoxFlat:
-		if is_gray:
-			style.bg_color = Color(0.4, 0.4, 0.4)  # グレー
-		else:
-			match element:
-				"fire":
-					style.bg_color = Color(0.8, 0.1, 0.1)  # 赤
-				"water":
-					style.bg_color = Color(0.1, 0.3, 0.8)  # 青
-				"wind":
-					style.bg_color = Color(0.1, 0.7, 0.3)  # 緑
-				"earth":
-					style.bg_color = Color(0.6, 0.4, 0.1)  # 茶色
-				_:
-					style.bg_color = Color(0.4, 0.4, 0.4)  # グレー（フォールバック）
-	
+		style.bg_color = bg_color
+
 	# シェーダーマテリアルの色を変更
 	# 重要：マテリアルを複製して個別に設定（共有を避ける）
 	var shader_mat = outer_frame.material as ShaderMaterial
@@ -408,38 +406,9 @@ func set_element_color():
 		if not outer_frame.material.resource_local_to_scene:
 			shader_mat = shader_mat.duplicate()
 			outer_frame.material = shader_mat
-		if is_gray:
-			# グレー系の迷彩パターン（アイテム・スペル・無属性）
-			shader_mat.set_shader_parameter("color_dark", Color(0.3, 0.3, 0.3, 1))
-			shader_mat.set_shader_parameter("color_mid", Color(0.5, 0.5, 0.5, 1))
-			shader_mat.set_shader_parameter("color_light", Color(0.7, 0.7, 0.7, 1))
-		else:
-			match element:
-				"fire":
-					# 赤系の迷彩パターン
-					shader_mat.set_shader_parameter("color_dark", Color(0.6, 0.05, 0.05, 1))
-					shader_mat.set_shader_parameter("color_mid", Color(0.8, 0.1, 0.1, 1))
-					shader_mat.set_shader_parameter("color_light", Color(0.95, 0.2, 0.2, 1))
-				"water":
-					# 青系の迷彩パターン
-					shader_mat.set_shader_parameter("color_dark", Color(0.05, 0.2, 0.6, 1))
-					shader_mat.set_shader_parameter("color_mid", Color(0.1, 0.4, 0.8, 1))
-					shader_mat.set_shader_parameter("color_light", Color(0.2, 0.6, 0.95, 1))
-				"wind":
-					# 緑系の迷彩パターン
-					shader_mat.set_shader_parameter("color_dark", Color(0.05, 0.5, 0.1, 1))
-					shader_mat.set_shader_parameter("color_mid", Color(0.1, 0.7, 0.2, 1))
-					shader_mat.set_shader_parameter("color_light", Color(0.2, 0.9, 0.3, 1))
-				"earth":
-					# 茶色系の迷彩パターン
-					shader_mat.set_shader_parameter("color_dark", Color(0.5, 0.3, 0.05, 1))
-					shader_mat.set_shader_parameter("color_mid", Color(0.7, 0.45, 0.1, 1))
-					shader_mat.set_shader_parameter("color_light", Color(0.9, 0.6, 0.2, 1))
-				_:
-					# フォールバック：グレー
-					shader_mat.set_shader_parameter("color_dark", Color(0.3, 0.3, 0.3, 1))
-					shader_mat.set_shader_parameter("color_mid", Color(0.5, 0.5, 0.5, 1))
-					shader_mat.set_shader_parameter("color_light", Color(0.7, 0.7, 0.7, 1))
+		shader_mat.set_shader_parameter("color_dark", shader_dark)
+		shader_mat.set_shader_parameter("color_mid", shader_mid)
+		shader_mat.set_shader_parameter("color_light", shader_light)
 
 # クリーチャー画像を読み込む
 func load_creature_image(card_id: int):
@@ -461,17 +430,7 @@ func load_creature_image(card_id: int):
 
 		# 属性に応じた色で塗りつぶし
 		var element = card_data.get("element", "")
-		var fill_color = Color(0.5, 0.5, 0.5)  # デフォルトはグレー
-
-		match element:
-			"fire":
-				fill_color = Color(0.9, 0.4, 0.3)
-			"water":
-				fill_color = Color(0.4, 0.6, 0.9)
-			"wind":
-				fill_color = Color(0.4, 0.8, 0.5)
-			"earth":
-				fill_color = Color(0.8, 0.6, 0.4)
+		var fill_color: Color = GC.ELEMENT_COLORS.get(element, Color(0.5, 0.5, 0.5))
 
 		placeholder.fill(fill_color)
 		card_art.texture = ImageTexture.create_from_image(placeholder)
@@ -877,19 +836,7 @@ func _get_card_type_symbol_info() -> Dictionary:
 
 # 属性の色を取得
 func _get_element_color(element: String) -> Color:
-	match element:
-		"fire":
-			return Color(1.0, 0.27, 0.27)  # 赤
-		"water":
-			return Color(0.27, 0.53, 1.0)  # 青
-		"earth":
-			return Color(0.53, 0.8, 0.27)  # 緑
-		"wind":
-			return Color(1.0, 0.8, 0.27)  # 黄
-		"neutral":
-			return Color(0.67, 0.67, 0.67)  # グレー
-		_:
-			return Color.WHITE
+	return GC.ELEMENT_COLORS.get(element, Color.WHITE)
 
 # アイテム種類の色を取得
 func _get_item_type_color(item_type: String) -> Color:

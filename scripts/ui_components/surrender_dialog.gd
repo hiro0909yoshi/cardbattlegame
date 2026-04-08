@@ -10,8 +10,8 @@ var bg: ColorRect
 var panel: Panel
 var is_open: bool = false
 
-const PANEL_WIDTH = 900
-const PANEL_HEIGHT = 500
+const PANEL_WIDTH = 466
+const PANEL_HEIGHT = 315
 
 
 func _ready():
@@ -45,47 +45,47 @@ func _build_ui():
 	
 	# 内部コンテナ
 	var inner_vbox = VBoxContainer.new()
-	inner_vbox.add_theme_constant_override("separation", 50)
+	inner_vbox.add_theme_constant_override("separation", 26)
 	inner_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	inner_vbox.position = Vector2(60, 60)
+	inner_vbox.position = Vector2(31, 38)
 	panel.add_child(inner_vbox)
 	
 	# タイトル
 	var title = Label.new()
 	title.text = "本当に降参しますか？"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 72)
-	title.custom_minimum_size = Vector2(780, 0)
+	title.add_theme_font_size_override("font_size", 37)
+	title.custom_minimum_size = Vector2(404, 0)
 	inner_vbox.add_child(title)
 	
 	# 説明
 	var desc = Label.new()
 	desc.text = "報酬は獲得できません。"
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc.add_theme_font_size_override("font_size", 48)
+	desc.add_theme_font_size_override("font_size", 25)
 	desc.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	desc.custom_minimum_size = Vector2(780, 0)
+	desc.custom_minimum_size = Vector2(404, 0)
 	inner_vbox.add_child(desc)
 	
 	# ボタンコンテナ
 	var button_container = HBoxContainer.new()
 	button_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	button_container.add_theme_constant_override("separation", 80)
+	button_container.add_theme_constant_override("separation", 41)
 	inner_vbox.add_child(button_container)
 	
 	# キャンセルボタン
 	var cancel_btn = Button.new()
 	cancel_btn.text = "キャンセル"
-	cancel_btn.custom_minimum_size = Vector2(320, 120)
-	cancel_btn.add_theme_font_size_override("font_size", 48)
+	cancel_btn.custom_minimum_size = Vector2(166, 62)
+	cancel_btn.add_theme_font_size_override("font_size", 25)
 	cancel_btn.pressed.connect(_on_cancel_pressed)
 	button_container.add_child(cancel_btn)
 	
 	# 降参ボタン
 	var surrender_btn = Button.new()
 	surrender_btn.text = "降参する"
-	surrender_btn.custom_minimum_size = Vector2(320, 120)
-	surrender_btn.add_theme_font_size_override("font_size", 48)
+	surrender_btn.custom_minimum_size = Vector2(166, 62)
+	surrender_btn.add_theme_font_size_override("font_size", 25)
 	surrender_btn.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
 	surrender_btn.pressed.connect(_on_surrender_pressed)
 	button_container.add_child(surrender_btn)
@@ -106,7 +106,7 @@ func _update_position():
 	# パネルを画面中央より少し上に
 	panel.position = Vector2(
 		(viewport_size.x - PANEL_WIDTH) / 2,
-		(viewport_size.y - PANEL_HEIGHT) / 2 - 100
+		(viewport_size.y - PANEL_HEIGHT) / 2 - 52
 	)
 
 

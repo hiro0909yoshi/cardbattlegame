@@ -248,10 +248,66 @@ static func get_required_checkpoints(preset_name: String) -> Array:
 # =============================================================================
 
 const ELEMENT_COLORS = {
-	"火": Color(1.0, 0.4, 0.4),
-	"水": Color(0.4, 0.6, 1.0),
-	"風": Color(0.4, 1.0, 0.6),
-	"土": Color(0.8, 0.6, 0.3)
+	"fire": Color(1.0, 0.4, 0.4),
+	"water": Color(0.4, 0.6, 1.0),
+	"wind": Color(0.8, 0.7, 0.1),
+	"earth": Color(0.1, 0.5, 0.15),
+	"neutral": Color(0.7, 0.7, 0.7)
+}
+
+# カード枠・シェーダー用の濃い色（dark/mid/light 3段階）
+const ELEMENT_CARD_COLORS = {
+	"fire": {
+		"bg": Color(0.8, 0.1, 0.1),
+		"dark": Color(0.6, 0.05, 0.05, 1),
+		"mid": Color(0.8, 0.1, 0.1, 1),
+		"light": Color(0.95, 0.2, 0.2, 1)
+	},
+	"water": {
+		"bg": Color(0.1, 0.3, 0.8),
+		"dark": Color(0.05, 0.2, 0.6, 1),
+		"mid": Color(0.1, 0.4, 0.8, 1),
+		"light": Color(0.2, 0.6, 0.95, 1)
+	},
+	"wind": {
+		"bg": Color(0.7, 0.6, 0.05),
+		"dark": Color(0.5, 0.4, 0.0, 1),
+		"mid": Color(0.7, 0.6, 0.05, 1),
+		"light": Color(0.9, 0.8, 0.15, 1)
+	},
+	"earth": {
+		"bg": Color(0.08, 0.45, 0.12),
+		"dark": Color(0.04, 0.3, 0.06, 1),
+		"mid": Color(0.08, 0.45, 0.12, 1),
+		"light": Color(0.15, 0.6, 0.2, 1)
+	},
+	"neutral": {
+		"bg": Color(0.4, 0.4, 0.4),
+		"dark": Color(0.3, 0.3, 0.3, 1),
+		"mid": Color(0.5, 0.5, 0.5, 1),
+		"light": Color(0.7, 0.7, 0.7, 1)
+	},
+	"item": {
+		"bg": Color(0.15, 0.15, 0.15),
+		"dark": Color(0.08, 0.08, 0.08, 1),
+		"mid": Color(0.18, 0.18, 0.18, 1),
+		"light": Color(0.3, 0.3, 0.3, 1)
+	},
+	"spell": {
+		"bg": Color(0.45, 0.1, 0.6),
+		"dark": Color(0.3, 0.05, 0.45, 1),
+		"mid": Color(0.5, 0.15, 0.65, 1),
+		"light": Color(0.7, 0.3, 0.85, 1)
+	}
+}
+
+# 属性色のHTMLカラーコード（BBCode用）
+const ELEMENT_HTML_COLORS = {
+	"fire": "#ff4444",
+	"water": "#4488ff",
+	"earth": "#1a8c33",
+	"wind": "#ccb31a",
+	"neutral": "#aaaaaa"
 }
 
 const PLAYER_COLORS = [
@@ -282,33 +338,33 @@ const SPECIAL_TILE_COLORS = {
 # フォントサイズ定義
 # =============================================================================
 
-# 基本サイズ
-const FONT_SIZE_XS = 14      # 極小（補足テキスト）
-const FONT_SIZE_S = 16       # 小（ラベル）
-const FONT_SIZE_M = 28       # 中（説明文）
-const FONT_SIZE_L = 36       # 大（ボタン、タイトル）
-const FONT_SIZE_XL = 48      # 特大（強調）
-const FONT_SIZE_XXL = 64     # 超大（アクション指示）
-const FONT_SIZE_XXXL = 96    # 最大（メニュー）
-const FONT_SIZE_ICON = 120   # アイコン用（グローバルボタン）
+# 基本サイズ（1920×1080ビューポート基準）
+const FONT_SIZE_XS = 8       # 極小（補足テキスト）
+const FONT_SIZE_S = 9        # 小（ラベル）
+const FONT_SIZE_M = 15       # 中（説明文）
+const FONT_SIZE_L = 19       # 大（ボタン、タイトル）
+const FONT_SIZE_XL = 25      # 特大（強調）
+const FONT_SIZE_XXL = 33     # 超大（アクション指示）
+const FONT_SIZE_XXXL = 50    # 最大（メニュー）
+const FONT_SIZE_ICON = 62    # アイコン用（グローバルボタン）
 
 # UI別サイズ
-const FONT_SIZE_BUTTON = 36          # 通常ボタン
-const FONT_SIZE_BUTTON_LARGE = 48    # 大きいボタン
-const FONT_SIZE_MENU_BUTTON = 96     # メニューボタン
-const FONT_SIZE_TOAST = 60           # トースト通知
+const FONT_SIZE_BUTTON = 19          # 通常ボタン
+const FONT_SIZE_BUTTON_LARGE = 25    # 大きいボタン
+const FONT_SIZE_MENU_BUTTON = 50     # メニューボタン
+const FONT_SIZE_TOAST = 31           # トースト通知
 const FONT_SIZE_COMMENT = 60         # コメント表示
-const FONT_SIZE_COMMENT_LARGE = 120  # 大きいコメント
-const FONT_SIZE_DICE = 64            # ダイス表示
-const FONT_SIZE_ACTION_PROMPT = 64   # アクション指示
+const FONT_SIZE_COMMENT_LARGE = 62   # 大きいコメント
+const FONT_SIZE_DICE = 33            # ダイス表示
+const FONT_SIZE_ACTION_PROMPT = 40   # アクション指示（viewport migration）
 
 # リザルト画面
-const FONT_SIZE_RESULT_TITLE = 96    # リザルトタイトル（STAGE CLEAR / LOSE）
-const FONT_SIZE_RESULT_RANK = 72     # ランク表示
-const FONT_SIZE_RESULT_INFO = 48     # ターン数・ベスト情報
-const FONT_SIZE_RESULT_REWARD = 40   # 報酬行
-const FONT_SIZE_RESULT_TOTAL = 52    # 合計報酬
-const FONT_SIZE_RESULT_HINT = 32     # タップで続ける等
+const FONT_SIZE_RESULT_TITLE = 50    # リザルトタイトル（STAGE CLEAR / LOSE）
+const FONT_SIZE_RESULT_RANK = 37     # ランク表示
+const FONT_SIZE_RESULT_INFO = 25     # ターン数・ベスト情報
+const FONT_SIZE_RESULT_REWARD = 21   # 報酬行
+const FONT_SIZE_RESULT_TOTAL = 27    # 合計報酬
+const FONT_SIZE_RESULT_HINT = 17     # タップで続ける等
 
 # =============================================================================
 # UI色定義

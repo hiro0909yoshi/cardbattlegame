@@ -18,8 +18,8 @@ const MARKER_BOB_BASE_Y: float = 1.2       # ボビング基準Y位置
 const MARKER_ROTATE_SPEED: float = 4.5     # Y軸周回速度(rad/s)
 const MARKER_ORBIT_RADIUS: float = 1.8     # 周回半径（タイルを包むサイズ）
 const MARKER_ORB_COUNT: int = 2            # 光の玉の数
-const MARKER_ORB_RADIUS: float = 0.12      # 光の玉の半径
-const MARKER_ORB_HEIGHT: float = 0.24      # 光の玉の高さ
+const MARKER_ORB_RADIUS: float = 0.25      # 光の玉の半径
+const MARKER_ORB_HEIGHT: float = 0.50      # 光の玉の高さ
 
 # ゴーストトレイル定数（各光の玉の後ろに配置する残像）
 const TRAIL_GHOST_COUNT: int = 30           # 1つの玉あたりのゴースト数
@@ -201,6 +201,11 @@ static func create_marker_mesh(marker_color: String = "yellow") -> Node3D:
 	sphere.radius = MARKER_ORB_RADIUS
 	sphere.height = MARKER_ORB_HEIGHT
 
+	# 赤マーカーは周回半径を大きく、発光を強く
+	var orbit_r: float = MARKER_ORBIT_RADIUS
+	if marker_color == "red":
+		orbit_r = 2.2
+
 	# 光の玉を等間隔に配置
 	for i in range(MARKER_ORB_COUNT):
 		var base_angle: float = TAU * i / MARKER_ORB_COUNT
@@ -210,9 +215,9 @@ static func create_marker_mesh(marker_color: String = "yellow") -> Node3D:
 		orb.mesh = sphere
 		orb.material_override = _create_orb_material(1.0, 0.0, marker_color)
 		orb.position = Vector3(
-			cos(base_angle) * MARKER_ORBIT_RADIUS,
+			cos(base_angle) * orbit_r,
 			0,
-			sin(base_angle) * MARKER_ORBIT_RADIUS
+			sin(base_angle) * orbit_r
 		)
 		container.add_child(orb)
 
@@ -228,9 +233,9 @@ static func create_marker_mesh(marker_color: String = "yellow") -> Node3D:
 			ghost.material_override = _create_orb_material(alpha, t, marker_color)
 			ghost.scale = Vector3.ONE * scale_factor
 			ghost.position = Vector3(
-				cos(ghost_angle) * MARKER_ORBIT_RADIUS,
+				cos(ghost_angle) * orbit_r,
 				0,
-				sin(ghost_angle) * MARKER_ORBIT_RADIUS
+				sin(ghost_angle) * orbit_r
 			)
 			container.add_child(ghost)
 
@@ -245,9 +250,11 @@ static func _create_orb_material(alpha: float, fade: float = 0.0, marker_color: 
 	var mat = StandardMaterial3D.new()
 	var base_albedo: Color
 	var base_emission: Color
+	var emission_max: float = 4.0
 	if marker_color == "red":
-		base_albedo = Color(1.0, 0.2, 0.1, alpha)
-		base_emission = Color(1.0, 0.15, 0.05)
+		base_albedo = Color(1.0, 0.35, 0.15, alpha)
+		base_emission = Color(1.0, 0.25, 0.1)
+		emission_max = 8.0
 	else:
 		base_albedo = Color(1.0, 1.0, 0.3, alpha)
 		base_emission = Color(1.0, 0.9, 0.2)
@@ -255,7 +262,7 @@ static func _create_orb_material(alpha: float, fade: float = 0.0, marker_color: 
 	mat.albedo_color = albedo
 	mat.emission_enabled = true
 	mat.emission = base_emission.lerp(Color(1.0, 1.0, 1.0), fade)
-	mat.emission_energy_multiplier = lerpf(1.0, 4.0, alpha)
+	mat.emission_energy_multiplier = lerpf(1.0, emission_max, alpha)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	return mat
 

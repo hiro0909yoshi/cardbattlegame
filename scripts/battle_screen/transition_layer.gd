@@ -32,10 +32,10 @@ func _setup_ui() -> void:
 	_battle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_battle_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_battle_label.set_anchors_preset(Control.PRESET_CENTER)
-	_battle_label.add_theme_font_size_override("font_size", 100)
+	_battle_label.add_theme_font_size_override("font_size", 63)
 	_battle_label.add_theme_color_override("font_color", Color.WHITE)
 	_battle_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_battle_label.add_theme_constant_override("outline_size", 6)
+	_battle_label.add_theme_constant_override("outline_size", 4)
 	_battle_label.modulate.a = 0.0
 	_battle_label.pivot_offset = _battle_label.size / 2
 	add_child(_battle_label)

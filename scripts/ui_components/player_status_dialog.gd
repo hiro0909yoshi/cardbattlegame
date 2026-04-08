@@ -1,6 +1,8 @@
 extends Control
 class_name PlayerStatusDialog
 
+const GC = preload("res://scripts/game_constants.gd")
+
 # プレイヤーステータスダイアログ
 # 土地情報と保有クリーチャーを表示するモーダルダイアログ
 # シーン: scenes/ui/player_status_dialog.tscn
@@ -252,19 +254,7 @@ func _get_card_symbol(card: Dictionary) -> String:
 
 # 属性の色を取得
 func _get_element_color(element: String) -> String:
-	match element:
-		"fire":
-			return "#ff4444"  # 赤
-		"water":
-			return "#4488ff"  # 青
-		"earth":
-			return "#88cc44"  # 緑
-		"wind":
-			return "#ffcc44"  # 黄
-		"neutral":
-			return "#aaaaaa"  # グレー
-		_:
-			return "#ffffff"  # 白
+	return GC.ELEMENT_HTML_COLORS.get(element, "#ffffff")
 
 # アイテム種類の色を取得
 func _get_item_type_color(item_type: String) -> String:

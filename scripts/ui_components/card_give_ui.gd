@@ -35,7 +35,7 @@ func setup_ui():
 	
 	# メインパネル（magic_tile_uiと同じサイズ）
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(1800, 1050)
+	panel.custom_minimum_size = Vector2(932, 662)
 	add_child(panel)
 	
 	# パネルスタイル
@@ -55,28 +55,28 @@ func setup_ui():
 	# VBoxContainer
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 30)
+	vbox.add_theme_constant_override("separation", 16)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 40)
-	margin.add_theme_constant_override("margin_bottom", 40)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 21)
+	margin.add_theme_constant_override("margin_bottom", 21)
+	margin.add_theme_constant_override("margin_left", 21)
+	margin.add_theme_constant_override("margin_right", 21)
 	panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# タイトル
 	title_label = Label.new()
 	title_label.text = "カードの種類を選択"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 56)
+	title_label.add_theme_font_size_override("font_size", 29)
 	title_label.add_theme_color_override("font_color", Color(0.8, 1.0, 0.8))
 	vbox.add_child(title_label)
 	
 	# タイプ表示エリア
 	types_container = HBoxContainer.new()
 	types_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	types_container.add_theme_constant_override("separation", 80)
+	types_container.add_theme_constant_override("separation", 41)
 	vbox.add_child(types_container)
 	
 	# 3つのタイプパネルを作成
@@ -88,8 +88,8 @@ func setup_ui():
 	# キャンセルボタン
 	cancel_button = Button.new()
 	cancel_button.text = "キャンセル"
-	cancel_button.custom_minimum_size = Vector2(450, 110)
-	cancel_button.add_theme_font_size_override("font_size", 42)
+	cancel_button.custom_minimum_size = Vector2(233, 57)
+	cancel_button.add_theme_font_size_override("font_size", 22)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	
 	var button_container = HBoxContainer.new()
@@ -99,7 +99,7 @@ func setup_ui():
 
 func _create_type_panel(index: int) -> Panel:
 	var type_panel = Panel.new()
-	type_panel.custom_minimum_size = Vector2(500, 680)
+	type_panel.custom_minimum_size = Vector2(259, 429)
 	
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.15, 0.2, 0.15, 1.0)
@@ -116,28 +116,28 @@ func _create_type_panel(index: int) -> Panel:
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 20)
+	vbox.add_theme_constant_override("separation", 10)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 30)
-	margin.add_theme_constant_override("margin_bottom", 30)
-	margin.add_theme_constant_override("margin_left", 25)
-	margin.add_theme_constant_override("margin_right", 25)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	margin.add_theme_constant_override("margin_left", 13)
+	margin.add_theme_constant_override("margin_right", 13)
 	type_panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# タイプ名
 	var name_label = Label.new()
 	name_label.name = "NameLabel"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 64)
+	name_label.add_theme_font_size_override("font_size", 33)
 	vbox.add_child(name_label)
 	
 	# 説明
 	var desc_label = Label.new()
 	desc_label.name = "DescLabel"
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_label.add_theme_font_size_override("font_size", 40)
+	desc_label.add_theme_font_size_override("font_size", 21)
 	desc_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(desc_label)
@@ -151,8 +151,8 @@ func _create_type_panel(index: int) -> Panel:
 	var select_button = Button.new()
 	select_button.name = "SelectButton"
 	select_button.text = "選択"
-	select_button.custom_minimum_size = Vector2(350, 100)
-	select_button.add_theme_font_size_override("font_size", 42)
+	select_button.custom_minimum_size = Vector2(181, 52)
+	select_button.add_theme_font_size_override("font_size", 22)
 	select_button.pressed.connect(_on_type_selected.bind(index))
 	vbox.add_child(select_button)
 	
@@ -207,7 +207,7 @@ func _center_panel():
 	var viewport_size = get_viewport_rect().size
 	panel.position = Vector2(
 		(viewport_size.x - panel.size.x) / 2,
-		(viewport_size.y - panel.size.y) / 2 - 150  # 150ピクセル上に
+		(viewport_size.y - panel.size.y) / 2 - 78
 	)
 
 func hide_selection():

@@ -9,12 +9,12 @@ const GC = preload("res://scripts/game_constants.gd")
 @onready var world_container: VBoxContainer = $MarginContainer/MainContainer/LeftPanel/WorldContainer
 @onready var stage_container: HBoxContainer = $MarginContainer/MainContainer/LeftPanel/StageContainer
 @onready var detail_panel: PanelContainer = $MarginContainer/MainContainer/RightPanel/DetailPanel
-@onready var map_preview: TextureRect = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/MapPreview
-@onready var stage_name_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/StageNameLabel
-@onready var reward_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/RewardLabel
-@onready var record_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/RecordLabel
-@onready var stats_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/StatsLabel
-@onready var special_tile_container: VBoxContainer = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/SpecialTileContainer
+@onready var map_preview: TextureRect = $MarginContainer/MainContainer/RightPanel/DetailPanel/ScrollContainer/VBox/MapPreview
+@onready var stage_name_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/ScrollContainer/VBox/StageNameLabel
+@onready var reward_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/ScrollContainer/VBox/RewardLabel
+@onready var record_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/ScrollContainer/VBox/RecordLabel
+@onready var stats_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/ScrollContainer/VBox/StatsLabel
+@onready var special_tile_container: VBoxContainer = $MarginContainer/MainContainer/RightPanel/DetailPanel/ScrollContainer/VBox/SpecialTileContainer
 @onready var start_button: Button = $MarginContainer/MainContainer/RightPanel/StartButton
 @onready var back_button: Button = $MarginContainer/MainContainer/RightPanel/BackButton
 
@@ -55,8 +55,8 @@ var stage_buttons: Array = []
 # 通常タイル（特殊タイル一覧から除外するタイプ）
 const NORMAL_TILE_TYPES = ["Fire", "Water", "Wind", "Earth", "Neutral", "Checkpoint"]
 
-const STAGE_BUTTON_SIZE = 165
-const STAGE_BUTTON_MARGIN = 40
+const STAGE_BUTTON_SIZE = 85
+const STAGE_BUTTON_MARGIN = 21
 
 # マッププレビュー画像キャッシュ
 var map_preview_cache: Dictionary = {}
@@ -100,8 +100,8 @@ func _create_world_buttons():
 		var world = worlds[i]
 		var btn = Button.new()
 		btn.text = world.name
-		btn.custom_minimum_size = Vector2(300, 80)
-		btn.add_theme_font_size_override("font_size", 32)
+		btn.custom_minimum_size = Vector2(155, 42)
+		btn.add_theme_font_size_override("font_size", 17)
 		
 		# アンロック判定
 		var is_unlocked = _is_world_unlocked(i)
@@ -170,7 +170,7 @@ func _create_stage_buttons(world_index: int):
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(STAGE_BUTTON_SIZE, STAGE_BUTTON_SIZE)
 		btn.text = str(i + 1)
-		btn.add_theme_font_size_override("font_size", 54)
+		btn.add_theme_font_size_override("font_size", 28)
 		
 		# スタイル設定
 		var style = StyleBoxFlat.new()
@@ -348,14 +348,14 @@ func _show_stamina_shortage_dialog():
 	dialog.ok_button_text = "OK"
 
 	var label = Label.new()
-	label.add_theme_font_size_override("font_size", 36)
+	label.add_theme_font_size_override("font_size", 28)
 	var current = GameData.get_stamina()
 	label.text = "スタミナが足りません。\n必要: %d / 現在: %d" % [GameData.STAMINA_COST_QUEST, current]
 	dialog.add_child(label)
 
 	var ok_button = dialog.get_ok_button()
-	ok_button.custom_minimum_size = Vector2(240, 60)
-	ok_button.add_theme_font_size_override("font_size", 32)
+	ok_button.custom_minimum_size = Vector2(372, 93)
+	ok_button.add_theme_font_size_override("font_size", 34)
 
 	add_child(dialog)
 	dialog.popup_centered()
@@ -408,7 +408,7 @@ func _show_map_preview(map_id: String):
 func _generate_3d_map_preview(map_id: String, tiles: Array):
 	# SubViewportを作成
 	var sub_viewport = SubViewport.new()
-	sub_viewport.size = Vector2i(600, 500)
+	sub_viewport.size = Vector2i(310, 260)
 	sub_viewport.transparent_bg = false
 	sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	
@@ -652,7 +652,7 @@ func _show_special_tile_overlay(tile_info: Dictionary):
 	vbox.add_child(header_hbox)
 	
 	var color_rect = ColorRect.new()
-	color_rect.custom_minimum_size = Vector2(48, 48)
+	color_rect.custom_minimum_size = Vector2(25, 25)
 	color_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	color_rect.color = tile_color
 	header_hbox.add_child(color_rect)
@@ -679,7 +679,7 @@ func _show_special_tile_overlay(tile_info: Dictionary):
 	var close_btn = Button.new()
 	close_btn.text = "閉じる"
 	close_btn.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
-	close_btn.custom_minimum_size = Vector2(200, 60)
+	close_btn.custom_minimum_size = Vector2(104, 31)
 	close_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(close_btn)
 	
@@ -724,7 +724,7 @@ func _show_book_selection():
 	# ブック選択UIを作成
 	_book_container = VBoxContainer.new()
 	_book_container.name = "BookContainer"
-	_book_container.add_theme_constant_override("separation", 20)
+	_book_container.add_theme_constant_override("separation", 10)
 	_book_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_panel.add_child(_book_container)
 	
@@ -732,7 +732,7 @@ func _show_book_selection():
 	var book_title = Label.new()
 	book_title.text = "ブック選択"
 	book_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	book_title.add_theme_font_size_override("font_size", 48)
+	book_title.add_theme_font_size_override("font_size", 25)
 	_book_container.add_child(book_title)
 	
 	# デッキボタン作成（スクロール対応）
@@ -740,13 +740,13 @@ func _show_book_selection():
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size = Vector2(0, 400)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_book_container.add_child(scroll)
 	
 	var grid = GridContainer.new()
 	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 40)
-	grid.add_theme_constant_override("v_separation", 30)
+	grid.add_theme_constant_override("h_separation", 21)
+	grid.add_theme_constant_override("v_separation", 16)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(grid)
 	
@@ -755,7 +755,7 @@ func _show_book_selection():
 		
 		var btn = Button.new()
 		btn.text = deck.get("name", "ブック" + str(i + 1))
-		btn.custom_minimum_size = Vector2(400, 150)
+		btn.custom_minimum_size = Vector2(207, 78)
 		btn.add_theme_font_size_override("font_size", GC.FONT_SIZE_BUTTON_LARGE)
 		btn.pressed.connect(_on_book_selected.bind(i))
 		
@@ -834,15 +834,15 @@ func _add_win_condition_display():
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.15, 0.18, 0.25, 1.0)
 	panel_style.set_corner_radius_all(8)
-	panel_style.content_margin_left = 20
-	panel_style.content_margin_top = 15
-	panel_style.content_margin_right = 20
-	panel_style.content_margin_bottom = 15
+	panel_style.content_margin_left = 10
+	panel_style.content_margin_top = 8
+	panel_style.content_margin_right = 10
+	panel_style.content_margin_bottom = 8
 	condition_panel.add_theme_stylebox_override("panel", panel_style)
 	_book_container.add_child(condition_panel)
 	
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 5)
 	condition_panel.add_child(vbox)
 	
 	# ヘッダー

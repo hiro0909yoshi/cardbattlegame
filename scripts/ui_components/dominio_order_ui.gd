@@ -3,6 +3,8 @@
 class_name DominioOrderUI
 extends Node
 
+const GC = preload("res://scripts/game_constants.gd")
+
 # シグナル
 signal level_up_selected(target_level: int, cost: int)
 
@@ -105,36 +107,36 @@ func _create_action_menu_items() -> Array:
 	
 	# レベルアップ
 	items.append({
-		"text": "[L] レベルアップ",
+		"text": "レベルアップ",
 		"color": Color(0.2, 0.6, 0.8),
-		"icon": "📈",
+		"icon": "",
 		"disabled": false,
 		"action": "level_up"
 	})
 	
 	# 移動（堅守は無効）
 	items.append({
-		"text": "[M] 移動" + (" (堅守)" if current_is_defensive else ""),
+		"text": "移動" + (" (堅守)" if current_is_defensive else ""),
 		"color": Color(0.6, 0.4, 0.8),
-		"icon": "🚶",
+		"icon": "",
 		"disabled": current_is_defensive,
 		"action": "move"
 	})
 	
 	# 交換
 	items.append({
-		"text": "[S] 交換",
+		"text": "交換",
 		"color": Color(0.8, 0.6, 0.2),
-		"icon": "🔄",
+		"icon": "",
 		"disabled": false,
 		"action": "swap"
 	})
 	
 	# 地形変化
 	items.append({
-		"text": "[T] 地形変化",
+		"text": "地形変化",
 		"color": Color(0.3, 0.7, 0.4),
-		"icon": "🌍",
+		"icon": "",
 		"disabled": false,
 		"action": "terrain"
 	})
@@ -154,7 +156,7 @@ func _ensure_action_menu_ui():
 	action_menu_ui = ActionMenuUIClass.new()
 	action_menu_ui.name = "LandActionMenu"
 	action_menu_ui.set_ui_manager(ui_manager_ref)
-	action_menu_ui.set_menu_size(650, 850, 140, 44, 40)  # 大きめサイズ、間隔広め
+	action_menu_ui.set_menu_size(420, 580, 95, 34, 28)  # 大きめサイズ、間隔広め
 	
 	# 選択シグナルを接続
 	action_menu_ui.item_selected.connect(_on_action_menu_item_selected)
@@ -428,7 +430,7 @@ func _create_large_menu_button(text: String, pos: Vector2, btn_size: Vector2, co
 	btn.text = text
 	btn.position = pos
 	btn.size = btn_size
-	btn.add_theme_font_size_override("font_size", 45)  # 1.4倍
+	btn.add_theme_font_size_override("font_size", 23)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
@@ -467,12 +469,12 @@ func create_level_selection_panel(parent: Node):
 	
 	# 画面中央に配置 ※1.5倍サイズ
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 945
-	var panel_height = 1240
-	
+	var panel_width = 490
+	var panel_height = 782
+
 	# 中央配置
 	var panel_x = (viewport_size.x - panel_width) / 2
-	var panel_y = (viewport_size.y - panel_height) / 2 - 200
+	var panel_y = (viewport_size.y - panel_height) / 2 - 100
 	
 	level_selection_panel.position = Vector2(panel_x, panel_y)
 	level_selection_panel.size = Vector2(panel_width, panel_height)
@@ -499,8 +501,8 @@ func create_level_selection_panel(parent: Node):
 	var title_label = Label.new()
 	title_label.name = "TitleLabel"
 	title_label.text = "レベルアップ"
-	title_label.position = Vector2(42, 30)
-	title_label.add_theme_font_size_override("font_size", 84)
+	title_label.position = Vector2(22, 19)
+	title_label.add_theme_font_size_override("font_size", 44)
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 	level_selection_panel.add_child(title_label)
 	
@@ -508,19 +510,19 @@ func create_level_selection_panel(parent: Node):
 	current_level_label = Label.new()
 	current_level_label.name = "CurrentLevelLabel"
 	current_level_label.text = "現在: Lv.1"
-	current_level_label.position = Vector2(42, 135)
-	current_level_label.add_theme_font_size_override("font_size", 63)
+	current_level_label.position = Vector2(22, 85)
+	current_level_label.add_theme_font_size_override("font_size", 33)
 	current_level_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	level_selection_panel.add_child(current_level_label)
 	
 	# レベル選択ボタン（2-5）
-	var button_y = 240
-	var button_spacing = 45
-	var button_height = 210
-	var button_width = 861
+	var button_y = 151
+	var button_spacing = 23
+	var button_height = 132
+	var button_width = 446
 	
 	for level in [2, 3, 4, 5]:
-		var btn = _create_large_level_button(level, 0, Vector2(42, button_y), Vector2(button_width, button_height))
+		var btn = _create_large_level_button(level, 0, Vector2(22, button_y), Vector2(button_width, button_height))
 		btn.pressed.connect(on_level_selected.bind(level))
 		level_selection_panel.add_child(btn)
 		level_selection_buttons[level] = btn
@@ -539,11 +541,11 @@ func _create_terrain_selection_panel(parent: Node):
 	
 	# 画面中央に配置 ※1.5倍サイズ
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 945
-	var panel_height = 1050
-	
+	var panel_width = 490
+	var panel_height = 662
+
 	var panel_x = (viewport_size.x - panel_width) / 2
-	var panel_y = (viewport_size.y - panel_height) / 2 -200
+	var panel_y = (viewport_size.y - panel_height) / 2 - 150
 	
 	terrain_selection_panel.position = Vector2(panel_x, panel_y)
 	terrain_selection_panel.size = Vector2(panel_width, panel_height)
@@ -570,8 +572,8 @@ func _create_terrain_selection_panel(parent: Node):
 	var title_label = Label.new()
 	title_label.name = "TitleLabel"
 	title_label.text = "地形変化"
-	title_label.position = Vector2(42, 30)
-	title_label.add_theme_font_size_override("font_size", 84)
+	title_label.position = Vector2(22, 19)
+	title_label.add_theme_font_size_override("font_size", 44)
 	title_label.add_theme_color_override("font_color", Color(1, 0.6, 0.2))
 	terrain_selection_panel.add_child(title_label)
 	
@@ -579,8 +581,8 @@ func _create_terrain_selection_panel(parent: Node):
 	current_terrain_label = Label.new()
 	current_terrain_label.name = "CurrentTerrainLabel"
 	current_terrain_label.text = "現在: 火属性"
-	current_terrain_label.position = Vector2(42, 135)
-	current_terrain_label.add_theme_font_size_override("font_size", 63)
+	current_terrain_label.position = Vector2(22, 85)
+	current_terrain_label.add_theme_font_size_override("font_size", 33)
 	current_terrain_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	terrain_selection_panel.add_child(current_terrain_label)
 	
@@ -588,26 +590,26 @@ func _create_terrain_selection_panel(parent: Node):
 	terrain_cost_label = Label.new()
 	terrain_cost_label.name = "TerrainCostLabel"
 	terrain_cost_label.text = "コスト: 400EP"
-	terrain_cost_label.position = Vector2(525, 135)
-	terrain_cost_label.add_theme_font_size_override("font_size", 63)
+	terrain_cost_label.position = Vector2(272, 85)
+	terrain_cost_label.add_theme_font_size_override("font_size", 33)
 	terrain_cost_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 	terrain_selection_panel.add_child(terrain_cost_label)
 	
 	# 属性選択ボタン（火、水、土、風）
 	var elements = [
-		{"key": "fire", "name": "火属性", "color": Color(0.8, 0.2, 0.2)},
-		{"key": "water", "name": "水属性", "color": Color(0.2, 0.4, 0.8)},
-		{"key": "earth", "name": "土属性", "color": Color(0.6, 0.4, 0.2)},
-		{"key": "wind", "name": "風属性", "color": Color(0.2, 0.7, 0.3)}
+		{"key": "fire", "name": "火属性", "color": GC.ELEMENT_COLORS["fire"]},
+		{"key": "water", "name": "水属性", "color": GC.ELEMENT_COLORS["water"]},
+		{"key": "earth", "name": "土属性", "color": GC.ELEMENT_COLORS["earth"]},
+		{"key": "wind", "name": "風属性", "color": GC.ELEMENT_COLORS["wind"]}
 	]
 	
-	var button_y = 240
-	var button_spacing = 45
-	var button_height = 165
-	var button_width = 861
-	
+	var button_y = 151
+	var button_spacing = 23
+	var button_height = 104
+	var button_width = 446
+
 	for element in elements:
-		var btn = _create_terrain_button(element["name"], element["color"], Vector2(42, button_y), Vector2(button_width, button_height))
+		var btn = _create_terrain_button(element["name"], element["color"], Vector2(22, button_y), Vector2(button_width, button_height))
 		btn.pressed.connect(_on_terrain_selected.bind(element["key"]))
 		terrain_selection_panel.add_child(btn)
 		terrain_selection_buttons[element["key"]] = btn
@@ -619,9 +621,9 @@ func _create_terrain_button(text: String, color: Color, pos: Vector2, btn_size: 
 	btn.text = text
 	btn.position = pos
 	btn.size = btn_size
-	btn.add_theme_font_size_override("font_size", 68)
+	btn.add_theme_font_size_override("font_size", 35)
 	btn.focus_mode = Control.FOCUS_NONE
-	
+
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
 	style.border_width_left = 4
@@ -711,14 +713,8 @@ func highlight_terrain_button(selected_element: String):
 		
 		if key == selected_element and not button.disabled:
 			# 選択中のボタンをハイライト
-			var base_colors = {
-				"fire": Color(0.8, 0.2, 0.2),
-				"water": Color(0.2, 0.4, 0.8),
-				"earth": Color(0.6, 0.4, 0.2),
-				"wind": Color(0.2, 0.7, 0.3)
-			}
 			var style = StyleBoxFlat.new()
-			style.bg_color = base_colors.get(key, Color(0.5, 0.5, 0.5))
+			style.bg_color = GC.ELEMENT_COLORS.get(key, Color(0.5, 0.5, 0.5))
 			style.border_color = Color(1, 1, 0, 1)  # 黄色の枠
 			style.border_width_top = 6
 			style.border_width_bottom = 6
@@ -735,12 +731,7 @@ func highlight_terrain_button(selected_element: String):
 
 ## 地形ボタンのスタイルをリセット
 func _reset_terrain_button_style(button: Button, element: String):
-	var base_colors = {
-		"fire": Color(0.8, 0.2, 0.2),
-		"water": Color(0.2, 0.4, 0.8),
-		"earth": Color(0.6, 0.4, 0.2),
-		"wind": Color(0.2, 0.7, 0.3)
-	}
+	var base_colors = GC.ELEMENT_COLORS
 	var style = StyleBoxFlat.new()
 	style.bg_color = base_colors.get(element, Color(0.5, 0.5, 0.5))
 	style.border_width_top = 4
@@ -772,7 +763,7 @@ func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: V
 	btn.text = "Lv.%d → %dEP" % [level, cost]
 	btn.position = pos
 	btn.size = btn_size
-	btn.add_theme_font_size_override("font_size", 68)  # 1.5倍
+	btn.add_theme_font_size_override("font_size", 35)
 	btn.focus_mode = Control.FOCUS_NONE
 	
 	var style = StyleBoxFlat.new()
@@ -807,7 +798,7 @@ func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
 	var btn = Button.new()
 	btn.text = text
 	btn.position = pos
-	btn.size = Vector2(252, 70)  # 1.4倍
+	btn.size = Vector2(130, 36)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
@@ -830,6 +821,6 @@ func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
 	pressed_style.bg_color = color.darkened(0.2)
 	btn.add_theme_stylebox_override("pressed", pressed_style)
 	
-	btn.add_theme_font_size_override("font_size", 22)  # 1.4倍
+	btn.add_theme_font_size_override("font_size", 12)
 	
 	return btn

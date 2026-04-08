@@ -32,13 +32,13 @@ theme_override_constants/separation = 0
 
 [node name="TopBar" type="PanelContainer" parent="MainVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 80)
+custom_minimum_size = Vector2(0, 42)
 size_flags_vertical = 0
 
 [node name="TopBarMargin" type="MarginContainer" parent="MainVBox/TopBar"]
 layout_mode = 2
-theme_override_constants/margin_left = 30
-theme_override_constants/margin_right = 30
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
 
 [node name="TopBarHBox" type="HBoxContainer" parent="MainVBox/TopBar/TopBarMargin"]
 layout_mode = 2
@@ -46,8 +46,8 @@ alignment = 1
 
 [node name="BackButton" type="Button" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(200, 0)
-theme_override_font_sizes/font_size = 48
+custom_minimum_size = Vector2(104, 0)
+theme_override_font_sizes/font_size = 32
 text = "< 戻る"
 flat = true
 alignment = 0
@@ -55,13 +55,13 @@ alignment = 0
 [node name="TitleLabel" type="Label" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 36
 text = "プレイヤーステータス"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="MainVBox/TopBar/TopBarMargin/TopBarHBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(104, 0)
 
 [node name="ContentArea" type="HBoxContainer" parent="MainVBox"]
 layout_mode = 2
@@ -75,18 +75,18 @@ size_flags_stretch_ratio = 3.0
 
 [node name="LeftMargin" type="MarginContainer" parent="MainVBox/ContentArea/LeftPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_bottom = 30
+theme_override_constants/margin_left = 21
+theme_override_constants/margin_right = 21
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
 
 [node name="LeftVBox" type="VBoxContainer" parent="MainVBox/ContentArea/LeftPanel/LeftMargin"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 18
 alignment = 1
 
 [node name="CharacterPreview" type="SubViewportContainer" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
-custom_minimum_size = Vector2(600, 700)
+custom_minimum_size = Vector2(310, 362)
 layout_mode = 2
 size_flags_horizontal = 4
 stretch = true
@@ -94,36 +94,36 @@ script = ExtResource("2_preview")
 
 [node name="PlayerNameLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 
 [node name="LevelLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 
 [node name="TitleLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.7, 0.7, 0.3, 1)
 horizontal_alignment = 1
 
 [node name="TitleChangeButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 60)
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 55)
+theme_override_font_sizes/font_size = 22
 text = "称号変更"
 
 [node name="CharacterChangeButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 80)
-theme_override_font_sizes/font_size = 36
+custom_minimum_size = Vector2(0, 65)
+theme_override_font_sizes/font_size = 26
 text = "キャラクター変更"
 
 [node name="NameChangeButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 80)
-theme_override_font_sizes/font_size = 36
+custom_minimum_size = Vector2(0, 65)
+theme_override_font_sizes/font_size = 26
 text = "名前変更"
 
 [node name="RightPanel" type="ScrollContainer" parent="MainVBox/ContentArea"]
@@ -134,15 +134,15 @@ size_flags_stretch_ratio = 7.0
 [node name="RightMargin" type="MarginContainer" parent="MainVBox/ContentArea/RightPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/margin_left = 60
-theme_override_constants/margin_right = 60
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_bottom = 30
+theme_override_constants/margin_left = 31
+theme_override_constants/margin_right = 31
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
 
 [node name="MenuVBox" type="VBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 20
+theme_override_constants/separation = 10
 
 [node name="ProfileSection" type="VBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
@@ -150,7 +150,7 @@ theme_override_constants/separation = 10
 
 [node name="ProfileTitle" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0.3, 0.6, 0.8, 1)
 text = "基本情報"
 
@@ -158,40 +158,40 @@ text = "基本情報"
 layout_mode = 2
 
 [node name="GoldKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/GoldRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "ゴールド"
 
 [node name="GoldValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/GoldRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="StoneRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection"]
 layout_mode = 2
 
 [node name="StoneKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/StoneRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "課金石"
 
 [node name="StoneValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/StoneRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="StaminaRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection"]
 layout_mode = 2
 
 [node name="StaminaKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/StaminaRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "スタミナ"
 
 [node name="StaminaValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/StaminaRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="Sep1" type="HSeparator" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
@@ -202,7 +202,7 @@ theme_override_constants/separation = 10
 
 [node name="StatsTitle" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0.3, 0.6, 0.8, 1)
 text = "戦績"
 
@@ -210,53 +210,53 @@ text = "戦績"
 layout_mode = 2
 
 [node name="BattleKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/BattleRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "総バトル数"
 
 [node name="BattleValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/BattleRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="WinLossRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection"]
 layout_mode = 2
 
 [node name="WinLossKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/WinLossRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "勝利 / 敗北"
 
 [node name="WinLossValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/WinLossRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="WinRateRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection"]
 layout_mode = 2
 
 [node name="WinRateKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/WinRateRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "勝率"
 
 [node name="WinRateValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/WinRateRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="StoryClearRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection"]
 layout_mode = 2
 
 [node name="StoryClearKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/StoryClearRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "ストーリークリア"
 
 [node name="StoryClearValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/StoryClearRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="Sep2" type="HSeparator" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
@@ -267,7 +267,7 @@ theme_override_constants/separation = 10
 
 [node name="CollectionTitle" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0.3, 0.6, 0.8, 1)
 text = "所持情報"
 
@@ -275,40 +275,40 @@ text = "所持情報"
 layout_mode = 2
 
 [node name="CardKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/CardRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "カード図鑑"
 
 [node name="CardValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/CardRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="DeckRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection"]
 layout_mode = 2
 
 [node name="DeckKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/DeckRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "デッキ数"
 
 [node name="DeckValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/DeckRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="MapRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection"]
 layout_mode = 2
 
 [node name="MapKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/MapRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "マップ"
 
 [node name="MapValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/CollectionSection/MapRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="Sep3" type="HSeparator" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
@@ -319,7 +319,7 @@ theme_override_constants/separation = 10
 
 [node name="LoginTitle" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0.3, 0.6, 0.8, 1)
 text = "ログイン"
 
@@ -327,43 +327,43 @@ text = "ログイン"
 layout_mode = 2
 
 [node name="StreakKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection/StreakRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "連続ログイン"
 
 [node name="StreakValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection/StreakRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="TotalLoginRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection"]
 layout_mode = 2
 
 [node name="TotalLoginKey" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection/TotalLoginRow"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 text = "累計ログイン"
 
 [node name="TotalLoginValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/LoginSection/TotalLoginRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 27
 
 [node name="Sep4" type="HSeparator" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
 
 [node name="SettingsSection" type="VBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox"]
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 8
 
 [node name="SettingsTitle" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/SettingsSection"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0.3, 0.6, 0.8, 1)
 text = "設定・その他"
 
 [node name="AccountButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/SettingsSection"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 80)
-theme_override_font_sizes/font_size = 40
+custom_minimum_size = Vector2(0, 42)
+theme_override_font_sizes/font_size = 27
 text = "アカウント連携"

@@ -28,14 +28,19 @@ UnlockManager="*res://scripts/autoload/unlock_manager.gd"
 
 [display]
 
-window/size/viewport_width=3704
-window/size/viewport_height=1712
-window/size/initial_position=Vector2i(0, -500)
-window/stretch/mode="viewport"
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=3044
+window/size/window_height_override=1712
+window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot-sqlite/plugin.cfg", "res://addons/gut/plugin.cfg")
+
+[filesystem]
+
+import/blender/enabled=false
 
 [gui]
 
@@ -46,4 +51,3 @@ theme/default_font_size=24
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true
-scaling_3d/scale=0.5

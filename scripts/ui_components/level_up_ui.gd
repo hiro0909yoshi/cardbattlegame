@@ -63,8 +63,8 @@ func show_level_up_selection(tile_info: Dictionary, current_magic: int):
 # パネルを作成
 func create_panel() -> Panel:
 	var panel = Panel.new()
-	panel.position = Vector2(200, 280)
-	panel.size = Vector2(500, 380)
+	panel.position = Vector2(104, 177)
+	panel.size = Vector2(259, 240)
 	panel.z_index = 50
 	
 	# パネルスタイル
@@ -83,24 +83,24 @@ func create_panel() -> Panel:
 func add_title_label():
 	var title_label = Label.new()
 	title_label.text = "土地レベルアップ"
-	title_label.position = Vector2(20, 20)
-	title_label.add_theme_font_size_override("font_size", 22)
+	title_label.position = Vector2(10, 13)
+	title_label.add_theme_font_size_override("font_size", 12)
 	level_up_panel.add_child(title_label)
 
 # 現在のレベル表示を追加
 func add_current_level_label(current_level: int):
 	var label = Label.new()
 	label.text = "現在のレベル: " + str(current_level) + " → ?"
-	label.position = Vector2(20, 60)
-	label.add_theme_font_size_override("font_size", 16)
+	label.position = Vector2(10, 38)
+	label.add_theme_font_size_override("font_size", 9)
 	level_up_panel.add_child(label)
 
 # 保有EP表示を追加
 func add_magic_label(current_magic: int):
 	var label = Label.new()
 	label.text = "保有EP: " + str(current_magic) + "EP"
-	label.position = Vector2(300, 60)
-	label.add_theme_font_size_override("font_size", 16)
+	label.position = Vector2(155, 38)
+	label.add_theme_font_size_override("font_size", 9)
 	label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))
 	level_up_panel.add_child(label)
 
@@ -115,8 +115,8 @@ func add_chain_bonus_label(tile_index: int, tile_info: Dictionary):
 	if chain_bonus > 1.0:
 		var label = Label.new()
 		label.text = "連鎖ボーナス: ×" + str(chain_bonus)
-		label.position = Vector2(20, 85)
-		label.add_theme_font_size_override("font_size", 14)
+		label.position = Vector2(10, 54)
+		label.add_theme_font_size_override("font_size", 8)
 		label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))
 		level_up_panel.add_child(label)
 
@@ -138,7 +138,7 @@ func add_level_buttons(current_level: int, current_magic: int, tile_index: int, 
 		)
 		level_up_panel.add_child(button)
 		level_buttons.append(button)
-		button_y += 55
+		button_y += 35
 
 # 個別のレベルボタンを作成
 func create_level_button(current_level: int, target_level: int, current_magic: int, chain_bonus: float, y_position: int) -> Button:
@@ -150,8 +150,8 @@ func create_level_button(current_level: int, target_level: int, current_magic: i
 	
 	# ボタン作成
 	var button = Button.new()
-	button.position = Vector2(20, y_position)
-	button.size = Vector2(460, 45)
+	button.position = Vector2(10, y_position)
+	button.size = Vector2(238, 28)
 	
 	# ボタンテキスト
 	var button_text = build_button_text(target_level, total_cost, expected_toll, chain_bonus)

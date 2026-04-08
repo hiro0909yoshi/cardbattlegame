@@ -11,9 +11,9 @@ signal menu_pressed
 
 var button: Button
 
-const BUTTON_SIZE = 180
-const MARGIN_RIGHT = 30
-const MARGIN_TOP = 30
+const BUTTON_SIZE = 93
+const MARGIN_RIGHT = 16
+const MARGIN_TOP = 16
 
 
 func _ready():

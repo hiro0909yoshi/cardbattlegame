@@ -12,6 +12,121 @@
 
 ---
 
+## 2026年4月2日（Session 1: 城壁GLBベイク完了 + モバイル適用 + iOS開発環境構築）
+
+### 完了した作業
+
+#### Blender城壁GLBベイク（モバイル用）
+- ✅ MAP_HALF_SIZE=35基準で城壁全体をBlenderで再構築（half_n=48, half_s=57）
+- ✅ 胸壁をGDScript仕様に合致（レンガ本体 depth=WALL_THICKNESS+0.3 + サンドストーンキャップ 0.1）
+- ✅ 扉をgate_door.glbから新規インポートして再構築（テクスチャ修正）
+- ✅ 胸壁900面のマテリアル未割当（None）→ Brickマテリアルに修正
+- ✅ 北南方向修正（Blender Y軸180°回転でGodot座標系と一致）
+- ✅ 屋根テクスチャ=赤茶色、塔=暗色、床=cube_size=6.0（引き伸ばし）
+- ✅ アーチフレーム追加（radius=5.0）
+
+#### GLB最適化
+- ✅ gltf-transform: テクスチャリサイズ（1024px）+ WebP圧縮 → 11.2MB → **2.8MB**
+- ⚠️ Draco圧縮はGodot 4.5で読み込み不可（`Failed loading resource`）→ 不使用
+- ⚠️ WebP圧縮後に`.import`ファイルの`valid=false`問題 → `.import`ファイル削除+エディタ再起動で解決
+
+#### OS分岐適用
+- ✅ castle_environment.gd — `if true:` → `OS.has_feature("android")` に変更
+  - Android: GLB版（2.8MB、壁・塔・門・アーチ・胸壁・床を含む）
+  - PC: プロシージャル版（フル城+蔦+草）
+
+#### iOS開発環境構築
+- ✅ Xcode 16.3インストール済み（Command Line Tools含む）
+- ✅ Apple Developer無料アカウント設定（Team ID: SQ8HJZALD6、Personal Team）
+- ✅ Godot iOS エクスポートプリセット作成（Bundle: com.katsurastudio.arcanaconquest）
+- ✅ Godotから「Export Project Only」でXcodeプロジェクト生成（`ios_build/arcana_conquest/`）
+- ✅ Xcodeビルド成功（シミュレータターゲット）
+- ✅ EXCLUDED_ARCHS設定修正: `[sdk=*]` → `[sdk=iphonesimulator*]`（Apple Silicon対応）
+- ⚠️ 実機接続未完了: USB-A to Lightningケーブルがデータ転送非対応の可能性 → USB-C to Lightningケーブルを別途用意
+
+#### iOS無料プロビジョニング制約
+- 証明書は7日で期限切れ（再署名で対応可能）
+- TestFlightは使用不可（Apple Developer Program $99/年 が必要）
+- App IDは10個まで/7日間
+
+### 既知の問題
+- PC版プロシージャル城の扉が表示されない（以前からの可能性あり、要調査）
+- iPhone実機テスト未完了（データ転送対応ケーブル待ち）
+
+### 次のステップ
+- USB-C to Lightningケーブル入手後、iPhone実機テスト
+- iPhoneのデベロッパモード有効化
+- デバッグprint文の削除
+- Android実機でのFPS再計測（GLB城壁の効果確認）
+
+---
+
+## 2026年4月1日（Session 1: Android最適化クリーンアップ + PC/Android分岐）
+
+### 完了した作業
+
+#### テストフラグ修正・OS分岐化
+- ✅ debug_settings.gd — `disable_all_process = true` → `false` に戻し（タイル点滅・ターゲット回転が停止していた原因）
+- ✅ quest_game.gd — `if true:` テストフラグ → `OS.has_feature("android")` に変更
+  - Android: `scaling_3d_scale = 0.6`、影オフ、単色背景、環境光COLOR 0.6
+  - PC: 元の設定復元（ProceduralSky カスタム色、影オン+max_distance=60、AMBIENT_SOURCE_SKY 0.4）
+- ✅ castle_environment.gd — `OS.has_feature("android")` で城の分岐
+  - Android: 壁4枚+単色地面（軽量版）
+  - PC: フル版（塔・胸壁・門・蔦・草）
+
+#### 松明コード削除
+- ✅ castle_environment.gd — 松明関連を全削除（変数3つ、`_process()`、`_create_torches()`、`_create_single_torch()`）
+- ✅ OmniLight3Dが全廃、ゲーム画面のライトはSunLight（DirectionalLight3D）1つのみに
+
+#### project.godot 修正
+- ✅ ビューポート移行設定を再適用（1920×1080、canvas_items、expand）
+- ✅ レンダラーは `forward_plus` を維持（⚠️ `gl_compatibility` にすると地面が白飛びする）
+- ✅ `scaling_3d/scale=0.5` を削除（Android分岐でコード側制御に移行）
+
+#### レッドゴブリン修正
+- ✅ quest_game.gd `_share_material()` — ShaderMaterialが既に設定済みのサーフェスはスキップ（red_tint.gdのシェーダーが上書きされていた問題）
+
+#### インフォパネル位置調整
+- ✅ creature_info_panel_ui.gd / spell_info_panel_ui.gd / item_info_panel_ui.gd — ゲーム画面のパネル位置を+40px右に移動（135→175）。プレイヤーインフォパネル拡大に伴う重なり回避。アルバム側は影響なし
+
+### 未完了（次回）
+- デバッグprint文の削除
+
+---
+
+## 2026年3月31日（Session 3: Androidパフォーマンス最適化）
+
+### 完了した作業
+
+#### ボトルネック特定
+- ✅ fillrate が主因と確定（`scaling_3d_scale=0.45` で 9→40 FPS）
+- ✅ 城背景が二番目の原因（消すと +10-15 FPS）
+- ✅ 影が三番目（`shadow_enabled=false` で +5 FPS）
+- ✅ ProceduralSky、キャラ、タイル、CPU _process() は原因ではないと確定
+
+#### マップ画面最適化（9→~40 FPS）
+- ✅ quest_game.gd — `scaling_3d_scale = 0.45`（モバイル用3D解像度削減）
+- ✅ castle_environment.gd — モバイル軽量城（壁4枚+単色BoxMesh地面）
+- ✅ quest_game.gd — `shadow_enabled = false`、ProceduralSky → 単色背景
+
+#### バトル画面最適化（23→~51 FPS）
+- ✅ battle_screen_manager.gd — バトル中に裏の3Dノードを非表示（`_set_3d_scene_visible`）
+- ✅ battle_creature_display.gd — CardTextureCacheから軽量モード適用（47子ノード→テクスチャ1枚）
+- ⚠️ CanvasLayer非表示はゲーム進行を止めるためNode3Dのみ対象
+
+#### セットアップ画面最適化
+- ✅ solo_battle_setup.gd — SubViewport UPDATE_ALWAYS → UPDATE_ONCE
+- ✅ net_battle_setup.gd — 同上
+- ✅ 戻るボタン拡大（93x42 → 240x70、フォント22→32）
+
+### 未完了（次回）
+- `if true:` テストフラグ → `OS.has_feature("android")` に変更
+- PC版設定復元（ProceduralSky、フル城、影オン）
+- `disable_all_process = true` → `false` に戻す
+- デバッグprint文の削除
+
+---
+
 ## 2026年3月31日（Session 2: UI統一 - グローバルコメント・インフォパネル・チュートリアル）
 
 ### 完了した作業
@@ -36,7 +151,17 @@
 - ✅ tutorial_popup.gd — 「タップで次へ」→「click >>>」(36px, #555555)
 - ✅ tutorial_overlay.gd — ハイライト定数をGlobalActionButtonsと統一（SIZE 280→175, SPACING 42→27, MARGIN 70→44）
 
+#### グローバルFPS表示
+- ✅ debug_settings.gd — 全シーン共通FPS表示追加（Autoload、左上、show_fpsフラグで切替）
+
+#### Android実機パフォーマンス調査（Huawei Mate 20）
+- ❌ レンダラー `mobile` に変更 → 改善なし
+- ❌ ビューポート 1920×1080 → 1280×720 → 改善なし
+- → DRAW 240 / OBJ 131で5-8FPS。GPU負荷ではなくCPU（GDScript処理）が原因の可能性大
+- → レンダラーは `forward_plus` に戻し済み、解像度も `1920×1080` に戻し済み
+
 ### 次のステップ
+- **Android性能**: 全画面FPS表示で各シーンのFPS計測 → タイトル画面でも低いならCPU全体、マップだけならゲーム画面固有
 - Step 2残り: game_menu.gd, debug_panel.gd, level_up_ui.gd, surrender_dialog.gd, magic_tile_ui.gd, base_tile_ui.gd, card_buy_ui.gd, card_give_ui.gd
 - Step 3: バトル画面
 - Step 5残り: special_tile_info_dialog, map_preview_dialog, result_screen

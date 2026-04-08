@@ -33,7 +33,7 @@ func show_win_screen(player_id: int):
 
 	var win_label = Label.new()
 	win_label.text = "WIN"
-	win_label.add_theme_font_size_override("font_size", 200)
+	win_label.add_theme_font_size_override("font_size", 126)
 	win_label.add_theme_color_override("font_color", Color.GOLD)
 	win_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(win_label)
@@ -44,13 +44,13 @@ func show_win_screen(player_id: int):
 
 	var player_label = Label.new()
 	player_label.text = player_name + " の勝利！"
-	player_label.add_theme_font_size_override("font_size", 48)
+	player_label.add_theme_font_size_override("font_size", 30)
 	player_label.add_theme_color_override("font_color", Color.WHITE)
 	player_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(player_label)
 
-	vbox.position = Vector2(-200, -150)
-	vbox.custom_minimum_size = Vector2(400, 300)
+	vbox.position = Vector2(-126, -95)
+	vbox.custom_minimum_size = Vector2(252, 189)
 
 	ui_manager.ui_layer.add_child(win_panel)
 
@@ -99,13 +99,13 @@ func show_lose_screen_async(player_id: int):
 
 	var lose_label = Label.new()
 	lose_label.text = "LOSE..."
-	lose_label.add_theme_font_size_override("font_size", 150)
+	lose_label.add_theme_font_size_override("font_size", 95)
 	lose_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	lose_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(lose_label)
 
-	vbox.position = Vector2(-200, -100)
-	vbox.custom_minimum_size = Vector2(400, 200)
+	vbox.position = Vector2(-126, -63)
+	vbox.custom_minimum_size = Vector2(252, 126)
 
 	ui_manager.ui_layer.add_child(lose_panel)
 

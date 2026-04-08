@@ -22,13 +22,13 @@ func _setup_ui() -> void:
 	_label = Label.new()
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_label.add_theme_font_size_override("font_size", 36)
+	_label.add_theme_font_size_override("font_size", 23)
 	_label.add_theme_color_override("font_color", TEXT_COLOR)
 	_label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
-	_label.add_theme_constant_override("outline_size", 8)
+	_label.add_theme_constant_override("outline_size", 5)
 	_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.7))
-	_label.add_theme_constant_override("shadow_offset_x", 2)
-	_label.add_theme_constant_override("shadow_offset_y", 3)
+	_label.add_theme_constant_override("shadow_offset_x", 1)
+	_label.add_theme_constant_override("shadow_offset_y", 2)
 	add_child(_label)
 
 
@@ -41,10 +41,10 @@ func show_skill(skill_name: String, duration: float = DISPLAY_DURATION) -> void:
 
 	# テキストサイズに合わせてラベルサイズ調整
 	var text_width = _label.get_theme_font("font").get_string_size(
-		skill_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 36
+		skill_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 23
 	).x
-	var label_width = text_width + 40
-	var label_height = 60.0
+	var label_width = text_width + 25
+	var label_height = 38.0
 	_label.position = Vector2(-label_width / 2, -label_height / 2)
 	_label.size = Vector2(label_width, label_height)
 
@@ -56,10 +56,10 @@ func show_skill(skill_name: String, duration: float = DISPLAY_DURATION) -> void:
 	var tween = create_tween()
 	tween.set_parallel(true)
 
-	# バウンス拡大（0.3 → 3.5 → 3.0 のオーバーシュート）
-	tween.tween_property(self, "scale", Vector2(3.5, 3.5), 0.25) \
+	# バウンス拡大（0.3 → 2.2 → 1.9 のオーバーシュート）
+	tween.tween_property(self, "scale", Vector2(2.2, 2.2), 0.25) \
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.chain().tween_property(self, "scale", Vector2(3.0, 3.0), 0.1) \
+	tween.chain().tween_property(self, "scale", Vector2(1.9, 1.9), 0.1) \
 		.set_ease(Tween.EASE_IN_OUT)
 
 	# フェードイン

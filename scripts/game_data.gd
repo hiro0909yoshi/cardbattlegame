@@ -316,10 +316,27 @@ static func _generate_uuid_v4() -> String:
 	]
 
 # ==========================================
+# バッチセーブ（複数更新をまとめて1回のセーブにする）
+# ==========================================
+
+var _batch_count: int = 0
+
+func begin_batch():
+	_batch_count += 1
+
+func end_batch():
+	_batch_count -= 1
+	if _batch_count <= 0:
+		_batch_count = 0
+		save_to_file()
+
+# ==========================================
 # セーブ/ロード
 # ==========================================
 
 func save_to_file() -> bool:
+	if _batch_count > 0:
+		return true
 	# 最終プレイ時刻を更新
 	player_data.profile.last_played = Time.get_datetime_string_from_unix_time(GameClock.get_now())
 	

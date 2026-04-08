@@ -51,6 +51,26 @@
 - ゴーストトレイル削減（TRAIL_GHOST_COUNT 30→5）— スペルターゲット選択時のみ発生
 - AtlasTexture方式（手札6枚のDRAWを6→1に統合）— 効果は5 draw calls分のみ
 
+### 城壁ベイク最適化（進行中）
+
+**目的**: castle_environment.gdのMultiMesh×10+ドローコールを、1メッシュ+1テクスチャ=1ドローコールに削減。Android版で単色フォールバックではなくPC版同等の見た目を実現。
+
+**Blenderファイル**: `assets/models/castle_wall.blend`
+
+**進捗（2026-04-01）**:
+- [x] Blender MCP接続・アドオン設定
+- [x] castle_environment.gdの全パーツをBlenderで再現（壁4面、塔4基、胸壁74個、門柱、門扉GLB）
+- [x] 壁テクスチャ選定: `brick_wall_13`（グレー系レンガ、PolyHaven）
+- [ ] 胸壁・塔・キャップ・屋根・地面にテクスチャ適用
+- [ ] 全オブジェクトJoin → ローポリメッシュにベイク（Diffuse+Normal+AO）
+- [ ] GLB書き出し → gltf-transformで最適化
+- [ ] Godotに配置、castle_environment.gdを差し替え
+
+**期待効果**:
+- ドローコール: 10+個 → 1個
+- Android: 単色BoxMeshフォールバック不要（PC版同等の見た目）
+- テクスチャサイズ: 1024×1024〜2048×2048（数MB以下）
+
 ---
 
 ## ビューポート移行計画（3704×1712 → 1920×1080）

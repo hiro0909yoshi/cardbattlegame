@@ -1,34 +1,18 @@
 extends BaseEnvironment
 class_name CastleEnvironment
 
-## 城壁環境: 壁・塔・門・胸壁・蔦・草を生成
+## 城壁環境: GLBモデル配置 + 蔦・草を生成
 
-# 松明アニメーション用
-var _torch_lights: Array[OmniLight3D] = []
-var _torch_flames: Array[MeshInstance3D] = []
-var _torch_time := 0.0
+# GLBモデルパス
+const CASTLE_GLB_PATH := "res://assets/models/castle_wall.glb"
 
-# 城壁パラメータ
-const WALL_MARGIN := 13.0      # マップ端からの余白（北・東・西）
-const WALL_MARGIN_SOUTH := 17.0  # 南壁マージン（カメラ干渉回避のため広め）
-const WALL_HEIGHT := 9.0       # 壁の高さ
-const WALL_THICKNESS := 1.2    # 壁の厚み
-const BATTLEMENT_HEIGHT := 0.8 # 胸壁（凹凸）の高さ
-const BATTLEMENT_WIDTH := 1.5  # 胸壁の幅
-const BATTLEMENT_GAP := 1.2    # 胸壁の隙間
-
-# 塔パラメータ
-const TOWER_RADIUS := 2.0
-const TOWER_HEIGHT := 11.0
-const TOWER_SIDES := 12
-
-# 門パラメータ
-const GATE_WIDTH := 5.5         # 門の幅
-const GATE_HEIGHT := 6.0        # 門の高さ
-const GATE_THICKNESS := 0.3     # 扉の厚み
-
-# シェーダーパス
-const BRICK_SHADER_PATH := "res://assets/shaders/brick_wall.gdshader"
+# 城壁パラメータ（蔦・草の配置に使用）
+const WALL_MARGIN := 13.0
+const WALL_MARGIN_SOUTH := 17.0
+const WALL_HEIGHT := 9.0
+const WALL_THICKNESS := 1.2
+const BATTLEMENT_WIDTH := 1.5
+const BATTLEMENT_GAP := 1.2
 
 # 蔦パラメータ
 const IVY_COUNT_PER_WALL := 5
@@ -42,40 +26,50 @@ const GRASS_PATCH_COUNT := 30
 const GRASS_BLADE_HEIGHT := 0.4
 const GRASS_BLADE_WIDTH := 0.08
 
+# [LEGACY] プロシージャル生成用（GLB移行後は未使用）
+const BATTLEMENT_HEIGHT := 0.8
+const TOWER_RADIUS := 2.0
+const TOWER_HEIGHT := 11.0
+const TOWER_SIDES := 12
+const GATE_WIDTH := 5.5
+const GATE_HEIGHT := 6.0
+const GATE_THICKNESS := 0.3
+const BRICK_SHADER_PATH := "res://assets/shaders/brick_wall.gdshader"
 var _brick_material: ShaderMaterial
 
 
-func _process(delta: float) -> void:
-	if _torch_lights.is_empty():
-		return
-	_torch_time += delta
-	for i in range(_torch_lights.size()):
-		var phase: float = float(i) * 2.7
-		var f1: float = sin(_torch_time * 5.3 + phase) * 0.08
-		var f2: float = sin(_torch_time * 8.7 + phase * 1.61) * 0.05
-		var f3: float = sin(_torch_time * 14.1 + phase * 0.73) * 0.03
-		var spike: float = pow(abs(sin(_torch_time * 3.1 + phase * 2.39)), 12.0) * 0.1
-		var flicker: float = f1 + f2 + f3 + spike
-		_torch_lights[i].light_energy = 1.5 + flicker
-		var s: float = 1.0 + flicker * 0.12
-		_torch_flames[i].scale = Vector3(s, s + flicker * 0.08, s)
-
-
 func _get_environment_margin() -> float:
-	return WALL_MARGIN_SOUTH  # 最大マージンを返す（地面が全壁を覆うように）
+	return WALL_MARGIN_SOUTH
 
 
 func _build() -> void:
-	_brick_material = _create_brick_material()
-	_create_ground()
-	_create_castle_structure()  # 壁・塔・門・胸壁を全てMultiMeshで一括生成
-	_create_ivy()
-	_create_grass()
+	if OS.has_feature("android"):
+		_place_castle_glb()
+	else:
+		_brick_material = _create_brick_material()
+		_create_ground()
+		_create_castle_structure()
+		_create_ivy()
+		_create_grass()
 
 
-# --- 城壁構造（全パーツMultiMesh化） ---
+## GLBモデルを配置（壁・塔・門・アーチ・胸壁・床を含む）
+## GLBはMAP_HALF_SIZE=35基準（南+5）で作成済み（蔦なし・モバイル専用）
+## 屋根=赤茶色、塔=暗色、床=ランダムUVタイリング
+const GLB_BASE_HALF_SIZE := 35.0
 
-## 壁・塔・門・胸壁を全てMultiMeshで一括生成
+func _place_castle_glb() -> void:
+	var scene: PackedScene = load(CASTLE_GLB_PATH)
+	if not scene:
+		push_warning("castle_wall.glb が見つかりません: %s" % CASTLE_GLB_PATH)
+		return
+	var castle: Node3D = scene.instantiate()
+	castle.name = "CastleWallGLB"
+	castle.position = _map_center
+	add_child(castle)
+
+
+## [LEGACY] 壁・塔・門・胸壁を全てMultiMeshで一括生成（GLB移行前のコード）
 func _create_castle_structure() -> void:
 	var half_n: float = _map_half_size + WALL_MARGIN
 	var half_s: float = _map_half_size + WALL_MARGIN_SOUTH
@@ -301,102 +295,6 @@ func _create_box_mesh(box_size: Vector3) -> BoxMesh:
 	var box: BoxMesh = BoxMesh.new()
 	box.size = box_size
 	return box
-
-
-# --- 松明（現在無効） ---
-
-## 松明を壁面に配置
-func _create_torches() -> void:
-	var half: float = _map_half_size + WALL_MARGIN
-	var cx: float = _map_center.x
-	var cz: float = _map_center.z
-	var torch_y := WALL_HEIGHT * 0.6
-	var torch_spacing := 10.0
-
-	var wall_defs: Array[Dictionary] = [
-		{"start": cx - half + 3.0, "end": cx + half - 3.0, "get_pos": func(along: float) -> Vector3:
-			return Vector3(along, torch_y, cz - half + WALL_THICKNESS * 0.5 + 0.15)},
-		{"start": cx - half + 3.0, "end": cx + half - 3.0, "get_pos": func(along: float) -> Vector3:
-			return Vector3(along, torch_y, cz + half - WALL_THICKNESS * 0.5 - 0.15)},
-		{"start": cz - half + 3.0, "end": cz + half - 3.0, "get_pos": func(along: float) -> Vector3:
-			return Vector3(cx - half + WALL_THICKNESS * 0.5 + 0.15, torch_y, along)},
-		{"start": cz - half + 3.0, "end": cz + half - 3.0, "get_pos": func(along: float) -> Vector3:
-			return Vector3(cx + half - WALL_THICKNESS * 0.5 - 0.15, torch_y, along)},
-	]
-
-	var torch_idx := 0
-	for wall_def in wall_defs:
-		var pos_along: float = wall_def.start
-		while pos_along <= wall_def.end:
-			var torch_pos: Vector3 = wall_def.get_pos.call(pos_along)
-			_create_single_torch(torch_pos, torch_idx)
-			torch_idx += 1
-			pos_along += torch_spacing
-
-
-## 松明1本を生成（柄 + 炎 + ポイントライト）
-func _create_single_torch(pos: Vector3, idx: int) -> void:
-	var torch_root: Node3D = Node3D.new()
-	torch_root.name = "Torch_%d" % idx
-	torch_root.position = pos
-	add_child(torch_root)
-
-	var handle: MeshInstance3D = MeshInstance3D.new()
-	handle.name = "Handle"
-	var handle_mesh: CylinderMesh = CylinderMesh.new()
-	handle_mesh.top_radius = 0.03
-	handle_mesh.bottom_radius = 0.04
-	handle_mesh.height = 0.6
-	handle.mesh = handle_mesh
-	handle.position = Vector3(0, -0.15, 0)
-	var handle_mat: StandardMaterial3D = StandardMaterial3D.new()
-	handle_mat.albedo_color = Color(0.25, 0.15, 0.08)
-	handle_mat.roughness = 0.95
-	handle.material_override = handle_mat
-	torch_root.add_child(handle)
-
-	var cloth: MeshInstance3D = MeshInstance3D.new()
-	cloth.name = "Wrap"
-	var cloth_mesh: CylinderMesh = CylinderMesh.new()
-	cloth_mesh.top_radius = 0.06
-	cloth_mesh.bottom_radius = 0.05
-	cloth_mesh.height = 0.15
-	cloth.mesh = cloth_mesh
-	cloth.position = Vector3(0, 0.12, 0)
-	var cloth_mat: StandardMaterial3D = StandardMaterial3D.new()
-	cloth_mat.albedo_color = Color(0.3, 0.18, 0.08)
-	cloth_mat.roughness = 0.9
-	cloth.material_override = cloth_mat
-	torch_root.add_child(cloth)
-
-	var flame: MeshInstance3D = MeshInstance3D.new()
-	flame.name = "Flame"
-	var flame_mesh: SphereMesh = SphereMesh.new()
-	flame_mesh.radius = 0.1
-	flame_mesh.height = 0.2
-	flame.mesh = flame_mesh
-	flame.position = Vector3(0, 0.25, 0)
-	var flame_mat: StandardMaterial3D = StandardMaterial3D.new()
-	flame_mat.albedo_color = Color(1.0, 0.6, 0.15)
-	flame_mat.emission_enabled = true
-	flame_mat.emission = Color(1.0, 0.5, 0.1)
-	flame_mat.emission_energy_multiplier = 3.0
-	flame_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	flame_mat.albedo_color.a = 0.8
-	flame.material_override = flame_mat
-	torch_root.add_child(flame)
-
-	var light: OmniLight3D = OmniLight3D.new()
-	light.name = "TorchLight"
-	light.position = Vector3(0, 0.3, 0)
-	light.light_color = Color(1.0, 0.7, 0.3)
-	light.light_energy = 1.5
-	light.omni_range = 14.0
-	light.omni_attenuation = 1.0
-	light.shadow_enabled = false
-	torch_root.add_child(light)
-	_torch_lights.append(light)
-	_torch_flames.append(flame)
 
 
 # --- 植生（VegetationBuilder に委譲） ---

@@ -152,7 +152,7 @@ static func create_effect_strategy(effect_type: String) -> SpellStrategy:
 		"remove_world_curse": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
 		"remove_all_player_curses": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
 		# === ダウン操作系（2個） ===
-		"down_clear": preload("res://scripts/spells/strategies/effect_strategies/down_state_effect_strategy.gd"),
+		"clear_down": preload("res://scripts/spells/strategies/effect_strategies/down_state_effect_strategy.gd"),
 		"set_down": preload("res://scripts/spells/strategies/effect_strategies/down_state_effect_strategy.gd"),
 		# === クリーチャー配置系（1個） ===
 		"place_creature": preload("res://scripts/spells/strategies/effect_strategies/creature_place_effect_strategy.gd"),
@@ -292,7 +292,7 @@ static func get_registered_effect_types() -> Array:
 		"remove_world_curse",
 		"remove_all_player_curses",
 		# === ダウン操作系（2個） ===
-		"down_clear",
+		"clear_down",
 		"set_down",
 		# === クリーチャー配置系（1個） ===
 		"place_creature",
@@ -425,7 +425,7 @@ static func has_effect_strategy(effect_type: String) -> bool:
 		"remove_world_curse",
 		"remove_all_player_curses",
 		# === ダウン操作系（2個） ===
-		"down_clear",
+		"clear_down",
 		"set_down",
 		# === クリーチャー配置系（1個） ===
 		"place_creature",

@@ -44,7 +44,7 @@
 			"cost": {
 				"ep": 30
 			},
-			"effect": "対象ドミニオに刻印[暁光]；カードを1枚引く",
+			"effect": "対象クリーチャーに刻印[暁光]；カードを1枚引く",
 			"effect_parsed": {
 				"target_type": "creature",
 				"target_info": {
@@ -109,7 +109,7 @@
 			"cost": {
 				"ep": 40
 			},
-			"effect": "対象ドミニオに刻印[消沈]",
+			"effect": "対象クリーチャーに刻印[消沈]",
 			"effect_parsed": {
 				"target_type": "creature",
 				"target_info": {
@@ -902,7 +902,7 @@
 		},
 		{
 			"id": 2095,
-			"name": "ラック",
+			"name": "ドロー",
 			"dev_name": "ホープ",
 			"rarity": "N",
 			"type": "spell",

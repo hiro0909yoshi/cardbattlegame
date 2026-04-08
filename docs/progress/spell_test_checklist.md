@@ -115,7 +115,7 @@
 | 8 | 2090 | チョイス | draw_by_type | spell_2 | [x] | JSON定義+効果(type指定ドロー) |
 | 9 | 9003 | アイテムリプレニッシュ | draw_by_type | spell_mystic | [x] | JSON定義確認 |
 | 10 | 9043 | アイテムドロー | draw_by_type | spell_mystic | [x] | JSON定義確認 |
-| 11 | 2095 | ラック | draw_cards | spell_2 | [x] | JSON定義(count=2)+効果(複数ドロー) |
+| 11 | 2095 | ドロー | draw_cards | spell_2 | [x] | JSON定義(count=2)+効果(複数ドロー) |
 | 12 | 9042 | カードドロー | draw_cards | spell_mystic | [x] | JSON定義確認 |
 | 13 | 2078 | オラクル | draw_from_deck_selection | spell_2 | [x] | JSON定義確認 |
 | 14 | 2132 | ディスカバー | draw_and_place | spell_2 | [x] | JSON定義確認 |

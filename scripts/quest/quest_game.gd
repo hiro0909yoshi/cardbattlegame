@@ -78,6 +78,10 @@ func _ready():
 
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():
+	# モバイル: 3D解像度削減（UIは影響なし）
+	if OS.has_feature("android"):
+		get_viewport().scaling_3d_scale = 0.6
+
 	# カメラ作成
 	var camera: Camera3D = Camera3D.new()
 	camera.name = "Camera3D"
@@ -100,26 +104,37 @@ func _setup_3d_scene_before_init():
 	sun.rotation_degrees = Vector3(-45, 30, 0)
 	sun.light_energy = 1.0
 	sun.light_color = Color(1.0, 0.95, 0.9)
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 60.0
+	if OS.has_feature("android"):
+		sun.shadow_enabled = false
+	else:
+		sun.shadow_enabled = true
+		sun.directional_shadow_max_distance = 60.0
 	add_child(sun)
 
 	# 空
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.name = "QuestWorldEnv"
 	var env: Environment = Environment.new()
-	var sky: Sky = Sky.new()
-	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.30, 0.55, 0.80)
-	sky_mat.sky_horizon_color = Color(0.55, 0.68, 0.80)
-	sky_mat.ground_bottom_color = Color(0.45, 0.58, 0.72)
-	sky_mat.ground_horizon_color = Color(0.55, 0.68, 0.80)
-	sky.sky_material = sky_mat
-	env.sky = sky
-	env.background_mode = Environment.BG_SKY
-	# 環境光（空から）
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.4
+	if OS.has_feature("android"):
+		# モバイル: 単色背景（軽量）
+		env.background_mode = Environment.BG_COLOR
+		env.background_color = Color(0.45, 0.60, 0.80)
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		env.ambient_light_color = Color(0.7, 0.75, 0.85)
+		env.ambient_light_energy = 0.6
+	else:
+		# PC: ProceduralSky（元の設定）
+		var sky: Sky = Sky.new()
+		var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = Color(0.30, 0.55, 0.80)
+		sky_mat.sky_horizon_color = Color(0.55, 0.68, 0.80)
+		sky_mat.ground_bottom_color = Color(0.45, 0.58, 0.72)
+		sky_mat.ground_horizon_color = Color(0.55, 0.68, 0.80)
+		sky.sky_material = sky_mat
+		env.sky = sky
+		env.background_mode = Environment.BG_SKY
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_energy = 0.4
 	world_env.environment = env
 	add_child(world_env)
 	
@@ -246,6 +261,9 @@ func _share_material(idle_model: Node, walk_model: Node) -> void:
 		var meshes := _find_all_mesh_instances(model)
 		for mesh in meshes:
 			for i in range(mesh.get_surface_override_material_count()):
+				# ShaderMaterial（red_tint等）が既に設定されている場合はスキップ
+				if mesh.get_surface_override_material(i) is ShaderMaterial:
+					continue
 				mesh.set_surface_override_material(i, mat)
 	print("[QuestGame] テクスチャ適用完了: ", texture_path)
 

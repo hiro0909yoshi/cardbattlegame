@@ -13,10 +13,10 @@ var hand_container: Control = null
 var card_scene = preload("res://scenes/Card.tscn")
 var player_card_nodes = {}  # player_id -> [card_nodes]
 
-# カード表示定数（CardFrame.tscnの実際のサイズ）
+# カード表示定数（CardFrame.tscnの設計サイズ、scaleで拡縮）
 const CARD_WIDTH = 220
 const CARD_HEIGHT = 293
-const CARD_SPACING = 30
+const CARD_SPACING = 20
 
 # システム参照
 var card_system_ref = null
@@ -84,6 +84,8 @@ func connect_card_system_signals():
 
 ## 手札表示を更新
 func update_hand_display(player_id: int):
+	if DebugSettings.disable_hand_cards:
+		return
 	if not card_system_ref or not hand_container:
 		return
 	
@@ -238,7 +240,7 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 	hand_container.add_child(card)
 
 	# 位置は後でrearrange_hand()で設定するので仮配置
-	var viewport_size = get_viewport().get_visible_rect().size
+	var viewport_size = _get_logical_viewport_size()
 	var card_y = viewport_size.y - CARD_HEIGHT - 20
 	card.position = Vector2(0, card_y)
 
@@ -289,24 +291,25 @@ func _apply_lightweight_deferred(card: Node, card_id: int) -> void:
 		card.enable_lightweight_mode(tex)
 
 
+## ビューポートサイズを取得
+func _get_logical_viewport_size() -> Vector2:
+	return get_viewport().get_visible_rect().size
+
 ## 手札を再配置（動的スケール対応）
 func rearrange_hand(player_id: int):
 	var card_nodes = player_card_nodes[player_id]
 	if card_nodes.is_empty():
 		return
 	
-	var viewport_size = get_viewport().get_visible_rect().size
+	var viewport_size = _get_logical_viewport_size()
 	var hand_size = card_nodes.size()
 	
 	# CardUIHelperを使用してレイアウト計算
 	var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_size)
-	
-	
 	# 各カードを配置
 	for i in range(card_nodes.size()):
 		var card = card_nodes[i]
 		if is_instance_valid(card):
-			# カードを通常サイズ(290x390)で配置し、スケールで縮小
 			var x_pos = layout.start_x + i * (layout.card_width + layout.spacing)
 			
 			card.position = Vector2(x_pos, layout.card_y)

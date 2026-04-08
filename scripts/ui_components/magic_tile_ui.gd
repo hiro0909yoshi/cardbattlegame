@@ -29,7 +29,7 @@ func setup_ui():
 	
 	# メインパネル（3倍サイズ）
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(2200, 1240)
+	panel.custom_minimum_size = Vector2(1140, 782)
 	add_child(panel)
 	
 	# パネルスタイル
@@ -49,28 +49,28 @@ func setup_ui():
 	# VBoxContainer
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 30)
+	vbox.add_theme_constant_override("separation", 16)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 40)
-	margin.add_theme_constant_override("margin_bottom", 40)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 21)
+	margin.add_theme_constant_override("margin_bottom", 21)
+	margin.add_theme_constant_override("margin_left", 21)
+	margin.add_theme_constant_override("margin_right", 21)
 	panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# タイトル
 	title_label = Label.new()
-	title_label.text = "魔法を使う（コストを支払い使用）"
+	title_label.text = "魔���を使う（コストを支払い使用）"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 48)
+	title_label.add_theme_font_size_override("font_size", 25)
 	title_label.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
 	vbox.add_child(title_label)
 	
 	# スペル表示エリア
 	spells_container = HBoxContainer.new()
 	spells_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	spells_container.add_theme_constant_override("separation", 80)
+	spells_container.add_theme_constant_override("separation", 41)
 	vbox.add_child(spells_container)
 	
 	# 3つのスペルパネルを作成
@@ -82,8 +82,8 @@ func setup_ui():
 	# 使わないボタン
 	cancel_button = Button.new()
 	cancel_button.text = "使わない"
-	cancel_button.custom_minimum_size = Vector2(600, 150)
-	cancel_button.add_theme_font_size_override("font_size", 48)
+	cancel_button.custom_minimum_size = Vector2(310, 78)
+	cancel_button.add_theme_font_size_override("font_size", 25)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	
 	var button_container = HBoxContainer.new()
@@ -93,7 +93,7 @@ func setup_ui():
 
 func _create_spell_panel(index: int) -> Panel:
 	var spell_panel = Panel.new()
-	spell_panel.custom_minimum_size = Vector2(600, 880)
+	spell_panel.custom_minimum_size = Vector2(310, 555)
 	
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.2, 0.15, 0.3, 1.0)
@@ -110,21 +110,21 @@ func _create_spell_panel(index: int) -> Panel:
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 20)
+	vbox.add_theme_constant_override("separation", 10)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 30)
-	margin.add_theme_constant_override("margin_bottom", 30)
-	margin.add_theme_constant_override("margin_left", 25)
-	margin.add_theme_constant_override("margin_right", 25)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	margin.add_theme_constant_override("margin_left", 13)
+	margin.add_theme_constant_override("margin_right", 13)
 	spell_panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# スペルタイプ
 	var type_label = Label.new()
 	type_label.name = "TypeLabel"
 	type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	type_label.add_theme_font_size_override("font_size", 32)
+	type_label.add_theme_font_size_override("font_size", 17)
 	type_label.add_theme_color_override("font_color", Color(0.7, 0.7, 1.0))
 	vbox.add_child(type_label)
 	
@@ -132,23 +132,23 @@ func _create_spell_panel(index: int) -> Panel:
 	var name_label = Label.new()
 	name_label.name = "NameLabel"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 44)
+	name_label.add_theme_font_size_override("font_size", 23)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(name_label)
 	
 	# スペル名と効果説明の間のスペーサー
 	var name_effect_spacer = Control.new()
-	name_effect_spacer.custom_minimum_size = Vector2(0, 30)  # ここで隙間を調整
+	name_effect_spacer.custom_minimum_size = Vector2(0, 16)
 	vbox.add_child(name_effect_spacer)
 	
 	# 効果説明
 	var effect_label = Label.new()
 	effect_label.name = "EffectLabel"
 	effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	effect_label.add_theme_font_size_override("font_size", 40)
+	effect_label.add_theme_font_size_override("font_size", 21)
 	effect_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 	effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	effect_label.custom_minimum_size = Vector2(0, 180)
+	effect_label.custom_minimum_size = Vector2(0, 93)
 	vbox.add_child(effect_label)
 	
 	# スペーサー
@@ -160,7 +160,7 @@ func _create_spell_panel(index: int) -> Panel:
 	var cost_label = Label.new()
 	cost_label.name = "CostLabel"
 	cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cost_label.add_theme_font_size_override("font_size", 48)
+	cost_label.add_theme_font_size_override("font_size", 25)
 	cost_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
 	vbox.add_child(cost_label)
 	
@@ -168,8 +168,8 @@ func _create_spell_panel(index: int) -> Panel:
 	var use_button = Button.new()
 	use_button.name = "UseButton"
 	use_button.text = "使用"
-	use_button.custom_minimum_size = Vector2(300, 90)
-	use_button.add_theme_font_size_override("font_size", 36)
+	use_button.custom_minimum_size = Vector2(155, 47)
+	use_button.add_theme_font_size_override("font_size", 19)
 	use_button.pressed.connect(_on_use_pressed.bind(index))
 	vbox.add_child(use_button)
 	
@@ -248,7 +248,7 @@ func _center_panel():
 	var viewport_size = get_viewport_rect().size
 	panel.position = Vector2(
 		(viewport_size.x - panel.size.x) / 2,
-		(viewport_size.y - panel.size.y) / 2 - 200  
+		(viewport_size.y - panel.size.y) / 2 - 100
 	)
 
 func hide_selection():

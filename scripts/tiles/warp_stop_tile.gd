@@ -71,6 +71,7 @@ func _ready():
 
 
 func _process(delta: float) -> void:
+	if DebugSettings.disable_all_process: return
 	_time += delta
 	# 2フレームに1回だけ更新（モバイル負荷軽減）
 	_frame_skip_counter += 1

@@ -147,7 +147,7 @@ func enter(config: Dictionary):
 		
 		# クリック終了の場合は「タップで次へ」を表示してクリック待ちを有効化
 		if exit_trigger == "click":
-			popup.label.text = "[center]" + message + "\n[color=gray][font_size=50]タップで次へ[/font_size][/color][/center]"
+			popup.label.text = "[center]" + message + "\n[color=#555555][font_size=50]click >>>[/font_size][/color][/center]"
 			popup.visible = true
 			popup.waiting_for_click = true
 			popup.apply_position(position, offset_y)

@@ -89,12 +89,16 @@ func on_player_won(player_id: int):
 
 	print("🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
 
-	# プレイヤー0（人間）が勝利した場合のみリザルト処理
+	# チームメイトの勝利も自分の勝利として扱う
 	# call_deferredで次フレームに実行（シグナル経由のawait問題回避）
-	if player_id == 0:
+	var is_ally_win = player_id == 0
+	if not is_ally_win and team_system:
+		is_ally_win = team_system.are_allies(player_id, 0)
+
+	if is_ally_win:
 		_start_victory_result.call_deferred()
 	else:
-		# CPU勝利 = プレイヤー敗北
+		# 敵チームCPU勝利 = プレイヤー敗北
 		_start_defeat_result.call_deferred("cpu_win")
 
 
@@ -194,6 +198,9 @@ func _process_victory_result():
 	var rewards = RewardCalculator.calculate_rewards(current_stage_data, rank, is_first_clear)
 	print("[GameResultHandler] 報酬計算結果: %s" % rewards)
 
+	# バッチセーブ開始（複数更新をまとめて最後に1回だけセーブ）
+	GameData.begin_batch()
+
 	# 記録更新
 	var record_result = StageRecordManager.update_record(stage_id, rank, _get_current_turn())
 
@@ -211,6 +218,9 @@ func _process_victory_result():
 		print("[GameResultHandler] ゴールド付与: %d" % rewards.total)
 	else:
 		print("[GameResultHandler] 報酬なし（total: %d）" % rewards.total)
+
+	# バッチセーブ完了（ここで1回だけセーブ）
+	GameData.end_batch()
 
 	# リザルト画面表示
 	print("[GameResultHandler] リザルト画面: %s" % ("あり" if result_screen else "なし"))

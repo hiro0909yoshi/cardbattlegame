@@ -1,5 +1,7 @@
 extends Control
 
+const GC = preload("res://scripts/game_constants.gd")
+
 # ベースタイルUI
 # 手札からクリーチャーを選択して遠隔配置
 
@@ -34,7 +36,7 @@ func _setup_ui():
 	
 	# メインパネル
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(1800, 1050)
+	panel.custom_minimum_size = Vector2(932, 662)
 	add_child(panel)
 	
 	# パネルスタイル
@@ -54,21 +56,21 @@ func _setup_ui():
 	# VBoxContainer
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 30)
+	vbox.add_theme_constant_override("separation", 16)
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 40)
-	margin.add_theme_constant_override("margin_bottom", 40)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 21)
+	margin.add_theme_constant_override("margin_bottom", 21)
+	margin.add_theme_constant_override("margin_left", 21)
+	margin.add_theme_constant_override("margin_right", 21)
 	panel.add_child(margin)
 	margin.add_child(vbox)
-	
+
 	# タイトル
 	title_label = Label.new()
 	title_label.text = "クリーチャーを配置（空き地を選択して配置）"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 48)
+	title_label.add_theme_font_size_override("font_size", 25)
 	title_label.add_theme_color_override("font_color", Color(0.9, 0.85, 1.0))
 	vbox.add_child(title_label)
 	
@@ -76,20 +78,20 @@ func _setup_ui():
 	scroll_container = ScrollContainer.new()
 	scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll_container.custom_minimum_size = Vector2(0, 700)
+	scroll_container.custom_minimum_size = Vector2(0, 441)
 	vbox.add_child(scroll_container)
 	
 	# クリーチャー表示エリア
 	creatures_container = HBoxContainer.new()
 	creatures_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	creatures_container.add_theme_constant_override("separation", 40)
+	creatures_container.add_theme_constant_override("separation", 21)
 	scroll_container.add_child(creatures_container)
 	
 	# 配置しないボタン
 	cancel_button = Button.new()
 	cancel_button.text = "配置しない"
-	cancel_button.custom_minimum_size = Vector2(400, 100)
-	cancel_button.add_theme_font_size_override("font_size", 36)
+	cancel_button.custom_minimum_size = Vector2(207, 52)
+	cancel_button.add_theme_font_size_override("font_size", 19)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	
 	var button_container = HBoxContainer.new()
@@ -99,7 +101,7 @@ func _setup_ui():
 
 func _create_creature_panel(index: int) -> Panel:
 	var creature_panel = Panel.new()
-	creature_panel.custom_minimum_size = Vector2(420, 600)
+	creature_panel.custom_minimum_size = Vector2(218, 378)
 	
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.2, 0.18, 0.28, 1.0)
@@ -116,13 +118,13 @@ func _create_creature_panel(index: int) -> Panel:
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 15)
+	vbox.add_theme_constant_override("separation", 8)
 	var margin_container = MarginContainer.new()
 	margin_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin_container.add_theme_constant_override("margin_top", 25)
-	margin_container.add_theme_constant_override("margin_bottom", 25)
-	margin_container.add_theme_constant_override("margin_left", 20)
-	margin_container.add_theme_constant_override("margin_right", 20)
+	margin_container.add_theme_constant_override("margin_top", 13)
+	margin_container.add_theme_constant_override("margin_bottom", 13)
+	margin_container.add_theme_constant_override("margin_left", 10)
+	margin_container.add_theme_constant_override("margin_right", 10)
 	creature_panel.add_child(margin_container)
 	margin_container.add_child(vbox)
 	
@@ -130,22 +132,22 @@ func _create_creature_panel(index: int) -> Panel:
 	var element_label = Label.new()
 	element_label.name = "ElementLabel"
 	element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	element_label.add_theme_font_size_override("font_size", 28)
+	element_label.add_theme_font_size_override("font_size", 15)
 	vbox.add_child(element_label)
 	
 	# クリーチャー名
 	var name_label = Label.new()
 	name_label.name = "NameLabel"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 36)
+	name_label.add_theme_font_size_override("font_size", 19)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(name_label)
-	
+
 	# ステータス（ST/HP）
 	var stats_label = Label.new()
 	stats_label.name = "StatsLabel"
 	stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats_label.add_theme_font_size_override("font_size", 32)
+	stats_label.add_theme_font_size_override("font_size", 17)
 	stats_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.7))
 	vbox.add_child(stats_label)
 	
@@ -158,7 +160,7 @@ func _create_creature_panel(index: int) -> Panel:
 	var cost_label = Label.new()
 	cost_label.name = "CostLabel"
 	cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cost_label.add_theme_font_size_override("font_size", 36)
+	cost_label.add_theme_font_size_override("font_size", 19)
 	cost_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
 	vbox.add_child(cost_label)
 	
@@ -166,7 +168,7 @@ func _create_creature_panel(index: int) -> Panel:
 	var condition_label = Label.new()
 	condition_label.name = "ConditionLabel"
 	condition_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	condition_label.add_theme_font_size_override("font_size", 24)
+	condition_label.add_theme_font_size_override("font_size", 13)
 	condition_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	condition_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(condition_label)
@@ -175,7 +177,7 @@ func _create_creature_panel(index: int) -> Panel:
 	var reason_label = Label.new()
 	reason_label.name = "ReasonLabel"
 	reason_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	reason_label.add_theme_font_size_override("font_size", 22)
+	reason_label.add_theme_font_size_override("font_size", 12)
 	reason_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
 	reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	vbox.add_child(reason_label)
@@ -184,8 +186,8 @@ func _create_creature_panel(index: int) -> Panel:
 	var place_button = Button.new()
 	place_button.name = "PlaceButton"
 	place_button.text = "配置"
-	place_button.custom_minimum_size = Vector2(280, 80)
-	place_button.add_theme_font_size_override("font_size", 32)
+	place_button.custom_minimum_size = Vector2(145, 42)
+	place_button.add_theme_font_size_override("font_size", 17)
 	place_button.pressed.connect(_on_place_pressed.bind(index))
 	vbox.add_child(place_button)
 	
@@ -320,19 +322,13 @@ func _get_element_name(element: String) -> String:
 		_: return element
 
 func _get_element_color(element: String) -> Color:
-	match element:
-		"fire": return Color(1.0, 0.5, 0.3)
-		"water": return Color(0.3, 0.6, 1.0)
-		"earth": return Color(0.8, 0.6, 0.3)
-		"wind": return Color(0.3, 1.0, 0.5)
-		"neutral": return Color(0.7, 0.7, 0.7)
-		_: return Color(1.0, 1.0, 1.0)
+	return GC.ELEMENT_COLORS.get(element, Color.WHITE)
 
 func _center_panel():
 	var viewport_size = get_viewport_rect().size
 	panel.position = Vector2(
 		(viewport_size.x - panel.size.x) / 2,
-		(viewport_size.y - panel.size.y) / 2 - 150
+		(viewport_size.y - panel.size.y) / 2 - 78
 	)
 
 func hide_selection():

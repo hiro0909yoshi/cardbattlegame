@@ -124,13 +124,13 @@ func test_lucky_json():
 func test_choice_json():
 	assert_true(_get_effect_types(2090).has("draw_by_type"), "チョイス: draw_by_type")
 
-## ラック(2095): draw_cards
-func test_luck_json():
+## ドロー(2095): draw_cards
+func test_draw_json():
 	var card = CardLoader.get_card_by_id(2095)
 	var effects: Array = card.get("effect_parsed", {}).get("effects", [])
 	for e in effects:
 		if e.get("effect_type", "") == "draw_cards":
-			assert_eq(int(e.get("count", 0)), 2, "ラック: count=2")
+			assert_eq(int(e.get("count", 0)), 2, "ドロー: count=2")
 
 ## オラクル(2078): draw_from_deck_selection
 func test_oracle_json():

@@ -67,10 +67,10 @@ func _setup_ui() -> void:
 	_vs_label.text = "VS"
 	_vs_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_vs_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_vs_label.add_theme_font_size_override("font_size", 100)
+	_vs_label.add_theme_font_size_override("font_size", 63)
 	_vs_label.add_theme_color_override("font_color", Color.WHITE)
 	_vs_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_vs_label.add_theme_constant_override("outline_size", 4)
+	_vs_label.add_theme_constant_override("outline_size", 3)
 	_vs_label.modulate.a = 0.0
 	container.add_child(_vs_label)
 	
@@ -113,39 +113,39 @@ func _layout_ui() -> void:
 	if get_viewport():
 		viewport_size = get_viewport().get_visible_rect().size
 	
-	# カードサイズ（3.9倍スケール）
-	var card_width = 220 * 3.9
-	var card_height = 293 * 3.9
-	
-	var center_y = viewport_size.y / 2 - 150 - 500 - 50  # 550ピクセル上に（さらに50px上）
-	
+	# カードサイズ（2.5倍スケール）
+	var card_width = 220 * 2.5
+	var card_height = 293 * 2.5
+
+	var center_y = viewport_size.y / 2 - 95 - 315 - 32  # viewport 1920×1080用
+
 	# 画面中央を基準に左右均等配置
 	var center_x = viewport_size.x / 2
-	var card_spacing = 300  # カード間のスペース（片側300px = 合計600px）
-	
+	var card_spacing = 190  # カード間のスペース（片側190px）
+
 	# 攻撃側（左）- カードの右端が中央から少し左
 	var attacker_x = center_x - card_spacing - card_width
 	_attacker_display.position = Vector2(attacker_x, center_y)
 	_attacker_display.original_position = _attacker_display.position
-	
+
 	# 防御側（右）- カードの左端が中央から少し右
 	var defender_x = center_x + card_spacing
 	_defender_display.position = Vector2(defender_x, center_y)
 	_defender_display.original_position = _defender_display.position
-	
+
 	# VS（中央）
-	_vs_label.position = Vector2(center_x - 30, center_y + card_height / 2 - 50)
-	
-	# HPバー固定位置（画面下部、片側300px = 合計600px離す）
-	var hp_bar_width = 1040  # HP_BAR_WIDTH
-	var hp_bar_y = viewport_size.y - 360  # 画面下から360px
-	var hp_bar_spacing = 300  # HPバーの中央からの距離
-	
-	# 攻撃側HPバー - 中央から左に300px
+	_vs_label.position = Vector2(center_x - 19, center_y + card_height / 2 - 32)
+
+	# HPバー固定位置（画面下部）
+	var hp_bar_width = 656  # HP_BAR_WIDTH
+	var hp_bar_y = viewport_size.y - 227  # 画面下から227px
+	var hp_bar_spacing = 190  # HPバーの中央からの距離
+
+	# 攻撃側HPバー - 中央から左
 	var attacker_hp_x = center_x - hp_bar_spacing - hp_bar_width
 	_attacker_hp_bar.position = Vector2(attacker_hp_x, hp_bar_y)
-	
-	# 防御側HPバー - 中央から右に300px
+
+	# 防御側HPバー - 中央から右
 	var defender_hp_x = center_x + hp_bar_spacing
 	_defender_hp_bar.position = Vector2(defender_hp_x, hp_bar_y)
 
@@ -329,8 +329,8 @@ func show_reflect_attack(defender_side: String):
 ## 反射用の光玉を作成（赤系グラデーション）
 func _create_reflect_orb(center: Vector2) -> Control:
 	var orb = ReflectOrb.new()
-	orb.size = Vector2(16, 16)
-	orb.position = center - Vector2(8, 8)
+	orb.size = Vector2(10, 10)
+	orb.position = center - Vector2(5, 5)
 	orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_effect_layer.add_child(orb)
 	return orb
@@ -342,20 +342,20 @@ func _animate_reflect_charge(orb: Control, center: Vector2, duration: float) -> 
 	var flash = Panel.new()
 	var flash_style = StyleBoxFlat.new()
 	flash_style.bg_color = Color(1.0, 0.3, 0.2, 0.4)
-	flash_style.corner_radius_top_left = 200
-	flash_style.corner_radius_top_right = 200
-	flash_style.corner_radius_bottom_left = 200
-	flash_style.corner_radius_bottom_right = 200
+	flash_style.corner_radius_top_left = 126
+	flash_style.corner_radius_top_right = 126
+	flash_style.corner_radius_bottom_left = 126
+	flash_style.corner_radius_bottom_right = 126
 	flash.add_theme_stylebox_override("panel", flash_style)
-	flash.size = Vector2(50, 50)
-	flash.position = center - Vector2(25, 25)
+	flash.size = Vector2(32, 32)
+	flash.position = center - Vector2(16, 16)
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_effect_layer.add_child(flash)
 
 	var flash_tween = create_tween()
 	flash_tween.set_parallel(true)
-	flash_tween.tween_property(flash, "size", Vector2(400, 400), duration * 0.6)
-	flash_tween.tween_property(flash, "position", center - Vector2(200, 200), duration * 0.6)
+	flash_tween.tween_property(flash, "size", Vector2(252, 252), duration * 0.6)
+	flash_tween.tween_property(flash, "position", center - Vector2(126, 126), duration * 0.6)
 	flash_tween.tween_property(flash, "modulate:a", 0.0, duration * 0.6)
 	flash_tween.chain().tween_callback(flash.queue_free)
 
@@ -363,7 +363,7 @@ func _animate_reflect_charge(orb: Control, center: Vector2, duration: float) -> 
 	var tween = create_tween()
 	tween.tween_method(func(t: float):
 		var base_t = t / duration
-		var current_size = Vector2(16, 16).lerp(Vector2(200, 200), base_t)
+		var current_size = Vector2(10, 10).lerp(Vector2(126, 126), base_t)
 		orb.size = current_size
 		orb.position = center - current_size / 2
 		orb.queue_redraw()
@@ -374,8 +374,8 @@ func _animate_reflect_charge(orb: Control, center: Vector2, duration: float) -> 
 ## エネルギーの玉を作成（_draw()ベースのなめらかグラデーション）
 func _create_energy_orb(center: Vector2) -> Control:
 	var orb = EnergyOrb.new()
-	orb.size = Vector2(16, 16)
-	orb.position = center - Vector2(8, 8)
+	orb.size = Vector2(10, 10)
+	orb.position = center - Vector2(5, 5)
 	orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_effect_layer.add_child(orb)
 	return orb
@@ -398,7 +398,7 @@ func _spawn_gathering_particles(center: Vector2, duration: float) -> void:
 
 		# ランダムな位置から出発（中心から200〜350px離れた円周上）
 		var angle = (TAU / particle_count) * i + randf_range(-0.3, 0.3)
-		var dist = randf_range(200, 350)
+		var dist = randf_range(126, 221)
 		var start_pos = center + Vector2(cos(angle), sin(angle)) * dist
 		particle.position = start_pos - Vector2(10, 10)
 
@@ -429,7 +429,7 @@ func _spawn_gathering_particles(center: Vector2, duration: float) -> void:
 ## 玉のチャージアニメーション（小→大 + 脈動 + 周回パーティクル）
 func _animate_orb_charge(orb: Control, duration: float) -> void:
 	var center = orb.position + orb.size / 2
-	var target_size = Vector2(300, 300)
+	var target_size = Vector2(189, 189)
 
 	# メインの拡大アニメーション
 	var tween = create_tween()
@@ -438,7 +438,7 @@ func _animate_orb_charge(orb: Control, duration: float) -> void:
 		# 脈動: 振幅0.25で4回、はっきり膨張・収縮
 		var pulse = sin(base_t * TAU * 4.0) * 0.25 * base_t
 		var scale_factor = base_t + pulse
-		var current_size = Vector2(16, 16).lerp(target_size, clampf(scale_factor, 0.0, 1.3))
+		var current_size = Vector2(10, 10).lerp(target_size, clampf(scale_factor, 0.0, 1.3))
 		orb.size = current_size
 		orb.position = center - current_size / 2
 		orb.queue_redraw()
@@ -455,7 +455,7 @@ func _spawn_orbiting_particles(center: Vector2, duration: float) -> void:
 	var orbit_count = 6
 	for i in range(orbit_count):
 		var p = EnergyOrb.new()
-		p.size = Vector2(30, 30)
+		p.size = Vector2(19, 19)
 		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		p.modulate.a = 0.0
 		_effect_layer.add_child(p)
@@ -469,7 +469,7 @@ func _spawn_orbiting_particles(center: Vector2, duration: float) -> void:
 		tween.tween_interval(delay)
 		tween.tween_method(func(t: float):
 			# 玉の外周を周回（半径180〜220で揺らぐ）
-			var orbit_radius = 180.0 + 40.0 * sin(t * TAU * 3.0)
+			var orbit_radius = 114.0 + 25.0 * sin(t * TAU * 3.0)
 			var angle = start_angle + t * TAU * 3.0
 			var pos = p_center + Vector2(cos(angle), sin(angle)) * orbit_radius
 			p.position = pos - p.size / 2
@@ -505,8 +505,8 @@ func _spawn_trail_particle(pos: Vector2) -> void:
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
 	p.add_theme_stylebox_override("panel", style)
-	p.size = Vector2(14, 14)
-	p.position = pos - Vector2(7, 7) + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+	p.size = Vector2(9, 9)
+	p.position = pos - Vector2(4, 4) + Vector2(randf_range(-5, 5), randf_range(-5, 5))
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_effect_layer.add_child(p)
 

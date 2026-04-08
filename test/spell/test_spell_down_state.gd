@@ -12,7 +12,7 @@ func _get_effect_type(spell_id: int) -> String:
 	var effects: Array = card.get("effect_parsed", {}).get("effects", [])
 	for e in effects:
 		var et = e.get("effect_type", "")
-		if et == "set_down" or et == "clear_down" or et == "down_clear":
+		if et == "set_down" or et == "clear_down":
 			return et
 	return ""
 
@@ -24,7 +24,7 @@ func _get_effect_type(spell_id: int) -> String:
 ## ラリー(2005): down_clear
 func test_rally_json():
 	var et = _get_effect_type(2005)
-	assert_true(et == "down_clear" or et == "clear_down", "ラリー: down_clear or clear_down")
+	assert_eq(et, "clear_down", "ラリー: clear_down")
 
 ## リジェネ(2121): clear_down（full_healも持つ）
 func test_regen_json():
@@ -34,7 +34,7 @@ func test_regen_json():
 	var has_heal = false
 	for e in effects:
 		var et = e.get("effect_type", "")
-		if et == "clear_down" or et == "down_clear":
+		if et == "clear_down":
 			has_clear_down = true
 		if et == "full_heal":
 			has_heal = true
@@ -48,7 +48,7 @@ func test_sleep_json():
 ## リバイブ(9044): clear_down
 func test_revive_json():
 	var et = _get_effect_type(9044)
-	assert_true(et == "clear_down" or et == "down_clear", "リバイブ: clear_down or down_clear")
+	assert_eq(et, "clear_down", "リバイブ: clear_down")
 
 
 # ========================================

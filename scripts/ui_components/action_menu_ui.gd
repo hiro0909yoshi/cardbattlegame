@@ -1,6 +1,8 @@
 class_name ActionMenuUI
 extends Control
 
+const GC = preload("res://scripts/game_constants.gd")
+
 ## 汎用アクションメニューUI
 ## ドミニオコマンド、アルカナアーツ選択などで共通使用
 
@@ -19,11 +21,11 @@ var items: Array = []  # {text, color, icon, disabled, data}
 var ui_manager_ref = null
 
 # 表示設定
-var panel_width: int = 450
-var panel_height: int = 600
-var button_height: int = 100
-var button_spacing: int = 20
-var font_size: int = 36
+var panel_width: int = 380
+var panel_height: int = 550
+var button_height: int = 88
+var button_spacing: int = 28
+var font_size: int = 32
 var position_left: bool = true  # true=左側, false=右側
 
 
@@ -129,21 +131,21 @@ func _create_land_info_panel(element: String, level: int):
 	panel.name = "LandInfoPanel"
 	
 	var viewport_size = get_viewport().get_visible_rect().size
-	var margin = 30
+	var margin = 19
 	var nav_button_width = 200
-	
+
 	# サイズ
-	var info_panel_width = 300
-	var info_panel_height = 140
-	
+	var info_panel_width = 190
+	var info_panel_height = 90
+
 	# ActionMenuと同じ位置（右端を揃える）
 	var panel_x: float
 	if position_left:
 		panel_x = margin
 	else:
 		# 上下ボタンの左側に配置
-		panel_x = viewport_size.x - info_panel_width - margin - nav_button_width - 700
-	var panel_y = (viewport_size.y - info_panel_height) / 2 - 100
+		panel_x = viewport_size.x - info_panel_width - margin - nav_button_width - 442
+	var panel_y = (viewport_size.y - info_panel_height) / 2 - 63
 	
 	panel.position = Vector2(panel_x, panel_y)
 	panel.size = Vector2(info_panel_width, info_panel_height)
@@ -168,9 +170,9 @@ func _create_land_info_panel(element: String, level: int):
 	# タイトルラベル
 	var title_label = Label.new()
 	title_label.text = "移動先"
-	title_label.position = Vector2(15, 15)
-	title_label.size = Vector2(info_panel_width - 30, 35)
-	title_label.add_theme_font_size_override("font_size", 28)
+	title_label.position = Vector2(9, 9)
+	title_label.size = Vector2(info_panel_width - 19, 22)
+	title_label.add_theme_font_size_override("font_size", 18)
 	title_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	panel.add_child(title_label)
 	
@@ -180,26 +182,26 @@ func _create_land_info_panel(element: String, level: int):
 	match element:
 		"fire":
 			element_name = "火"
-			element_color = Color(1.0, 0.4, 0.3)
+			element_color = GC.ELEMENT_COLORS.get("fire", Color.WHITE)
 		"water":
 			element_name = "水"
-			element_color = Color(0.3, 0.6, 1.0)
+			element_color = GC.ELEMENT_COLORS.get("water", Color.WHITE)
 		"earth":
 			element_name = "地"
-			element_color = Color(0.8, 0.6, 0.3)
+			element_color = GC.ELEMENT_COLORS.get("earth", Color.WHITE)
 		"wind":
 			element_name = "風"
-			element_color = Color(0.4, 0.9, 0.5)
+			element_color = GC.ELEMENT_COLORS.get("wind", Color.WHITE)
 		"neutral":
 			element_name = "無"
-			element_color = Color(0.7, 0.7, 0.7)
+			element_color = GC.ELEMENT_COLORS.get("neutral", Color.WHITE)
 	
 	# 属性・レベル情報
 	var info_label = Label.new()
 	info_label.text = "属性: %s　Lv: %d" % [element_name, level]
-	info_label.position = Vector2(15, 60)
-	info_label.size = Vector2(270, 60)
-	info_label.add_theme_font_size_override("font_size", 36)
+	info_label.position = Vector2(9, 38)
+	info_label.size = Vector2(170, 38)
+	info_label.add_theme_font_size_override("font_size", 23)
 	info_label.add_theme_color_override("font_color", element_color)
 	panel.add_child(info_label)
 
@@ -215,7 +217,7 @@ func set_position_left(left: bool):
 
 
 ## サイズを設定
-func set_menu_size(width: int, height: int, btn_height: int = 100, fnt_size: int = 36, btn_spacing: int = 20):
+func set_menu_size(width: int, height: int, btn_height: int = 63, fnt_size: int = 23, btn_spacing: int = 13):
 	panel_width = width
 	panel_height = height
 	button_height = btn_height
@@ -231,17 +233,17 @@ func _create_panel():
 	panel.name = "ActionMenuPanel"
 	
 	var viewport_size = get_viewport().get_visible_rect().size
-	var margin = 30
+	var margin = 19
 	var nav_button_width = 200  # グローバルナビゲーションボタンの幅
-	
+
 	var panel_x: float
 	if position_left:
 		panel_x = margin
 	else:
 		# 上下ボタンの左側に配置
-		panel_x = viewport_size.x - panel_width - margin - nav_button_width - 300
-	
-	var panel_y = (viewport_size.y - panel_height) / 2 - 150
+		panel_x = viewport_size.x - panel_width - margin - nav_button_width - 60
+
+	var panel_y = (viewport_size.y - panel_height) / 2 - 140
 	
 	panel.position = Vector2(panel_x, panel_y)
 	panel.size = Vector2(panel_width, panel_height)
@@ -267,24 +269,24 @@ func _create_panel():
 func _create_buttons(title: String):
 	buttons.clear()
 	
-	var button_y = 20
-	var button_width = panel_width - 40
-	
+	var button_y = 15
+	var button_width = panel_width - 26
+
 	# タイトルラベル（オプション）
 	if not title.is_empty():
 		var title_label = Label.new()
 		title_label.text = title
-		title_label.position = Vector2(20, button_y)
-		title_label.size = Vector2(button_width, 40)
+		title_label.position = Vector2(13, button_y)
+		title_label.size = Vector2(button_width, 30)
 		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		title_label.add_theme_font_size_override("font_size", font_size)
 		title_label.add_theme_color_override("font_color", Color(1, 1, 1))
 		panel.add_child(title_label)
-		button_y += 50
-	
+		button_y += 60
+
 	for i in range(items.size()):
 		var item = items[i]
-		var btn = _create_button(item, Vector2(20, button_y), Vector2(button_width, button_height), i)
+		var btn = _create_button(item, Vector2(13, button_y), Vector2(button_width, button_height), i)
 		panel.add_child(btn)
 		buttons.append(btn)
 		button_y += button_height + button_spacing

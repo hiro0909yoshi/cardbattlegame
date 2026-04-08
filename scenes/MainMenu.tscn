@@ -174,28 +174,28 @@ theme_override_constants/separation = 20
 
 [node name="PlayerNameButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 56
 text = "プレイヤー名"
 flat = true
 
 [node name="ResetGoldButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 10
 text = "💰リセット"
 
 [node name="ResetStaminaButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 10
 text = "⚡リセット"
 
 [node name="ResetStoneButton" type="Button" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox/NameHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 10
 text = "💎リセット"
 
 [node name="TitleLabel" type="Label" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/UserInfoPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.7, 0.7, 0.3, 1)
 text = "はじまりの一歩"
 
@@ -204,7 +204,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CharacterPreview" type="SubViewportContainer" parent="MainVBox/ContentArea/LeftPanel/VBoxContainer/CharacterContainer"]
-custom_minimum_size = Vector2(800, 900)
+custom_minimum_size = Vector2(533, 600)
 layout_mode = 2
 stretch = true
 script = ExtResource("2_preview")
@@ -227,77 +227,77 @@ alignment = 1
 [node name="BattleContainer" type="VBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 120
+theme_override_constants/separation = 62
 alignment = 1
 
 [node name="TopRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 160
+theme_override_constants/separation = 83
 
 [node name="QuestButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/TopRow"]
-custom_minimum_size = Vector2(700, 300)
+custom_minimum_size = Vector2(470, 246)
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 48
 text = "クエスト"
 
 [node name="TournamentButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/TopRow"]
-custom_minimum_size = Vector2(700, 300)
+custom_minimum_size = Vector2(470, 246)
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 48
 text = "大 会"
 
 [node name="BottomBattleRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 160
+theme_override_constants/separation = 83
 
 [node name="NetBattleButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/BottomBattleRow"]
-custom_minimum_size = Vector2(700, 300)
+custom_minimum_size = Vector2(470, 246)
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 48
 text = "ネット対戦"
 
 [node name="SoloBattleButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/BattleContainer/BottomBattleRow"]
-custom_minimum_size = Vector2(700, 300)
+custom_minimum_size = Vector2(470, 246)
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 48
 text = "ソロバトル"
 
 [node name="MenuContainer" type="MarginContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox"]
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_constants/margin_bottom = 40
-theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 21
+theme_override_constants/margin_right = 21
 
 [node name="BottomRow" type="HBoxContainer" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer"]
 layout_mode = 2
 alignment = 2
-theme_override_constants/separation = 160
+theme_override_constants/separation = 83
 
 [node name="DeckButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
-custom_minimum_size = Vector2(140, 140)
+custom_minimum_size = Vector2(124, 124)
 layout_mode = 2
 size_flags_vertical = 8
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 21
 text = "アルバム"
 
 [node name="StorageButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
-custom_minimum_size = Vector2(140, 140)
+custom_minimum_size = Vector2(124, 124)
 layout_mode = 2
 size_flags_vertical = 8
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 21
 text = "倉庫"
 
 [node name="FacilityButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
-custom_minimum_size = Vector2(140, 140)
+custom_minimum_size = Vector2(124, 124)
 layout_mode = 2
 size_flags_vertical = 8
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 21
 text = "施設"
 
 [node name="ShopButton" type="Button" parent="MainVBox/ContentArea/RightPanel/RightVBox/MenuContainer/BottomRow"]
-custom_minimum_size = Vector2(320, 200)
+custom_minimum_size = Vector2(216, 164)
 layout_mode = 2
-theme_override_font_sizes/font_size = 56
+theme_override_font_sizes/font_size = 38
 text = "ショップ"

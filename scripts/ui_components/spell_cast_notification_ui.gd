@@ -80,7 +80,7 @@ func show_notification_and_wait(message: String) -> void:
 		current_tween.kill()
 	
 	# テキスト設定（中央揃え + ヒント）
-	var hint = "[color=gray][自動進行][/color]" if battle_auto_advance else "[color=gray][クリックで次へ][/color]"
+	var hint = "[color=gray][自動進行][/color]" if battle_auto_advance else "[color=#555555]click >>>[/color]"
 	var text = "[center]" + message + "\n\n" + hint + "[/center]"
 	label.text = text
 

@@ -312,8 +312,6 @@ func _show_unlock_popup(gacha_name: String) -> void:
 	_waiting_unlock_popup = true
 	_unlock_overlay = overlay
 	await _unlock_popup_closed
-	_waiting_unlock_popup = false
-	_unlock_overlay = null
 
 
 ## ランク色を取得
@@ -366,11 +364,16 @@ func _input(event):
 
 ## 解禁ポップアップを閉じる
 func _close_unlock_popup():
+	if not _waiting_unlock_popup:
+		return
+	_waiting_unlock_popup = false
 	if _unlock_overlay:
+		var overlay = _unlock_overlay
+		_unlock_overlay = null
 		var tween = create_tween()
-		tween.tween_property(_unlock_overlay, "modulate:a", 0.0, 0.2)
+		tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
 		await tween.finished
-		_unlock_overlay.queue_free()
+		overlay.queue_free()
 	_unlock_popup_closed.emit()
 
 

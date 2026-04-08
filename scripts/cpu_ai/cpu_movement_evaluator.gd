@@ -37,6 +37,10 @@ const SCORE_CHECKPOINT_DIRECTION_BONUS = CPUAIConstantsScript.SCORE_CHECKPOINT_D
 # 足止めペナルティ
 const SCORE_FORCED_STOP_PENALTY = CPUAIConstantsScript.SCORE_FORCED_STOP_PENALTY
 
+# 高額通行料ペナルティ
+const SCORE_HIGH_TOLL_PENALTY = CPUAIConstantsScript.SCORE_HIGH_TOLL_PENALTY
+const HIGH_TOLL_THRESHOLD = CPUAIConstantsScript.HIGH_TOLL_THRESHOLD
+
 # 経路評価の最大距離
 const PATH_EVALUATION_DISTANCE = CPUAIConstantsScript.PATH_EVALUATION_DISTANCE
 
@@ -414,7 +418,10 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 		else:
 			# 倒せない → 通行料ペナルティ
 			score = toll * SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER
-		
+			# 高額通行料の追加ペナルティ
+			if toll >= HIGH_TOLL_THRESHOLD:
+				score += SCORE_HIGH_TOLL_PENALTY
+
 		# 足止めの場合は追加ペナルティ（勝敗に関わらず）
 		if is_forced_stop:
 			score += SCORE_FORCED_STOP_PENALTY

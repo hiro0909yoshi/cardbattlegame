@@ -15,7 +15,7 @@ signal start_passed(player_id: int)  # スタート地点通過時に発火
 
 # 移動設定
 const MOVE_DURATION = 0.1  # 1マスの移動時間
-const MOVE_HEIGHT = 1.0    # 駒の高さオフセット
+const MOVE_HEIGHT = 0.5    # 駒の高さオフセット
 const TILE_OFFSET = Vector3(0.8, 0, 0.8)  # タイル上の位置オフセット
 
 # 参照
@@ -689,6 +689,17 @@ func _play_walk_animation(player_node: Node, play: bool) -> void:
 		player_node.rotation = Vector3(0, deg_to_rad(45), 0)
 
 # 移動方向にキャラクターを向かせる
+# プレイヤーを指定タイル方向に向ける（セレクターから呼び出し用）
+func face_player_toward_tile(player_id: int, target_tile: int) -> void:
+	if player_id < 0 or player_id >= player_nodes.size():
+		return
+	if not tile_nodes.has(target_tile):
+		return
+	var player_node = player_nodes[player_id]
+	var target_pos = tile_nodes[target_tile].global_position
+	_face_direction(player_node, target_pos)
+
+
 func _face_direction(player_node: Node, target_pos: Vector3) -> void:
 	var current_pos = player_node.global_position
 	var direction = target_pos - current_pos

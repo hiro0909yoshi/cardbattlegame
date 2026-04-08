@@ -63,8 +63,13 @@ func _update_ui():
 	if _message_service:
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
 		_message_service.show_action_prompt("移動方向を選択: %s" % dir_text)
-	# カメラを選択方向に少しずらす
+	# プレイヤーを選択方向に向ける＋カメラを選択方向に少しずらす
 	var player_id = controller.current_moving_player
+	if player_id >= 0:
+		var ct_face = controller.player_tiles[player_id]
+		var nt_face = ct_face + selected_direction
+		if controller.tile_nodes.has(nt_face):
+			controller.face_player_toward_tile(player_id, nt_face)
 	if player_id >= 0:
 		var ct = controller.player_tiles[player_id]
 		var nt = ct + selected_direction

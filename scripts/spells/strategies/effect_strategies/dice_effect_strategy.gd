@@ -84,8 +84,8 @@ func execute(context: Dictionary) -> Dictionary:
 			var max_val = effect.get("max", 6)
 			effect_message = "ダイスを%d～%dに設定" % [min_val, max_val]
 		"dice_multi":
-			var times = effect.get("times", 2)
-			effect_message = "ダイスを%d回振る" % times
+			var dice_count = effect.get("count", 3)
+			effect_message = "サイコロを%d個振る" % dice_count
 		"dice_range_magic":
 			effect_message = "マジックダイス発動"
 		_:

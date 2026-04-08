@@ -152,7 +152,7 @@
 		"target_type": "self",
 		"effects": [
 		  {
-			"effect_type": "down_clear",
+			"effect_type": "clear_down",
 			"target": "own_creatures"
 		  }
 		]
@@ -1889,7 +1889,7 @@
 	  "cost": {
 		"ep": 20
 	  },
-	  "effect": "対象自ドミニオに刻印[吸魔]",
+	  "effect": "対象自クリーチャーに刻印[吸魔]",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {

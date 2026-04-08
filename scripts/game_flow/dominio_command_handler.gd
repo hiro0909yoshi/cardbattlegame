@@ -136,6 +136,7 @@ func _ready():
 	pass
 
 func _process(delta):
+	if DebugSettings.disable_all_process: return
 	# 選択マーカーを回転
 	TargetSelectionHelper.rotate_selection_marker(self, delta)
 

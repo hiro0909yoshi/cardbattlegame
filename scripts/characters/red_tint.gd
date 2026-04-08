@@ -9,13 +9,11 @@ func _ready():
 	_apply_color_swap($IdleModel)
 
 
-func _apply_color_swap(model: Node) -> void:
-	for child in model.get_children():
-		if child is MeshInstance3D:
-			_swap_mesh(child)
-		for grandchild in child.get_children():
-			if grandchild is MeshInstance3D:
-				_swap_mesh(grandchild)
+func _apply_color_swap(node: Node) -> void:
+	if node is MeshInstance3D:
+		_swap_mesh(node)
+	for child in node.get_children():
+		_apply_color_swap(child)
 
 
 func _swap_mesh(mesh_instance: MeshInstance3D) -> void:

@@ -17,7 +17,7 @@ func _ready():
 func _setup_viewport():
 	# SubViewport
 	_sub_viewport = SubViewport.new()
-	_sub_viewport.size = Vector2i(800, 900)
+	_sub_viewport.size = Vector2i(276, 310)
 	_sub_viewport.transparent_bg = true
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	add_child(_sub_viewport)

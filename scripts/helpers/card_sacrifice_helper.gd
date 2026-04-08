@@ -32,7 +32,8 @@ func set_card_selection_service(css: Object) -> void:
 
 ## 手札選択UIを表示し、選択されたカードを返す
 ## filter: "creature", "spell", "item", "" (全て)
-func show_hand_selection(player_id: int, filter: String = "", _message: String = "犠牲にするカードを選択") -> Dictionary:
+## exclude_card_id: 除外するカードのID（使用中のカード自身を犠牲にさせないため）
+func show_hand_selection(player_id: int, filter: String = "", _message: String = "犠牲にするカードを選択", exclude_card_id: String = "") -> Dictionary:
 	_selected_card = {}
 	_selected_index = -1
 
@@ -50,6 +51,10 @@ func show_hand_selection(player_id: int, filter: String = "", _message: String =
 		print("[CardSacrificeHelper] CardSelectionService未設定、最初のカードを使用")
 		return _fallback_selection(hand, filter)
 
+	# 除外カードIDを設定（使用中のカード自身を犠牲にさせない）
+	if exclude_card_id != "":
+		_card_selection_service_ref.excluded_card_id = exclude_card_id
+
 	# カード選択UIを表示
 	if player_system_ref:
 		var player = player_system_ref.players[player_id]
@@ -61,6 +66,10 @@ func show_hand_selection(player_id: int, filter: String = "", _message: String =
 
 	# UIを閉じる
 	_card_selection_service_ref.hide_card_selection_ui()
+
+	# 除外カードIDをリセット
+	if exclude_card_id != "":
+		_card_selection_service_ref.excluded_card_id = ""
 
 	# 選択されたカードを取得
 	if selected_index >= 0 and selected_index < hand.size():

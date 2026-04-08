@@ -25,6 +25,8 @@ var _selected_map_id: String = ""
 var _selected_rule_preset: String = "standard"
 var _maps: Array[Dictionary] = []
 var _map_preview_cache: Dictionary = {}
+var _map_swipe_start_y: float = 0.0
+var _map_is_swiping: bool = false
 var _is_host: bool = true  # ホストかゲストか
 var _max_players: int = 4  # 最大プレイヤー数
 var _local_ready: bool = false
@@ -83,21 +85,21 @@ func _ready():
 func _build_top_bar():
 	var top_hbox = HBoxContainer.new()
 	top_hbox.add_theme_constant_override("separation", 20)
-	top_hbox.custom_minimum_size = Vector2(0, 100)
+	top_hbox.custom_minimum_size = Vector2(0, 52)
 	_main_vbox.add_child(top_hbox)
 
 	# 退出ボタン
 	var back_button = Button.new()
 	back_button.text = "← 退出"
-	back_button.custom_minimum_size = Vector2(180, 80)
-	back_button.add_theme_font_size_override("font_size", 42)
+	back_button.custom_minimum_size = Vector2(240, 70)
+	back_button.add_theme_font_size_override("font_size", 32)
 	back_button.pressed.connect(_on_back_pressed)
 	top_hbox.add_child(back_button)
 
 	# タイトル
 	var title_label = Label.new()
 	title_label.text = "対戦準備（フレンドマッチ）"
-	title_label.add_theme_font_size_override("font_size", 72)
+	title_label.add_theme_font_size_override("font_size", 37)
 	title_label.add_theme_color_override("font_color", Color.WHITE)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -107,15 +109,15 @@ func _build_top_bar():
 	if _room_id != "":
 		var room_id_label = Label.new()
 		room_id_label.text = "ルームID: %s" % _room_id
-		room_id_label.add_theme_font_size_override("font_size", 54)
+		room_id_label.add_theme_font_size_override("font_size", 28)
 		room_id_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
-		room_id_label.custom_minimum_size = Vector2(360, 0)
+		room_id_label.custom_minimum_size = Vector2(187, 0)
 		room_id_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		top_hbox.add_child(room_id_label)
 	else:
 		# 右スペーサー（ルームIDなし時）
 		var spacer = Control.new()
-		spacer.custom_minimum_size = Vector2(120, 0)
+		spacer.custom_minimum_size = Vector2(62, 0)
 		top_hbox.add_child(spacer)
 
 
@@ -169,7 +171,7 @@ func _build_left_panel() -> Control:
 	# ===== ブック選択 =====
 	var book_label = Label.new()
 	book_label.text = "■ ブック選択"
-	book_label.add_theme_font_size_override("font_size", 48)
+	book_label.add_theme_font_size_override("font_size", 25)
 	book_label.add_theme_color_override("font_color", Color.WHITE)
 	left_vbox.add_child(book_label)
 
@@ -198,15 +200,15 @@ func _build_left_panel() -> Control:
 		var deck_name = deck.get("name", "ブック%d" % (i + 1))
 		var card_count = deck.get("cards", {}).size()
 		book_button.text = "%s\n(%d枚)" % [deck_name, card_count]
-		book_button.custom_minimum_size = Vector2(390, 176)
-		book_button.add_theme_font_size_override("font_size", 36)
+		book_button.custom_minimum_size = Vector2(202, 91)
+		book_button.add_theme_font_size_override("font_size", 19)
 		book_button.pressed.connect(_on_deck_selected.bind(i))
 		book_grid.add_child(book_button)
 		_book_buttons.append(book_button)
 
 	# 右側: ブックプレビュー（将来実装用のプレースホルダー）
 	var book_preview_panel = PanelContainer.new()
-	book_preview_panel.custom_minimum_size = Vector2(400, 0)
+	book_preview_panel.custom_minimum_size = Vector2(207, 0)
 	book_preview_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var book_preview_style = StyleBoxFlat.new()
 	book_preview_style.bg_color = Color(0.1, 0.1, 0.12, 1.0)
@@ -224,9 +226,9 @@ func _build_left_panel() -> Control:
 
 	var player_label = Label.new()
 	player_label.text = "■ プレイヤー"
-	player_label.add_theme_font_size_override("font_size", 48)
+	player_label.add_theme_font_size_override("font_size", 25)
 	player_label.add_theme_color_override("font_color", Color.WHITE)
-	player_label.custom_minimum_size = Vector2(0, 70)
+	player_label.custom_minimum_size = Vector2(0, 36)
 	left_vbox.add_child(player_label)
 
 	# プレイヤースロット（各行: 名前 + 準備完了マーク + キャラプレビュー）
@@ -254,19 +256,19 @@ func _build_left_panel() -> Control:
 
 		var num_label = Label.new()
 		num_label.text = "P%d:" % (slot_index + 1)
-		num_label.add_theme_font_size_override("font_size", 48)
+		num_label.add_theme_font_size_override("font_size", 25)
 		num_label.add_theme_color_override("font_color", Color.WHITE)
 		name_hbox.add_child(num_label)
 
 		var name_label = Label.new()
-		name_label.add_theme_font_size_override("font_size", 48)
+		name_label.add_theme_font_size_override("font_size", 25)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_hbox.add_child(name_label)
 
 		# 準備完了マーク
 		var ready_label = Label.new()
-		ready_label.add_theme_font_size_override("font_size", 48)
-		ready_label.custom_minimum_size = Vector2(100, 0)
+		ready_label.add_theme_font_size_override("font_size", 25)
+		ready_label.custom_minimum_size = Vector2(52, 0)
 		ready_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		slot_hbox.add_child(ready_label)
 
@@ -277,13 +279,13 @@ func _build_left_panel() -> Control:
 
 		# 右側: キャラプレビュー（SubViewportContainer）
 		var svc = SubViewportContainer.new()
-		svc.custom_minimum_size = Vector2(200, 150)
+		svc.custom_minimum_size = Vector2(104, 78)
 		svc.stretch = true
 		svc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		slot_hbox.add_child(svc)
 
 		var sv = SubViewport.new()
-		sv.size = Vector2i(200, 150)
+		sv.size = Vector2i(104, 78)
 		sv.transparent_bg = false
 		sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		sv.own_world_3d = true
@@ -351,16 +353,16 @@ func _build_right_panel() -> Control:
 	map_top_hbox.size_flags_stretch_ratio = 1.0
 	right_vbox.add_child(map_top_hbox)
 
-	# 左側：マップ選択リスト
+	# 左側：マップ選択リスト（ダイヤルボックス形式）
 	var map_list_vbox = VBoxContainer.new()
 	map_list_vbox.add_theme_constant_override("separation", 8)
 	map_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	map_list_vbox.size_flags_stretch_ratio = 0.4
+	map_list_vbox.size_flags_stretch_ratio = 0.5
 	map_top_hbox.add_child(map_list_vbox)
 
 	var map_label = Label.new()
 	map_label.text = "■ マップ選択"
-	map_label.add_theme_font_size_override("font_size", 48)
+	map_label.add_theme_font_size_override("font_size", 32)
 	map_label.add_theme_color_override("font_color", Color.WHITE)
 	map_list_vbox.add_child(map_label)
 
@@ -368,16 +370,21 @@ func _build_right_panel() -> Control:
 	if not _is_host:
 		var host_only_label = Label.new()
 		host_only_label.text = "（ホストが選択中）"
-		host_only_label.add_theme_font_size_override("font_size", 32)
+		host_only_label.add_theme_font_size_override("font_size", 17)
 		host_only_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 		map_list_vbox.add_child(host_only_label)
 
 	var map_scroll = ScrollContainer.new()
 	map_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	map_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	map_list_vbox.add_child(map_scroll)
 
+	# スワイプ対応
+	map_scroll.gui_input.connect(_on_map_scroll_input.bind(map_scroll))
+
 	var map_vbox = VBoxContainer.new()
-	map_vbox.add_theme_constant_override("separation", 28)
+	map_vbox.add_theme_constant_override("separation", 8)
+	map_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	map_scroll.add_child(map_vbox)
 
 	for map_data in _maps:
@@ -388,8 +395,9 @@ func _build_right_panel() -> Control:
 
 		var map_button = Button.new()
 		map_button.text = "%s (%dマス)" % [map_data.name, map_data.tile_count]
-		map_button.custom_minimum_size = Vector2(0, 75)
-		map_button.add_theme_font_size_override("font_size", 42)
+		map_button.custom_minimum_size = Vector2(0, 60)
+		map_button.add_theme_font_size_override("font_size", 30)
+		map_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		map_button.pressed.connect(_on_map_selected.bind(map_id))
 		# ゲストはマップ選択不可
 		if not _is_host:
@@ -403,7 +411,7 @@ func _build_right_panel() -> Control:
 	preview_margin.add_theme_constant_override("margin_right", 20)
 	preview_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	preview_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	preview_margin.size_flags_stretch_ratio = 0.48
+	preview_margin.size_flags_stretch_ratio = 0.5
 	map_top_hbox.add_child(preview_margin)
 
 	_map_preview = TextureRect.new()
@@ -425,7 +433,7 @@ func _build_right_panel() -> Control:
 	# ===== 下段：ルール設定（左右2列） =====
 	var rule_label = Label.new()
 	rule_label.text = "■ ルール設定"
-	rule_label.add_theme_font_size_override("font_size", 60)
+	rule_label.add_theme_font_size_override("font_size", 36)
 	rule_label.add_theme_color_override("font_color", Color.WHITE)
 	right_vbox.add_child(rule_label)
 
@@ -433,12 +441,12 @@ func _build_right_panel() -> Control:
 	if not _is_host:
 		var host_rule_label = Label.new()
 		host_rule_label.text = "（ホストが設定中）"
-		host_rule_label.add_theme_font_size_override("font_size", 32)
+		host_rule_label.add_theme_font_size_override("font_size", 17)
 		host_rule_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 		right_vbox.add_child(host_rule_label)
 
 	var rule_hbox = HBoxContainer.new()
-	rule_hbox.add_theme_constant_override("separation", 60)
+	rule_hbox.add_theme_constant_override("separation", 40)
 	right_vbox.add_child(rule_hbox)
 
 	# --- 左列：プリセット + 最大ターン ---
@@ -451,14 +459,14 @@ func _build_right_panel() -> Control:
 	# プリセット
 	var preset_label = Label.new()
 	preset_label.text = "プリセット:"
-	preset_label.add_theme_font_size_override("font_size", 54)
+	preset_label.add_theme_font_size_override("font_size", 34)
 	rule_left_grid.add_child(preset_label)
 
 	_rule_preset_option = OptionButton.new()
-	_rule_preset_option.custom_minimum_size = Vector2(340, 80)
-	_rule_preset_option.add_theme_font_size_override("font_size", 54)
+	_rule_preset_option.custom_minimum_size = Vector2(210, 50)
+	_rule_preset_option.add_theme_font_size_override("font_size", 34)
 	rule_left_grid.add_child(_rule_preset_option)
-	_rule_preset_option.get_popup().add_theme_font_size_override("font_size", 63)
+	_rule_preset_option.get_popup().add_theme_font_size_override("font_size", 33)
 
 	_rule_preset_option.add_item("スタンダード", 0)
 	_rule_preset_option.add_item("クイック", 1)
@@ -472,7 +480,7 @@ func _build_right_panel() -> Control:
 	# 最大ターン
 	var turns_label = Label.new()
 	turns_label.text = "最大ターン:"
-	turns_label.add_theme_font_size_override("font_size", 54)
+	turns_label.add_theme_font_size_override("font_size", 34)
 	rule_left_grid.add_child(turns_label)
 
 	_max_turns_spin = SpinBox.new()
@@ -480,7 +488,7 @@ func _build_right_panel() -> Control:
 	_max_turns_spin.max_value = 100
 	_max_turns_spin.step = 1
 	_max_turns_spin.value = 0
-	var turns_row = _create_spin_with_arrows(_max_turns_spin, 280, true)
+	var turns_row = _create_spin_with_arrows(_max_turns_spin, 145, true)
 	rule_left_grid.add_child(turns_row)
 
 	# --- 右列：目標TEP + 初期EP ---
@@ -494,7 +502,7 @@ func _build_right_panel() -> Control:
 	# 目標TEP
 	var tep_label = Label.new()
 	tep_label.text = "目標TEP:"
-	tep_label.add_theme_font_size_override("font_size", 54)
+	tep_label.add_theme_font_size_override("font_size", 34)
 	rule_right_grid.add_child(tep_label)
 
 	_target_tep_spin = SpinBox.new()
@@ -502,14 +510,14 @@ func _build_right_panel() -> Control:
 	_target_tep_spin.max_value = 30000
 	_target_tep_spin.step = 1000
 	_target_tep_spin.value = 8000
-	var tep_row = _create_spin_with_arrows(_target_tep_spin, 320)
+	var tep_row = _create_spin_with_arrows(_target_tep_spin, 166)
 	tep_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule_right_grid.add_child(tep_row)
 
 	# 初期EP（全員共通）
 	var ep_label = Label.new()
 	ep_label.text = "初期EP:"
-	ep_label.add_theme_font_size_override("font_size", 54)
+	ep_label.add_theme_font_size_override("font_size", 34)
 	rule_right_grid.add_child(ep_label)
 
 	_initial_ep_spin = SpinBox.new()
@@ -517,7 +525,7 @@ func _build_right_panel() -> Control:
 	_initial_ep_spin.max_value = 10000
 	_initial_ep_spin.step = 100
 	_initial_ep_spin.value = GameConstants.get_initial_magic("standard")
-	var ep_row = _create_spin_with_arrows(_initial_ep_spin, 320)
+	var ep_row = _create_spin_with_arrows(_initial_ep_spin, 166)
 	ep_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule_right_grid.add_child(ep_row)
 
@@ -533,12 +541,12 @@ func _build_right_panel() -> Control:
 func _build_bottom_area():
 	var bottom_hbox = HBoxContainer.new()
 	bottom_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	bottom_hbox.custom_minimum_size = Vector2(0, 100)
+	bottom_hbox.custom_minimum_size = Vector2(0, 52)
 	_main_vbox.add_child(bottom_hbox)
 
 	_action_button = Button.new()
-	_action_button.custom_minimum_size = Vector2(450, 100)
-	_action_button.add_theme_font_size_override("font_size", 54)
+	_action_button.custom_minimum_size = Vector2(350, 80)
+	_action_button.add_theme_font_size_override("font_size", 36)
 
 	if _is_host:
 		_action_button.text = "【 対戦開始 】"
@@ -865,7 +873,7 @@ func _update_player_preview(slot_index: int, model_path: String):
 		sv.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		return
 
-	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	sv.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 	var char_scene = load(model_path)
 	if not char_scene:
@@ -1012,7 +1020,7 @@ func _show_map_preview(map_id: String):
 
 func _generate_3d_map_preview(map_id: String, tiles: Array):
 	var sub_viewport = SubViewport.new()
-	sub_viewport.size = Vector2i(900, 700)
+	sub_viewport.size = Vector2i(468, 364)
 	sub_viewport.transparent_bg = false
 	sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
@@ -1121,9 +1129,9 @@ func _create_spin_with_arrows(spin: SpinBox, min_width: float, zero_as_infinity:
 
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
-	hbox.custom_minimum_size = Vector2(min_width, 80)
+	hbox.custom_minimum_size = Vector2(min_width, 50)
 
-	var btn_size := 70
+	var btn_size := 44
 
 	var _format_value = func(val: float) -> String:
 		if zero_as_infinity and int(val) == 0:
@@ -1134,7 +1142,7 @@ func _create_spin_with_arrows(spin: SpinBox, min_width: float, zero_as_infinity:
 	var up_btn = Button.new()
 	up_btn.text = "▲"
 	up_btn.custom_minimum_size = Vector2(btn_size, btn_size)
-	up_btn.add_theme_font_size_override("font_size", 40)
+	up_btn.add_theme_font_size_override("font_size", 26)
 	# ゲストは操作不可
 	if not _is_host:
 		up_btn.disabled = true
@@ -1143,7 +1151,7 @@ func _create_spin_with_arrows(spin: SpinBox, min_width: float, zero_as_infinity:
 	# 数値ラベル
 	var value_label = Label.new()
 	value_label.text = _format_value.call(spin.value)
-	value_label.add_theme_font_size_override("font_size", 72)
+	value_label.add_theme_font_size_override("font_size", 44)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(value_label)
@@ -1152,7 +1160,7 @@ func _create_spin_with_arrows(spin: SpinBox, min_width: float, zero_as_infinity:
 	var down_btn = Button.new()
 	down_btn.text = "▼"
 	down_btn.custom_minimum_size = Vector2(btn_size, btn_size)
-	down_btn.add_theme_font_size_override("font_size", 40)
+	down_btn.add_theme_font_size_override("font_size", 26)
 	if not _is_host:
 		down_btn.disabled = true
 	hbox.add_child(down_btn)
@@ -1187,7 +1195,7 @@ func _build_castle_background(viewport_size: Vector2) -> void:
 	bg_viewport.size = Vector2i(int(viewport_size.x), int(viewport_size.y))
 	bg_viewport.own_world_3d = true
 	bg_viewport.transparent_bg = false
-	bg_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	bg_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	bg_viewport_container.add_child(bg_viewport)
 
 	# WorldEnvironment（空と環境光）
@@ -1236,3 +1244,16 @@ func _build_castle_background(viewport_size: Vector2) -> void:
 	overlay.size = viewport_size
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(overlay)
+
+
+func _on_map_scroll_input(event: InputEvent, scroll: ScrollContainer) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_map_swipe_start_y = event.position.y
+			_map_is_swiping = true
+		else:
+			_map_is_swiping = false
+	elif event is InputEventScreenDrag and _map_is_swiping:
+		var delta = event.position.y - _map_swipe_start_y
+		scroll.scroll_vertical -= int(delta)
+		_map_swipe_start_y = event.position.y

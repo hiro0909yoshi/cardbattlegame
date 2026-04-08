@@ -35,6 +35,7 @@ func _ready():
 	set_process(true)
 
 func _process(delta: float):
+	if DebugSettings.disable_all_process: return
 	if visible and holes.size() > 0:
 		glow_time += delta * 3.0  # 速度調整
 		queue_redraw()

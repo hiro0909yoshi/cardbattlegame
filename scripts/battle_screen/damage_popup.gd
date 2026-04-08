@@ -23,9 +23,9 @@ func _setup_label() -> void:
 	add_child(_label)
 	
 	# フォント設定
-	_label.add_theme_font_size_override("font_size", 100)
+	_label.add_theme_font_size_override("font_size", 63)
 	_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_label.add_theme_constant_override("outline_size", 8)
+	_label.add_theme_constant_override("outline_size", 5)
 
 
 ## ダメージポップアップを表示
@@ -69,7 +69,7 @@ func _animate() -> void:
 	tween.set_parallel(true)
 	
 	# 上に浮かぶ
-	tween.tween_property(self, "position:y", start_pos.y - 50, 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "position:y", start_pos.y - 32, 0.8).set_ease(Tween.EASE_OUT)
 	
 	# スケールで強調
 	tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)

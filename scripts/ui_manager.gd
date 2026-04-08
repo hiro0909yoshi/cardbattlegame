@@ -967,9 +967,9 @@ func get_player_card_nodes(player_id: int) -> Array:
 
 # プレイヤー情報パネルがクリックされたときのハンドラ
 func _on_player_panel_clicked(player_id: int):
-	# 他のインフォパネルが開いていたら閉じる
+	# 他のインフォパネルが開いていたら閉じる（ナビゲーションボタンは保持）
 	if _info_panel_service:
-		_info_panel_service.hide_all_info_panels(true)
+		_info_panel_service.hide_all_info_panels(false)
 
 	if player_status_dialog and player_status_dialog.has_method("show_for_player"):
 		player_status_dialog.show_for_player(player_id)

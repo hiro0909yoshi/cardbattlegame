@@ -13,11 +13,11 @@ const COLOR_RED = Color("#F44336")        # 赤: ダメージ演出
 const COLOR_DARK_RED = Color("#B71C1C")    # 濃い赤: APバー
 
 # バーサイズ（4倍 × 1.3 = 5.2倍）
-const HP_BAR_WIDTH = 1040.0
-const HP_BAR_HEIGHT = 150.0
-const AP_BAR_WIDTH = 1040.0
-const AP_BAR_HEIGHT = 140.0
-const BAR_SPACING = 21.0
+const HP_BAR_WIDTH = 656.0
+const HP_BAR_HEIGHT = 95.0
+const AP_BAR_WIDTH = 656.0
+const AP_BAR_HEIGHT = 88.0
+const BAR_SPACING = 13.0
 
 # HPデータ
 var hp_data := {
@@ -58,22 +58,22 @@ func _setup_labels() -> void:
 	hp_label.size = Vector2(HP_BAR_WIDTH, HP_BAR_HEIGHT)
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 100)
+	hp_label.add_theme_font_size_override("font_size", 63)
 	hp_label.add_theme_color_override("font_color", Color.WHITE)
 	hp_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	hp_label.add_theme_constant_override("outline_size", 10)
+	hp_label.add_theme_constant_override("outline_size", 6)
 	add_child(hp_label)
-	
-	# APラベル（フォントサイズ5.2倍）
+
+	# APラベル
 	ap_label = Label.new()
 	ap_label.position = Vector2(0, HP_BAR_HEIGHT + BAR_SPACING)
 	ap_label.size = Vector2(AP_BAR_WIDTH, AP_BAR_HEIGHT)
 	ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ap_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	ap_label.add_theme_font_size_override("font_size", 100)
+	ap_label.add_theme_font_size_override("font_size", 63)
 	ap_label.add_theme_color_override("font_color", Color.WHITE)
 	ap_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	ap_label.add_theme_constant_override("outline_size", 10)
+	ap_label.add_theme_constant_override("outline_size", 6)
 	add_child(ap_label)
 
 
@@ -134,7 +134,7 @@ func _draw_hp_bar() -> void:
 		draw_rect(bar_rect, flash_color)
 	
 	# 枠線（5.2倍の太さ）
-	draw_rect(bar_rect, Color.WHITE, false, 5.0)
+	draw_rect(bar_rect, Color.WHITE, false, 3.0)
 
 
 ## APバーを描画
@@ -151,8 +151,8 @@ func _draw_ap_bar() -> void:
 	if filled_width > 0:
 		_draw_gradient_segment(0, y_offset, filled_width, AP_BAR_HEIGHT, COLOR_DARK_RED)
 
-	# 枠線（5.2倍の太さ）
-	draw_rect(bar_rect, Color.WHITE, false, 5.0)
+	# 枠線
+	draw_rect(bar_rect, Color.WHITE, false, 3.0)
 
 
 ## HPデータを設定

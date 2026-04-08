@@ -269,7 +269,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				if selection_mode == "sacrifice" and ui_manager_ref:
 					if _card_selection_service.excluded_card_index == i:
 						is_excluded = true
-					if _card_selection_service.excluded_card_id != "" and card_data.get("id", "") == _card_selection_service.excluded_card_id:
+					if _card_selection_service.excluded_card_id != "" and str(card_data.get("id", "")) == _card_selection_service.excluded_card_id:
 						is_excluded = true
 				
 				# 除外カード以外は全て選択可能
@@ -420,7 +420,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 # 到着予想タイルに基づいて制限表示のみ更新
 func update_restriction_for_destinations(destination_tiles: Array):
 	predicted_destination_tiles = destination_tiles
-	if not is_active or not ui_manager_ref:
+	if not ui_manager_ref:
 		return
 	
 	var player_id = current_selection_player_id
