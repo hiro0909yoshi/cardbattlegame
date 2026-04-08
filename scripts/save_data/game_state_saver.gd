@@ -190,7 +190,7 @@ static func _build_cards(card_system: CardSystem, player_system: PlayerSystem) -
 		var hand_ids: Array[int] = []
 		if card_system.player_hands.has(pid):
 			for card in card_system.player_hands[pid].get("data", []):
-				hand_ids.append(card.get("id", -1))
+				hand_ids.append(int(card.get("id", -1)))
 
 		# デッキ: card_id の配列
 		var deck_ids: Array = []
