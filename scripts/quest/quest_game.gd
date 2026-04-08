@@ -63,16 +63,32 @@ func _ready():
 		player_is_cpu,
 		DebugSettings.manual_control_all
 	)
-	
+
+	# ステージID・ゲームモードをGFMに設定（セーブ/復帰用）
+	if system_manager.game_flow_manager:
+		system_manager.game_flow_manager.current_stage_id = stage_id
+		system_manager.game_flow_manager.current_game_mode = "quest"
+
 	# ステージ固有の設定を適用
 	_apply_stage_settings()
 	
 	# ゲーム開始待機
 	await get_tree().create_timer(0.5).timeout
-	
-	# ゲーム開始
-	system_manager.start_game()
-	
+
+	# クラッシュ復帰チェック
+	var _is_restoring = false
+	if GameData.has_meta("restore_game") and GameData.get_meta("restore_game"):
+		GameData.remove_meta("restore_game")
+		var save_data = GameStateSaver.load_from_file()
+		if not save_data.is_empty():
+			_is_restoring = true
+			system_manager.restore_game(save_data)
+			print("[QuestGame] クラッシュ復帰完了")
+
+	# 通常のゲーム開始（復帰でない場合）
+	if not _is_restoring:
+		system_manager.start_game()
+
 	# CPUのバトルポリシーを設定（start_game後にCPUTurnProcessorが初期化される）
 	_setup_cpu_battle_policies()
 

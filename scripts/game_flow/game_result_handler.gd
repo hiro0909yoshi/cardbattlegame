@@ -81,6 +81,7 @@ func on_player_won(player_id: int):
 		print("[GameResultHandler] ゲームは既に終了しています")
 		return
 	_game_ended = true
+	_clear_game_state_save()
 	GameLogger.info("Game", "ゲーム終了: P%d勝利 ラウンド%d" % [player_id + 1, _get_current_turn()])
 
 	var _player = player_system.players[player_id]  # 将来の拡張用
@@ -109,6 +110,7 @@ func on_player_defeated(reason: String = ""):
 		print("[GameResultHandler] ゲームは既に終了しています")
 		return
 	_game_ended = true
+	_clear_game_state_save()
 	GameLogger.info("Game", "ゲーム終了: P1敗北 理由=%s ラウンド%d" % [reason, _get_current_turn()])
 
 	if _end_game_cb.is_valid():
@@ -333,3 +335,9 @@ func _return_to_stage_select():
 		# それ以外はメインメニューへ
 		print("[GameResultHandler] メインメニューへ遷移")
 		tree.change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
+## ゲーム状態セーブをクリア（ゲーム正常終了時）
+func _clear_game_state_save() -> void:
+	GameStateSaver.clear_save_file()
+	GameData.set_in_game(false)

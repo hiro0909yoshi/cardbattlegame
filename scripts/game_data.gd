@@ -89,7 +89,10 @@ var player_data = {
 		"se_volume": 1.0,
 		"language": "ja",
 		"auto_save": true
-	}
+	},
+
+	# === ゲーム中フラグ（クラッシュ復帰判定用） ===
+	"in_game": false
 }
 
 # プレイアブルキャラクターマスターデータ
@@ -188,6 +191,17 @@ func get_selected_character() -> Dictionary:
 	if PLAYABLE_CHARACTERS.has(char_id):
 		return PLAYABLE_CHARACTERS[char_id]
 	return PLAYABLE_CHARACTERS["hero"]
+
+
+## ゲーム中フラグを設定（クラッシュ復帰判定用）
+func set_in_game(value: bool) -> void:
+	player_data["in_game"] = value
+	save_to_file()
+
+
+## ゲーム中かどうかを取得
+func is_in_game() -> bool:
+	return player_data.get("in_game", false)
 
 
 ## 選択中キャラクターのモデルパスを取得

@@ -47,7 +47,8 @@ GameFlowManager (Central state machine)
 ├── PlayerSystem, PlayerBuffSystem, SkillSystem, SpecialTileSystem, LapSystem
 ├── UIManager (5 services: Navigation, Message, CardSelection, InfoPanel, PlayerInfo)
 ├── BattleScreenManager (battle animations)
-└── SpellSystemContainer (10 spell systems + SpellUIManager + CPUSpellAIContainer)
+├── SpellSystemContainer (10 spell systems + SpellUIManager + CPUSpellAIContainer)
+└── GameStateSaver (game state save/restore for crash recovery & future PvP)
 ```
 
 ### Initialization System
@@ -73,6 +74,7 @@ Turn Start → Draw Card → Spell Phase → Dice Roll → Movement → Tile Lan
 4. **BattleParticipant Pattern** - 一時的修正をベースステータスと分離管理
 5. **Autoload Singletons** - DebugSettings, CardLoader, UserCardDB, GameData, CpuDeckData
 6. **Direct Reference + Container Pattern** - SpellSystemContainer で10システム集約、DI で参照注入
+7. **State Save/Restore** - 5段階セーブポイント（turn_start/after_dice/after_movement/after_battle/after_tile_action）、クラッシュ復帰は「再生成＋上書き」方式
 
 ## Critical Implementation Details
 
@@ -105,6 +107,28 @@ spell_draw, spell_magic, spell_land, spell_curse, spell_dice,
 spell_curse_stat, spell_world_curse, spell_player_move, spell_curse_toll, spell_cost_modifier
 ```
 
+### Game State Save/Restore System
+- **目的**: クラッシュ復帰 + 将来のPvP切断復帰
+- **保存先**: `user://game_state.json`（tmp→rename方式で破損防止）
+- **保存タイミング**: 5段階セーブポイント（`save_phase` フィールドで識別）
+  - `turn_start`: ターン開始時（ダイス結果リセット後）
+  - `after_dice`: ダイス確定後（ダイス目は `last_dice_result` に保存、再ロール不可）
+  - `after_movement`: 移動完了後（駒位置確定）
+  - `after_battle`: バトル結果確定後（**バトル画面クラッシュループ防止**、全スキル効果反映済み）
+  - `after_tile_action`: タイルアクション完了後（召喚/ドミニオコマンド等）
+- **復帰方式**: 通常 `initialize_all()` → `apply_save_data()` で上書き → `_restore_phase` に応じたフェーズスキップ
+- **復帰時の動作**:
+  - `turn_start` → 通常開始（スペル→ダイスから）
+  - `after_dice` → スペル/ダイススキップ→移動へ
+  - `after_movement` → `process_tile_landing()` へスキップ
+  - `after_battle` → バトルUI出さずにターン終了（**重要: バトル中クラッシュ時の安全な復帰先**）
+  - `after_tile_action` → ターン終了→次プレイヤーへ
+- **保存対象**: players(位置・EP・刻印・魔法石), cards(デッキ・手札・捨て札), board(全タイル状態), lap_state, buffs, game_stats, save_phase
+- **クラッシュ検知**: `GameData.in_game` フラグ（player_save.json） + `game_state.json` 存在チェック
+- **ゲームモード判定**: `game_mode` フィールド ("quest" / "solo") で遷移先シーンを決定
+- **駒位置の注意**: `player_system.current_tile` ではなく `board_system_3d.get_player_tile()` が正（movement_controller管理）
+- **関連ファイル**: `game_state_saver.gd`, `game_data.gd`, `game_flow_manager.gd`, `game_result_handler.gd`, `game_3d.gd`, `quest_game.gd`, `main_menu.gd`
+
 ## File Organization
 
 ### Key Directories
@@ -120,7 +144,7 @@ scripts/
 ├── cpu_ai/             # CPU AI + CPUSpellAIContainer
 ├── battle_screen/      # Battle animations
 ├── tiles/, creatures/, quest/, tutorial/, helpers/, utils/
-├── save_data/          # Save/load system
+├── save_data/          # Save/load system (GameStateSaver: crash recovery & PvP state)
 └── network/            # Network functionality
 
 data/

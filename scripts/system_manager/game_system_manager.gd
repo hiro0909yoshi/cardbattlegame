@@ -121,9 +121,20 @@ func start_game() -> void:
 	if not is_initialized:
 		GameLogger.error("Init", "start_game() 呼び出し時に GameSystemManager が初期化されていません")
 		return
-	
+
 	if game_flow_manager:
 		game_flow_manager.start_game()
+
+
+## セーブデータからゲームを復帰
+func restore_game(save_data: Dictionary) -> bool:
+	if not is_initialized:
+		GameLogger.error("Init", "restore_game() 呼び出し時に GameSystemManager が初期化されていません")
+		return false
+
+	if game_flow_manager:
+		return game_flow_manager.restore_game(save_data)
+	return false
 
 # === フェーズ実装 ===
 
@@ -949,7 +960,8 @@ func _initialize_phase1a_handlers() -> void:
 
 	# Phase A-3d: DicePhaseHandler change_phase Callable 注入（DPH作成直後に実行）
 	var change_phase_cb = func(phase: int) -> void: game_flow_manager.change_phase(phase)
-	dice_phase_handler.inject_callbacks(change_phase_cb)
+	var on_dice_confirmed_cb = func(dice_value: int) -> void: game_flow_manager._on_dice_confirmed(dice_value)
+	dice_phase_handler.inject_callbacks(change_phase_cb, on_dice_confirmed_cb)
 
 	# Phase 6-B: DicePhaseHandler UI Signal接続
 	_connect_dice_phase_signals(dice_phase_handler, ui_manager)

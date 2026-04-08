@@ -71,6 +71,9 @@ func _ready():
 	# ログインボーナスチェック
 	_check_login_bonus()
 
+	# クラッシュ復帰チェック
+	_check_crash_recovery()
+
 	# デバッグ用：リセットボタン（後で削除）
 	if _reset_gold_button:
 		_reset_gold_button.pressed.connect(_on_reset_gold)
@@ -79,6 +82,60 @@ func _ready():
 	if _reset_stone_button:
 		_reset_stone_button.visible = DebugSettings.show_premium_stone
 		_reset_stone_button.pressed.connect(_on_reset_stone)
+
+
+## クラッシュ復帰チェック
+func _check_crash_recovery():
+	if not GameData.is_in_game():
+		return
+	if not GameStateSaver.has_save_file():
+		# セーブファイルがないのにin_gameフラグが立っている → フラグだけクリア
+		GameData.set_in_game(false)
+		return
+
+	# 復帰ダイアログを表示
+	var dialog = ConfirmationDialog.new()
+	dialog.title = "ゲーム復帰"
+	dialog.dialog_text = "前回のゲームが中断されました。\n復帰しますか？"
+	dialog.ok_button_text = "復帰する"
+	dialog.cancel_button_text = "破棄する"
+	dialog.exclusive = true
+
+	# フォントサイズを設定
+	var label: Label = dialog.get_label()
+	if label:
+		label.add_theme_font_size_override("font_size", 48)
+
+	dialog.confirmed.connect(_on_crash_recovery_confirmed)
+	dialog.canceled.connect(_on_crash_recovery_canceled)
+
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(800, 300))
+
+
+func _on_crash_recovery_confirmed():
+	# 復帰フラグを設定してゲームシーンへ遷移
+	GameData.set_meta("restore_game", true)
+
+	# セーブデータからステージID・ゲームモードを取得
+	var save_data = GameStateSaver.load_from_file()
+	var stage_id = save_data.get("stage_id", "")
+	var game_mode = save_data.get("game_mode", "solo")
+	if not stage_id.is_empty():
+		GameData.selected_stage_id = stage_id
+
+	# ゲームモードに応じたシーンへ遷移
+	if game_mode == "quest":
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/Quest.tscn")
+	else:
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
+
+
+func _on_crash_recovery_canceled():
+	# セーブデータを破棄
+	GameStateSaver.clear_save_file()
+	GameData.set_in_game(false)
+	print("[MainMenu] クラッシュ復帰を破棄")
 
 
 ## ログインボーナスをチェックして表示

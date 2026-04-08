@@ -814,6 +814,9 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 	# 他のパネルを閉じる（ボタンはクリアしない：show_card_info内での切り替えなのでrestoreを走らせない）
 	_hide_all_info_panels_raw()
 
+	# GPU描画集中を防ぐため1フレーム分散（iOS Metal対策）
+	await get_tree().process_frame
+
 	# 閲覧モードで表示
 	var panel = null
 	match card_type:

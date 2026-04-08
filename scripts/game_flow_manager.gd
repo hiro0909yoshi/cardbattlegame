@@ -107,6 +107,21 @@ var current_turn_number = 1
 # ゲーム全体の共有ステート（世界刻印等）
 var game_stats: Dictionary = {}
 
+# 現在プレイ中のステージID（セーブ/復帰用）
+var current_stage_id: String = ""
+
+# ゲームモード（セーブ/復帰用: "quest" / "solo"）
+var current_game_mode: String = "solo"
+
+# ダイス結果（セーブ/復帰用: -1 = 未確定）
+var last_dice_result: int = -1
+
+## 復帰時のフェーズ（"" = 通常, "turn_start", "after_dice", "after_movement", "after_battle", "after_tile_action"）
+var _restore_phase: String = ""
+
+## 現在のセーブフェーズ（_save_game_state で保存される）
+var _current_save_phase: String = "turn_start"
+
 # 注: _ready()は使用しない。初期化はGameSystemManagerが担当
 # LapSystemはGameSystemManagerで作成され、set_lap_system()で設定される
 
@@ -243,6 +258,9 @@ func start_game():
 	print("=== ゲーム開始 ===")
 	GameLogger.info("Game", "ゲーム開始: %d人" % player_system.players.size())
 
+	# ゲーム中フラグを設定（クラッシュ復帰判定用）
+	GameData.set_in_game(true)
+
 	# State Machineの初期化（ゲーム開始時に実施）
 	_init_state_machine()
 
@@ -258,6 +276,12 @@ func start_game():
 
 # ターン開始
 func start_turn():
+	# 復帰モードでない場合のみリセット＋セーブ
+	if _restore_phase.is_empty():
+		last_dice_result = -1
+		_current_save_phase = "turn_start"
+		_save_game_state()
+
 	var current_player = player_system.get_current_player()
 	GameLogger.info("GFM", "ターン開始: P%d, ラウンド%d" % [current_player.id + 1, current_turn_number])
 
@@ -283,12 +307,64 @@ func start_turn():
 	if _ui_update_panels_cb.is_valid():
 		_ui_update_panels_cb.call()
 	
+	# === 復帰フェーズ別スキップ処理 ===
+	if not _restore_phase.is_empty():
+		var phase = _restore_phase
+		_restore_phase = ""  # 復帰モード解除（1回限り）
+
+		if phase == "after_tile_action":
+			# タイルアクション完了後 → そのままターン終了して次プレイヤーへ
+			print("[GFM] 復帰: タイルアクション完了済み → ターン終了")
+			end_turn()
+			return
+
+		if phase == "after_battle":
+			# バトル結果確定後 → バトルUIを出さずにターン終了へ
+			# （バトル結果はボード状態に反映済み、dominio_command_handlerの後続処理も不要）
+			print("[GFM] 復帰: バトル結果確定済み → ターン終了")
+			end_turn()
+			return
+
+		if phase == "after_movement":
+			# 移動完了後 → タイルアクション処理へスキップ
+			print("[GFM] 復帰: 移動完了済み → タイルアクション開始")
+			change_phase(GamePhase.TILE_ACTION)
+			var current_tile = board_system_3d.get_player_tile(current_player.id) if board_system_3d else 0
+			if board_system_3d:
+				board_system_3d.process_tile_landing(current_tile)
+			return
+
+		if phase == "after_dice":
+			# ダイス確定後 → 移動へスキップ
+			var saved_dice = last_dice_result
+			print("[GFM] 復帰: ダイス結果 %d → 移動開始" % saved_dice)
+			change_phase(GamePhase.MOVING)
+			if board_system_3d:
+				if _ui_set_phase_text_cb.is_valid():
+					_ui_set_phase_text_cb.call("移動中...")
+				board_system_3d.move_player_3d(current_player.id, saved_dice, saved_dice)
+			return
+
+		# "turn_start" の場合はそのまま通常フロー（フォールスルー）
+
+	# ダイス結果が保存済みの場合 → スペル/ダイスフェーズをスキップして移動へ
+	# （後方互換: _restore_phase が空でも last_dice_result で判定）
+	if last_dice_result >= 0:
+		var saved_dice = last_dice_result
+		print("[GFM] ダイス結果復帰: %d → 移動開始" % saved_dice)
+		change_phase(GamePhase.MOVING)
+		if board_system_3d:
+			if _ui_set_phase_text_cb.is_valid():
+				_ui_set_phase_text_cb.call("移動中...")
+			board_system_3d.move_player_3d(current_player.id, saved_dice, saved_dice)
+		return
+
 	# スペルフェーズを開始
 	if spell_phase_handler:
 		spell_phase_handler.start_spell_phase(current_player.id)
 		# スペルフェーズ完了を待つ
 		await spell_phase_handler.spell_phase_completed
-	
+
 	# ワープ系スペル使用時はサイコロフェーズをスキップしてタイルアクションへ
 	if spell_phase_handler and spell_phase_handler.spell_state and spell_phase_handler.spell_state.should_skip_dice_phase():
 		print("[GameFlowManager] ワープ使用によりサイコロフェーズをスキップ")
@@ -297,7 +373,7 @@ func start_turn():
 		var current_tile = board_system_3d.get_player_tile(current_player.id)
 		board_system_3d.process_tile_landing(current_tile)
 		return
-	
+
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = is_cpu_player(current_player.id)
 	if is_cpu_turn:
@@ -349,11 +425,19 @@ func _on_tile_action_completed_3d():
 	if _is_ending_turn:
 		return
 
+	# タイルアクション完了後セーブ（Save④）
+	_current_save_phase = "after_tile_action"
+	_save_game_state()
+
 	end_turn()
 
 func _on_invasion_completed_from_board(success: bool, tile_index: int):
 	# デバッグログ
 	print("[GameFlowManager] invasion_completed 受信: success=%s, tile=%d" % [success, tile_index])
+
+	# バトル結果確定後セーブ（Save⑤: バトル画面クラッシュループ防止）
+	_current_save_phase = "after_battle"
+	_save_game_state()
 
 	# DominioCommandHandler へ通知（完了処理を一元管理）
 	# NOTE: CPUTurnProcessor への通知は不要（DCH.complete_action() がターン終了を処理）
@@ -365,6 +449,10 @@ func _on_movement_completed_from_board(player_id: int, final_tile: int):
 	# 各ハンドラーへ通知
 	if dominio_command_handler:
 		dominio_command_handler._on_movement_completed(player_id, final_tile)
+
+	# 移動完了後セーブ（Save③）
+	_current_save_phase = "after_movement"
+	_save_game_state()
 
 func _on_level_up_completed_from_board(tile_index: int, new_level: int):
 	# デバッグログ
@@ -838,6 +926,89 @@ func _check_turn_limit() -> bool:
 	if game_result_handler:
 		return game_result_handler.check_turn_limit()
 	return false
+
+
+## セーブデータからゲームを復帰
+## 通常のstart_game()の代わりに呼ばれる
+func restore_game(save_data: Dictionary) -> bool:
+	print("=== ゲーム復帰開始 ===")
+	GameLogger.info("Game", "ゲーム復帰: ラウンド%d" % save_data.get("progress", {}).get("current_turn_number", 0))
+
+	# ゲーム中フラグを維持
+	GameData.set_in_game(true)
+
+	# ステージID・ゲームモードを復元
+	current_stage_id = save_data.get("stage_id", current_stage_id)
+	current_game_mode = save_data.get("game_mode", current_game_mode)
+
+	# State Machineの初期化
+	_init_state_machine()
+
+	# ゲーム統計の初期化（セーブデータで上書きされる）
+	game_stats["total_creatures_destroyed"] = 0
+
+	# セーブデータを適用
+	var systems: Dictionary = {
+		"player_system": player_system,
+		"card_system": card_system,
+		"board_system_3d": board_system_3d,
+		"game_flow_manager": self,
+		"lap_system": lap_system,
+		"player_buff_system": player_buff_system,
+	}
+	if not GameStateSaver.apply_save_data(save_data, systems):
+		GameLogger.error("Game", "セーブデータの適用に失敗、通常開始にフォールバック")
+		start_game()
+		return false
+
+	# 復帰フェーズを設定（start_turnでのスキップ制御に使用）
+	_restore_phase = _current_save_phase
+	GameLogger.info("Game", "復帰フェーズ: %s, ダイス結果: %d" % [_restore_phase, last_dice_result])
+
+	# 3D駒を復元位置に配置
+	if board_system_3d:
+		for player in player_system.players:
+			board_system_3d.place_player_at_tile(player.id, player.current_tile)
+			board_system_3d.set_player_tile(player.id, player.current_tile)
+
+	# UI更新（apply後に手札・パネル等を再描画）
+	if card_system:
+		card_system.hand_updated.emit()
+	if _ui_update_panels_cb.is_valid():
+		_ui_update_panels_cb.call()
+
+	# カメラを復帰プレイヤーに移動
+	if board_system_3d:
+		board_system_3d.set_camera_player(player_system.current_player_index)
+
+	# フェーズをSETUPからDICE_ROLLへ
+	change_phase(GamePhase.DICE_ROLL)
+	start_turn()
+
+	print("=== ゲーム復帰完了 ===")
+	return true
+
+
+## ダイス結果確定時のコールバック（DicePhaseHandlerから呼ばれる）
+func _on_dice_confirmed(dice_value: int) -> void:
+	last_dice_result = dice_value
+	_current_save_phase = "after_dice"
+	_save_game_state()
+
+
+## ゲーム状態をセーブ（各セーブポイントから呼ばれる）
+func _save_game_state() -> void:
+	var systems: Dictionary = {
+		"player_system": player_system,
+		"card_system": card_system,
+		"board_system_3d": board_system_3d,
+		"game_flow_manager": self,
+		"lap_system": lap_system,
+		"player_buff_system": player_buff_system,
+		"stage_id": current_stage_id,
+	}
+	var save_data: Dictionary = GameStateSaver.build_save_data(systems)
+	GameStateSaver.save_to_file(save_data)
 
 ## プレイヤーの制御タイプを取得（"local" / "cpu" / 将来 "remote"）
 ## convert_to_*で明示変更された場合はmanual_control_allより優先

@@ -91,7 +91,11 @@ func _ready():
 		player_is_cpu,
 		DebugSettings.manual_control_all
 	)
-	
+
+	# ステージIDをGFMに設定（セーブ/復帰用）
+	if system_manager.game_flow_manager:
+		system_manager.game_flow_manager.current_stage_id = stage_id
+
 	# ソロバトル（対戦モード）: 全通知を3秒自動進行に設定
 	if is_solo_battle:
 		var ui_mgr = system_manager.ui_manager if system_manager else null
@@ -113,10 +117,21 @@ func _ready():
 	
 	# ゲーム開始待機
 	await get_tree().create_timer(0.5).timeout
-	
-	# ゲーム開始
-	system_manager.start_game()
-	
+
+	# クラッシュ復帰チェック
+	var _is_restoring = false
+	if GameData.has_meta("restore_game") and GameData.get_meta("restore_game"):
+		GameData.remove_meta("restore_game")
+		var save_data = GameStateSaver.load_from_file()
+		if not save_data.is_empty():
+			_is_restoring = true
+			system_manager.restore_game(save_data)
+			print("[Game3D] クラッシュ復帰完了")
+
+	# 通常のゲーム開始（復帰でない場合）
+	if not _is_restoring:
+		system_manager.start_game()
+
 	# チュートリアル開始
 	if is_tutorial_mode and tutorial_manager:
 		tutorial_manager.start_tutorial()

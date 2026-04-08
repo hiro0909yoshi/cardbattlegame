@@ -17,6 +17,9 @@ var player_buff_system
 var spell_dice
 var board_system_3d
 
+# ダイス確定時セーブ用Callable（GFMから注入）
+var _on_dice_confirmed_cb: Callable = Callable()
+
 # === Phase A-3d: change_phase Callable 化 ===
 var _change_phase_cb: Callable = Callable()
 
@@ -42,8 +45,10 @@ func setup(p_player_system, p_player_buff_system, p_spell_dice, p_board_system_3
 ## GFM依存のCallable一括注入（Phase A-3d）
 func inject_callbacks(
 	change_phase_cb: Callable,
+	on_dice_confirmed_cb: Callable = Callable(),
 ) -> void:
 	_change_phase_cb = change_phase_cb
+	_on_dice_confirmed_cb = on_dice_confirmed_cb
 	if not _change_phase_cb.is_valid():
 		GameLogger.error("Spell", "change_phase_cb is not valid in DicePhaseHandler.inject_callbacks")
 
@@ -123,6 +128,10 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	else:
 		dice_ui_double_result_shown.emit(dice1, dice2, modified_dice)
 		print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
+
+	# ダイス結果確定 → セーブ（復帰時にダイスフェーズをスキップするため）
+	if _on_dice_confirmed_cb.is_valid():
+		_on_dice_confirmed_cb.call(modified_dice)
 
 	# ダイスロール後のEP付与（ジャーニーなど）
 	if spell_dice:

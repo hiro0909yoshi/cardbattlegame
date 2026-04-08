@@ -12,6 +12,47 @@
 
 ---
 
+## 2026年4月8-9日（Session: ゲーム中ステートセーブ/復帰機能実装）
+
+### 完了した作業
+
+#### ゲーム中ステートセーブ/復帰システム
+- ✅ `scripts/save_data/game_state_saver.gd` 新規作成 — セーブ/復元の中核（build_save_data, apply_save_data, tmp→renameアトミック書き込み）
+- ✅ `scripts/game_data.gd` — `in_game` フラグ追加（クラッシュ検知用）
+- ✅ `scripts/game_flow_manager.gd` — `start_game()` で in_game=true、`start_turn()` 冒頭でセーブ、`restore_game()` 復帰メソッド追加、`current_stage_id` / `current_game_mode` 追加
+- ✅ `scripts/game_flow/game_result_handler.gd` — 勝利/敗北時にセーブクリア + in_game=false
+- ✅ `scripts/system_manager/game_system_manager.gd` — `restore_game()` 委譲メソッド追加
+- ✅ `scripts/game_3d.gd` / `scripts/quest/quest_game.gd` — `restore_game` メタチェックで復帰フロー分岐
+- ✅ `scripts/main_menu.gd` — クラッシュ復帰ダイアログ表示（game_modeベースでシーン判定）
+
+#### 5段階セーブポイント拡張（2026-04-09）
+- ✅ `save_phase` フィールド追加 — progress内に保存、復帰時のフェーズスキップ制御に使用
+- ✅ Save①`turn_start` — ターン開始時（既存）
+- ✅ Save②`after_dice` — ダイス確定後（`_on_dice_confirmed` コールバック）
+- ✅ Save③`after_movement` — 移動完了後（`_on_movement_completed_from_board`）
+- ✅ Save④`after_tile_action` — タイルアクション完了後（`_on_tile_action_completed_3d`）
+- ✅ Save⑤`after_battle` — バトル結果確定後（`_on_invasion_completed_from_board`、バトル画面クラッシュループ防止）
+- ✅ 復帰時 `_restore_phase` によるフェーズ別スキップ（start_turn内で分岐）
+- ✅ 復帰モード時のダイス結果リセット/セーブスキップ修正
+
+#### バグ修正（実装中に発見）
+- ✅ 駒位置: `player_system.current_tile` ではなく `board_system_3d.get_player_tile()` から取得するよう修正（movement_controller管理のため）
+- ✅ シーン遷移: stage_id推測ではなく `game_mode` フィールドで明示的にクエスト/ソロを判定
+- ✅ セーブファイル破損対策: tmp→rename方式に変更
+- ✅ 復帰後UI更新: `hand_updated.emit()` + `_ui_update_panels_cb` 呼び出し追加
+- ✅ `start_turn()` 復帰時のダイス結果リセットバグ修正（`_restore_phase` チェックで回避）
+
+#### iOS GPU フリーズ対策
+- ✅ `scripts/ui_manager.gd` — `show_card_info()` にフレーム分散（`await process_frame`）追加
+- ✅ `.gitignore` — `ios_build/` 追加（libgodot.a 100MB+防止）
+
+### 次のステップ
+- 復帰後の3Dクリーチャーカード表示の再描画確認
+- SubViewport生成抑制（iPhone SE安定化）
+- PvP実装時にネットワーク同期フィールド追加
+
+---
+
 ## 2026年4月2日（Session 1: 城壁GLBベイク完了 + モバイル適用 + iOS開発環境構築）
 
 ### 完了した作業

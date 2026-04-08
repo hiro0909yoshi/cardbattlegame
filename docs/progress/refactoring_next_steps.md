@@ -1,8 +1,45 @@
 # マルチデバイス対応リファクタリング（ビューポート移行）
 
-**最終更新**: 2026-03-30
+**最終更新**: 2026-04-09
 **ステータス**: ビューポート移行進行中（Step 0/1/4/5一部/2一部 完了）
 **優先度**: 高（モバイル実機テストのブロッカー）
+
+---
+
+## ゲーム中ステートセーブ/復帰（2026-04-09 実装完了）
+
+**目的**: クラッシュ復帰 + 将来のPvP切断復帰基盤
+
+### 実装済み
+
+| ファイル | 修正内容 |
+|---------|---------|
+| `scripts/save_data/game_state_saver.gd` | **新規** — セーブ/復元中核（tmp→rename書き込み、save_phase対応） |
+| `scripts/game_data.gd` | in_gameフラグ追加 |
+| `scripts/game_flow_manager.gd` | 5段階セーブポイント、restore_game()、フェーズ別復帰スキップ |
+| `scripts/game_flow/dice_phase_handler.gd` | ダイス確定コールバック追加 |
+| `scripts/game_flow/game_result_handler.gd` | 勝利/敗北時にセーブクリア |
+| `scripts/system_manager/game_system_manager.gd` | restore_game()委譲、ダイスコールバック注入 |
+| `scripts/game_3d.gd` / `quest_game.gd` | 復帰フロー分岐 |
+| `scripts/main_menu.gd` | クラッシュ復帰ダイアログ |
+
+### セーブポイント一覧
+
+```
+ターン開始 → [①turn_start] → スペル → ダイス → [②after_dice] → 移動 → [③after_movement]
+  → タイルアクション
+    ├─ バトル発生 → バトル完了 → [⑤after_battle] → ターン終了
+    └─ バトルなし → アクション完了 → [④after_tile_action] → ターン終了
+```
+
+- **after_battle**: バトル画面GPUフリーズ時のクラッシュループ防止。バトル中の全スキル効果（マップ全体影響含む）は `invasion_completed` シグナル発行前に確定済み
+- **save_phase**: progress内に保存。復帰時に `_restore_phase` として使用し、フェーズ別スキップを制御
+
+### PvP拡張時の追加予定
+- ネットワーク同期用シーケンス番号
+- 相手側の復帰待ち状態管理
+- game_mode: "net" の追加
+- save_phaseはPvP通信プロトコルの同期ポイント（`docs/design/network_design.md`）と対応
 
 ---
 
