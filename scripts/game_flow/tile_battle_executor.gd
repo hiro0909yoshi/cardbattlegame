@@ -363,6 +363,11 @@ func _execute_pending_battle():
 	if not battle_system.invasion_completed.is_connected(callable):
 		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
+	# バトル開始直前セーブ（バトル中クラッシュ時はバトル終了扱いで復帰）
+	if game_flow_manager and game_flow_manager.has_method("_save_game_state"):
+		game_flow_manager._current_save_phase = "after_battle"
+		game_flow_manager._save_game_state()
+
 	# バトル実行
 	await battle_system.execute_3d_battle_with_data(current_player_index, pending_battle_card_data, pending_battle_tile_info, pending_attacker_item, pending_defender_item)
 	
