@@ -1140,62 +1140,19 @@ func _execute_swap_with_hand_index_for_cpu(hand_index: int):
 		return
 
 	# 新しいクリーチャーのデータを取得
-	var card_sys = board_system.card_system
-	var new_creature = card_sys.get_card_data_for_player(current_player_index, hand_index)
+	var card_system = board_system.card_system
+	var new_creature = card_system.get_card_data_for_player(current_player_index, hand_index)
 
 	if new_creature.is_empty():
 		_complete_swap_for_cpu(false)
 		return
 
-	# カード犠牲処理（通常召喚と同じ条件）
-	var summon_executor = board_system.tile_action_processor.summon_executor if board_system.tile_action_processor else null
-	if SummonConditionChecker.requires_card_sacrifice(new_creature) and not DebugSettings.disable_card_sacrifice and summon_executor:
-		var tile_element = tile.tile_type if "tile_type" in tile else ""
-		var sacrifice_result = summon_executor._process_card_sacrifice_cpu(current_player_index, new_creature, tile_element)
-		var sacrifice_card = sacrifice_result.get("card", {})
-		var sacrifice_index = sacrifice_result.get("index", -1)
-
-		if sacrifice_card.is_empty():
-			print("[DominioCommandHandler] CPU: 交換用犠牲カードが選択できません")
-			_complete_swap_for_cpu(false)
-			return
-
-		# 犠牲カード破棄後のインデックス調整
-		hand_index = CPUTileActionExecutor.adjust_index_after_sacrifice(hand_index, sacrifice_index)
-
-		# クリーチャー合成処理
-		if summon_executor.creature_synthesis:
-			var is_synthesized = summon_executor.creature_synthesis.check_condition(new_creature, sacrifice_card)
-			if is_synthesized:
-				new_creature = summon_executor.creature_synthesis.apply_synthesis(new_creature, sacrifice_card, true)
-				print("[DominioCommandHandler] CPU: 交換時合成成立: %s" % new_creature.get("name", "?"))
-
-	# コスト計算・EP消費
-	var cost_data = new_creature.get("cost", 1)
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("ep", 0)
-	else:
-		cost = cost_data
-	var spell_cost_modifier = board_system.tile_action_processor.spell_cost_modifier if board_system.tile_action_processor else null
-	if spell_cost_modifier:
-		cost = spell_cost_modifier.get_modified_cost(current_player_index, new_creature)
-
-	if player_system and player_system.players[current_player_index].magic_power < cost:
-		print("[DominioCommandHandler] CPU: EP不足で交換できません")
-		_complete_swap_for_cpu(false)
-		return
-
-	# 元のクリーチャーを手札に戻す（合成リセット等の処理付き）
+	# 元のクリーチャーを手札に戻す
 	var old_creature = tile.creature_data.duplicate()
-	card_sys.return_card_to_hand(current_player_index, old_creature)
+	card_system.add_card_to_hand(current_player_index, old_creature)
 
 	# 新しいクリーチャーを手札から消費
-	card_sys.use_card_for_player(current_player_index, hand_index)
-
-	# EP消費
-	if player_system:
-		player_system.add_magic(current_player_index, -cost)
+	card_system.use_card_for_player(current_player_index, hand_index)
 
 	# タイルに新しいクリーチャーを配置
 	tile.place_creature(new_creature)
@@ -1205,8 +1162,8 @@ func _execute_swap_with_hand_index_for_cpu(hand_index: int):
 		if not PlayerBuffSystem.has_unyielding(new_creature):
 			tile.set_down_state(true)
 
-	print("[DominioCommandHandler] CPU: 交換成功 %s → %s (EP-%d)" % [
-		old_creature.get("name", "?"), new_creature.get("name", "?"), cost])
+	print("[DominioCommandHandler] CPU: 交換成功 %s → %s" % [
+		old_creature.get("name", "?"), new_creature.get("name", "?")])
 
 	_complete_swap_for_cpu(true)
 
