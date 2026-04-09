@@ -27,13 +27,13 @@ static func handle_land_selection_input(handler, event):
 		if not handler.player_owned_lands.is_empty():
 			handler.current_land_selection_index = (handler.current_land_selection_index - 1 + handler.player_owned_lands.size()) % handler.player_owned_lands.size()
 			var tile_index = handler.player_owned_lands[handler.current_land_selection_index]
-			LandSelectionHelper.preview_land(handler, tile_index)
+			await LandSelectionHelper.preview_land(handler, tile_index)
 			LandSelectionHelper.update_land_selection_ui(handler)
 	elif event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
 		if not handler.player_owned_lands.is_empty():
 			handler.current_land_selection_index = (handler.current_land_selection_index + 1) % handler.player_owned_lands.size()
 			var tile_index = handler.player_owned_lands[handler.current_land_selection_index]
-			LandSelectionHelper.preview_land(handler, tile_index)
+			await LandSelectionHelper.preview_land(handler, tile_index)
 			LandSelectionHelper.update_land_selection_ui(handler)
 	
 	# Enterキーで確定（アクションメニュー表示）
@@ -46,7 +46,7 @@ static func handle_land_selection_input(handler, event):
 		if index < handler.player_owned_lands.size():
 			handler.current_land_selection_index = index
 			var tile_index = handler.player_owned_lands[index]
-			LandSelectionHelper.preview_land(handler, tile_index)
+			await LandSelectionHelper.preview_land(handler, tile_index)
 			LandSelectionHelper.update_land_selection_ui(handler)
 			# 数字キーの場合は即座に確定
 			LandSelectionHelper.confirm_land_selection(handler)

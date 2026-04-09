@@ -291,12 +291,137 @@ await ui_manager.global_comment_ui.click_confirmed
 
 ---
 
+## ナビゲーション状態の保存/復元（NavigationService）
+
+クリーチャー情報パネルなどを「閲覧モード」で開く際、現在のナビゲーション状態を一時保存し、パネルを閉じた時に自動復元する仕組みがあります。
+
+### 仕組み
+
+```
+[土地選択中: ○×▲▼ボタンあり]
+    ↓ クリーチャーをタップ
+[save_navigation_state()] ← 今のボタン状態を記憶
+    ↓
+[情報パネル表示: ×ボタンのみ（閉じる）]
+    ↓ ×を押す
+[restore_navigation_state()] ← 記憶した状態を復元
+    ↓
+[土地選択中: ○×▲▼ボタン復帰]
+```
+
+### 主要メソッド（NavigationService）
+
+| メソッド | 役割 |
+|---------|------|
+| `save_navigation_state()` | 現在のコールバック4つ+特殊ボタンを保存。既に保存済みなら上書きしない |
+| `restore_navigation_state()` | 保存した状態を復元し、保存フラグをクリア |
+| `clear_navigation_saved_state()` | 保存状態を破棄（フェーズ完全終了時に使用） |
+| `is_nav_state_saved()` | 保存状態があるかチェック |
+
+### info_panel_back_locked（×ボタン保護）
+
+情報パネルの「閉じる」ボタンが設定された後、他のコードが `enable_navigation()` / `disable_navigation()` で上書きするのを防ぐロック機構。
+
+```gdscript
+lock_info_panel_back()    # ロック開始（パネル表示後）
+unlock_info_panel_back()  # ロック解除（パネル非表示時）
+```
+
+ロック中は `enable_navigation()` / `disable_navigation()` がスキップされます。
+
+### restore_current_phase() のフォールバック
+
+`restore_navigation_state()` で復元できない場合（保存がない場合）、UIManagerの `restore_current_phase()` がフォールバック処理を行います。
+
+フォールバックの優先順位：
+1. ドミニオコマンド中 → `dominio_command_handler.restore_navigation()`
+2. カード選択UI中 → `card_selection_ui.restore_navigation()`
+3. スペルターゲット選択中 → ターゲット選択UIを復元
+
+---
+
+## ドミニオコマンドでのナビゲーション
+
+### 状態遷移とボタン設定
+
+```
+CLOSED → SELECTING_LAND → SELECTING_ACTION → (各アクション状態)
+```
+
+| 状態 | ボタン構成 | 設定元 |
+|------|-----------|--------|
+| SELECTING_LAND | ○×▲▼（決定/戻る/前の土地/次の土地） | `_set_land_selection_navigation()` |
+| SELECTING_ACTION | アクションメニューが管理 | `ActionMenuUI.show_menu()` |
+| SELECTING_LEVEL | ×▲▼（戻る/前レベル/次レベル） | `restore_navigation()` |
+| SELECTING_MOVE_DEST | ○×▲▼（決定/戻る/前/次） | `restore_navigation()` |
+| SELECTING_TERRAIN | ○×▲▼（決定/戻る/前/次） | `restore_navigation()` |
+| SELECTING_SWAP | ×のみ（戻る） | `restore_navigation()` |
+
+### 重要な実装ルール
+
+#### 1. アクションメニュー表示時のクリーチャー情報は `show_card_info_only` を使う
+
+アクションメニュー（`dominio_order_ui.show_action_menu()`）では、選択中の土地のクリーチャー情報を表示しますが、ナビゲーションはアクションメニュー自身が管理します。
+
+```gdscript
+# ✓ 正しい — ナビに触らない表示のみ
+ui_manager_ref.show_card_info_only(creature, tile_index)
+
+# ❌ 間違い — ナビ保存+awaitが発生し、メニューのenable_navigationと競合
+ui_manager_ref.show_card_info(creature, tile_index, false)
+```
+
+`show_card_info()` は内部に `await get_tree().process_frame`（iOS Metal対策の1フレーム待ち）があり、その待ち時間中に `show_menu()` の `enable_navigation()` が割り込み実行されます。この順序衝突が「ボタンが消える」バグの原因でした。
+
+#### 2. アクション失敗時はメニューを再表示する
+
+`execute_action()` が失敗した場合（移動先なし、最大レベル等）、アクションメニューを再表示して選び直せるようにします。
+
+```gdscript
+# ✓ 正しい — メニューUIとナビゲーションが両方復帰
+if not success:
+    _dominio_order_ui.show_action_menu(selected_tile_index)
+
+# ❌ 間違い — ナビだけ設定してメニューUIが出ない
+if not success:
+    set_action_selection_navigation()
+```
+
+#### 3. キャンセル時の流れ
+
+アクションメニューから土地選択に戻る流れ:
+
+```
+×ボタン押下
+  → ActionMenuUI._cancel_selection()
+    → hide_menu() → disable_navigation()
+    → item_selected.emit(-1)
+  → dominio_order_ui._on_action_menu_item_selected(-1)
+    → dominio_cancel_requested.emit()
+  → dominio_command_handler.cancel()
+    → hide_action_menu(false) → パネル非表示
+    → preview_land() → クリーチャー情報再表示
+    → _set_land_selection_navigation() → ○×▲▼ボタン復帰
+```
+
+### BUG-001: enable_navigation での保存状態破壊（修正済み）
+
+**発生日**: 2026-04-10
+**症状**: ドミニオコマンドのアクションメニューから土地選択に戻ると、グローバルボタンが全て消える
+**原因**: `enable_navigation()` 内の `_nav_state_saved = false` が、`show_card_info()` の `await` 中に呼ばれることで保存済みナビゲーション状態を破壊していた
+**修正**: `enable_navigation()` から `_nav_state_saved = false` を削除。保存状態のクリアは `restore_navigation_state()` と `clear_navigation_saved_state()` のみに限定
+
+---
+
 ## 関連ファイル
 
 - `scripts/ui_components/global_action_buttons.gd` - ボタンUI実装
+- `scripts/ui_services/navigation_service.gd` - ナビゲーション状態管理（保存/復元/ロック）
 - `scripts/ui_components/global_comment_ui.gd` - 通知ポップアップUI実装
-- `scripts/ui_manager.gd` - API提供（enable_navigation, global_comment_ui等）
+- `scripts/ui_manager.gd` - API提供（enable_navigation, restore_current_phase等）
 - `scripts/game_flow/dominio_command_handler.gd` - 使用例（ドミニオコマンド）
+- `scripts/ui_components/dominio_order_ui.gd` - アクションメニューUI
+- `scripts/ui_components/action_menu_ui.gd` - 汎用アクションメニュー
 - `scripts/game_flow/lap_system.gd` - 使用例（周回完了通知）
 
 ---
@@ -307,7 +432,8 @@ await ui_manager.global_comment_ui.click_confirmed
 |------|-----------|---------|
 | 2025/12/12 | 1.0 | 初版作成 |
 | 2026/02/12 | 1.1 | 特殊ボタン追加、入力ロック機能追加、説明モード対応追加 |
+| 2026/04/10 | 1.2 | NavigationService保存/復元機構、ドミニオコマンド注意点、BUG-001記録追加 |
 
 ---
 
-**最終更新**: 2026年2月12日（v1.1）
+**最終更新**: 2026年4月10日（v1.2）

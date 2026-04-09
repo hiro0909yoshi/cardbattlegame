@@ -22,7 +22,7 @@ const MARKER_ORB_RADIUS: float = 0.25      # 光の玉の半径
 const MARKER_ORB_HEIGHT: float = 0.50      # 光の玉の高さ
 
 # ゴーストトレイル定数（各光の玉の後ろに配置する残像）
-const TRAIL_GHOST_COUNT: int = 30           # 1つの玉あたりのゴースト数
+const TRAIL_GHOST_COUNT_PC: int = 30        # PC/Mac: フル品質
 const TRAIL_ANGLE_STEP: float = 0.04       # ゴースト間の角度間隔(rad ≈ 7度)
 
 # ============================================
@@ -196,6 +196,35 @@ static func rotate_confirmation_markers(handler, delta: float):
 static func create_marker_mesh(marker_color: String = "yellow") -> Node3D:
 	var container = Node3D.new()
 
+	if GameData.is_lightweight_mode():
+		return _create_marker_mesh_lightweight(container, marker_color)
+
+	return _create_marker_mesh_full(container, marker_color)
+
+
+## 軽量版マーカー: 玉1個のみ（パルスアニメーションで視認性確保）
+static func _create_marker_mesh_lightweight(container: Node3D, marker_color: String) -> Node3D:
+	var sphere = SphereMesh.new()
+	sphere.radius = MARKER_ORB_RADIUS * 1.5
+	sphere.height = MARKER_ORB_HEIGHT * 1.5
+
+	var orbit_r: float = MARKER_ORBIT_RADIUS
+	if marker_color == "red":
+		orbit_r = 2.2
+
+	var orb = MeshInstance3D.new()
+	orb.mesh = sphere
+	orb.material_override = _create_orb_material(1.0, 0.0, marker_color)
+	orb.position = Vector3(orbit_r, 0, 0)
+	container.add_child(orb)
+
+	container.set_meta("lightweight", true)
+
+	return container
+
+
+## フル版マーカー: 光の玉 + ゴーストトレイル
+static func _create_marker_mesh_full(container: Node3D, marker_color: String) -> Node3D:
 	# メインの球メッシュ（共有）
 	var sphere = SphereMesh.new()
 	sphere.radius = MARKER_ORB_RADIUS
@@ -222,9 +251,9 @@ static func create_marker_mesh(marker_color: String = "yellow") -> Node3D:
 		container.add_child(orb)
 
 		# ゴーストトレイル（回転方向の後ろに配置）
-		for g in range(TRAIL_GHOST_COUNT):
+		for g in range(TRAIL_GHOST_COUNT_PC):
 			var ghost_angle: float = base_angle + TRAIL_ANGLE_STEP * (g + 1)
-			var t: float = float(g + 1) / TRAIL_GHOST_COUNT  # 0→1（遠いほど1）
+			var t: float = float(g + 1) / TRAIL_GHOST_COUNT_PC  # 0→1（遠いほど1）
 			var alpha: float = lerpf(0.5, 0.0, t)
 			var scale_factor: float = lerpf(0.85, 0.15, t)
 
@@ -283,10 +312,20 @@ static func _animate_marker(marker: Node3D, delta: float) -> void:
 	marker.set_meta("anim_time", t)
 
 	# ボビング（上下浮き沈み）
-	marker.position.y = MARKER_BOB_BASE_Y + sin(t * MARKER_BOB_SPEED) * MARKER_BOB_AMPLITUDE
+	var is_lightweight: bool = marker.get_meta("lightweight", false)
+	if is_lightweight:
+		# 軽量版: 基準位置を高く、可動域を広く
+		marker.position.y = 2.0 + sin(t * MARKER_BOB_SPEED) * MARKER_BOB_AMPLITUDE
+	else:
+		marker.position.y = MARKER_BOB_BASE_Y + sin(t * MARKER_BOB_SPEED) * MARKER_BOB_AMPLITUDE
 
 	# コンテナをY軸回転（子の光の玉が円状に周回する）
 	marker.rotation.y += delta * MARKER_ROTATE_SPEED
+
+	# 軽量モード: 玉のパルスアニメーション（拡大縮小で存在感）
+	if is_lightweight and marker.get_child_count() > 0:
+		var pulse: float = 1.0 + sin(t * 4.0) * 0.3
+		marker.get_child(0).scale = Vector3.ONE * pulse
 
 
 ## 赤マーカーのTweenアニメーション開始（Y軸回転 + ボビング）

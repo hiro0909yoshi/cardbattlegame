@@ -50,13 +50,12 @@ func unlock_info_panel_back() -> void:
 
 ## ナビゲーションボタンを設定
 ## 入力待ち状態になったのでロック解除
-## 新しいナビゲーション設定時は前の保存状態を無効化
+## 保存状態は維持する（show_card_infoのawait中に呼ばれても復元可能にするため）
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()) -> void:
 	if _unlock_input_callback.is_valid():
 		_unlock_input_callback.call()
 	if _info_panel_back_locked:
 		return
-	_nav_state_saved = false
 	_compat_confirm_cb = confirm_cb
 	_compat_back_cb = back_cb
 	_compat_up_cb = up_cb

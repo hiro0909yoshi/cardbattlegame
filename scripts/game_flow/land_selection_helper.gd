@@ -8,28 +8,32 @@ class_name LandSelectionHelper
 static func preview_land(handler, tile_index: int) -> bool:
 	if handler.current_state != handler.State.SELECTING_LAND:
 		return false
-	
+
 	# 所有地かチェック
 	if tile_index not in handler.player_owned_lands:
 			return false
-	
+
 	# ダウン状態チェック
 	if handler.board_system and handler.board_system.tile_nodes.has(tile_index):
 		var tile = handler.board_system.tile_nodes[tile_index]
 		if tile.has_method("is_down") and tile.is_down():
 			return false
-	
+
 	handler.selected_tile_index = tile_index
-	
+
 	# 汎用ヘルパーを使用して視覚的に選択
 	TargetSelectionHelper.clear_all_highlights(handler)
 	TargetSelectionHelper.show_selection_marker(handler, tile_index)
+
+	# GPU負荷分散: マーカー/フェード処理とカメラ移動を別フレームに分散
+	await handler.get_tree().process_frame
+
 	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
 	TargetSelectionHelper.highlight_tile(handler, tile_index)
-	
+
 	# クリーチャー情報パネルを表示
 	_show_creature_info_for_tile(handler, tile_index)
-	
+
 	return true
 
 
@@ -73,7 +77,7 @@ static func confirm_land_selection(handler) -> bool:
 
 ## 土地選択（旧メソッド - 互換性のため残す）
 static func select_land(handler, tile_index: int) -> bool:
-	return preview_land(handler, tile_index)
+	return await preview_land(handler, tile_index)
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
 ##

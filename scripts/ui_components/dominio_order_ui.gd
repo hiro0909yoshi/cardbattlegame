@@ -73,9 +73,9 @@ func show_action_menu(tile_index: int):
 		var tile = board_system_ref.tile_nodes[tile_index]
 		var creature = tile.creature_data if tile else {}
 		
-		# クリーチャーがいる場合、情報パネルを表示（ボタン設定はスキップ）
+		# クリーチャーがいる場合、情報パネルを表示（ナビに触らない表示のみ）
 		if not creature.is_empty() and ui_manager_ref:
-			ui_manager_ref.show_card_info(creature, tile_index, false)
+			ui_manager_ref.show_card_info_only(creature, tile_index)
 		
 		# 堅守チェック
 		var creature_type = creature.get("creature_type", "normal")

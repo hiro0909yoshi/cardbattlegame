@@ -573,11 +573,11 @@ func _smooth_transition_to(target_pos: Vector3, _look_target: Vector3, duration:
 ## スムーズにカメラを移動
 func _smooth_move_to(target_pos: Vector3, look_target: Vector3):
 	cancel_tween()
-	
+
 	current_tween = create_tween()
 	current_tween.set_parallel(true)
 	current_tween.tween_property(camera, "global_position", target_pos, camera_move_duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	
+
 	current_tween.set_parallel(false)
 	current_tween.tween_callback(func(): camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP))
 

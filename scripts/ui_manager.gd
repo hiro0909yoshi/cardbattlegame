@@ -581,6 +581,13 @@ func restore_current_phase():
 	# info_panel_back_lockedが残っている場合はクリア（fallbackパスではrestoreが走らないため）
 	if _navigation_service:
 		_navigation_service.unlock_info_panel_back()
+	# ドミニオコマンド中ならドミニオのナビゲーションを復元
+	if game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler:
+		var dch = game_flow_manager_ref.dominio_command_handler
+		if dch.current_state != DominioCommandHandler.State.CLOSED:
+			dch.restore_navigation()
+			dch.restore_phase_comment()
+			return
 	if card_selection_ui and card_selection_ui.is_active:
 		card_selection_ui.restore_navigation()
 	# Fallback でもスペルターゲット選択中なら復元

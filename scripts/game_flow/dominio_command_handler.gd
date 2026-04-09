@@ -215,7 +215,10 @@ func open_dominio_order(player_id: int):
 	current_state = State.SELECTING_LAND
 	current_land_selection_index = 0  # 最初の土地を選択
 	dominio_command_opened.emit()
-	
+
+	# GPU負荷分散: UI変更と3D変更を別フレームに分散
+	await get_tree().process_frame
+
 	# 入力ロックを解除（土地選択待ち状態になった）
 	if game_flow_manager:
 		game_flow_manager.unlock_input()
@@ -223,9 +226,9 @@ func open_dominio_order(player_id: int):
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:
 		var first_tile = player_owned_lands[0]
-		LandSelectionHelper.preview_land(self, first_tile)
+		await LandSelectionHelper.preview_land(self, first_tile)
 		LandSelectionHelper.update_land_selection_ui(self)
-	
+
 	# ナビゲーションボタン設定（土地選択用）※preview_landの後に設定する
 	# （preview_land→show_card_info(false)がナビゲーションをクリアするため）
 	if _navigation_service:
@@ -240,7 +243,7 @@ func open_dominio_order(player_id: int):
 
 ## 土地をプレビュー（ハイライトのみ、状態は変更しない）
 func preview_land(tile_index: int) -> bool:
-	return LandSelectionHelper.preview_land(self, tile_index)
+	return await LandSelectionHelper.preview_land(self, tile_index)
 
 ## 土地選択を確定してアクションメニューを表示
 func confirm_land_selection() -> bool:
@@ -248,7 +251,7 @@ func confirm_land_selection() -> bool:
 
 ## 土地選択（旧メソッド - 互換性のため残す）
 func select_land(tile_index: int) -> bool:
-	return LandSelectionHelper.select_land(self, tile_index)
+	return await LandSelectionHelper.select_land(self, tile_index)
 
 ## アクション実行
 func execute_action(action_type: String) -> bool:
@@ -279,10 +282,11 @@ func execute_action(action_type: String) -> bool:
 		"terrain_change":
 			success = execute_terrain_change()
 	
-	# 失敗時はアクション選択に戻す
+	# 失敗時はアクションメニューを再表示
 	if not success:
 		current_state = State.SELECTING_ACTION
-		set_action_selection_navigation()
+		if _dominio_order_ui:
+			_dominio_order_ui.show_action_menu(selected_tile_index)
 		restore_phase_comment()
 	
 	return success
@@ -492,7 +496,7 @@ func cancel():
 		# 現在選択中の土地を再プレビュー（selected_tile_indexを維持）
 		if player_owned_lands.size() > 0:
 			var tile_index = player_owned_lands[current_land_selection_index]
-			LandSelectionHelper.preview_land(self, tile_index)
+			await LandSelectionHelper.preview_land(self, tile_index)
 			LandSelectionHelper.update_land_selection_ui(self)
 
 		# 土地選択用ナビゲーション（全ボタン）
@@ -594,15 +598,17 @@ func on_arrow_up():
 			if not player_owned_lands.is_empty():
 				current_land_selection_index = (current_land_selection_index - 1 + player_owned_lands.size()) % player_owned_lands.size()
 				var tile_index = player_owned_lands[current_land_selection_index]
-				LandSelectionHelper.preview_land(self, tile_index)
+				await LandSelectionHelper.preview_land(self, tile_index)
 				LandSelectionHelper.update_land_selection_ui(self)
-		
+
 		State.SELECTING_MOVE_DEST:
 			# 前の移動先を選択（ループ）
 			if not move_destinations.is_empty():
 				current_destination_index = (current_destination_index - 1 + move_destinations.size()) % move_destinations.size()
 				var dest_tile_index = move_destinations[current_destination_index]
 				TargetSelectionHelper.show_selection_marker(self, dest_tile_index)
+				# GPU負荷分散: マーカーとカメラ移動を別フレームに分散
+				await get_tree().process_frame
 				TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
 				LandActionHelper.update_move_destination_ui(self)
 		
@@ -623,7 +629,7 @@ func on_arrow_down():
 			if not player_owned_lands.is_empty():
 				current_land_selection_index = (current_land_selection_index + 1) % player_owned_lands.size()
 				var tile_index = player_owned_lands[current_land_selection_index]
-				LandSelectionHelper.preview_land(self, tile_index)
+				await LandSelectionHelper.preview_land(self, tile_index)
 				LandSelectionHelper.update_land_selection_ui(self)
 		
 		State.SELECTING_MOVE_DEST:
@@ -632,6 +638,8 @@ func on_arrow_down():
 				current_destination_index = (current_destination_index + 1) % move_destinations.size()
 				var dest_tile_index = move_destinations[current_destination_index]
 				TargetSelectionHelper.show_selection_marker(self, dest_tile_index)
+				# GPU負荷分散: マーカーとカメラ移動を別フレームに分散
+				await get_tree().process_frame
 				TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
 				LandActionHelper.update_move_destination_ui(self)
 		
