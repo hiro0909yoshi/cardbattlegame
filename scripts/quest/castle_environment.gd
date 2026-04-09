@@ -43,7 +43,7 @@ func _get_environment_margin() -> float:
 
 
 func _build() -> void:
-	if OS.has_feature("android"):
+	if GameData.is_lightweight_mode():
 		_place_castle_glb()
 	else:
 		_brick_material = _create_brick_material()

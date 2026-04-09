@@ -100,7 +100,8 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 	
 	visible = true
 	is_visible_panel = true
-	
+	main_container.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	# グローバルボタン設定（閲覧モード：戻るのみ）
 	# setup_buttons=falseの場合はスキップ（呼び出し側でナビゲーション管理）
 	if setup_buttons and ui_manager_ref:
@@ -122,7 +123,8 @@ func show_selection_mode(creature_data: Dictionary, confirmation_text: String = 
 	
 	visible = true
 	is_visible_panel = true
-	
+	main_container.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	# 制限理由に応じてコメントとボタンを変更
 	var creature_name = creature_data.get("name", "クリーチャー")
 	
@@ -178,6 +180,7 @@ func hide_panel(clear_buttons: bool = true):
 	visible = false
 	is_visible_panel = false
 	is_info_only_mode = false  # フラグをリセット
+	main_container.mouse_filter = Control.MOUSE_FILTER_PASS
 	current_creature_data = {}
 	current_tile_index = -1
 	

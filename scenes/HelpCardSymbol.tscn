@@ -34,7 +34,7 @@ theme_override_constants/separation = 20
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 36
 text = "カード記号について"
 horizontal_alignment = 1
 
@@ -54,7 +54,7 @@ theme_override_constants/separation = 15
 
 [node name="CreatureTitle" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/CreatureColumn"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 36
 text = "クリーチャー ●"
 horizontal_alignment = 1
 
@@ -71,7 +71,7 @@ theme_override_constants/separation = 15
 
 [node name="ItemTitle" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/ItemColumn"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 36
 text = "アイテム ▲"
 horizontal_alignment = 1
 
@@ -88,7 +88,7 @@ theme_override_constants/separation = 15
 
 [node name="SpellTitle" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/SpellColumn"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 36
 text = "スペル ◆"
 horizontal_alignment = 1
 
@@ -102,5 +102,5 @@ fit_content = true
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 20
 text = "戻る"

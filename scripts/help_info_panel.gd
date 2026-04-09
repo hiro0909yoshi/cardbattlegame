@@ -220,26 +220,27 @@ func _setup_creature_annotations() -> void:
 	annotation_overlay.clear_annotations()
 	
 	# クリーチャーパネル内のノードを取得
-	var content_vbox = creature_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/VBoxContainer")
-	if not content_vbox:
+	var outer_vbox = creature_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/OuterVBox")
+	if not outer_vbox:
 		return
-	
+	var scroll_vbox = outer_vbox.get_node_or_null("ScrollContainer/VBoxContainer")
+
 	# 左パネルの各要素を取得
-	var name_container = content_vbox.get_node_or_null("NameContainer")
+	var name_container = outer_vbox.get_node_or_null("NameContainer")
 	var name_label = name_container.get_node_or_null("NameLabel") if name_container else null
 	var rarity_label = name_container.get_node_or_null("RarityLabel") if name_container else null
-	var cost_container = content_vbox.get_node_or_null("CostContainer")
+	var cost_container = scroll_vbox.get_node_or_null("CostContainer") if scroll_vbox else null
 	var cost_label = cost_container.get_node_or_null("CostLabel") if cost_container else null
 	var cost_icons = cost_container.get_node_or_null("CostElementIcons") if cost_container else null
-	var hp_ap_container = content_vbox.get_node_or_null("HpApContainer")
+	var hp_ap_container = scroll_vbox.get_node_or_null("HpApContainer") if scroll_vbox else null
 	var hp_label = hp_ap_container.get_node_or_null("HpLabel") if hp_ap_container else null
 	var ap_label = hp_ap_container.get_node_or_null("ApLabel") if hp_ap_container else null
-	var restriction_container = content_vbox.get_node_or_null("RestrictionContainer")
+	var restriction_container = scroll_vbox.get_node_or_null("RestrictionContainer") if scroll_vbox else null
 	var restriction_label = restriction_container.get_node_or_null("RestrictionTextLabel") if restriction_container else null
 	var restriction_icons = restriction_container.get_node_or_null("RestrictionElementIcons") if restriction_container else null
 	var item_label = restriction_container.get_node_or_null("ItemLabel") if restriction_container else null
-	var curse_label = content_vbox.get_node_or_null("CurseLabel")
-	var skill_container = content_vbox.get_node_or_null("SkillContainer")
+	var curse_label = scroll_vbox.get_node_or_null("CurseLabel") if scroll_vbox else null
+	var skill_container = scroll_vbox.get_node_or_null("SkillContainer") if scroll_vbox else null
 	
 	# 右パネルの注釈ラベルを取得
 	var name_annotation = annotation_labels.get_node_or_null("NameAnnotation")
@@ -320,20 +321,21 @@ func _setup_spell_annotations() -> void:
 	annotation_overlay.clear_annotations()
 	
 	# スペルパネル内のノードを取得
-	var content_vbox = spell_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/VBoxContainer")
-	if not content_vbox:
+	var outer_vbox = spell_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/OuterVBox")
+	if not outer_vbox:
 		return
-	
+	var scroll_vbox = outer_vbox.get_node_or_null("ScrollContainer/VBoxContainer")
+
 	# 左パネルの各要素を取得
-	var name_container = content_vbox.get_node_or_null("NameContainer")
+	var name_container = outer_vbox.get_node_or_null("NameContainer")
 	var name_label = name_container.get_node_or_null("NameLabel") if name_container else null
 	var rarity_label = name_container.get_node_or_null("RarityLabel") if name_container else null
-	var cost_container = content_vbox.get_node_or_null("CostContainer")
+	var cost_container = scroll_vbox.get_node_or_null("CostContainer") if scroll_vbox else null
 	var cost_label = cost_container.get_node_or_null("CostLabel") if cost_container else null
 	var cost_icons = cost_container.get_node_or_null("CostIcons") if cost_container else null
-	var spell_type_container = content_vbox.get_node_or_null("SpellTypeContainer")
+	var spell_type_container = scroll_vbox.get_node_or_null("SpellTypeContainer") if scroll_vbox else null
 	var spell_type_label = spell_type_container.get_node_or_null("SpellTypeLabel") if spell_type_container else null
-	var effect_container = content_vbox.get_node_or_null("EffectContainer")
+	var effect_container = scroll_vbox.get_node_or_null("EffectContainer") if scroll_vbox else null
 	
 	# 右パネルの注釈ラベルを取得
 	var name_annotation = spell_annotation_labels.get_node_or_null("SpellNameAnnotation")
@@ -386,18 +388,19 @@ func _setup_item_annotations() -> void:
 	annotation_overlay.clear_annotations()
 	
 	# アイテムパネル内のノードを取得
-	var content_vbox = item_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/VBoxContainer")
-	if not content_vbox:
+	var outer_vbox = item_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/OuterVBox")
+	if not outer_vbox:
 		return
-	
+	var scroll_vbox = outer_vbox.get_node_or_null("ScrollContainer/VBoxContainer")
+
 	# 左パネルの各要素を取得
-	var name_container = content_vbox.get_node_or_null("NameContainer")
+	var name_container = outer_vbox.get_node_or_null("NameContainer")
 	var name_label = name_container.get_node_or_null("NameLabel") if name_container else null
 	var rarity_label = name_container.get_node_or_null("RarityLabel") if name_container else null
-	var cost_label = content_vbox.get_node_or_null("CostLabel")
-	var item_type_container = content_vbox.get_node_or_null("ItemTypeContainer")
-	var stat_container = content_vbox.get_node_or_null("StatContainer")
-	var effect_container = content_vbox.get_node_or_null("EffectContainer")
+	var cost_label = scroll_vbox.get_node_or_null("CostLabel") if scroll_vbox else null
+	var item_type_container = scroll_vbox.get_node_or_null("ItemTypeContainer") if scroll_vbox else null
+	var stat_container = scroll_vbox.get_node_or_null("StatContainer") if scroll_vbox else null
+	var effect_container = scroll_vbox.get_node_or_null("EffectContainer") if scroll_vbox else null
 	
 	# 右パネルの注釈ラベルを取得
 	var name_annotation = item_annotation_labels.get_node_or_null("ItemNameAnnotation")
@@ -540,8 +543,8 @@ func _get_sample_item_data() -> Dictionary:
 
 # 説明テキスト
 func _get_player_info_description() -> String:
-	var text = "[font_size=36][b]プレイヤーインフォパネル[/b][/font_size]\n\n"
-	text += "[font_size=28]"
+	var text = "[font_size=24][b]プレイヤーインフォパネル[/b][/font_size]\n\n"
+	text += "[font_size=20]"
 	text += "画面左上のプレイヤー情報パネルをタップすると\n"
 	text += "詳細情報が表示されます。\n\n"
 	text += "[b]表示内容：[/b]\n"
@@ -554,8 +557,8 @@ func _get_player_info_description() -> String:
 	return text
 
 func _get_creature_info_description() -> String:
-	var text = "[font_size=36][b]クリーチャーインフォパネル[/b][/font_size]\n\n"
-	text += "[font_size=28]"
+	var text = "[font_size=24][b]クリーチャーインフォパネル[/b][/font_size]\n\n"
+	text += "[font_size=20]"
 	text += "クリーチャーカードをタップすると\n"
 	text += "詳細情報が表示されます。\n\n"
 	text += "[b]表示内容：[/b]\n"
@@ -568,8 +571,8 @@ func _get_creature_info_description() -> String:
 	return text
 
 func _get_spell_info_description() -> String:
-	var text = "[font_size=36][b]スペルインフォパネル[/b][/font_size]\n\n"
-	text += "[font_size=28]"
+	var text = "[font_size=24][b]スペルインフォパネル[/b][/font_size]\n\n"
+	text += "[font_size=20]"
 	text += "スペルカードをタップすると\n"
 	text += "詳細情報が表示されます。\n\n"
 	text += "[b]表示内容：[/b]\n"
@@ -581,8 +584,8 @@ func _get_spell_info_description() -> String:
 	return text
 
 func _get_item_info_description() -> String:
-	var text = "[font_size=36][b]アイテムインフォパネル[/b][/font_size]\n\n"
-	text += "[font_size=28]"
+	var text = "[font_size=24][b]アイテムインフォパネル[/b][/font_size]\n\n"
+	text += "[font_size=20]"
 	text += "アイテムカードをタップすると\n"
 	text += "詳細情報が表示されます。\n\n"
 	text += "[b]表示内容：[/b]\n"

@@ -82,7 +82,8 @@ func show_item_info(item_data: Dictionary, hand_index: int = -1, restriction_rea
 	
 	visible = true
 	is_visible_panel = true
-	
+	main_container.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	var item_name = item_data.get("name", "アイテム")
 	
 	if restriction_reason == "ep":
@@ -147,7 +148,8 @@ func show_view_mode(item_data: Dictionary, setup_buttons: bool = false):
 	
 	visible = true
 	is_visible_panel = true
-	
+	main_container.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	# ボタン登録（オプション）
 	if setup_buttons and ui_manager_ref:
 		ui_manager_ref.register_back_action(_on_back_action, "閉じる")
@@ -162,6 +164,7 @@ func hide_panel(clear_buttons: bool = true):
 	visible = false
 	is_visible_panel = false
 	is_info_only_mode = false  # フラグをリセット
+	main_container.mouse_filter = Control.MOUSE_FILTER_PASS
 	current_item_data = {}
 	current_hand_index = -1
 	

@@ -157,6 +157,7 @@
 | se_volume | float | GameData.settings | SE音量 |
 | language | String | GameData.settings | 言語 |
 | auto_save | bool | GameData.settings | 自動セーブ |
+| lightweight_mode | bool | GameData.settings | 軽量描画モード（影なし・単色背景・3D解像度60%・GLB城壁） |
 | device_id | String | 未実装 | 端末識別用UUID |
 
 ---
@@ -222,7 +223,8 @@ GameDataの `player_data` をこの構造に整理する目標形。
     "bgm_volume": 0.8,
     "se_volume": 1.0,
     "language": "ja",
-    "auto_save": true
+    "auto_save": true,
+    "lightweight_mode": false
   }
 }
 ```

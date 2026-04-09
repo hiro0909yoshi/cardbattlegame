@@ -67,10 +67,6 @@ func _show_book_selection():
 	grid_container.add_theme_constant_override("v_separation", 15)
 	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	# スワイプ用の入力ハンドリング設定
-	if not scroll_container.is_connected("gui_input", _on_book_scroll_input):
-		scroll_container.gui_input.connect(_on_book_scroll_input)
-
 	# ブックボタンを再作成
 	var book_count = max(6, GameData.player_data.decks.size())
 	for i in range(book_count):
@@ -107,23 +103,37 @@ func _show_book_selection():
 
 
 ## スワイプ用変数
-var _book_swipe_start_y: float = 0.0
-var _book_is_swiping: bool = false
+var _swipe_start_y: float = 0.0
+var _is_swiping: bool = false
 
 
-## ブックスクロールのスワイプ入力処理
-func _on_book_scroll_input(event: InputEvent):
+## 全体入力処理（mouse_filterに依存しないスワイプ対応）
+func _input(event: InputEvent):
+	if not scroll_container or not scroll_container.visible:
+		return
+
+	# マウス操作
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				_book_swipe_start_y = event.position.y
-				_book_is_swiping = true
+				_swipe_start_y = event.position.y
+				_is_swiping = true
 			else:
-				_book_is_swiping = false
-	elif event is InputEventMouseMotion and _book_is_swiping:
-		var delta = event.position.y - _book_swipe_start_y
+				_is_swiping = false
+	elif event is InputEventMouseMotion and _is_swiping:
+		var delta = event.position.y - _swipe_start_y
 		scroll_container.scroll_vertical -= int(delta)
-		_book_swipe_start_y = event.position.y
+		_swipe_start_y = event.position.y
+
+	# タッチ操作（モバイル）
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_swipe_start_y = event.position.y
+			_is_swiping = true
+		else:
+			_is_swiping = false
+	elif event is InputEventScreenDrag and _is_swiping:
+		scroll_container.scroll_vertical -= int(event.relative.y)
 
 func _on_book_selected(book_index: int):
 	# 選択したブックを保存
@@ -334,6 +344,7 @@ func _render_card_page():
 	grid_container.add_theme_constant_override("h_separation", h_sep)
 	grid_container.add_theme_constant_override("v_separation", 12)
 	grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# カードサイズをScrollContainer幅から動的計算（スクロールバー分も考慮）
 	var scrollbar_width = 30
@@ -447,6 +458,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(_thumbnail_width, _thumbnail_height)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var element_color = _get_element_color(element, card_type)
 	var style = StyleBoxFlat.new()
@@ -469,6 +481,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# カード画像
 	var image_path = _get_card_image_path(card_id, card_type, element)
@@ -476,6 +489,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 	tex_rect.custom_minimum_size = Vector2(_thumbnail_width - 12, _thumbnail_width - 12)
 	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	if image_path != "" and ResourceLoader.exists(image_path):
 		tex_rect.texture = load(image_path)
@@ -501,6 +515,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 			_:
 				name_label.add_theme_color_override("font_color", Color.WHITE)
 
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(name_label)
 
 	# 所持数ラベル
@@ -509,6 +524,7 @@ func _create_card_thumbnail(card: Dictionary) -> Control:
 	count_label.add_theme_font_size_override("font_size", 24)
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	count_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(count_label)
 
 	panel.add_child(vbox)

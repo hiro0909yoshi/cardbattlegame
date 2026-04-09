@@ -94,8 +94,8 @@ func _ready():
 
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():
-	# モバイル: 3D解像度削減（UIは影響なし）
-	if OS.has_feature("android"):
+	# 軽量モード: 3D解像度削減（UIは影響なし）
+	if GameData.is_lightweight_mode():
 		get_viewport().scaling_3d_scale = 0.6
 
 	# カメラ作成
@@ -120,7 +120,7 @@ func _setup_3d_scene_before_init():
 	sun.rotation_degrees = Vector3(-45, 30, 0)
 	sun.light_energy = 1.0
 	sun.light_color = Color(1.0, 0.95, 0.9)
-	if OS.has_feature("android"):
+	if GameData.is_lightweight_mode():
 		sun.shadow_enabled = false
 	else:
 		sun.shadow_enabled = true
@@ -131,15 +131,15 @@ func _setup_3d_scene_before_init():
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.name = "QuestWorldEnv"
 	var env: Environment = Environment.new()
-	if OS.has_feature("android"):
-		# モバイル: 単色背景（軽量）
+	if GameData.is_lightweight_mode():
+		# 軽量モード: 単色背景
 		env.background_mode = Environment.BG_COLOR
 		env.background_color = Color(0.45, 0.60, 0.80)
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 		env.ambient_light_color = Color(0.7, 0.75, 0.85)
 		env.ambient_light_energy = 0.6
 	else:
-		# PC: ProceduralSky（元の設定）
+		# 通常: ProceduralSky
 		var sky: Sky = Sky.new()
 		var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
 		sky_mat.sky_top_color = Color(0.30, 0.55, 0.80)

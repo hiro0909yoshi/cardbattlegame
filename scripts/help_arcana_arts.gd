@@ -13,7 +13,7 @@ func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Help.tscn")
 
 func _setup_content():
-	var text = "[font_size=56]"
+	var text = "[font_size=32]"
 	text += "アルカナアーツは、クリーチャーが持つ特殊な能力です。\n\n"
 	text += "[b]発動タイミング[/b]\n"
 	text += "・スペルフェーズで発動できます\n"

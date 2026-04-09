@@ -3,14 +3,14 @@ extends Control
 ## 説明画面
 ## ゲームの各種説明を表示する
 
-@onready var back_button: Button = $MarginContainer/VBoxContainer/BackButton
-@onready var card_symbol_button: Button = $MarginContainer/VBoxContainer/CardSymbolButton
-@onready var info_panel_button: Button = $MarginContainer/VBoxContainer/InfoPanelButton
-@onready var arcana_arts_button: Button = $MarginContainer/VBoxContainer/ArcanaArtsButton
-@onready var dominion_command_button: Button = $MarginContainer/VBoxContainer/DominionCommandButton
-@onready var down_state_button: Button = $MarginContainer/VBoxContainer/DownStateButton
-@onready var skill_button: Button = $MarginContainer/VBoxContainer/SkillButton
-@onready var special_tile_button: Button = $MarginContainer/VBoxContainer/SpecialTileButton
+@onready var back_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/BackButton
+@onready var card_symbol_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/CardSymbolButton
+@onready var info_panel_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/InfoPanelButton
+@onready var arcana_arts_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ArcanaArtsButton
+@onready var dominion_command_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/DominionCommandButton
+@onready var down_state_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/DownStateButton
+@onready var skill_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/SkillButton
+@onready var special_tile_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/SpecialTileButton
 
 func _ready():
 	back_button.pressed.connect(_on_back_pressed)

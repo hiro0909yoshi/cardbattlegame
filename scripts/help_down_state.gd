@@ -13,7 +13,7 @@ func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Help.tscn")
 
 func _setup_content():
-	var text = "[font_size=56]"
+	var text = "[font_size=32]"
 	text += "ダウン状態は、クリーチャーが一時的に行動不能になる状態です。\n\n"
 	text += "[b]ダウン状態になる条件[/b]\n"
 	text += "・召喚直後、ドミニオコマンド使用後、アルカナアーツ使用後\n"

@@ -236,8 +236,8 @@ func _create_reward_line(label_text: String, value_text: String) -> HBoxContaine
 	return hbox
 
 
-## ガチャ解禁ポップアップを表示（タップで閉じる）
-func _show_unlock_popup(gacha_name: String) -> void:
+## 解禁ポップアップを表示（タップで閉じる）
+func _show_unlock_popup(notification_text: String) -> void:
 	# オーバーレイ（暗転）
 	var overlay = ColorRect.new()
 	overlay.name = "UnlockOverlay"
@@ -281,7 +281,7 @@ func _show_unlock_popup(gacha_name: String) -> void:
 	
 	# メッセージ
 	var msg_label = Label.new()
-	msg_label.text = "%s が解禁されました！" % gacha_name
+	msg_label.text = notification_text
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	msg_label.add_theme_font_size_override("font_size", 48)
 	msg_label.add_theme_color_override("font_color", Color.WHITE)

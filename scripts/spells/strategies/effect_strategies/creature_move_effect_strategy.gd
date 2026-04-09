@@ -74,7 +74,7 @@ func execute(context: Dictionary) -> Dictionary:
 	var effect_message = ""
 	match effect_type:
 		"move_to_adjacent_enemy":
-			effect_message = "敵の隣に移動"
+			effect_message = "隣接ドミニオへ移動"
 		"move_steps":
 			var steps = effect.get("steps", 1)
 			effect_message = "%d マス移動" % steps

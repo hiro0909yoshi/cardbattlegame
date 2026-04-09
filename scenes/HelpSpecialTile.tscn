@@ -34,7 +34,7 @@ theme_override_constants/separation = 30
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 36
 text = "特殊タイルについて"
 horizontal_alignment = 1
 
@@ -58,5 +58,5 @@ scroll_active = false
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 20
 text = "戻る"

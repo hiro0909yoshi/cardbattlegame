@@ -88,7 +88,8 @@ var player_data = {
 		"bgm_volume": 0.8,
 		"se_volume": 1.0,
 		"language": "ja",
-		"auto_save": true
+		"auto_save": true,
+		"lightweight_mode": false
 	},
 
 	# === ゲーム中フラグ（クラッシュ復帰判定用） ===
@@ -191,6 +192,17 @@ func get_selected_character() -> Dictionary:
 	if PLAYABLE_CHARACTERS.has(char_id):
 		return PLAYABLE_CHARACTERS[char_id]
 	return PLAYABLE_CHARACTERS["hero"]
+
+
+## 軽量描画モードか判定（設定ON または Android端末）
+func is_lightweight_mode() -> bool:
+	return player_data.settings.get("lightweight_mode", false) or OS.has_feature("android")
+
+
+## 軽量描画モードの設定を変更
+func set_lightweight_mode(value: bool) -> void:
+	player_data.settings["lightweight_mode"] = value
+	save_to_file()
 
 
 ## ゲーム中フラグを設定（クラッシュ復帰判定用）

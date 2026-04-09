@@ -23,80 +23,87 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 100
-theme_override_constants/margin_top = 100
-theme_override_constants/margin_right = 100
-theme_override_constants/margin_bottom = 100
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 60
+theme_override_constants/margin_bottom = 40
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 40
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ScrollContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
 text = "説明"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="CardSymbolButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="CardSymbolButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "カード記号について"
 
-[node name="InfoPanelButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="InfoPanelButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "インフォパネルについて"
 
-[node name="ArcanaArtsButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="ArcanaArtsButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "アルカナアーツについて"
 
-[node name="DominionCommandButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="DominionCommandButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "ドミニオコマンドについて"
 
-[node name="DownStateButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="DownStateButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "ダウン状態について"
 
-[node name="SkillButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="SkillButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "スキルについて"
 
-[node name="SpecialTileButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="SpecialTileButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 60)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 24
 text = "特殊タイルについて"
 
-[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
+[node name="Spacer" type="Control" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
-size_flags_vertical = 3
 
-[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 60)
+[node name="BackButton" type="Button" parent="MarginContainer/ScrollContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 20
 text = "戻る"

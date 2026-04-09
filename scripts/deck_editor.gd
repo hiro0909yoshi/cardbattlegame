@@ -226,12 +226,14 @@ func _create_card_button(card_data: Dictionary):
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 4)
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	# カード画像
 	var image_rect = TextureRect.new()
 	image_rect.custom_minimum_size = Vector2(190, 190)
 	image_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	image_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image_rect.mouse_filter = Control.MOUSE_FILTER_PASS
 	var image_path = _get_card_image_path(card_data)
 	if ResourceLoader.exists(image_path):
 		image_rect.texture = load(image_path)
@@ -242,6 +244,7 @@ func _create_card_button(card_data: Dictionary):
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 24)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var card_name = card_data.get("name", "???")
 	var dev_name = card_data.get("dev_name", "")

@@ -678,7 +678,7 @@
 	  "cost": {
 		"ep": 60
 	  },
-	  "effect": "AP+HP+10~70",
+	  "effect": "AP,HP上昇10~70",
 	  "effect_parsed": {
 		"effects": [
 		  {

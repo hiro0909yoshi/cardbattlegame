@@ -13,7 +13,7 @@ func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Help.tscn")
 
 func _setup_content():
-	var text = "[font_size=56]"
+	var text = "[font_size=32]"
 	text += "ドミニオコマンド（支配地指令）は、自分のドミニオ（支配地）に指令を出して行えるコマンドです。\n\n"
 	text += "[b]レベルアップ[/b]\n"
 	text += "・EPを消費してドミニオ（支配地）のレベルを上げます\n"

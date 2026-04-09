@@ -16,7 +16,7 @@ func _on_back_pressed():
 
 func _setup_content():
 	# クリーチャー
-	var creature_text = "[font_size=100]"
+	var creature_text = "[font_size=48]"
 	creature_text += "[color=#ff4545]●[/color] 火属性\n"
 	creature_text += "[color=#4587ff]●[/color] 水属性\n"
 	creature_text += "[color=#87cc45]●[/color] 地属性\n"
@@ -26,7 +26,7 @@ func _setup_content():
 	creature_list.text = creature_text
 	
 	# アイテム
-	var item_text = "[font_size=100]"
+	var item_text = "[font_size=48]"
 	item_text += "[color=#ff6645]▲[/color] 武器\n"
 	item_text += "[color=#4566ff]▲[/color] 防具\n"
 	item_text += "[color=#45cc87]▲[/color] アクセサリ\n"
@@ -35,7 +35,7 @@ func _setup_content():
 	item_list.text = item_text
 	
 	# スペル
-	var spell_text = "[font_size=100]"
+	var spell_text = "[font_size=48]"
 	spell_text += "[color=#ff4545]◆[/color] 単体対象\n"
 	spell_text += "[color=#45ff87]◆[/color] 単体特殊能力付与\n"
 	spell_text += "[color=#ffaa45]◆[/color] 複数対象\n"

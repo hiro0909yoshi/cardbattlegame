@@ -71,7 +71,7 @@ func execute(context: Dictionary) -> Dictionary:
 	var effect_message = ""
 	match effect_type:
 		"destroy_selected_card":
-			effect_message = "敵のカードを破壊！"
+			effect_message = "カードを破壊！"
 		"destroy_curse_cards":
 			effect_message = "刻印カードを破壊！"
 		"draw":
@@ -98,7 +98,7 @@ func execute(context: Dictionary) -> Dictionary:
 		"destroy_duplicate_cards":
 			effect_message = "重複カード破壊"
 		"steal_selected_card":
-			effect_message = "敵カード奪取"
+			effect_message = "カード奪取"
 		"destroy_from_deck_selection":
 			effect_message = "デッキから破壊"
 		"steal_item_conditional":

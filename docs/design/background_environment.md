@@ -266,7 +266,29 @@ moss_amount: 0.25
 
 ---
 
-## モバイル最適化
+## 軽量描画モード
+
+### 概要
+
+ユーザーが設定画面から「画質: 軽量」に切り替え可能。Android端末は自動で軽量モードが適用される。
+
+判定: `GameData.is_lightweight_mode()` → `settings.lightweight_mode == true` または `OS.has_feature("android")`
+
+### 軽量モードの効果
+
+| 項目 | 通常 | 軽量 |
+|------|------|------|
+| 背景 | ProceduralSky | 単色 Color(0.45, 0.60, 0.80) |
+| 影 | 有効（max_distance=60） | 無効 |
+| 3D解像度 | 100% | 60%（`scaling_3d_scale = 0.6`） |
+| 城壁 | シェーダー生成（レンガ・蔦・草） | GLBモデル |
+| 環境光 | AMBIENT_SOURCE_SKY, energy=0.4 | AMBIENT_SOURCE_COLOR, energy=0.6 |
+
+### 設定の保存
+
+`GameData.player_data.settings.lightweight_mode` (bool) に保存。設定画面のトグルで切り替え。
+
+### モバイル最適化（軽量モードに含まれる対策）
 
 | 対策 | 内容 |
 |------|------|

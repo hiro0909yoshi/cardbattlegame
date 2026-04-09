@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://cmqc8cb50jqn8" path="res://scripts/quest/quest_game.gd" id="1_quest"]
 
-
 [sub_resource type="Environment" id="Environment_sp3l6"]
 ambient_light_source = 2
 ambient_light_color = Color(0.96474224, 0.96474224, 0.9647421, 1)
@@ -17,5 +16,3 @@ light_energy = 2.316
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_sp3l6")
-
-

@@ -13,7 +13,7 @@ func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Help.tscn")
 
 func _setup_content():
-	var text = "[font_size=56]"
+	var text = "[font_size=32]"
 	text += "特殊な機能を持つタイルの説明です。\n\n"
 
 	for tile_key in SpecialTileDescriptions.TILE_ORDER:

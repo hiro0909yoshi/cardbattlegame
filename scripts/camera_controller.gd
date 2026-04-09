@@ -280,13 +280,15 @@ func _input(event):
 	
 	# ドラッグ移動
 	if event is InputEventMouseMotion and is_dragging:
-		_total_drag_distance += event.relative.length()
-		_move_camera(event.relative)
-	
+		if not _is_over_ui(event.position):
+			_total_drag_distance += event.relative.length()
+			_move_camera(event.relative)
+
 	# スクリーンドラッグ（モバイル）
 	if event is InputEventScreenDrag:
-		_total_drag_distance += event.relative.length()
-		_move_camera(event.relative)
+		if not _is_over_ui(event.position):
+			_total_drag_distance += event.relative.length()
+			_move_camera(event.relative)
 
 
 ## 指定位置にUIがあるかチェック

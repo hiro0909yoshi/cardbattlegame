@@ -81,7 +81,8 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 	
 	visible = true
 	is_visible_panel = true
-	
+	main_container.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	var spell_name = spell_data.get("name", "スペル")
 	
 	if restriction_reason == "ep":
@@ -146,7 +147,8 @@ func show_view_mode(spell_data: Dictionary, setup_buttons: bool = false):
 	
 	visible = true
 	is_visible_panel = true
-	
+	main_container.mouse_filter = Control.MOUSE_FILTER_STOP
+
 	# ボタン登録（オプション）
 	if setup_buttons and ui_manager_ref:
 		ui_manager_ref.register_back_action(_on_back_action, "閉じる")
@@ -161,6 +163,7 @@ func hide_panel(clear_buttons: bool = true):
 	visible = false
 	is_visible_panel = false
 	is_info_only_mode = false  # フラグをリセット
+	main_container.mouse_filter = Control.MOUSE_FILTER_PASS
 	current_spell_data = {}
 	current_hand_index = -1
 

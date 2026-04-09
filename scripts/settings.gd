@@ -4,13 +4,14 @@ extends Control
 ## チュートリアル開始、各種設定を行う
 
 
-@onready var back_button: Button = $MarginContainer/VBoxContainer/BackButton
-@onready var tutorial_button: Button = $MarginContainer/VBoxContainer/TutorialButton
-@onready var help_button: Button = $MarginContainer/VBoxContainer/HelpButton
-@onready var cpu_deck_button: Button = $MarginContainer/VBoxContainer/CpuDeckButton
-@onready var player_card_button: Button = $MarginContainer/VBoxContainer/PlayerCardButton
-@onready var map_button: Button = $MarginContainer/VBoxContainer/MapButton
-@onready var reset_button: Button = $MarginContainer/VBoxContainer/ResetButton
+@onready var back_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/BackButton
+@onready var tutorial_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/TutorialButton
+@onready var help_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/HelpButton
+@onready var cpu_deck_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/CpuDeckButton
+@onready var player_card_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/PlayerCardButton
+@onready var map_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/MapButton
+@onready var graphics_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/GraphicsButton
+@onready var reset_button: Button = $MarginContainer/ScrollContainer/VBoxContainer/ResetButton
 
 
 func _ready():
@@ -21,8 +22,10 @@ func _ready():
 	cpu_deck_button.pressed.connect(_on_cpu_deck_pressed)
 	player_card_button.pressed.connect(_on_player_card_pressed)
 	map_button.pressed.connect(_on_map_pressed)
+	graphics_button.pressed.connect(_on_graphics_pressed)
 	reset_button.pressed.connect(_on_reset_pressed)
 	_setup_reset_button_style()
+	_update_graphics_button()
 
 
 func _on_back_pressed():
@@ -48,6 +51,18 @@ func _on_map_pressed():
 	var dialog = MapPreviewDialog.new()
 	add_child(dialog)
 	dialog.popup_centered()
+
+func _on_graphics_pressed():
+	var current = GameData.player_data.settings.get("lightweight_mode", false)
+	GameData.set_lightweight_mode(!current)
+	_update_graphics_button()
+
+func _update_graphics_button():
+	var is_lightweight = GameData.player_data.settings.get("lightweight_mode", false)
+	if is_lightweight:
+		graphics_button.text = "画質: 軽量"
+	else:
+		graphics_button.text = "画質: 通常"
 
 
 func _setup_reset_button_style():
