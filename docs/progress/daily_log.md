@@ -12,6 +12,32 @@
 
 ---
 
+## 2026年4月10日（Session: GPU負荷対策・半透明システム統一・スペル修正）
+
+### 完了した作業
+
+#### 半透明システム修正（target_marker_system.gd）
+- ✅ カードとキャラクターの独立透明度制御 — creature→カードのみフェード、player→キャラフェード
+- ✅ GLBモデル黒化防止 — プレイヤーキャラクターは `visible` 切り替え方式に変更（`_set_player_transparency`）
+- ✅ 軽量モード: `TRANSPARENCY_ALPHA` + `albedo_color.a`、PC: `GeometryInstance3D.transparency`
+- ✅ dead code削除（約80行: `OCCLUDER_ALPHA`, cache変数, `_fade_with_diff()`, 旧 `_set_node_transparency()` 等）
+
+#### target_selection_helper.gd
+- ✅ `show_confirmation_highlights` の "self"/"none" ケースで `target_type`/`player_id` を渡すよう修正
+
+#### スペル: インベイド（id:2002）修正（target_finder.gd）
+- ✅ `has_adjacent_enemy` チェック — `owner_filter: "any"` 時にクリーチャーオーナー視点で敵判定するよう修正
+
+#### GPU フレーム分散（dominio_command_handler.gd, land_selection_helper.gd, land_input_helper.gd）
+- ✅ マーカー/フェード処理とカメラ移動を `await process_frame` で別フレームに分散
+- ✅ 軽量モード用マーカー（玉1個+パルス）追加
+
+### 次のステップ
+- モバイル（iPhone/Android）で `TRANSPARENCY_ALPHA` のGPUクラッシュテスト
+- 全修正のコミット
+
+---
+
 ## 2026年4月8-9日（Session: ゲーム中ステートセーブ/復帰機能実装）
 
 ### 完了した作業

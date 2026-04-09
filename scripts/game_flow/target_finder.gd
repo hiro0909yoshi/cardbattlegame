@@ -230,8 +230,10 @@ static func _find_creature_targets(sys_board, current_player_id: int, target_inf
 				continue
 		
 		# has_adjacent_enemy チェック（アウトレイジ用）
+		# owner_filter="any"の場合、クリーチャーのオーナー視点で敵を判定
 		if target_info.get("has_adjacent_enemy", false):
-			var has_adjacent = _check_has_adjacent_enemy(sys_board, tile_index, current_player_id)
+			var check_player_id: int = tile_owner if owner_filter == "any" and tile_owner >= 0 else current_player_id
+			var has_adjacent = _check_has_adjacent_enemy(sys_board, tile_index, check_player_id)
 			if not has_adjacent:
 				continue
 		

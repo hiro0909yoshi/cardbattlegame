@@ -107,18 +107,3 @@ func _get_card_texture_cache_instance():
 func set_height(height: float):
 	if mesh_instance:
 		mesh_instance.position.y = height
-
-
-## 半透明化（ターゲット選択時に他タイルのカードを薄くする）
-func set_transparency(alpha: float) -> void:
-	if not mesh_instance:
-		return
-	var mat = mesh_instance.material_override as StandardMaterial3D
-	if not mat:
-		return
-	if alpha < 1.0:
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(1, 1, 1, alpha)
-	else:
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
-		mat.albedo_color = Color(1, 1, 1, 1)

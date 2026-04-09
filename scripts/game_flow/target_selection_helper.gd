@@ -350,7 +350,8 @@ static func show_confirmation_highlights(handler, target_type: String, target_in
 				var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
 				var player_tile = handler.board_system.get_player_tile(current_player_id)
 				if player_tile >= 0:
-					TargetMarkerSystem.show_selection_marker(handler, player_tile)
+					var pid: int = current_player_id
+					TargetMarkerSystem.show_selection_marker(handler, player_tile, "player", pid)
 					TargetMarkerSystem.highlight_tile(handler, player_tile)
 					highlighted_tiles.append(player_tile)
 		
