@@ -343,18 +343,19 @@ func complete_action():
 	_complete_action()
 
 # クリーチャー交換処理
-func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictionary):
+func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictionary, override_card_data: Dictionary = {}):
 	if not is_action_processing:
 		print("Warning: Not processing any action")
 		return
-	
+
 	if card_index < 0:
 		print("[TileActionProcessor] 交換キャンセル")
 		_complete_action()
 		return
-	
+
 	var current_player_index = board_system.current_player_index
-	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
+	# override_card_dataがあればそれを使用（犠牲処理後のインデックスずれ防止）
+	var card_data = override_card_data if not override_card_data.is_empty() else card_system.get_card_data_for_player(current_player_index, card_index)
 	
 	if card_data.is_empty():
 		print("[TileActionProcessor] カードデータが取得できません")

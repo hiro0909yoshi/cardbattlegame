@@ -923,9 +923,9 @@ func set_pending_comment(comment: String):
 		tile_action_processor.set_pending_comment(comment)
 
 ## 交換実行
-func execute_swap_action(tile_index: int, card_index: int, old_creature_data: Dictionary):
+func execute_swap_action(tile_index: int, card_index: int, old_creature_data: Dictionary, override_card_data: Dictionary = {}):
 	if tile_action_processor:
-		tile_action_processor.execute_swap(tile_index, card_index, old_creature_data)
+		tile_action_processor.execute_swap(tile_index, card_index, old_creature_data, override_card_data)
 
 ## 召喚実行（await必要）
 func execute_summon_action(card_index: int):

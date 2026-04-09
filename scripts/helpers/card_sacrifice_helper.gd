@@ -105,13 +105,13 @@ func consume_card(player_id: int, card: Dictionary) -> bool:
 		GameLogger.error("Card", "CardSacrificeHelper: 破棄するカードが空です (player=%d)" % player_id)
 		return false
 
-	var hand = card_system_ref.get_all_cards_for_player(player_id)
+	var player_hand = card_system_ref.get_all_cards_for_player(player_id)
 	var card_id = card.get("id", -1)
 	var card_name = card.get("name", "不明")
 
 	# カードを探してdiscard_card()で削除（捨て札プールに追加される）
-	for i in range(hand.size()):
-		if hand[i].get("id") == card_id:
+	for i in range(player_hand.size()):
+		if player_hand[i].get("id") == card_id:
 			card_system_ref.discard_card(player_id, i, "sacrifice")
 			print("[CardSacrificeHelper] %s を犠牲にしました" % card_name)
 			return true
@@ -141,12 +141,12 @@ func has_valid_cards(player_id: int, filter: String = "") -> bool:
 	if not card_system_ref:
 		return false
 	
-	var hand = card_system_ref.get_all_cards_for_player(player_id)
-	
+	var player_hand = card_system_ref.get_all_cards_for_player(player_id)
+
 	if filter.is_empty():
-		return hand.size() > 0
-	
-	for card in hand:
+		return player_hand.size() > 0
+
+	for card in player_hand:
 		if card.get("type") == filter:
 			return true
 	
@@ -160,9 +160,9 @@ func get_valid_cards(player_id: int, filter: String = "") -> Array:
 	if not card_system_ref:
 		return result
 	
-	var hand = card_system_ref.get_all_cards_for_player(player_id)
-	
-	for card in hand:
+	var player_hand = card_system_ref.get_all_cards_for_player(player_id)
+
+	for card in player_hand:
 		if filter.is_empty() or card.get("type") == filter:
 			result.append(card)
 	
