@@ -50,6 +50,8 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			if target_player_id >= 0 and card_selection_handler:
 				var filter_mode = effect.get("filter_mode", "destroy_spell")
 				card_selection_handler.set_current_player(player_id)
+				var spell_card_data = context.get("spell_card", {})
+				card_selection_handler._current_spell_card_id = spell_card_data.get("id", -1)
 				card_selection_handler.start_enemy_card_selection(target_player_id, filter_mode, func(_card_index: int):
 					pass
 				, true)
@@ -64,6 +66,8 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				var item_count = count_items_in_hand(target_player_id)
 				if item_count >= required_count:
 					card_selection_handler.set_current_player(player_id)
+					var spell_card_data_2 = context.get("spell_card", {})
+					card_selection_handler._current_spell_card_id = spell_card_data_2.get("id", -1)
 					card_selection_handler.start_enemy_card_selection(target_player_id, "item", func(_card_index: int):
 						pass
 					, true)
@@ -77,6 +81,8 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			var caster_tile_index = context.get("tile_index", -1)
 			if target_player_id >= 0 and card_selection_handler and caster_tile_index >= 0:
 				card_selection_handler.set_current_player(player_id)
+				var spell_card_data_3 = context.get("spell_card", {})
+				card_selection_handler._current_spell_card_id = spell_card_data_3.get("id", -1)
 				card_selection_handler.start_enemy_card_selection(target_player_id, "creature", func(_card_index: int):
 					pass
 				, true)

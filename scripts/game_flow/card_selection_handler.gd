@@ -24,6 +24,9 @@ var enemy_card_selection_filter_mode: String = ""
 var enemy_card_selection_callback: Callable
 var enemy_card_selection_is_steal: bool = false
 
+## 使用中スペルカードID（自分対象時の除外用）
+var _current_spell_card_id: int = -1
+
 ## カード変換用変数（メタモルフォシス）
 var transform_target_player_id: int = -1
 var transform_to_card_id: int = -1
@@ -157,10 +160,18 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		var is_self_target = (target_player_id == current_player_id)
 		await _cpu_auto_select_enemy_card(target_player_id, filter_mode, callback, is_steal, is_self_target)
 		return
-	
+
 	# フィルターモードを設定
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = filter_mode
+
+	# 自分に対して使った場合、使用中のスペルカードを除外（インデックスベース）
+	if target_player_id == current_player_id and _card_selection_service and card_system and _current_spell_card_id >= 0:
+		var hand = card_system.get_all_cards_for_player(current_player_id)
+		for i in range(hand.size()):
+			if hand[i].get("id", -1) == _current_spell_card_id:
+				_card_selection_service.excluded_card_index = i
+				break
 
 	# 対象プレイヤーの手札を表示
 	if ui_manager:
@@ -388,7 +399,12 @@ func _finish_enemy_card_selection():
 	enemy_card_selection_target_id = -1
 	enemy_card_selection_filter_mode = ""
 	enemy_card_selection_is_steal = false
+	_current_spell_card_id = -1
 	pending_confirmation.clear()  # 確認待ち情報クリア
+
+	# 除外インデックスをリセット
+	if _card_selection_service:
+		_card_selection_service.excluded_card_index = -1
 	
 	# カメラを現在のプレイヤーに戻す
 	_restore_camera_to_current_player()
@@ -949,17 +965,32 @@ func _show_info_panel_for_card(card_data: Dictionary, action_type: String):
 	var card_name = card_data.get("name", "?")
 
 	# アクションタイプに応じた確認テキスト
-	var confirmation_text = ""
+	# クリーチャー用: カード名なし（show_selection_modeが「名前を＋テキスト」形式で連結するため）
+	# スペル/アイテム用: カード名入りの完全文
+	var creature_action_text = ""
+	var other_confirmation_text = ""
 	match action_type:
-		"destroy": confirmation_text = "『%s』を破壊" % card_name
-		"steal": confirmation_text = "『%s』を奪う" % card_name
-		"swap": confirmation_text = "『%s』と交換" % card_name
-		"draw": confirmation_text = "『%s』を引く" % card_name
-		"transform": confirmation_text = "『%s』を変換" % card_name
-		_: confirmation_text = "『%s』を選択" % card_name
+		"destroy":
+			creature_action_text = "破壊しますか？"
+			other_confirmation_text = "『%s』を破壊しますか？" % card_name
+		"steal":
+			creature_action_text = "奪いますか？"
+			other_confirmation_text = "『%s』を奪いますか？" % card_name
+		"swap":
+			creature_action_text = "交換しますか？"
+			other_confirmation_text = "『%s』と交換しますか？" % card_name
+		"draw":
+			creature_action_text = "引きますか？"
+			other_confirmation_text = "『%s』を引きますか？" % card_name
+		"transform":
+			creature_action_text = "変換しますか？"
+			other_confirmation_text = "『%s』を変換しますか？" % card_name
+		_:
+			creature_action_text = "選択しますか？"
+			other_confirmation_text = "『%s』を選択しますか？" % card_name
 
 	if card_type in ["creature", "spell", "item"]:
-		var prompt = confirmation_text if card_type == "creature" else "『%s』に使用しますか？" % card_name
+		var prompt = creature_action_text if card_type == "creature" else other_confirmation_text
 		_info_panel_service.show_card_selection(card_data, card_index, prompt, "", card_type)
 	else:
 		_on_info_panel_confirmed({})

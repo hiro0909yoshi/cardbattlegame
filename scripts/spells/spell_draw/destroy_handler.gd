@@ -77,6 +77,9 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				var magic_bonus = effect.get("magic_bonus", 0)
 				print("[DestroyHandler] start_enemy_card_selection 呼び出し: target_player_id=%d, filter_mode=%s" % [target_player_id, filter_mode])
 				card_selection_handler.set_current_player(player_id)
+				# 使用中スペルカードIDを設定（自分対象時の除外用）
+				var spell_card_data = context.get("spell_card", {})
+				card_selection_handler._current_spell_card_id = spell_card_data.get("id", -1)
 				card_selection_handler.start_enemy_card_selection(target_player_id, filter_mode, func(card_index: int):
 					print("[DestroyHandler] コールバック実行: card_index=%d" % card_index)
 					if card_index >= 0 and magic_bonus > 0:
@@ -92,6 +95,8 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			var target_player_id = context.get("target_player_id", -1)
 			if target_player_id >= 0 and card_selection_handler:
 				card_selection_handler.set_current_player(player_id)
+				var spell_card_data_2 = context.get("spell_card", {})
+				card_selection_handler._current_spell_card_id = spell_card_data_2.get("id", -1)
 				card_selection_handler.start_enemy_card_selection(target_player_id, "destroy_any", func(_card_index: int):
 					_draw_cards_for_player(target_player_id, 1)
 				)

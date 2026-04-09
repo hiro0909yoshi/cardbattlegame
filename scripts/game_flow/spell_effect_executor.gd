@@ -80,25 +80,16 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 		if handler.spell_state:
 			handler.spell_state.set_spell_failed(true)
 
+	# スペルカードを先に消費（エフェクト実行前に手札から除去）
+	# → 手札参照系エフェクト（ディール等）でのインデックスずれ・除外漏れを防止
+	var spell_failed = handler.spell_state.is_spell_failed() if handler.spell_state else false
+	var is_external_mode = handler.spell_state.is_in_external_spell_mode() if handler.spell_state else false
+	if handler.card_system and not spell_failed and not is_external_mode:
+		_discard_spell_card(handler, current_player_id, spell_card)
+
 	# 効果を適用
 	for effect in effects:
 		await apply_single_effect(effect, target_data)
-
-	# spell_failed フラグを取得（spell_state経由）
-	var spell_failed = handler.spell_state.is_spell_failed() if handler.spell_state else false
-	var is_external_mode = handler.spell_state.is_in_external_spell_mode() if handler.spell_state else false
-
-	# カードを捨て札に（復帰[ブック]/復帰[手札]/外部スペル時はスキップ）
-	if handler.card_system and not spell_failed and not is_external_mode:
-		var hand = handler.card_system.get_all_cards_for_player(current_player_id)
-		for i in range(hand.size()):
-			if hand[i].get("id", -1) == spell_card.get("id", -2):
-				handler.card_system.discard_card(current_player_id, i, "use")
-				break
-	elif spell_failed and return_to_hand:
-		pass
-	elif is_external_mode:
-		pass
 
 	GameLogger.info("Spell", "効果完了: P%d %s(id:%d) result=%s" % [current_player_id_log + 1, spell_name, spell_id, "success"])
 
@@ -117,6 +108,15 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# さらに待機してからスペルフェーズ完了
 	await handler.get_tree().create_timer(0.5).timeout
 	handler.complete_spell_phase()
+
+
+## スペルカードを手札から捨て札に移動（ID検索）
+func _discard_spell_card(handler, player_id: int, spell_card: Dictionary) -> void:
+	var hand = handler.card_system.get_all_cards_for_player(player_id)
+	for i in range(hand.size()):
+		if hand[i].get("id", -1) == spell_card.get("id", -2):
+			handler.card_system.discard_card(player_id, i, "use")
+			return
 
 
 ## 赤マーカーをターゲットに表示（0.8秒で自動消滅）
@@ -315,6 +315,12 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 	if not target_tile_indices.is_empty() and handler.board_system:
 		TargetMarkerSystem.fade_non_target_tiles(handler, target_tile_indices)
 
+	# スペルカードを先に消費（エフェクト実行前に手札から除去）
+	var spell_failed = handler.spell_state.is_spell_failed() if handler.spell_state else false
+	var is_external_mode = handler.spell_state.is_in_external_spell_mode() if handler.spell_state else false
+	if handler.card_system and not spell_failed and not is_external_mode:
+		_discard_spell_card(handler, current_player_id, spell_card)
+
 	# 各対象に個別フォーカス+赤マーカー+効果を適用
 	for target in targets:
 		var tile_idx: int = target.get("tile_index", -1)
@@ -329,20 +335,6 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 	# 半透明を一括復元
 	if handler.board_system:
 		TargetMarkerSystem.restore_all_creature_transparency(handler)
-	
-	# spell_failed フラグを取得（spell_state経由）
-	var spell_failed = handler.spell_state.is_spell_failed() if handler.spell_state else false
-	var is_external_mode = handler.spell_state.is_in_external_spell_mode() if handler.spell_state else false
-
-	# カードを捨て札に（外部スペル時はスキップ）
-	if handler.card_system and not spell_failed and not is_external_mode:
-		var hand = handler.card_system.get_all_cards_for_player(current_player_id)
-		for i in range(hand.size()):
-			if hand[i].get("id", -1) == spell_card.get("id", -2):
-				handler.card_system.discard_card(current_player_id, i, "use")
-				break
-	elif is_external_mode:
-		pass
 
 	# 効果発動完了
 	handler.spell_used.emit(spell_card)

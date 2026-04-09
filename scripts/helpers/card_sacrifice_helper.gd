@@ -33,7 +33,8 @@ func set_card_selection_service(css: Object) -> void:
 ## 手札選択UIを表示し、選択されたカードを返す
 ## filter: "creature", "spell", "item", "" (全て)
 ## exclude_card_id: 除外するカードのID（使用中のカード自身を犠牲にさせないため）
-func show_hand_selection(player_id: int, filter: String = "", _message: String = "犠牲にするカードを選択", exclude_card_id: String = "") -> Dictionary:
+## exclude_card_index: 除外するカードのインデックス（同IDカード2枚対応、-1で無効）
+func show_hand_selection(player_id: int, filter: String = "", _message: String = "犠牲にするカードを選択", exclude_card_id: String = "", exclude_card_index: int = -1) -> Dictionary:
 	_selected_card = {}
 	_selected_index = -1
 
@@ -41,18 +42,20 @@ func show_hand_selection(player_id: int, filter: String = "", _message: String =
 		GameLogger.error("Card", "CardSacrificeHelper: card_system_ref が未設定 (player=%d filter=%s)" % [player_id, filter])
 		return {}
 
-	var hand = card_system_ref.get_all_cards_for_player(player_id)
-	if hand.is_empty():
+	var player_hand = card_system_ref.get_all_cards_for_player(player_id)
+	if player_hand.is_empty():
 		print("[CardSacrificeHelper] 手札が空です")
 		return {}
 
 	# CardSelectionServiceがない場合はフォールバック
 	if not _card_selection_service_ref:
 		print("[CardSacrificeHelper] CardSelectionService未設定、最初のカードを使用")
-		return _fallback_selection(hand, filter)
+		return _fallback_selection(player_hand, filter)
 
-	# 除外カードIDを設定（使用中のカード自身を犠牲にさせない）
-	if exclude_card_id != "":
+	# 除外設定（インデックスベース優先、IDベースはフォールバック）
+	if exclude_card_index >= 0:
+		_card_selection_service_ref.excluded_card_index = exclude_card_index
+	elif exclude_card_id != "":
 		_card_selection_service_ref.excluded_card_id = exclude_card_id
 
 	# カード選択UIを表示
@@ -67,13 +70,13 @@ func show_hand_selection(player_id: int, filter: String = "", _message: String =
 	# UIを閉じる
 	_card_selection_service_ref.hide_card_selection_ui()
 
-	# 除外カードIDをリセット
-	if exclude_card_id != "":
-		_card_selection_service_ref.excluded_card_id = ""
+	# 除外をリセット
+	_card_selection_service_ref.excluded_card_index = -1
+	_card_selection_service_ref.excluded_card_id = ""
 
 	# 選択されたカードを取得
-	if selected_index >= 0 and selected_index < hand.size():
-		_selected_card = hand[selected_index]
+	if selected_index >= 0 and selected_index < player_hand.size():
+		_selected_card = player_hand[selected_index]
 		_selected_index = selected_index
 		return _selected_card
 
@@ -117,9 +120,18 @@ func consume_card(player_id: int, card: Dictionary) -> bool:
 	return false
 
 
-## 選択中のカードを破棄
+## 選択中のカードをインデックスで直接破棄（同IDカード2枚対応）
 func consume_selected_card(player_id: int) -> bool:
-	return consume_card(player_id, _selected_card)
+	if not card_system_ref:
+		GameLogger.error("Card", "CardSacrificeHelper: card_system_ref が未設定 (player=%d)" % player_id)
+		return false
+	if _selected_index < 0 or _selected_card.is_empty():
+		GameLogger.error("Card", "CardSacrificeHelper: 選択されたカードがありません (player=%d)" % player_id)
+		return false
+	var card_name = _selected_card.get("name", "不明")
+	card_system_ref.discard_card(player_id, _selected_index, "sacrifice")
+	print("[CardSacrificeHelper] %s を犠牲にしました (index=%d)" % [card_name, _selected_index])
+	return true
 
 
 # ============ ユーティリティ ============

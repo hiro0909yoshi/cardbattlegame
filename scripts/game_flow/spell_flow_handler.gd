@@ -88,6 +88,18 @@ func inject_dependencies(spell_container: SpellSystemContainer) -> void:
 
 ## ===== ヘルパーメソッド =====
 
+## 手札内のカードインデックスを検索
+func _find_card_index_in_hand(player_id: int, card: Dictionary) -> int:
+	if not _card_system:
+		return -1
+	var player_hand = _card_system.get_all_cards_for_player(player_id)
+	var card_id = card.get("id", -1)
+	for i in range(player_hand.size()):
+		if player_hand[i].get("id", -1) == card_id:
+			return i
+	return -1
+
+
 ## CPU判定ヘルパー（Phase A-3a）
 func _is_cpu_player(player_id: int) -> bool:
 	return _is_cpu_player_cb.call(player_id) if _is_cpu_player_cb.is_valid() else false
@@ -195,11 +207,11 @@ func use_spell(spell_card: Dictionary):
 	_spell_state.clear_pending_sacrifice_card()
 	var disable_sacrifice = _is_card_sacrifice_disabled() or _spell_state.is_in_magic_tile_mode()
 	if _spell_synthesis and _spell_synthesis.requires_sacrifice(spell_card) and not disable_sacrifice:
-		# 手札選択UIを表示
+		# 手札選択UIを表示（インデックスベース除外：スペルカード1枚だけ除外）
 		if _card_sacrifice_helper:
-			var spell_id = str(spell_card.get("id", ""))
+			var spell_card_index = _find_card_index_in_hand(_spell_state.current_player_id, spell_card)
 			var sacrifice_card = await _card_sacrifice_helper.show_hand_selection(
-				_spell_state.current_player_id, "", "犠牲にするカードを選択", spell_id
+				_spell_state.current_player_id, "", "犠牲にするカードを選択", "", spell_card_index
 			)
 
 			if sacrifice_card.is_empty():
@@ -223,11 +235,11 @@ func use_spell(spell_card: Dictionary):
 					_show_spell_selection_ui(hand_data, current_player.magic_power)
 				return
 
-			# 合成条件判定
+			# 犠牲カードを即消費（クリーチャー側と同じパターン）
+			_card_sacrifice_helper.consume_selected_card(_spell_state.current_player_id)
+
+			# 合成条件判定（スキル発動判定のみ、犠牲は既に消費済み）
 			is_synthesized = _spell_synthesis.check_condition(spell_card, sacrifice_card)
-			if is_synthesized:
-				# カードを一時保存（スペル実行確定時に消費）
-				_spell_state.set_pending_sacrifice_card(sacrifice_card)
 
 	# 合成成立時はeffect_parsedを書き換え
 	var parsed = spell_card.get("effect_parsed", {})
@@ -363,20 +375,19 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	var _t_tile = target_data.get("tile_index", -1)
 	GameLogger.info("Spell", "選択確定: P%d %s(id:%d) → %s tile:%d" % [_s_pid + 1, _s_name, _s_id, _t_type, _t_tile])
 
-	# 犠牲カードを消費（スペル実行確定時）
-	if not _spell_state.get_pending_sacrifice_card().is_empty() and _card_sacrifice_helper:
-		_card_sacrifice_helper.consume_card(_spell_state.current_player_id, _spell_state.get_pending_sacrifice_card())
-		_spell_state.clear_pending_sacrifice_card()
+	# 犠牲カードは use_spell() 内で即消費済みのため、ここでの消費は不要
 
 	# Strategy パターンで実行を試行（Day 1-2 試験的実装）
 	var strategy_executed = await _try_execute_spell_with_strategy(spell_card, target_data)
 
 	if strategy_executed:
+		print("[SpellFlowHandler] ⚠️ Strategyパスで実行完了（スペルカード消費はSpellEffectExecutor側）")
 		# Strategy により実行完了 → 背景処理完了を待機してからフェーズ完了
 		await _get_tree_ref().create_timer(0.5).timeout
 		complete_spell_phase()
 		return
 
+	print("[SpellFlowHandler] フォールバックパスで実行 → SpellEffectExecutor")
 	# フォールバック: 従来のロジックで実行
 	if _spell_effect_executor:
 		# SpellEffectExecutor は内部で complete_spell_phase() を呼ぶ

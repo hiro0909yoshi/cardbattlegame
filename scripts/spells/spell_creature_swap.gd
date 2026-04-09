@@ -469,10 +469,16 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = ""
 
-	# 召喚カードを除外（型を String に統一）
-	var card_id = summon_creature.get("id", -1)
+	# 召喚カードをインデックスベースで除外（同IDカード2枚対応）
 	if _card_selection_service:
-		_card_selection_service.excluded_card_id = str(card_id) if card_id != -1 else ""
+		var hand = card_system_ref.get_all_cards_for_player(player_id)
+		var summon_id = summon_creature.get("id", -1)
+		var exclude_idx = -1
+		for i in range(hand.size()):
+			if hand[i].get("id", -1) == summon_id:
+				exclude_idx = i
+				break
+		_card_selection_service.excluded_card_index = exclude_idx
 	var player = player_system_ref.players[player_id]
 	css.show_card_selection_ui_mode(player, "sacrifice")
 
@@ -490,9 +496,9 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	# UIを閉じる
 	css.hide_card_selection_ui()
 
-	# 除外IDをリセット
+	# 除外インデックスをリセット
 	if _card_selection_service:
-		_card_selection_service.excluded_card_id = ""
+		_card_selection_service.excluded_card_index = -1
 
 	# 選択されたカードを取得
 	if selected_index < 0:

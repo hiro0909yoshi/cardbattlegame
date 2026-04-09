@@ -248,7 +248,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			else:
 				# 召喚フェーズ等: クリーチャーカードのみ選択可能
 				is_selectable = card_type == "creature"
-			
+
+			# 共通除外チェック（使用中カードのインデックスベース除外）
+			if is_selectable and selection_mode != "sacrifice" and _card_selection_service:
+				if _card_selection_service.excluded_card_index == i:
+					is_selectable = false
+
 				# 土地条件チェック（召喚/バトルフェーズでクリーチャーの場合）
 			# 犠牲/捨て札モードではスキップ
 			if is_selectable and card_type == "creature" and (filter_mode == "" or filter_mode == "battle"):

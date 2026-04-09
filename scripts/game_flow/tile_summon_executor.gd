@@ -228,62 +228,39 @@ func execute_summon_for_cpu(card_index: int, complete_callback: Callable) -> boo
 	return true
 
 
-## カード犠牲処理（手札選択UI表示→カード破棄）
+## カード犠牲処理（CardSacrificeHelper経由で手札選択UI表示→カード破棄）
 func process_card_sacrifice(player_id: int, summon_card_index: int, creature_card: Dictionary = {}, tile_element: String = "") -> Dictionary:
 	# CPUの場合は自動選択
 	if game_flow_manager and game_flow_manager.is_cpu_player(player_id):
 		return _process_card_sacrifice_cpu(player_id, creature_card, tile_element)
-	
+
 	# CardSacrificeHelperを初期化
 	if not card_sacrifice_helper:
 		card_sacrifice_helper = CardSacrificeHelper.new(card_system, player_system, _card_selection_service)
-	
+
 	# 犠牲選択モードに入る
 	is_sacrifice_selecting = true
 
-	# 手札選択UIを表示（召喚するカード以外を選択可能）
+	# アクション指示パネルを表示
 	if _message_service:
 		_message_service.show_action_prompt("犠牲にするカードを選択")
-	if _card_selection_service:
-		_card_selection_service.card_selection_filter = ""
-		_card_selection_service.excluded_card_index = summon_card_index
-		var player = player_system.players[player_id]
-		_card_selection_service.show_card_selection_ui_mode(player, "sacrifice")
-	
-	# カード選択を待つ
-	var selected_index = await _card_selection_service.card_selected
+
+	# CardSacrificeHelper経由で手札選択UI表示（インデックスベース除外）
+	var sacrifice_card = await card_sacrifice_helper.show_hand_selection(
+		player_id, "", "犠牲にするカードを選択", "", summon_card_index
+	)
 
 	# 犠牲選択モードを終了
 	is_sacrifice_selecting = false
 
-	# UIを閉じる
-	if _card_selection_service:
-		_card_selection_service.hide_card_selection_ui()
-	
-	# 除外インデックスをリセット
-	if _card_selection_service:
-		_card_selection_service.excluded_card_index = -1
-	
-	# 選択されたカードを取得
-	if selected_index < 0:
+	# キャンセル時
+	if sacrifice_card.is_empty():
 		return {"card": {}, "index": -1}
-	
-	# 召喚するカードと同じインデックスは選択不可
-	if selected_index == summon_card_index:
-		if _message_service:
-			_message_service.show_toast("召喚するカードは犠牲にできません")
-		return {"card": {}, "index": -1}
-	
-	var hand = card_system.get_all_cards_for_player(player_id)
-	if selected_index >= hand.size():
-		return {"card": {}, "index": -1}
-	
-	var sacrifice_card = hand[selected_index]
-	
-	# カードを破棄
-	card_system.discard_card(player_id, selected_index, "sacrifice")
-	print("[TileSummonExecutor] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
-	
+
+	# 犠牲カードを即消費
+	var selected_index = card_sacrifice_helper.get_selected_index()
+	card_sacrifice_helper.consume_selected_card(player_id)
+
 	return {"card": sacrifice_card, "index": selected_index}
 
 
