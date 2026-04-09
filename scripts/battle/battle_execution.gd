@@ -435,6 +435,61 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							# 復活しなかったので撃破確定
 							break
 
+					# 🔄 攻撃成功時の変身処理（軽減パス用）
+					if defender_p.is_alive() and card_system_ref and attacker_p.current_ap > 0:
+						if not SkillSpecialCreature.is_trigger_nullified(defender_p.creature_data, "on_attack_success"):
+							var battle_tile_index_t = tile_info.get("index", -1)
+							var board_system_t = special_effects.board_system_ref if special_effects else null
+							var transform_result = TransformSkill.process_transform_effects(
+								attacker_p,
+								defender_p,
+								CardLoader,
+								"on_attack_success",
+								board_system_t,
+								battle_tile_index_t
+							)
+
+							if transform_result.get("attacker_transformed", false):
+								battle_result["attacker_transformed"] = true
+								battle_result["attacker_original"] = transform_result.get("attacker_original", {})
+								if battle_screen_manager:
+									var skill_name = SkillDisplayConfig.get_skill_name("transform")
+									var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+									await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
+									var display_data = _create_display_data(attacker_p)
+									await battle_screen_manager.update_creature(attacker_side, display_data)
+							if transform_result.get("defender_transformed", false):
+								battle_result["defender_transformed"] = true
+								battle_result["defender_original"] = transform_result.get("defender_original", {})
+								print("  【変身発動】防御側が変身しました（軽減パス）")
+								if battle_screen_manager:
+									var skill_name = SkillDisplayConfig.get_skill_name("transform")
+									var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+									await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
+									var defender_side = "attacker" if defender_p.is_attacker else "defender"
+									var display_data = _create_display_data(defender_p)
+									await battle_screen_manager.update_creature(defender_side, display_data)
+
+							if transform_result.get("needs_attacker_skill_recalc", false):
+								print("  【ツインスパイク】侵略側のスキルを再計算（軽減パス）")
+								var recalc_context = {
+									"player_id": defender_p.player_id,
+									"player_lands": special_effects.board_system_ref.get_player_lands_by_element(defender_p.player_id) if special_effects and special_effects.board_system_ref else {},
+									"battle_tile_index": tile_info.get("index", -1),
+									"battle_tile_element": tile_info.get("element", "neutral"),
+									"battle_land_element": tile_info.get("element", "neutral"),
+									"creature_element": defender_p.creature_data.get("element", ""),
+									"creature_mhp": defender_p.get_max_hp(),
+									"enemy_element": attacker_p.creature_data.get("element", ""),
+									"opponent": attacker_p,
+									"is_attacker": defender_p.is_attacker
+								}
+								await skill_processor.recalculate_skills_after_transform(defender_p, recalc_context)
+								if battle_screen_manager:
+									var recalc_side = "attacker" if defender_p.is_attacker else "defender"
+									var display_data = _create_display_data(defender_p)
+									await battle_screen_manager.update_creature(recalc_side, display_data)
+
 					# 🔒 攻撃成功時効果（軽減パス用）
 					# ブラックナイト等の無効化チェック
 					if defender_p.is_alive() and attacker_p.current_ap > 0:
