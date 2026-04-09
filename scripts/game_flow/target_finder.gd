@@ -258,7 +258,7 @@ static func _find_creature_targets(sys_board, current_player_id: int, target_inf
 		# element_mismatch チェック
 		if target_info.get("element_mismatch", false):
 			var creature_element = creature.get("element", "")
-			if creature_element == tile_element or creature_element == "neutral":
+			if creature_element == tile_element:
 				continue
 		
 		# can_move チェック

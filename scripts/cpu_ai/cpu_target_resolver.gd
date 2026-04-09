@@ -258,9 +258,9 @@ func _get_element_mismatch_creatures(_context: Dictionary) -> Array:
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
 		
-		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
+		if tile_element != creature_element:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## 属性不一致の敵クリーチャーを取得
@@ -284,7 +284,7 @@ func _get_element_mismatch_enemy_creatures(context: Dictionary) -> Array:
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
 
-		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
+		if tile_element != creature_element:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
 
 	return results

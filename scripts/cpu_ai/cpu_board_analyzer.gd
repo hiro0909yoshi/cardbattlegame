@@ -117,7 +117,7 @@ func get_mismatched_own_lands(player_id: int) -> Array:
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
 		
-		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
+		if tile_element != creature_element:
 			results.append(tile)
 	
 	return results
