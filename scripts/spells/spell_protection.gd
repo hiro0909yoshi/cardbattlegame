@@ -77,16 +77,16 @@ static func is_player_protected(player, context: Dictionary = {}) -> bool:
 
 
 ## 対象データから結界判定を行う（統合メソッド）
-## 
+##
 ## target_data: ターゲット情報（type, tile_index, player_id等）
 ## handler: board_system, player_system, game_flow_manager を持つオブジェクト
 ## 戻り値: true = 結界状態（対象に選べない）
 static func is_target_protected(target_data: Dictionary, handler) -> bool:
 	var target_type = target_data.get("type", "")
-	
+
 	# コンテキストを構築（世界刻印チェック用）
 	var context = _build_context(handler)
-	
+
 	match target_type:
 		"creature":
 			# クリーチャーターゲットの結界チェック
@@ -94,20 +94,20 @@ static func is_target_protected(target_data: Dictionary, handler) -> bool:
 			if creature.is_empty():
 				return false
 			return is_creature_protected(creature, context)
-		
+
 		"land":
 			# 土地ターゲットの場合、クリーチャーがいればそのクリーチャーの結界チェック
 			var tile_index = target_data.get("tile_index", -1)
 			if tile_index < 0 or not handler.board_system:
 				return false
-			
+
 			var tile = handler.board_system.tile_nodes.get(tile_index)
 			if not tile or tile.creature_data.is_empty():
 				# クリーチャーがいない土地は結界対象外
 				return false
-			
+
 			return is_creature_protected(tile.creature_data, context)
-		
+
 		"player":
 			# プレイヤーの結界チェック
 			var player_id = target_data.get("player_id", -1)
@@ -115,10 +115,10 @@ static func is_target_protected(target_data: Dictionary, handler) -> bool:
 				return false
 			if player_id >= handler.player_system.players.size():
 				return false
-			
+
 			var player = handler.player_system.players[player_id]
 			return is_player_protected(player, context)
-	
+
 	return false
 
 

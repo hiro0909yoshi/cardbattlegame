@@ -294,6 +294,20 @@ func _confirm_target_selection() -> void:
 		_is_selecting = false
 		return
 
+	# 外部スペルモード（魔法タイル・ルーンアデプト借用等）は
+	# SpellEffectExecutor を直接呼ぶ。
+	# spell_flow.execute_spell_effect を使うと末尾で complete_spell_phase が
+	# 重複呼び出しされ、Enki のスペル借用経由でダイスフェーズ遷移が壊れる
+	# （外側のアルカナアーツ後処理と競合して return_to_spell_selection が
+	#   ダイスナビを上書きするため）
+	if _spell_phase_handler.spell_state.is_in_external_spell_mode():
+		if _spell_phase_handler and _spell_phase_handler.spell_effect_executor:
+			await _spell_phase_handler.spell_effect_executor.execute_spell_effect(_spell_phase_handler.spell_state.selected_spell_card, selected_target)
+		else:
+			GameLogger.error("Spell", "spell_effect_executor が初期化されていません")
+		_is_selecting = false
+		return
+
 	# アルカナアーツかスペルかで分岐
 	if _spell_phase_handler.spell_mystic_arts and _spell_phase_handler.spell_mystic_arts.is_active():
 		# アルカナアーツ実行（SpellMysticArtsに委譲）
@@ -412,7 +426,7 @@ func _start_spell_tap_target_selection(targets: Array, target_type: String) -> v
 
 	# 選択タイプを決定
 	var selection_type = TapTargetManager.SelectionType.CREATURE
-	if target_type == "land" or target_type == "empty_land":
+	if target_type in ["land", "empty_land", "own_land", "enemy_land"]:
 		selection_type = TapTargetManager.SelectionType.TILE
 	elif target_type == "creature_or_land":
 		selection_type = TapTargetManager.SelectionType.CREATURE_OR_TILE

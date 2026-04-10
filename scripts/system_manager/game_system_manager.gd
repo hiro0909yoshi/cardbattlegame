@@ -579,6 +579,13 @@ func _on_turn_started(player_id: int) -> void:
 	if ui_manager:
 		ui_manager.set_current_turn(player_id)
 		ui_manager.hide_dominio_order_button()
+		# ターン開始時に手札表示を明示的に更新
+		# （draw_one 経由の hand_updated シグナルだけに依存すると、
+		#  何らかの理由でドローが失敗した場合や is_enemy_card_selection_active が
+		#  残ってしまった場合に前ターンの手札が残り続ける）
+		if ui_manager.hand_display:
+			ui_manager.hand_display.is_enemy_card_selection_active = false
+		ui_manager.update_hand_display(player_id)
 
 func _on_turn_ended(_player_id: int) -> void:
 	pass  # 必要に応じて処理追加

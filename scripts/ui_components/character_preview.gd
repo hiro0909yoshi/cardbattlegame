@@ -93,11 +93,15 @@ func set_character_model(model_path: String) -> void:
 
 	# アニメーション適用後にキャプチャ（数フレーム待つ）
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	await get_tree().process_frame
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for i in range(3):
+		if not is_inside_tree():
+			return
+		await get_tree().process_frame
+	# await 中にシーン離脱した場合は中断
+	if not is_inside_tree():
+		return
 	# アニメーション停止して静止画化
-	if idle_model:
+	if idle_model and is_instance_valid(idle_model):
 		var anim_player = idle_model.find_child("AnimationPlayer", true, false)
 		if anim_player:
 			anim_player.pause()

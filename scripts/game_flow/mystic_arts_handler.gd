@@ -180,11 +180,20 @@ func _on_mystic_phase_completed():
 
 	# current_player_id を保存（reset_turn_state で -1 にリセットされるため）
 	var saved_player_id = _spell_phase_handler.spell_state.current_player_id
+	# skip_dice_phase を保存（ワープ系アルカナアーツ後にダイスフェーズをスキップする必要があるため）
+	var saved_skip_dice = _spell_phase_handler.spell_state.should_skip_dice_phase()
 
 	# spell_stateを完全にリセット（spell_used_this_turn を false に）
 	_spell_phase_handler.spell_state.reset_turn_state()
 	_spell_phase_handler.spell_state.set_current_player_id(saved_player_id)
+	_spell_phase_handler.spell_state.set_skip_dice_phase(saved_skip_dice)
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
+
+	# ワープ系アルカナアーツ実行直後はスペル選択UIに戻さない
+	# （直後に complete_spell_phase が呼ばれてフェーズ自体が終了するため、
+	#   ここでスペル選択UIを再表示すると手札表示がフィルタ状態のまま一瞬残ってしまう）
+	if saved_skip_dice:
+		return
 
 	if _spell_phase_handler.spell_flow:
 		_spell_phase_handler.spell_flow.return_to_spell_selection()

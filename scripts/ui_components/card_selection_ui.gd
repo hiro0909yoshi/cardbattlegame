@@ -775,8 +775,10 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text, restriction_reason)
 	
 	# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
+	# ただしスペルフェーズ中（トレード等の手札クリーチャー選択）は除外
 	if selection_mode in ["summon", "battle"]:
-		ui_manager_ref.show_dominio_order_button()
+		if not _is_in_spell_phase():
+			ui_manager_ref.show_dominio_order_button()
 
 
 # スペル情報パネルを表示
@@ -967,7 +969,7 @@ func _on_info_panel_cancelled():
 			restore_phase_comment()
 			register_back_button_for_current_mode()
 			# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
-			if selection_mode in ["summon", "battle"] and ui_manager_ref:
+			if selection_mode in ["summon", "battle"] and ui_manager_ref and not _is_in_spell_phase():
 				ui_manager_ref.show_dominio_order_button()
 
 
@@ -978,6 +980,16 @@ func _setup_item_phase_back_button():
 			Callable(),  # 決定なし
 			func(): _on_pass_button_pressed()  # 戻る→パス
 		)
+
+
+# スペルフェーズ実行中か判定（借用スペルの手札選択中にドミニオボタン誤表示を防ぐ）
+func _is_in_spell_phase() -> bool:
+	if not game_flow_manager_ref:
+		return false
+	var sph = game_flow_manager_ref.spell_phase_handler
+	if not sph or not sph.spell_state:
+		return false
+	return sph.spell_state.current_state != SpellStateHandler.State.INACTIVE
 
 
 # スペルフェーズ用のナビゲーションを設定（決定 = サイコロへ）
@@ -1015,7 +1027,8 @@ func restore_navigation():
 			_setup_item_phase_back_button()
 		"summon":
 			register_back_button_for_current_mode()
-			ui_manager_ref.show_dominio_order_button()
+			if not _is_in_spell_phase():
+				ui_manager_ref.show_dominio_order_button()
 		"battle":
 			register_back_button_for_current_mode()
 		_:
@@ -1118,8 +1131,13 @@ func _on_pass_button_pressed():
 	
 	if is_active:
 		# 交換/移動モードの場合はアクションメニューに戻る
-		if selection_mode in ["swap", "move"]:
+		# ただしスペルフェーズ中（トレード等）はスペルキャンセルとして扱う
+		if selection_mode in ["swap", "move"] and not _is_in_spell_phase():
 			_cancel_dominio_order_and_return_to_action_menu()
+		elif selection_mode in ["swap", "move"] and _is_in_spell_phase():
+			hide_selection()
+			if _card_selection_service:
+				_card_selection_service.card_selected.emit(-1)
 		elif selection_mode == "sacrifice":
 			# 犠牲モードの場合はcard_selectedに-1を送って召喚をキャンセル
 			hide_selection()

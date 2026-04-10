@@ -349,7 +349,11 @@ func destroy_creature(tile: Node) -> void:
 	
 	# クリーチャーを削除（3Dカードも削除される）
 	tile.remove_creature()
-	
+
+	# 破壊カウンタ更新（インシネレート等のスキルで参照）
+	if board_system_ref and board_system_ref.game_flow_manager and board_system_ref.game_flow_manager.lap_system:
+		board_system_ref.game_flow_manager.lap_system.on_creature_destroyed()
+
 	tile.owner_id = -1
 	tile.level = saved_level  # レベル維持（空き地として残る）
 	

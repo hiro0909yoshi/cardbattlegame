@@ -366,6 +366,9 @@ func _destroy_creature_on_tile(handler: Node, tile_index: int, creature_name: St
 		tile.level = saved_level
 		if tile.has_method("update_visual"):
 			tile.update_visual()
+		# 破壊カウンタ更新（インシネレート等のスキルで参照）
+		if board_system and board_system.game_flow_manager and board_system.game_flow_manager.lap_system:
+			board_system.game_flow_manager.lap_system.on_creature_destroyed()
 		print("[SpellCurseStat] MHP減少により %s を撃破（フォールバック）" % creature_name)
 	
 	# 破壊通知

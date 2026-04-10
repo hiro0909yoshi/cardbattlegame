@@ -890,9 +890,10 @@ func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, play
 		
 		# use_hand_spell: 手札に単体対象スペルがないと使用不可
 		if effect_type == "use_hand_spell":
-			if spell_phase_handler_ref and spell_phase_handler_ref.spell_borrow:
-				if not spell_phase_handler_ref.spell_borrow.can_cast_use_hand_spell(player_id):
-					return false
+			var spell_systems = spell_phase_handler_ref.spell_systems if spell_phase_handler_ref else null
+			var spell_borrow = spell_systems.spell_borrow if spell_systems else null
+			if spell_borrow and not spell_borrow.can_cast_use_hand_spell(player_id):
+				return false
 	
 	return true
 

@@ -161,7 +161,11 @@ func destroy_creature(tile_index: int) -> bool:
 	
 	creature_manager_ref.set_data(tile_index, {})
 	board_system_ref.remove_creature(tile_index)
-	
+
+	# 破壊カウンタ更新（インシネレート等のスキルで参照）
+	if board_system_ref and board_system_ref.game_flow_manager and board_system_ref.game_flow_manager.lap_system:
+		board_system_ref.game_flow_manager.lap_system.on_creature_destroyed()
+
 	print("[クリーチャー破壊] タイル%d: %sを破壊" % [tile_index, creature_name])
 	return true
 

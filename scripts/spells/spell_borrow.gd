@@ -54,31 +54,20 @@ func apply_use_hand_spell(caster_player_id: int) -> Dictionary:
 	var spells = get_hand_single_target_spells(caster_player_id)
 	if spells.is_empty():
 		return {"success": false, "reason": "no_single_target_spell"}
-	
+
 	# 2. スペル選択UI
 	var selected_result = await _select_hand_spell(spells, "使用するスペルを選択")
 	if selected_result.get("cancelled", false):
 		return {"success": false, "reason": "cancelled"}
-	
+
 	var selected_spell = selected_result.get("spell", {})
-	var hand_index = selected_result.get("hand_index", -1)
-	
-	if selected_spell.is_empty() or hand_index < 0:
+	if selected_spell.is_empty():
 		return {"success": false, "reason": "invalid_selection"}
-	
-	# 3. 選択スペルの効果を実行（ターゲット選択含む）
-	var effect_parsed = selected_spell.get("effect_parsed", {})
-	if effect_parsed.is_empty():
-		return {"success": false, "reason": "no_effect_parsed"}
-	
-	# ターゲット選択と効果適用
-	var spell_result = await _execute_borrowed_spell(effect_parsed, caster_player_id)
-	
-	if spell_result.get("cancelled", false):
-		return {"success": false, "reason": "cancelled"}
-	
-	# スペル借用はカードを消費しない（効果だけ使用）
-	
+
+	# 3. 選択スペルの効果を canonical spell pipeline に委譲して実行
+	# 仕様(b): 手札スペル選択完了後はターゲット不在/キャンセルでもアルカナアーツ確定使用扱い
+	await _execute_borrowed_spell(selected_spell, caster_player_id)
+
 	return {
 		"success": true,
 		"spell_name": selected_spell.get("name", "スペル")
@@ -148,36 +137,41 @@ func _find_hand_index(spell: Dictionary) -> int:
 	return -1
 
 
-## 借用スペルの効果を実行
-func _execute_borrowed_spell(effect_parsed: Dictionary, _caster_player_id: int) -> Dictionary:
+## 借用スペルの効果を実行（canonical spell pipeline に委譲）
+##
+## 通常スペル詠唱と同じ経路 (use_spell → execute_spell_effect → complete_spell_phase) を流用する。
+## is_hand_borrow_mode フラグにより:
+##   - スペル本体コストの支払いをスキップ
+##   - カード犠牲を無効化
+##   - キャンセル時の cost 返却をスキップ
+## カード手札消費は is_external_spell_mode (execute_external_spell が自動設定) でスキップされる。
+## 完了時は execute_external_spell が external_spell_finished を await して戻ってくる。
+func _execute_borrowed_spell(selected_spell: Dictionary, caster_player_id: int) -> Dictionary:
 	if not spell_phase_handler_ref:
 		return {"success": false, "reason": "no_handler"}
-	
-	var target_type = effect_parsed.get("target_type", "")
-	var target_info = effect_parsed.get("target_info", {})
-	var effects = effect_parsed.get("effects", [])
-	
-	# 借用スペルモードを有効化
-	spell_phase_handler_ref.spell_state.set_borrow_spell_mode(true)
-	
-	# ターゲット選択UI表示（内部でターゲット取得も行われる）
-	spell_phase_handler_ref.show_target_selection_ui(target_type, target_info)
-	
-	# ターゲット選択を待機
-	var target_data = await spell_phase_handler_ref.target_confirmed
-	
-	if target_data.is_empty() or target_data.get("cancelled", false):
-		TargetSelectionHelper.clear_selection(spell_phase_handler_ref)
-		return {"cancelled": true}
-	
-	# 効果適用
-	for effect in effects:
-		await spell_phase_handler_ref.apply_single_effect(effect, target_data)
-	
-	# ターゲット選択クリア
-	TargetSelectionHelper.clear_selection(spell_phase_handler_ref)
-	
-	return {"success": true}
+
+	var spell_state = spell_phase_handler_ref.spell_state
+	if not spell_state:
+		return {"success": false, "reason": "no_state"}
+
+	# 手札借用モードを有効化（cost/犠牲/cost返却スキップ）
+	spell_state.set_hand_borrow_mode(true)
+
+	# canonical pipeline で実行（execute_external_spell が完了処理まで一括処理）
+	# selected_spell は手札参照ではなくコピーを渡す（手札消費はモードにより自動スキップされるが念のため）
+	var spell_copy = selected_spell.duplicate(true)
+	var result = await spell_phase_handler_ref.execute_external_spell(spell_copy, caster_player_id, false)
+
+	# 借用モード解除
+	spell_state.set_hand_borrow_mode(false)
+
+	# ワープ系スペル(テレポ等)が使われた場合は skip_dice_phase を立て直す
+	# execute_external_spell が内部で skip_dice_phase をリセットするため、
+	# アルカナアーツ完了→GFM のサイコロスキップ判定に伝わるよう再設定する
+	if result.get("warped", false):
+		spell_state.set_skip_dice_phase(true)
+
+	return result
 
 
 ## 手札のカードを破棄

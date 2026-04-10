@@ -62,8 +62,8 @@ func execute(context: Dictionary) -> Dictionary:
 	# effect_type に応じて処理を分岐（await - 元のロジックを再現）
 	match effect_type:
 		"use_hand_spell":
+			# 借用スペル自身がメッセージを表示するため effect_message は空のまま
 			await spell_borrow.apply_use_hand_spell(current_player_id)
-			effect_message = "手札のスペルを使用"
 
 		"use_target_mystic_art":
 			await spell_borrow.apply_use_target_mystic_art(target_data, current_player_id)

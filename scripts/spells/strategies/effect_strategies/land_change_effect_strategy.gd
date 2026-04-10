@@ -74,8 +74,15 @@ func validate(context: Dictionary) -> bool:
 	var target_data = context.get("target_data", {})
 	var tile_index = target_data.get("tile_index", -1)
 
-	# ターゲットタイルの有効性確認
-	if tile_index < 0:
+	# タイル指定不要な effect_type（プレイヤー指定、全体対象等）
+	var tile_optional_types = [
+		"find_and_change_highest_level",  # player_id の最高レベルを自動探索
+		"conditional_level_change",       # player_id 配下の条件一致タイル
+		"align_mismatched_lands",         # 全体対象
+	]
+
+	# ターゲットタイルの有効性確認（タイル必須 effect のみ）
+	if effect_type not in tile_optional_types and tile_index < 0:
 		_log_error("ターゲットタイルが選択されていません (tile_index: %d)" % tile_index)
 		return false
 
@@ -105,13 +112,15 @@ func execute(context: Dictionary) -> Dictionary:
 			var element = effect.get("element", "?")
 			effect_message = "属性を%sに変更" % element
 		"change_level":
-			var amount = effect.get("amount", 0)
+			var amount = effect.get("value", 0)
 			if amount > 0:
-				effect_message = "土地レベル+%d" % amount
+				effect_message = "土地レベルを%d上げる" % amount
+			elif amount < 0:
+				effect_message = "土地レベルを%d下げる" % -amount
 			else:
-				effect_message = "土地レベル%d" % amount
+				effect_message = "土地レベル変更"
 		"set_level":
-			var level = effect.get("level", 0)
+			var level = effect.get("value", 0)
 			effect_message = "土地レベルを%dに設定" % level
 		"abandon_land":
 			effect_message = "土地を放棄"

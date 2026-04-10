@@ -42,8 +42,14 @@ var is_magic_tile_mode: bool = false  # マジックタイル経由（刻印dura
 var _external_spell_cancelled: bool = false  # キャンセルフラグ
 var _external_spell_no_target: bool = false  # 対象不在フラグ
 
-# 借用スペル実行中フラグ
+# 借用スペル実行中フラグ（テンプテーション用：ターゲット選択を spell_borrow が手動 await）
 var is_borrow_spell_mode: bool = false
+
+# 手札借用モード（ルーンアデプト系: スペル借用アルカナアーツ）
+# trueの間: cost支払い・カード犠牲・キャンセル時のcost返却 をすべてスキップ
+# canonical spell pipeline (use_spell → execute_spell_effect → complete_spell_phase) を
+# そのまま流用しつつ、コストとカード消費だけを抑止する
+var is_hand_borrow_mode: bool = false
 
 ## ===== 初期化 =====
 func _init() -> void:
@@ -76,6 +82,7 @@ func reset_turn_state() -> void:
 	_external_spell_cancelled = false
 	_external_spell_no_target = false
 	is_borrow_spell_mode = false
+	is_hand_borrow_mode = false
 
 ## 現在の状態を取得
 func get_current_state() -> State:
@@ -211,6 +218,14 @@ func set_borrow_spell_mode(enabled: bool) -> void:
 ## 借用スペルモードを取得
 func is_in_borrow_spell_mode() -> bool:
 	return is_borrow_spell_mode
+
+## 手札借用モードを設定（ルーンアデプト系スペル借用）
+func set_hand_borrow_mode(enabled: bool) -> void:
+	is_hand_borrow_mode = enabled
+
+## 手札借用モードを取得
+func is_in_hand_borrow_mode() -> bool:
+	return is_hand_borrow_mode
 
 ## スペル失敗フラグを設定
 func set_spell_failed(failed: bool) -> void:

@@ -391,10 +391,20 @@ func _select_hand_creature(creatures: Array, _message: String) -> int:
 		_card_selection_service.card_selection_filter = ""
 
 	# カード選択UIを表示
+	# "swap" モードを使うことで:
+	#   - ドミニオコマンドボタンが再表示されない
+	#   - EP/土地制限チェックがスキップされる（トレードは無料交換のため）
+	#   - 確認ボタンが「交換」になる
 	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
-		css.show_card_selection_ui_mode(player, "summon")
+		css.show_card_selection_ui_mode(player, "swap")
+
+	# エンキ借用経由等、ドミニオボタンが残っている場合に備えて明示的に非表示
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		var gfm = spell_phase_handler_ref.game_flow_manager
+		if "ui_manager" in gfm and gfm.ui_manager and gfm.ui_manager.has_method("hide_dominio_order_button"):
+			gfm.ui_manager.hide_dominio_order_button()
 
 	# 戻るボタンを登録（キャンセル可能に）
 	var nav = _navigation_service

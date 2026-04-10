@@ -182,9 +182,10 @@ func use_spell(spell_card: Dictionary):
 	spell_ui_action_prompt_hidden.emit()
 
 	# コストを支払う（常に実行）
+	# 手札借用モード（ルーンアデプト系）では cost を払わない
 	var cost = _get_spell_cost(spell_card)
 
-	if _player_system:
+	if _player_system and not _spell_state.is_in_hand_borrow_mode():
 		_player_system.add_magic(_spell_state.current_player_id, -cost)
 
 	# エンジェルギフト刻印チェック（スペル無効化）
@@ -205,7 +206,8 @@ func use_spell(spell_card: Dictionary):
 	# マジックタイルモードではカード犠牲をスキップ（手札から使用していないため）
 	var is_synthesized = false
 	_spell_state.clear_pending_sacrifice_card()
-	var disable_sacrifice = _is_card_sacrifice_disabled() or _spell_state.is_in_magic_tile_mode()
+	# 手札借用モード（ルーンアデプト系）でもカード犠牲を無効化（無料発動仕様）
+	var disable_sacrifice = _is_card_sacrifice_disabled() or _spell_state.is_in_magic_tile_mode() or _spell_state.is_in_hand_borrow_mode()
 	if _spell_synthesis and _spell_synthesis.requires_sacrifice(spell_card) and not disable_sacrifice:
 		# 手札選択UIを表示（インデックスベース除外：スペルカード1枚だけ除外）
 		if _card_sacrifice_helper:
@@ -316,7 +318,8 @@ func cancel_spell():
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		cost = cost_data.get("ep", 0)
 
-	if _player_system and cost > 0:
+	# 手札借用モードでは cost を払っていないため返却もしない
+	if _player_system and cost > 0 and not _spell_state.is_in_hand_borrow_mode():
 		_player_system.add_magic(_spell_state.current_player_id, cost)
 
 	_spell_state.clear_spell_card()
