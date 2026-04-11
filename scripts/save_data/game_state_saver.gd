@@ -193,19 +193,30 @@ static func _build_cards(card_system: CardSystem, player_system: PlayerSystem) -
 				hand_ids.append(int(card.get("id", -1)))
 
 		# デッキ: card_id の配列
+		# クエストモード(player_deck_pools)優先、通常モード(player_decks)フォールバック
 		var deck_ids: Array = []
-		if card_system.player_decks.has(pid):
+		if card_system.player_deck_pools.has(pid) and not card_system.player_deck_pools[pid].is_empty():
+			for card in card_system.player_deck_pools[pid]:
+				deck_ids.append(int(card.get("id", -1)))
+		elif card_system.player_decks.has(pid):
 			deck_ids = card_system.player_decks[pid].duplicate()
 
 		# 捨て札: card_id の配列
 		var discard_ids: Array = []
-		if card_system.player_discards.has(pid):
+		if card_system.player_discard_pools.has(pid) and not card_system.player_discard_pools[pid].is_empty():
+			for card in card_system.player_discard_pools[pid]:
+				discard_ids.append(int(card.get("id", -1)))
+		elif card_system.player_discards.has(pid):
 			discard_ids = card_system.player_discards[pid].duplicate()
+
+		# クエストモードかどうかのフラグ（復元時の分岐用）
+		var is_pool_mode: bool = card_system.player_deck_pools.has(pid)
 
 		cards_data[pid_str] = {
 			"deck": deck_ids,
 			"hand": hand_ids,
 			"discard": discard_ids,
+			"pool_mode": is_pool_mode,
 		}
 	return cards_data
 
@@ -347,18 +358,43 @@ static func _apply_cards(cards_data: Dictionary, card_system: CardSystem, player
 			continue
 
 		var c_data = cards_data[pid_str]
+		var pool_mode: bool = bool(c_data.get("pool_mode", false))
 
-		# デッキを復元（card_id配列）
-		if card_system.player_decks.has(pid):
-			card_system.player_decks[pid].clear()
+		if pool_mode:
+			# クエストモード: player_deck_pools / player_discard_pools を復元
+			# card_id から CardLoader で card_data を再構築
+			if not card_system.player_deck_pools.has(pid):
+				card_system.player_deck_pools[pid] = []
+			card_system.player_deck_pools[pid].clear()
 			for card_id in c_data.get("deck", []):
-				card_system.player_decks[pid].append(int(card_id))
+				var card_data = CardLoader.get_card_by_id(int(card_id))
+				if not card_data.is_empty():
+					card_system.player_deck_pools[pid].append(card_data.duplicate(true))
 
-		# 捨て札を復元（card_id配列）
-		if card_system.player_discards.has(pid):
-			card_system.player_discards[pid].clear()
+			if not card_system.player_discard_pools.has(pid):
+				card_system.player_discard_pools[pid] = []
+			card_system.player_discard_pools[pid].clear()
 			for card_id in c_data.get("discard", []):
-				card_system.player_discards[pid].append(int(card_id))
+				var card_data = CardLoader.get_card_by_id(int(card_id))
+				if not card_data.is_empty():
+					card_system.player_discard_pools[pid].append(card_data.duplicate(true))
+
+			# 通常モードのデッキ/捨て札はクリア（誤参照防止）
+			if card_system.player_decks.has(pid):
+				card_system.player_decks[pid].clear()
+			if card_system.player_discards.has(pid):
+				card_system.player_discards[pid].clear()
+		else:
+			# 通常モード: デッキ/捨て札を復元（card_id配列）
+			if card_system.player_decks.has(pid):
+				card_system.player_decks[pid].clear()
+				for card_id in c_data.get("deck", []):
+					card_system.player_decks[pid].append(int(card_id))
+
+			if card_system.player_discards.has(pid):
+				card_system.player_discards[pid].clear()
+				for card_id in c_data.get("discard", []):
+					card_system.player_discards[pid].append(int(card_id))
 
 		# 手札を復元（card_idから CardLoader で再構築）
 		if card_system.player_hands.has(pid):

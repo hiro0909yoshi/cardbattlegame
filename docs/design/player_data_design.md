@@ -24,7 +24,6 @@
 | `current_direction` | int | 1 | 移動方向（1=順, -1=逆） | 必須 |
 | `came_from` | int | -1 | 前にいたタイル（分岐判定用） | 必須 |
 | `last_choice_tile` | int | -1 | 最後に選択したタイル | 必須 |
-| `movement_direction` | String | "" | 移動方向フラグ | 必須 |
 
 ### 効果・刻印
 

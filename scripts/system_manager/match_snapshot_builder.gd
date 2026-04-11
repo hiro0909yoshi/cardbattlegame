@@ -58,7 +58,6 @@ func get_player_snapshot(player_id: int) -> Dictionary:
 		snapshot["current_direction"] = p.current_direction
 		snapshot["came_from"] = p.came_from
 		snapshot["last_choice_tile"] = p.last_choice_tile
-		snapshot["movement_direction"] = p.movement_direction
 		snapshot["direction_choice_pending"] = p.direction_choice_pending
 		snapshot["curse"] = p.curse.duplicate(true)
 		snapshot["magic_stones"] = p.magic_stones.duplicate(true)
