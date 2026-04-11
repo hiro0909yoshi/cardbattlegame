@@ -81,8 +81,9 @@ func execute(context: Dictionary) -> Dictionary:
 		var target_player_id = target_data.get("player_id", current_player_id)
 		spell_curse.curse_player(target_player_id, curse_type, duration, params, current_player_id)
 
-	# ★ effect_message を構築（creature_curse と統一フォーマット）
-	var effect_message = "%sの刻印" % curse_name
+	# ★ effect_message を構築（対象名 + 刻印名）
+	var target_name = _get_target_display_name(context)
+	var effect_message = "%sに%sの刻印" % [target_name, curse_name]
 
 	_log("効果実行完了")
 

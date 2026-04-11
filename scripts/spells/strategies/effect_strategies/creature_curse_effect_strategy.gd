@@ -65,11 +65,12 @@ func execute(context: Dictionary) -> Dictionary:
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
-	# ★ effect_message を構築（JSONの name フィールドを優先）
+	# ★ effect_message を構築（対象名 + 刻印名）
+	var target_name = _get_target_display_name(context)
 	var curse_name = effect.get("name", "")
 	var effect_message = ""
 	if not curse_name.is_empty():
-		effect_message = "%sの刻印" % curse_name
+		effect_message = "%sに%sの刻印" % [target_name, curse_name]
 	else:
 		match effect_type:
 			"skill_nullify":
@@ -112,6 +113,8 @@ func execute(context: Dictionary) -> Dictionary:
 				effect_message = "刻印適用"
 			_:
 				effect_message = "刻印効果実行"
+		# フォールバック側にも対象名を付与
+		effect_message = "%sに%s" % [target_name, effect_message]
 
 	# target_type チェック（元のロジックを再現）
 	var target_type = target_data.get("type", "")

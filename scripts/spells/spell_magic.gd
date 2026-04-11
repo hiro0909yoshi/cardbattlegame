@@ -27,17 +27,14 @@ func set_notification_ui(notification_ui) -> void:
 func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) -> Dictionary:
 	var effect_type = effect.get("effect_type", "")
 	var result = {"success": false, "amount": 0}
-	var notification_text = ""
 	var from_id = context.get("from_player_id", -1)
-	
+
 	match effect_type:
 		"gain_magic":
 			var amount = effect.get("amount", 0)
 			add_magic(player_id, amount)
 			result = {"success": true, "amount": amount}
-			if amount > 0:
-				notification_text = _format_gain_notification(player_id, amount)
-		
+
 		"gain_magic_by_rank":
 			var rank = context.get("rank", 1)
 			var multiplier = effect.get("multiplier", 50)
@@ -45,109 +42,54 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			add_magic(player_id, amount)
 			print("[EP効果] 順位EP: %d位 × %dEP = %dEP" % [rank, multiplier, amount])
 			result = {"success": true, "amount": amount}
-			if amount > 0:
-				notification_text = _format_gain_notification(player_id, amount, "【順位ボーナス】%d位 × %dEP" % [rank, multiplier])
-		
+
 		"gain_magic_by_lap":
-			# マナ: 周回数×50蓄魔
 			result = gain_magic_by_lap(player_id, effect)
-			if result.get("amount", 0) > 0:
-				var lap = result.get("lap_count", 0)
-				notification_text = _format_gain_notification(player_id, result["amount"], "【マナ】%d周 × %dEP" % [lap, effect.get("multiplier", 50)])
-		
+
 		"gain_magic_from_destroyed_count":
-			# インシネレート: 破壊数×20EP
 			result = gain_magic_from_destroyed_count(player_id, effect)
-			if result.get("amount", 0) > 0:
-				var count = result.get("destroy_count", 0)
-				notification_text = _format_gain_notification(player_id, result["amount"], "【インシネレート】%d体破壊 × %dEP" % [count, effect.get("multiplier", 20)])
-		
+
 		"gain_magic_from_spell_cost":
-			# クレアボヤンス: 敵スペルEP合計×50%
 			var target_player_id = context.get("from_player_id", -1)
 			var card_system = context.get("card_system", null)
 			if target_player_id >= 0 and card_system:
 				result = gain_magic_from_spell_cost(player_id, effect, target_player_id, card_system)
-				if result.get("amount", 0) > 0:
-					var total = result.get("spell_cost_total", 0)
-					notification_text = _format_gain_notification(player_id, result["amount"], "【クレアボヤンス】敵スペルコスト%dEPの%d%%" % [total, effect.get("percentage", 50)])
-		
+
 		"drain_magic":
 			if from_id >= 0:
 				var amount = drain_magic_from_effect(effect, from_id, player_id)
 				result = {"success": amount > 0, "amount": amount}
-				if amount > 0:
-					notification_text = _format_drain_notification(from_id, player_id, amount, "【ドレインマジック】")
-		
+
 		"drain_magic_conditional":
-			# フラクション: 自分よりEPが多い敵から30%奪取
 			if from_id >= 0:
 				result = drain_magic_conditional(effect, from_id, player_id)
-				if result.get("amount", 0) > 0:
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【フラクション】%d%%奪取" % effect.get("percentage", 30))
-				elif result.get("reason") == "condition_not_met":
-					notification_text = "【フラクション】\n条件不成立: 対象のEPが術者以下"
-		
+
 		"drain_magic_by_land_count":
-			# ランドドレイン: 敵ドミニオ数×30吸魔
 			if from_id >= 0:
 				result = drain_magic_by_land_count(effect, from_id, player_id)
-				if result.get("amount", 0) > 0:
-					var lands = result.get("land_count", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ランドドレイン】%dドミニオ × %dEP" % [lands, effect.get("multiplier", 30)])
-		
+
 		"drain_magic_by_lap_diff":
-			# スピードペナルティ: 周回数差×100吸魔
 			if from_id >= 0:
 				result = drain_magic_by_lap_diff(effect, from_id, player_id)
-				if result.get("amount", 0) > 0:
-					var diff = result.get("diff", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【スピードペナルティ】%d周差 × %dEP" % [diff, effect.get("multiplier", 100)])
-				elif result.get("diff", 0) <= 0:
-					notification_text = "【スピードペナルティ】\n周回数差なし"
-		
+
 		"balance_all_magic":
-			# レディビジョン: 全プレイヤーEP平均化
 			result = balance_all_magic()
-			if result.get("success", false):
-				notification_text = "【レディビジョン】\n全プレイヤーEPを%dEPに平均化" % result.get("average", 0)
-		
+
 		"gain_magic_from_land_chain":
-			# ロングライン: 連続ドミニオ×5EP00、未達成ならドロー
 			result = gain_magic_from_land_chain(player_id, effect, context)
-			var chain = result.get("chain", 0)
-			var required = effect.get("required_chain", 4)
-			if result.get("condition_met", false):
-				notification_text = _format_gain_notification(player_id, result["amount"], "【ロングライン】連続%dドミニオ達成！" % chain)
-			else:
-				notification_text = "【ロングライン】\n連続%dドミニオ (必要%d)\n条件未達成 → カードドロー" % [chain, required]
-		
+
 		"mhp_to_magic":
-			# ドゥームデボラーアルカナアーツ: MHP×2EPを得て、ST&MHP-10
 			var tile_index = context.get("tile_index", -1)
 			result = mhp_to_magic(player_id, effect, tile_index)
-			if result.get("success", false):
-				var mhp = result.get("mhp", 0)
-				notification_text = _format_gain_notification(player_id, result["amount"], "【ドゥームデボラー】MHP%d × 2EP\nST&MHP-10" % mhp)
-		
+
 		"drain_magic_by_spell_count":
-			# ウィッチアルカナアーツ: 対象の手札スペル数×40EPを奪う
 			if from_id >= 0:
 				var card_system = context.get("card_system", null)
 				result = drain_magic_by_spell_count(effect, from_id, player_id, card_system)
-				if result.get("amount", 0) > 0:
-					var spell_count = result.get("spell_count", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ウィッチ】スペル%d枚 × %dEP" % [spell_count, effect.get("multiplier", 40)])
-				else:
-					notification_text = "【ウィッチ】\n対象の手札にスペルがありません"
-		
+
 		_:
 			print("[SpellMagic] 未対応の効果タイプ: ", effect_type)
-	
-	# 通知を表示（クリック待ち）
-	if notification_text != "":
-		await _show_notification_and_wait(notification_text)
-	
+
 	return result
 
 ## EP増加
@@ -647,39 +589,11 @@ func apply_bounty_reward_with_notification(loser_creature: Dictionary, winner_cr
 # 通知システム
 # ========================================
 
-## 通知表示＋クリック待ち
+## 通知表示＋クリック待ち（バウンティハント報酬表示用）
 func _show_notification_and_wait(text: String) -> void:
 	if spell_cast_notification_ui:
 		spell_cast_notification_ui.show_notification_and_wait(text)
 		await spell_cast_notification_ui.click_confirmed
-
-## 蓄魔の通知テキスト生成
-@warning_ignore("unused_variable")
-func _format_gain_notification(player_id: int, amount: int, source: String = "") -> String:
-	var _player_name = "プレイヤー%d" % (player_id + 1)
-	if player_system_ref and player_id >= 0 and player_id < player_system_ref.players.size():
-		_player_name = player_system_ref.players[player_id].name
-	
-	var text = "+%dEP 獲得！" % amount
-	if source != "":
-		text = "%s\n%s" % [source, text]
-	return text
-
-## 吸魔の通知テキスト生成
-@warning_ignore("unused_variable")
-func _format_drain_notification(from_id: int, to_id: int, amount: int, source: String = "") -> String:
-	var from_name = "プレイヤー%d" % (from_id + 1)
-	var _to_name = "プレイヤー%d" % (to_id + 1)
-	if player_system_ref:
-		if from_id >= 0 and from_id < player_system_ref.players.size():
-			from_name = player_system_ref.players[from_id].name
-		if to_id >= 0 and to_id < player_system_ref.players.size():
-			_to_name = player_system_ref.players[to_id].name
-	
-	var text = "%sから%dEP奪取！" % [from_name, amount]
-	if source != "":
-		text = "%s\n%s" % [source, text]
-	return text
 
 # ========================================
 # 土地刻印（ブラストトラップ等）

@@ -57,8 +57,9 @@ func execute(context: Dictionary) -> Dictionary:
 	# spell_world_curse に委譲
 	spell_world_curse.apply(effect)
 
-	# ★ NEW: effect_message を構築
-	var effect_message = "ワールド刻印発動"
+	# ★ effect_message を構築（JSONの name を使用）
+	var curse_name = effect.get("name", "")
+	var effect_message = "ワールド刻印 %s" % curse_name if not curse_name.is_empty() else "ワールド刻印発動"
 
 	_log("効果実行完了")
 

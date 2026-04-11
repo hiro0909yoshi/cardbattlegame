@@ -63,8 +63,14 @@ func execute(context: Dictionary) -> Dictionary:
 	else:
 		_log("ターゲットタイプが land/creature ではありません (type: %s)" % target_type)
 
-	# ★ NEW: effect_message を構築
-	var effect_message = "ステータスを強化"
+	# ★ effect_message を構築（対象名 + 刻印名）
+	var target_name = _get_target_display_name(context)
+	var curse_name = effect.get("name", "")
+	var effect_message = ""
+	if not curse_name.is_empty():
+		effect_message = "%sに%sの刻印" % [target_name, curse_name]
+	else:
+		effect_message = "%sにステータス強化の刻印" % target_name
 
 	_log("効果実行完了")
 

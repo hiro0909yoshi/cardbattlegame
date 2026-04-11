@@ -59,25 +59,30 @@ func execute(context: Dictionary) -> Dictionary:
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
-	# ★ NEW: effect_message を構築
+	# ★ effect_message を構築（対象名 + 刻印名 / JSONの name 優先）
+	var target_name = _get_target_display_name(context)
+	var curse_name = effect.get("name", "")
 	var effect_message = ""
-	match effect_type:
-		"toll_share":
-			effect_message = "通行料を共有"
-		"toll_disable":
-			effect_message = "通行料を無効化"
-		"toll_fixed":
-			var amount = effect.get("amount", 0)
-			effect_message = "通行料を%dに固定" % amount
-		"toll_multiplier":
-			var multiplier = effect.get("multiplier", 1.0)
-			effect_message = "通行料を%.1f倍に" % multiplier
-		"peace":
-			effect_message = "安寧が訪れた"
-		"curse_toll_half":
-			effect_message = "通行料を半減"
-		_:
-			effect_message = "通行料刻印"
+	if not curse_name.is_empty():
+		effect_message = "%sに%sの刻印" % [target_name, curse_name]
+	else:
+		match effect_type:
+			"toll_share":
+				effect_message = "%sに通行料共有の刻印" % target_name
+			"toll_disable":
+				effect_message = "%sに通行料無効化の刻印" % target_name
+			"toll_fixed":
+				var amount = effect.get("amount", 0)
+				effect_message = "%sに通行料%d固定の刻印" % [target_name, amount]
+			"toll_multiplier":
+				var multiplier = effect.get("multiplier", 1.0)
+				effect_message = "%sに通行料%.1f倍の刻印" % [target_name, multiplier]
+			"peace":
+				effect_message = "%sに安寧の刻印" % target_name
+			"curse_toll_half":
+				effect_message = "%sに通行料半減の刻印" % target_name
+			_:
+				effect_message = "%sに通行料刻印" % target_name
 
 	# 元のロジック (spell_effect_executor.gd Line 176-180) を再現
 	var tile_index = target_data.get("tile_index", -1)

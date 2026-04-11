@@ -66,6 +66,45 @@ func _validate_spell_conditions(_context: Dictionary) -> bool:
 	return true
 
 ## ================================================================================
+## 対象名解決
+## ================================================================================
+
+## target_data とシステム参照から対象の表示名を取得
+## creature/land: クリーチャー名 or "ドミニオ"
+## player: プレイヤー名
+## all_creatures: "全クリーチャー"
+## all_players: "全プレイヤー"
+func _get_target_display_name(context: Dictionary) -> String:
+	var target_data = context.get("target_data", {})
+	var board_system = context.get("board_system")
+	var player_system = context.get("player_system")
+	var target_type = target_data.get("type", "")
+
+	match target_type:
+		"creature", "land":
+			var tile_index = target_data.get("tile_index", -1)
+			if tile_index >= 0 and board_system and board_system.tile_nodes.has(tile_index):
+				var tile = board_system.tile_nodes[tile_index]
+				if tile and "creature_data" in tile and not tile.creature_data.is_empty():
+					return tile.creature_data.get("name", "クリーチャー")
+			return "ドミニオ"
+		"player":
+			var player_id = target_data.get("player_id", -1)
+			if player_id >= 0 and player_system and player_id < player_system.players.size():
+				return player_system.players[player_id].name
+			return "プレイヤー"
+		"all", "all_creatures":
+			return "全クリーチャー"
+		"all_lands":
+			return "全ドミニオ"
+		"all_players":
+			return "全プレイヤー"
+		"world":
+			return "世界"
+		_:
+			return "対象"
+
+## ================================================================================
 ## Logging Helper
 ## ================================================================================
 

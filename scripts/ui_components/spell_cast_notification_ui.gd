@@ -127,12 +127,6 @@ func show_spell_cast_and_wait(caster_name: String, target_name: String, effect_n
 	]
 	show_notification_and_wait(text)
 
-## 非推奨: 旧API互換（クリック待ちなし自動フェード）
-## 新規コードでは show_notification_and_wait を使用してください
-func show_notification(caster_name: String, target_name: String, effect_name: String):
-	# クリック待ち版を呼び出す（互換性のため残すが非推奨）
-	show_spell_cast_and_wait(caster_name, target_name, effect_name)
-
 ## タイムアウトタイマーを開始
 func _start_timeout_timer():
 	_stop_timeout_timer()
@@ -192,31 +186,8 @@ func _input(event):
 		get_viewport().set_input_as_handled()
 
 ## スペルカードから効果名を取得
-## 優先順位:
-## 1. effect_parsed.effects[].name
-## 2. effectテキストから \"...\" を抽出
-## 3. スペル名（name）
+## スペルカード名をそのまま返す
 static func get_effect_display_name(spell_card: Dictionary) -> String:
-	# 1. effect_parsed.effects[].name を探す
-	var effect_parsed = spell_card.get("effect_parsed", {})
-	var effects = effect_parsed.get("effects", [])
-	
-	for effect in effects:
-		var effect_name = effect.get("name", "")
-		if not effect_name.is_empty():
-			return effect_name
-	
-	# 2. effectテキストから \"...\" を抽出
-	var effect_text = spell_card.get("effect", "")
-	if not effect_text.is_empty():
-		var regex = RegEx.new()
-		# \"...\" パターンを検索（エスケープされたダブルクォート）
-		regex.compile('\\\\"([^"]+)\\\\"')
-		var result = regex.search(effect_text)
-		if result:
-			return result.get_string(1)
-	
-	# 3. スペル名を使用
 	return spell_card.get("name", "不明")
 
 ## アルカナアーツから効果名を取得

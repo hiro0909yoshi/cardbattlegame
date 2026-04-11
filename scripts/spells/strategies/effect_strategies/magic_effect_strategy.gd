@@ -85,37 +85,37 @@ func execute(context: Dictionary) -> Dictionary:
 	var result = await spell_magic.apply_effect(effect, current_player_id, magic_context)
 	print("[MagicEffectStrategy] spell_magic.apply_effect() 完了")
 
-	# ★ NEW: effect_message を構築
+	# effect_message を構築（result の動的計算値とプレイヤー名を使用）
+	var player_system = handler.player_system if handler else null
+	var caster_name = _get_player_name(player_system, current_player_id)
+	var target_name = _get_player_name(player_system, target_data.get("player_id", -1))
+	var actual_amount = result.get("amount", 0)
+
+	var gain_types = [
+		"gain_magic", "gain_magic_by_rank", "gain_magic_by_lap",
+		"gain_magic_from_destroyed_count", "gain_magic_from_spell_cost",
+		"gain_magic_from_land_chain", "mhp_to_magic"
+	]
+	var drain_types = [
+		"drain_magic", "drain_magic_conditional", "drain_magic_by_land_count",
+		"drain_magic_by_lap_diff", "drain_magic_by_spell_count"
+	]
+
 	var effect_message = ""
-	match effect_type:
-		"drain_magic":
-			effect_message = "EP%d獲得！" % effect.get("amount", 0)
-		"drain_magic_conditional":
-			effect_message = "条件付きドレイン発動"
-		"drain_magic_by_land_count":
-			effect_message = "土地数でドレイン"
-		"drain_magic_by_lap_diff":
-			effect_message = "周回差でドレイン"
-		"gain_magic":
-			effect_message = "EP%d獲得！" % effect.get("amount", 0)
-		"gain_magic_by_rank":
-			effect_message = "順位で蓄魔"
-		"gain_magic_by_lap":
-			effect_message = "周回ボーナス蓄魔"
-		"gain_magic_from_destroyed_count":
-			effect_message = "破壊数で蓄魔"
-		"gain_magic_from_spell_cost":
-			effect_message = "スペルコストで蓄魔"
-		"balance_all_magic":
-			effect_message = "EP平均化発動"
-		"gain_magic_from_land_chain":
-			effect_message = "土地チェーンで蓄魔"
-		"mhp_to_magic":
-			effect_message = "最大HPから蓄魔"
-		"drain_magic_by_spell_count":
-			effect_message = "スペル数でドレイン"
-		_:
-			effect_message = "魔法効果実行"
+	if effect_type in gain_types:
+		if actual_amount > 0:
+			effect_message = "%sは%dEP獲得！" % [caster_name, actual_amount]
+		elif effect_type == "gain_magic_from_land_chain" and not result.get("condition_met", true):
+			effect_message = "%sは連続ドミニオ条件を満たさなかった" % caster_name
+	elif effect_type in drain_types:
+		if actual_amount > 0:
+			effect_message = "%sは%sから%dEPを奪った！" % [caster_name, target_name, actual_amount]
+		elif effect_type == "drain_magic_conditional" and result.get("reason", "") == "condition_not_met":
+			effect_message = "%sはEP奪取の条件を満たさなかった" % caster_name
+		elif effect_type == "drain_magic_by_lap_diff" and result.get("diff", 0) <= 0:
+			effect_message = "%sは周回差がないためEPを奪えなかった" % caster_name
+	elif effect_type == "balance_all_magic":
+		effect_message = "全プレイヤーのEPが%dEPになった" % result.get("average", 0)
 
 	# next_effect がある場合は処理（spell_magic は内部で next_effect を返す場合がある）
 	if result.has("next_effect") and not result.get("next_effect", {}).is_empty():
@@ -134,3 +134,9 @@ func execute(context: Dictionary) -> Dictionary:
 		"effect_message": effect_message,
 		"success": result.get("success", true)
 	}
+
+## プレイヤー名を取得（フォールバック: "プレイヤーN"）
+func _get_player_name(player_system, player_id: int) -> String:
+	if player_system and player_id >= 0 and player_id < player_system.players.size():
+		return player_system.players[player_id].name
+	return "プレイヤー%d" % (player_id + 1)
