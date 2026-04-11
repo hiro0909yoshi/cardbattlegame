@@ -32,8 +32,8 @@
 カルドセプト系HP構造：
 ```
 total_hp = base_hp + base_up_hp + land_bonus_hp + (その他一時ボーナス)
-          └─────┬─────┘  └──────┬──────┘
-          "クリーチャー本体"    "土地の防御壁"
+		  └─────┬─────┘  └──────┬──────┘
+		  "クリーチャー本体"    "土地の防御壁"
 ```
 
 `land_bonus_hp = land_level × 10`
@@ -155,26 +155,26 @@ Lv2 フロー:
 
 ```gdscript
 CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
-    # Step 1: 両方アイテムなしで勝てる
-    if eval_result.get("can_win_both_no_item", false):
-        creature_index = eval_result.get("best_both_no_item_creature_index", -1)
-        item_index = -1
-    # Step 2: アイテム使えば勝てる（仮想）
-    elif eval_result.get("can_win_vs_enemy_item", false):
-        creature_index = eval_result.creature_index
-        item_index = -1  # アイテム使用を強制的に無効化
-    # Step 3-a: 生存 & 本体削り
-    elif eval_result.get("lv2_step3a_creature_index", -1) >= 0:
-        creature_index = eval_result.get("lv2_step3a_creature_index")
-        item_index = -1
-    # Step 3-b: 捨て身特攻
-    elif eval_result.get("lv2_step3b_creature_index", -1) >= 0:
-        creature_index = eval_result.get("lv2_step3b_creature_index")
-        item_index = -1
-    # Step 4: 戦闘しない
-    else:
-        creature_index = -1
-        item_index = -1
+	# Step 1: 両方アイテムなしで勝てる
+	if eval_result.get("can_win_both_no_item", false):
+		creature_index = eval_result.get("best_both_no_item_creature_index", -1)
+		item_index = -1
+	# Step 2: アイテム使えば勝てる（仮想）
+	elif eval_result.get("can_win_vs_enemy_item", false):
+		creature_index = eval_result.creature_index
+		item_index = -1  # アイテム使用を強制的に無効化
+	# Step 3-a: 生存 & 本体削り
+	elif eval_result.get("lv2_step3a_creature_index", -1) >= 0:
+		creature_index = eval_result.get("lv2_step3a_creature_index")
+		item_index = -1
+	# Step 3-b: 捨て身特攻
+	elif eval_result.get("lv2_step3b_creature_index", -1) >= 0:
+		creature_index = eval_result.get("lv2_step3b_creature_index")
+		item_index = -1
+	# Step 4: 戦闘しない
+	else:
+		creature_index = -1
+		item_index = -1
 ```
 
 ## 7. ポリシー選択条件
@@ -190,14 +190,14 @@ CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
 ```json
 {
   "enemy_stage3_boss": {
-    "battle_policy": {
-      "attack": {
-        "always_battle": 0.0,
-        "always_battle_lv2": 0.8,
-        "vs_enemy_item": 0.2,
-        "never_battle": 0.0
-      }
-    }
+	"battle_policy": {
+	  "attack": {
+		"always_battle": 0.0,
+		"always_battle_lv2": 0.8,
+		"vs_enemy_item": 0.2,
+		"never_battle": 0.0
+	  }
+	}
   }
 }
 ```
@@ -208,14 +208,14 @@ CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
 
 ```gdscript
 CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
-    # 勝てる場合は勝ち扱い、それ以外は負け前提だが戦闘する扱い
-    if eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false):
-        return {"will_battle": true, "will_win": true}
-    elif eval_result.get("lv2_step3a_creature_index", -1) >= 0 \
-         or eval_result.get("lv2_step3b_creature_index", -1) >= 0:
-        return {"will_battle": true, "will_win": false}
-    else:
-        return {"will_battle": false, "will_win": false}
+	# 勝てる場合は勝ち扱い、それ以外は負け前提だが戦闘する扱い
+	if eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false):
+		return {"will_battle": true, "will_win": true}
+	elif eval_result.get("lv2_step3a_creature_index", -1) >= 0 \
+		 or eval_result.get("lv2_step3b_creature_index", -1) >= 0:
+		return {"will_battle": true, "will_win": false}
+	else:
+		return {"will_battle": false, "will_win": false}
 ```
 
 これを入れないと、移動方向選択時に ALWAYS_BATTLE_LV2 キャラが判断を誤る。

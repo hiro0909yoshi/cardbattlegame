@@ -11,6 +11,7 @@ const GameConstantsScript = preload("res://scripts/game_constants.gd")
 # =============================================================================
 enum AttackAction {
 	ALWAYS_BATTLE,         # 必ずバトルを仕掛ける（勝敗関係なく）
+	ALWAYS_BATTLE_LV2,     # 揺さぶり戦術（アイテム不使用、本体HP削れる時のみ）
 	BATTLE_IF_BOTH_NO_ITEM,# 両方アイテムなしで勝てるなら戦闘
 	BATTLE_IF_WIN_VS_ENEMY_ITEM, # CPUアイテムなし、防衛側アイテム使用でも勝てるなら戦闘（従来ワーストケース）
 	NEVER_BATTLE           # 必ずバトルを仕掛けない
@@ -31,6 +32,7 @@ enum DefenseAction {
 # 侵略時の重み（デフォルト値）
 var attack_weights: Dictionary = {
 	AttackAction.ALWAYS_BATTLE: 0.0,
+	AttackAction.ALWAYS_BATTLE_LV2: 0.0,
 	AttackAction.BATTLE_IF_BOTH_NO_ITEM: 0.0,
 	AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM: 1.0,  # 従来ロジック
 	AttackAction.NEVER_BATTLE: 0.0
@@ -74,6 +76,8 @@ func load_from_json(policy_data: Dictionary) -> void:
 		var attack_data = policy_data["attack"]
 		if attack_data.has("always_battle"):
 			attack_weights[AttackAction.ALWAYS_BATTLE] = float(attack_data["always_battle"])
+		if attack_data.has("always_battle_lv2"):
+			attack_weights[AttackAction.ALWAYS_BATTLE_LV2] = float(attack_data["always_battle_lv2"])
 		if attack_data.has("both_no_item"):
 			attack_weights[AttackAction.BATTLE_IF_BOTH_NO_ITEM] = float(attack_data["both_no_item"])
 		if attack_data.has("vs_enemy_item"):
@@ -135,6 +139,10 @@ func decide_attack_action(evaluation_result: Dictionary) -> AttackAction:
 	# ALWAYS_BATTLE: 常に選択可能
 	if attack_weights[AttackAction.ALWAYS_BATTLE] > 0:
 		available_weights[AttackAction.ALWAYS_BATTLE] = attack_weights[AttackAction.ALWAYS_BATTLE]
+
+	# ALWAYS_BATTLE_LV2: 常に選択可能（内部で無駄戦闘を回避）
+	if attack_weights[AttackAction.ALWAYS_BATTLE_LV2] > 0:
+		available_weights[AttackAction.ALWAYS_BATTLE_LV2] = attack_weights[AttackAction.ALWAYS_BATTLE_LV2]
 	
 	# BATTLE_IF_BOTH_NO_ITEM: 両方アイテムなしで勝てる場合のみ
 	if evaluation_result.get("can_win_both_no_item", false):
@@ -263,6 +271,7 @@ static func create_tutorial_policy() -> CPUBattlePolicy:
 	var policy = CPUBattlePolicy.new()
 	policy.attack_weights = {
 		AttackAction.ALWAYS_BATTLE: 1.0,
+		AttackAction.ALWAYS_BATTLE_LV2: 0.0,
 		AttackAction.BATTLE_IF_BOTH_NO_ITEM: 0.0,
 		AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM: 0.0,
 		AttackAction.NEVER_BATTLE: 0.0
@@ -279,6 +288,7 @@ static func create_standard_policy() -> CPUBattlePolicy:
 	var policy = CPUBattlePolicy.new()
 	policy.attack_weights = {
 		AttackAction.ALWAYS_BATTLE: 0.0,
+		AttackAction.ALWAYS_BATTLE_LV2: 0.0,
 		AttackAction.BATTLE_IF_BOTH_NO_ITEM: 0.0,
 		AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM: 1.0,
 		AttackAction.NEVER_BATTLE: 0.0
@@ -294,6 +304,7 @@ static func create_optimistic_policy() -> CPUBattlePolicy:
 	var policy = CPUBattlePolicy.new()
 	policy.attack_weights = {
 		AttackAction.ALWAYS_BATTLE: 0.0,
+		AttackAction.ALWAYS_BATTLE_LV2: 0.0,
 		AttackAction.BATTLE_IF_BOTH_NO_ITEM: 1.0,
 		AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM: 0.0,
 		AttackAction.NEVER_BATTLE: 0.0
@@ -309,6 +320,7 @@ static func create_passive_policy() -> CPUBattlePolicy:
 	var policy = CPUBattlePolicy.new()
 	policy.attack_weights = {
 		AttackAction.ALWAYS_BATTLE: 0.0,
+		AttackAction.ALWAYS_BATTLE_LV2: 0.0,
 		AttackAction.BATTLE_IF_BOTH_NO_ITEM: 0.0,
 		AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM: 0.0,
 		AttackAction.NEVER_BATTLE: 1.0
@@ -324,6 +336,7 @@ static func create_balanced_policy() -> CPUBattlePolicy:
 	var policy = CPUBattlePolicy.new()
 	policy.attack_weights = {
 		AttackAction.ALWAYS_BATTLE: 0.0,
+		AttackAction.ALWAYS_BATTLE_LV2: 0.0,
 		AttackAction.BATTLE_IF_BOTH_NO_ITEM: 0.3,
 		AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM: 1.0,
 		AttackAction.NEVER_BATTLE: 0.0

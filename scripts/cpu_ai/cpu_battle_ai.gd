@@ -224,6 +224,11 @@ func evaluate_all_combinations_for_battle(
 		"best_no_item_creature_index": -1,  # ワーストケースで勝てる最善のクリーチャー
 		"best_no_item_overkill": -999,      # ワーストケース時のオーバーキル値
 		"first_creature_index": -1,         # 最初のクリーチャー（ALWAYS_BATTLE用）
+		# ALWAYS_BATTLE_LV2用: 本体HPを削れるクリーチャー（壁抜け & 無効化されない）
+		"lv2_step3a_creature_index": -1,    # Step 3-a: 生存かつ本体HP削れる最善クリーチャー
+		"lv2_step3a_damage": -1,            # Step 3-a 選出時の本体HPダメージ量
+		"lv2_step3b_creature_index": -1,    # Step 3-b: 倒されるが条件達成の最善クリーチャー
+		"lv2_step3b_damage": -1,            # Step 3-b 選出時の本体HPダメージ量
 		"creature_evaluations": []          # 各クリーチャーの詳細評価
 	}
 	
@@ -331,13 +336,17 @@ func evaluate_all_combinations_for_battle(
 			creature_eval["can_win_both_no_item"] = true
 			creature_eval["overkill_both_no_item"] = both_no_item_result.overkill
 			result["can_win_both_no_item"] = true
-			
+
 			# best_both_no_itemの更新（オーバーキルが大きいものを優先）
 			if not result.has("best_both_no_item_creature_index") or both_no_item_result.overkill > result.get("best_both_no_item_overkill", -999):
 				result["best_both_no_item_creature_index"] = creature_index
 				result["best_both_no_item_overkill"] = both_no_item_result.overkill
-			
+
 			print("    [両方アイテムなし] 勝利可能: オーバーキル %d" % both_no_item_result.overkill)
+
+		# 1.5. ALWAYS_BATTLE_LV2 用評価（本体HPを削れるクリーチャーを選定）
+		#      両方アイテムなしのシミュレーション結果を流用
+		_evaluate_lv2_candidate(result, creature, creature_index, creature_cost, both_no_item_result)
 		
 		# 2. ワーストケースシミュレーション（敵がアイテム/加勢を使った場合）
 		var worst_case = simulate_worst_case(creature, defender, tile_info, current_player.id, {})
@@ -551,6 +560,99 @@ func _get_item_type_priority(item: Dictionary) -> int:
 # ============================================================
 # ワーストケースシミュレーション（CPUBattleDefenseEvaluatorに委譲）
 # ============================================================
+
+## ALWAYS_BATTLE_LV2用: 本体HP削り候補クリーチャーを評価
+## 両方アイテムなしのシミュレーション結果を使い、Step 3-a / 3-b 候補を更新する
+##
+## 判定基準:
+##   Step 3-a: 本体HPに到達 & 自クリーチャー生存（引き分け含む）
+##   Step 3-b: 本体HPに到達 & 自クリーチャー倒される が 以下を全て満たす
+##             - 本体HPダメージ >= 10
+##             - 攻撃後の敵残本体HP <= 40
+##             - 自クリーチャーのCPUレート <= 80
+##
+## 複数候補いる場合の優先順位:
+##   1. 本体HPダメージ大きい順
+##   2. コスト小さい順（同点時）
+func _evaluate_lv2_candidate(
+	result: Dictionary,
+	creature: Dictionary,
+	creature_index: int,
+	creature_cost: int,
+	both_no_item_result: Dictionary
+) -> void:
+	var sim_result = both_no_item_result.get("sim_result", {})
+	if sim_result.is_empty():
+		return
+
+	# 壁抜け判定: 本体HPに1以上のダメージ
+	var damage_to_base: int = sim_result.get("damage_to_defender_base_hp", 0)
+	if damage_to_base <= 0:
+		return
+
+	# 無効化されているなら対象外（damage_to_base は 0 になるはずだが念のため）
+	if sim_result.get("is_nullified", false):
+		return
+
+	var attacker_survives: bool = sim_result.get("attacker_survives", false)
+
+	if attacker_survives:
+		# --- Step 3-a: 生存かつ本体削れる ---
+		_update_lv2_best(result, "lv2_step3a_creature_index", "lv2_step3a_damage",
+			creature_index, damage_to_base, creature_cost)
+	else:
+		# --- Step 3-b: 倒されるが捨て身条件達成 ---
+		if damage_to_base < 10:
+			return
+
+		# 攻撃後の敵残本体HP = (初期総HP - ランドボーナス) - 本体ダメージ
+		var defender_initial_total_hp: int = sim_result.get("defender_hp", 0)
+		var defender_land_bonus: int = sim_result.get("defender_land_bonus_hp", 0)
+		var defender_base_remaining: int = defender_initial_total_hp - defender_land_bonus - damage_to_base
+		if defender_base_remaining > 40:
+			return
+
+		# 自クリーチャーのCPUレート確認（使い捨て可能な安価なクリーチャーのみ）
+		var CardRateEvaluatorScript = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+		var creature_rate: int = CardRateEvaluatorScript.get_rate(creature)
+		if creature_rate > 80:
+			return
+
+		_update_lv2_best(result, "lv2_step3b_creature_index", "lv2_step3b_damage",
+			creature_index, damage_to_base, creature_cost)
+
+## Lv2候補の更新（ダメージ大 → コスト小 の優先順位）
+func _update_lv2_best(
+	result: Dictionary,
+	index_key: String,
+	damage_key: String,
+	creature_index: int,
+	damage_to_base: int,
+	creature_cost: int
+) -> void:
+	var current_best_index: int = result.get(index_key, -1)
+	var current_best_damage: int = result.get(damage_key, -1)
+
+	if current_best_index < 0:
+		# 初候補
+		result[index_key] = creature_index
+		result[damage_key] = damage_to_base
+		result["_" + index_key + "_cost"] = creature_cost
+		return
+
+	# 既存候補との比較
+	if damage_to_base > current_best_damage:
+		# ダメージがより大きい → 更新
+		result[index_key] = creature_index
+		result[damage_key] = damage_to_base
+		result["_" + index_key + "_cost"] = creature_cost
+	elif damage_to_base == current_best_damage:
+		# ダメージ同点 → コスト小さい方を優先
+		var current_cost: int = result.get("_" + index_key + "_cost", 99999)
+		if creature_cost < current_cost:
+			result[index_key] = creature_index
+			result[damage_key] = damage_to_base
+			result["_" + index_key + "_cost"] = creature_cost
 
 ## 両方アイテムなしでのシミュレーション
 func _simulate_both_no_item(

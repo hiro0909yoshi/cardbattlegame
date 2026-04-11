@@ -267,7 +267,39 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 			if creature_index >= 0:
 				var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
 				print("[CPU AI] バトル決定（ALWAYS_BATTLE）: %s で強行突破" % creature.get("name", "?"))
-		
+
+		CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
+			# 揺さぶり戦術（アイテム不使用、無駄戦闘は回避）
+			# Step 1: 両方アイテムなしで勝てる → 最善クリーチャー
+			# Step 2: アイテム使用で勝てる（仮想）→ クリーチャー選択、アイテムは使わない
+			# Step 3-a: 本体HP削れる & 生存
+			# Step 3-b: 本体HP削れる（捨て身条件合致）
+			# Step 4: 戦闘しない
+			item_index = -1
+			var step_label = ""
+			if eval_result.get("can_win_both_no_item", false):
+				creature_index = eval_result.get("best_both_no_item_creature_index", -1)
+				step_label = "Step1 両方なし勝利"
+			elif eval_result.get("can_win_vs_enemy_item", false):
+				# アイテム使えば勝てる → そのクリーチャーで戦闘（ただしアイテムは使わない）
+				creature_index = eval_result.get("creature_index", -1)
+				step_label = "Step2 仮想アイテム使用勝利（実アイテム不使用）"
+			elif eval_result.get("lv2_step3a_creature_index", -1) >= 0:
+				creature_index = eval_result.get("lv2_step3a_creature_index", -1)
+				step_label = "Step3-a 生存&本体削り"
+			elif eval_result.get("lv2_step3b_creature_index", -1) >= 0:
+				creature_index = eval_result.get("lv2_step3b_creature_index", -1)
+				step_label = "Step3-b 捨て身特攻"
+			else:
+				creature_index = -1
+				step_label = "Step4 戦闘せず（通行料）"
+
+			if creature_index >= 0:
+				var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
+				print("[CPU AI] バトル決定（ALWAYS_BATTLE_LV2 / %s）: %s" % [step_label, creature.get("name", "?")])
+			else:
+				print("[CPU AI] バトル決定（ALWAYS_BATTLE_LV2 / %s）: 攻撃を見送り" % step_label)
+
 		CPUBattlePolicyScript.AttackAction.BATTLE_IF_BOTH_NO_ITEM:
 			# 両方アイテムなしで勝てるクリーチャーを選択
 			creature_index = eval_result.get("best_both_no_item_creature_index", -1)
@@ -327,7 +359,16 @@ func get_policy_based_battle_result(eval_result: Dictionary) -> Dictionary:
 		CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
 			# アイテムなしで戦うため、勝てない可能性が高い → 方向選択時は回避させる
 			return {"will_battle": true, "will_win": false}
-		
+
+		CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
+			# Lv2: 勝てるなら勝ち扱い、本体削りだけの場合は負け扱い、どれも該当なしなら戦闘しない
+			if eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false):
+				return {"will_battle": true, "will_win": true}
+			elif eval_result.get("lv2_step3a_creature_index", -1) >= 0 or eval_result.get("lv2_step3b_creature_index", -1) >= 0:
+				return {"will_battle": true, "will_win": false}
+			else:
+				return {"will_battle": false, "will_win": false}
+
 		CPUBattlePolicyScript.AttackAction.BATTLE_IF_BOTH_NO_ITEM:
 			# 相手がアイテムを使う可能性があるため → 方向選択時は回避させる
 			return {"will_battle": true, "will_win": false}
@@ -471,6 +512,9 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 		var can_win = false
 		if action == CPUBattlePolicyScript.AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM:
 			can_win = eval_result.get("can_win_vs_enemy_item", false)
+		elif action == CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
+			# Lv2: 勝てる状況ならcan_win扱い
+			can_win = eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false)
 		# ALWAYS_BATTLEとBATTLE_IF_BOTH_NO_ITEMは勝てない前提で処理
 		if can_win:
 			# 倒せる場合は侵略スコアとドミニオコマンドスコアを比較（下の処理へ）
@@ -478,6 +522,15 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 		elif action == CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
 			# ALWAYS_BATTLEで勝てない場合はドミニオコマンドを検討しない（戦闘を強行）
 			return {"action": "battle"}
+		elif action == CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE_LV2:
+			# Lv2: 本体削りできるクリーチャーがあれば戦闘、なければドミニオコマンド検討
+			if eval_result.get("lv2_step3a_creature_index", -1) >= 0 or eval_result.get("lv2_step3b_creature_index", -1) >= 0:
+				return {"action": "battle"}
+			# 本体削りもできない → ドミニオコマンド検討へ
+			var territory_option_lv2 = territory_ai.evaluate_all_options(cmd_context)
+			if not territory_option_lv2.is_empty():
+				return {"action": "territory_command", "command": territory_option_lv2}
+			return {"action": "skip"}
 		else:
 			# 勝てない場合はドミニオコマンドを検討
 			var territory_option = territory_ai.evaluate_all_options(cmd_context)

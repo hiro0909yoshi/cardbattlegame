@@ -180,7 +180,9 @@ func simulate_battle(
 			"attack_order": "N/A",
 			"attacker_survives": false,
 			"defender_survives": final_defender_survives,
-			"is_nullified": true
+			"is_nullified": true,
+			"damage_to_defender_base_hp": 0,
+			"defender_land_bonus_hp": defender.land_bonus_hp
 		}
 	
 	# 5. 最終ステータス取得
@@ -282,6 +284,12 @@ func simulate_battle(
 			order_str, result_str
 		])
 
+	# ALWAYS_BATTLE_LV2用: 本体HPへの実効ダメージ量を計算
+	# land_bonus_hpを超えた分がbase_hpに到達するダメージ
+	var defender_land_bonus_for_lv2 = defender.land_bonus_hp
+	var effective_attack_damage = int(float(attacker_final_ap) * defender_damage_reduction)
+	var damage_to_defender_base_hp = max(0, effective_attack_damage - defender_land_bonus_for_lv2)
+
 	return {
 		"result": result,
 		"attacker_ap": attacker_final_ap,
@@ -291,7 +299,9 @@ func simulate_battle(
 		"attack_order": attack_order,
 		"attacker_survives": result == BattleResult.ATTACKER_WIN or result == BattleResult.ATTACKER_SURVIVED,
 		"defender_survives": result == BattleResult.DEFENDER_WIN or result == BattleResult.ATTACKER_SURVIVED,
-		"is_nullified": false
+		"is_nullified": false,
+		"damage_to_defender_base_hp": damage_to_defender_base_hp,
+		"defender_land_bonus_hp": defender_land_bonus_for_lv2
 	}
 
 ## BattleParticipant作成
