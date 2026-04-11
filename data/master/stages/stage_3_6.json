@@ -1,21 +1,21 @@
 {
   "id": "stage_3_6",
   "name": "永久凍土",
-  "description": "決して溶けない氷の大地。",
+  "description": "ダークウィッチとオークの連携。",
   "map_id": "map_cross_1",
   "rule_preset": "standard",
-  "max_turns": 60,
+  "max_turns": 40,
   "rule_overrides": {
     "initial_magic": {
-      "player": 2500,
-      "cpu": 3500
+      "player": 300,
+      "cpu": 300
     },
     "win_conditions": {
       "mode": "all",
       "conditions": [
         {
           "type": "magic",
-          "target": 7500,
+          "target": 8000,
           "timing": "checkpoint"
         }
       ]
@@ -24,8 +24,14 @@
   "quest": {
     "enemies": [
       {
-        "character_id": "bowser",
-        "deck_id": "skills_test",
+        "character_id": "witch2",
+        "deck_id": "cpu_deck_11",
+        "ai_level": 6,
+        "start_tile": 0
+      },
+      {
+        "character_id": "orc",
+        "deck_id": "cpu_deck_5",
         "ai_level": 6,
         "start_tile": 0
       }

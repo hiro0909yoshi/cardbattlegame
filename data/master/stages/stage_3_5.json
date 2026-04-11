@@ -1,21 +1,21 @@
 {
   "id": "stage_3_5",
   "name": "氷竜の領域",
-  "description": "伝説の氷竜が棲む地。",
+  "description": "闇魔法を操るダークウィッチが現れる。",
   "map_id": "map_branch_1",
   "rule_preset": "standard",
-  "max_turns": 60,
+  "max_turns": 40,
   "rule_overrides": {
     "initial_magic": {
-      "player": 2500,
-      "cpu": 3500
+      "player": 300,
+      "cpu": 300
     },
     "win_conditions": {
       "mode": "all",
       "conditions": [
         {
           "type": "magic",
-          "target": 7000,
+          "target": 8000,
           "timing": "checkpoint"
         }
       ]
@@ -24,8 +24,8 @@
   "quest": {
     "enemies": [
       {
-        "character_id": "bowser",
-        "deck_id": "balance_easy",
+        "character_id": "witch2",
+        "deck_id": "cpu_deck_11",
         "ai_level": 6,
         "start_tile": 0
       }

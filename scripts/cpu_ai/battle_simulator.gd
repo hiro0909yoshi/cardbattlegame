@@ -182,7 +182,7 @@ func simulate_battle(
 			"defender_survives": final_defender_survives,
 			"is_nullified": true,
 			"damage_to_defender_base_hp": 0,
-			"defender_land_bonus_hp": defender.land_bonus_hp
+			"defender_all_bonuses_hp": _calculate_defender_all_bonuses(defender)
 		}
 	
 	# 5. 最終ステータス取得
@@ -285,10 +285,10 @@ func simulate_battle(
 		])
 
 	# ALWAYS_BATTLE_LV2用: 本体HPへの実効ダメージ量を計算
-	# land_bonus_hpを超えた分がbase_hpに到達するダメージ
-	var defender_land_bonus_for_lv2 = defender.land_bonus_hp
+	# land_bonus + 全ての一時HPボーナスを超えた分がbase_hpに到達する
+	var defender_all_bonuses_hp = _calculate_defender_all_bonuses(defender)
 	var effective_attack_damage = int(float(attacker_final_ap) * defender_damage_reduction)
-	var damage_to_defender_base_hp = max(0, effective_attack_damage - defender_land_bonus_for_lv2)
+	var damage_to_defender_base_hp = max(0, effective_attack_damage - defender_all_bonuses_hp)
 
 	return {
 		"result": result,
@@ -301,7 +301,7 @@ func simulate_battle(
 		"defender_survives": result == BattleResult.DEFENDER_WIN or result == BattleResult.ATTACKER_SURVIVED,
 		"is_nullified": false,
 		"damage_to_defender_base_hp": damage_to_defender_base_hp,
-		"defender_land_bonus_hp": defender_land_bonus_for_lv2
+		"defender_all_bonuses_hp": defender_all_bonuses_hp
 	}
 
 ## BattleParticipant作成
@@ -399,6 +399,11 @@ func _calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> 
 ## 合計HP計算
 func _calculate_total_hp(participant) -> int:
 	return participant.current_hp + participant.land_bonus_hp + participant.resonance_bonus_hp + \
+		   participant.temporary_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp
+
+## ALWAYS_BATTLE_LV2用: 本体HP(current_hp)を守る全ボーナスの合計
+func _calculate_defender_all_bonuses(participant) -> int:
+	return participant.land_bonus_hp + participant.resonance_bonus_hp + \
 		   participant.temporary_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp
 
 ## 攻撃順序決定

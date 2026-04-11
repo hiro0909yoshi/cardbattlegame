@@ -1,14 +1,14 @@
 {
   "id": "stage_3_7",
   "name": "氷帝の間",
-  "description": "氷の王が待ち構える。",
+  "description": "3人の魔女たちが総力戦を仕掛けてくる。",
   "map_id": "map_diamond_20",
   "rule_preset": "standard",
-  "max_turns": 60,
+  "max_turns": 40,
   "rule_overrides": {
     "initial_magic": {
-      "player": 2000,
-      "cpu": 4000
+      "player": 300,
+      "cpu": 300
     },
     "win_conditions": {
       "mode": "all",
@@ -24,8 +24,20 @@
   "quest": {
     "enemies": [
       {
-        "character_id": "bowser",
-        "deck_id": "balance_easy",
+        "character_id": "witch",
+        "deck_id": "cpu_deck_8",
+        "ai_level": 7,
+        "start_tile": 0
+      },
+      {
+        "character_id": "old_sage",
+        "deck_id": "cpu_deck_9",
+        "ai_level": 7,
+        "start_tile": 0
+      },
+      {
+        "character_id": "witch2",
+        "deck_id": "cpu_deck_11",
         "ai_level": 7,
         "start_tile": 0
       }

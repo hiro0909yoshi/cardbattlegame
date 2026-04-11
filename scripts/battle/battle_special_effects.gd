@@ -94,8 +94,15 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 		
 		# 無効化タイプ別の判定
 		var nullify_type = nullify_condition.get("nullify_type", "")
+
+		# 術攻撃は scroll_attack タイプ以外では無効化されない
+		# （通常攻撃と術攻撃の両方を対象にする無効化は存在しない）
+		if attacker.is_using_scroll and nullify_type != "scroll_attack":
+			print("  【無効化スキップ】術攻撃は%sの対象外" % nullify_type)
+			continue
+
 		var is_nullified = false
-		
+
 		match nullify_type:
 			"element":
 				is_nullified = _check_nullify_element(nullify_condition, attacker)

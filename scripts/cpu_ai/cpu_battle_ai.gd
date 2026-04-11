@@ -605,10 +605,10 @@ func _evaluate_lv2_candidate(
 		if damage_to_base < 10:
 			return
 
-		# 攻撃後の敵残本体HP = (初期総HP - ランドボーナス) - 本体ダメージ
+		# 攻撃後の敵残本体HP = (初期総HP - 全ボーナス) - 本体ダメージ
 		var defender_initial_total_hp: int = sim_result.get("defender_hp", 0)
-		var defender_land_bonus: int = sim_result.get("defender_land_bonus_hp", 0)
-		var defender_base_remaining: int = defender_initial_total_hp - defender_land_bonus - damage_to_base
+		var defender_all_bonuses: int = sim_result.get("defender_all_bonuses_hp", 0)
+		var defender_base_remaining: int = defender_initial_total_hp - defender_all_bonuses - damage_to_base
 		if defender_base_remaining > 40:
 			return
 

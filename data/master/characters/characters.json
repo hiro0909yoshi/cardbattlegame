@@ -461,6 +461,138 @@
 		"spell_use_rate": 1.0,
 		"dominio_use_rate": 0.8
 	  }
+	},
+	"witch": {
+	  "name": "ウィッチ",
+	  "model_path": "res://scenes/Characters/Witch.tscn",
+	  "portrait_path": "",
+	  "description": "術攻撃を得意とする攻撃的な魔女",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_8"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "always_battle_lv2": 0.5,
+		  "both_no_item": 0.0,
+		  "vs_enemy_item": 0.5,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.3,
+		  "always_protect": 0.7,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": false,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 900,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 1.0,
+		"summon_rate_mismatch": 0.4,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 0.8
+	  }
+	},
+	"old_sage": {
+	  "name": "オールドセージ",
+	  "model_path": "res://scenes/Characters/OldSage.tscn",
+	  "portrait_path": "",
+	  "description": "年老いた賢者。慎重で確実な判断を下す",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_9"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "always_battle_lv2": 0.3,
+		  "both_no_item": 0.1,
+		  "vs_enemy_item": 0.6,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.0,
+		  "always_protect": 1.0,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 900,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 1.0,
+		"summon_rate_mismatch": 0.3,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 0.9
+	  }
+	},
+	"witch2": {
+	  "name": "ダークウィッチ",
+	  "model_path": "res://scenes/Characters/Witch2.tscn",
+	  "portrait_path": "",
+	  "description": "闇魔法を操る上位の魔女。より攻撃的で容赦がない",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_11"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "always_battle_lv2": 0.3,
+		  "both_no_item": 0.0,
+		  "vs_enemy_item": 0.7,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.0,
+		  "always_protect": 1.0,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 850,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 1.0,
+		"summon_rate_mismatch": 0.5,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 0.9
+	  }
+	},
+	"golem": {
+	  "name": "ゴーレム",
+	  "model_path": "res://scenes/Characters/Golem.tscn",
+	  "portrait_path": "",
+	  "description": "氷河の守護者。圧倒的な防御力を誇る巨像",
+	  "difficulties": [
+		{"level": 1, "label": "初級", "deck_id": "cpu_deck_12"}
+	  ],
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "always_battle_lv2": 0.2,
+		  "both_no_item": 0.0,
+		  "vs_enemy_item": 0.8,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.6,
+		  "always_protect": 0.4,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": false,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 300,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 1.0,
+		"summon_rate_mismatch": 0.5,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 1.0
+	  }
 	}
   }
 }

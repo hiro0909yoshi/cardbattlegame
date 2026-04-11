@@ -185,261 +185,181 @@
 			"name": "オーク"
 		},
 		{
-			"cards": {
-
-			},
-			"name": "CPUデッキ8"
+			"cards": {},
+			"name": "ウィッチ"
+		},
+		{
+			"cards": {},
+			"name": "オールドセージ"
 		},
 		{
 			"cards": {
-
-			},
-			"name": "CPUデッキ9"
-		},
-		{
-			"cards": {
-				"6 // ジャックオランタン": 3
+				"102 // ゼロポイント": 1,
+				"106 // アビスキーパー": 3,
+				"6 // ジャックオランタン": 1,
+				"8 // ヘルハウンド": 1,
+				"9 // バルログ": 1
 			},
 			"name": "CPUデッキ10"
 		},
 		{
-			"cards": {
-
-			},
-			"name": "CPUデッキ11"
+			"cards": {},
+			"name": "ダークウィッチ"
 		},
 		{
-			"cards": {
-
-			},
-			"name": "CPUデッキ12"
+			"cards": {},
+			"name": "ゴーレム"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ13"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ14"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ15"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ16"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ17"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ18"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ19"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ20"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ21"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ22"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ23"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ24"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ25"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ26"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ27"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ28"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ29"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ30"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ31"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ32"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ33"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ34"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ35"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ36"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ37"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ38"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ39"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ40"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ41"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ42"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ43"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ44"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ45"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ46"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ47"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ48"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ49"
 		},
 		{
-			"cards": {
-
-			},
+			"cards": {},
 			"name": "CPUデッキ50"
 		}
 	],
