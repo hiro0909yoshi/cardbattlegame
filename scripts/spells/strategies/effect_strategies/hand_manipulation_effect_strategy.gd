@@ -64,8 +64,8 @@ func execute(context: Dictionary) -> Dictionary:
 		"tile_index": target_data.get("tile_index", -1)
 	}
 
-	# spell_draw に委譲
-	var result = spell_draw.apply_effect(effect, current_player_id, draw_context)
+	# spell_draw に委譲（draw_by_type はタイプ選択を await するため、ここも await 必須）
+	var result = await spell_draw.apply_effect(effect, current_player_id, draw_context)
 
 	# ★ NEW: effect_message を構築
 	var effect_message = ""

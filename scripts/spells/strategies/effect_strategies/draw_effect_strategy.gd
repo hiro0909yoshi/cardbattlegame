@@ -67,7 +67,8 @@ func execute(context: Dictionary) -> Dictionary:
 	}
 
 	print("[DrawEffectStrategy] spell_draw.apply_effect() 呼び出し")
-	var result = spell_draw.apply_effect(effect, current_player_id, context_for_draw)
+	# draw_by_type はタイプ選択を await するため、ここも await 必須
+	var result = await spell_draw.apply_effect(effect, current_player_id, context_for_draw)
 	print("[DrawEffectStrategy] spell_draw.apply_effect() 完了")
 
 	# ★ NEW: effect_message を構築

@@ -130,23 +130,29 @@ func set_navigation_service(nav_service) -> void:
 
 
 func _update_positions():
-	"""UI要素の位置を更新（左側に配置）"""
+	"""UI要素の位置を更新（クリーチャー/アーツは左、タイプ選択は中央）"""
 	var margin = 30
 	var list_width = 400
 	var list_height = 500
-	
+
 	# クリーチャーリスト（画面左上）
 	creature_list.position = Vector2(margin, margin + 50)
 	creature_list.size = Vector2(list_width, list_height)
-	
+
 	# アルカナアーツリスト（同じ位置 - クリーチャーリストと排他表示）
 	mystic_art_list.position = Vector2(margin, margin + 50)
 	mystic_art_list.size = Vector2(list_width, list_height)
-	
-	# タイプ選択リスト（画面左上）
-	var type_list_height = 300
-	type_list.position = Vector2(margin, margin + 50)
-	type_list.size = Vector2(list_width, type_list_height)
+
+	# タイプ選択リスト（画面中央・大きめ）
+	var type_list_width = 600
+	var type_list_height = 480
+	var viewport_size = get_viewport_rect().size
+	var type_list_x = (viewport_size.x - type_list_width) * 0.5
+	var type_list_y = (viewport_size.y - type_list_height) * 0.5
+	type_list.position = Vector2(type_list_x, type_list_y)
+	type_list.size = Vector2(type_list_width, type_list_height)
+	# フォントサイズを大きく
+	type_list.add_theme_font_size_override("font_size", 40)
 
 func show_creature_selection(creatures: Array):
 	"""クリーチャー選択を表示"""
@@ -223,9 +229,10 @@ func show_type_selection(types: Array = ["creature", "item", "spell"]):
 	if type_list.item_count > 0:
 		type_list.select(0)
 
-	# グローバルボタンに登録
+	# タイプ選択はキャンセル不可（プロフェシー等は必ず1つ選ばせる）
+	# ×ボタンを出さないため、他フェーズで残っている戻るボタンもクリアする
 	if _navigation_service:
-		_navigation_service.register_back_action(_on_cancel_button_pressed, "やめる")
+		_navigation_service.clear_back_action()
 
 func hide_all():
 	"""全UI非表示"""

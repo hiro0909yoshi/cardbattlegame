@@ -590,6 +590,13 @@ func _is_mystic_selection_phase() -> bool:
 	if filter in ["single_target_spell", "spell_borrow"]:
 		return false  # 効果適用中のカード選択は許可
 
+	# アイテムフェーズ中のカード選択は通常タップを許可
+	# 例: スペル発動→移動侵略バトル→アイテム選択（インベイド等）
+	if _is_item_phase_active():
+		return false
+	if _game_flow_manager_ref.item_phase_handler and _game_flow_manager_ref.item_phase_handler.is_item_phase_active():
+		return false
+
 	# 借用スペル実行中（エンキ経由のトレード等）のカード選択は通常タップを許可
 	# 例: ルーンアデプト→トレード→手札クリーチャー選択
 	var spell_state = _game_flow_manager_ref.spell_phase_handler.spell_state

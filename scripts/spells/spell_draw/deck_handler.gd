@@ -87,15 +87,41 @@ func can_handle(effect_type: String) -> bool:
 func get_top_cards_from_deck(player_id: int, count: int) -> Array:
 	if not card_system_ref:
 		return []
-	
+
+	# クエストモード: player_deck_pools を優先（card_data 配列）
+	if card_system_ref.player_deck_pools.has(player_id):
+		# デッキプールが空の場合、捨て札プールから補充（draw_card_data_v2 と同じロジック）
+		if card_system_ref.player_deck_pools[player_id].is_empty():
+			if card_system_ref.player_discard_pools.has(player_id) and not card_system_ref.player_discard_pools[player_id].is_empty():
+				print("[デッキ確認] Player %d: 捨て札をシャッフルしてデッキに戻します（プール）" % (player_id + 1))
+				card_system_ref.player_deck_pools[player_id] = card_system_ref.player_discard_pools[player_id].duplicate()
+				card_system_ref.player_discard_pools[player_id].clear()
+				card_system_ref.player_deck_pools[player_id].shuffle()
+		var pool = card_system_ref.player_deck_pools[player_id]
+		if pool.is_empty():
+			return []
+		var actual_count_pool = min(count, pool.size())
+		var result_pool = []
+		var RateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+		print("[デッキ確認] プレイヤー%d のデッキ上部%d枚（プール）:" % [player_id + 1, actual_count_pool])
+		for i in range(actual_count_pool):
+			var card_data_pool = pool[i]
+			if card_data_pool and not card_data_pool.is_empty():
+				var data_copy_pool = card_data_pool.duplicate(true)
+				result_pool.append(data_copy_pool)
+				var rate_pool = RateEvaluator.get_rate(card_data_pool)
+				print("  [%d] %s (ID: %d, レート: %d)" % [i, card_data_pool.get("name", "?"), card_data_pool.get("id", -1), rate_pool])
+		return result_pool
+
+	# 通常モード: player_decks（card_id 配列）
 	var deck = card_system_ref.player_decks.get(player_id, [])
 	if deck.is_empty():
 		return []
-	
+
 	var actual_count = min(count, deck.size())
 	var result = []
-	
-	var RateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+
+	var RateEvaluator2 = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
 	print("[デッキ確認] プレイヤー%d のデッキ上部%d枚:" % [player_id + 1, actual_count])
 	for i in range(actual_count):
 		var card_id = deck[i]
@@ -103,9 +129,9 @@ func get_top_cards_from_deck(player_id: int, count: int) -> Array:
 		if card_data and not card_data.is_empty():
 			var data_copy = card_data.duplicate(true)
 			result.append(data_copy)
-			var rate = RateEvaluator.get_rate(card_data)
+			var rate = RateEvaluator2.get_rate(card_data)
 			print("  [%d] %s (ID: %d, レート: %d)" % [i, card_data.get("name", "?"), card_id, rate])
-	
+
 	return result
 
 
@@ -114,23 +140,45 @@ func draw_from_deck_at_index(player_id: int, card_index: int) -> Dictionary:
 	if not card_system_ref:
 		GameLogger.error("Card", "CardSystemが設定されていません (player_id=%d, card_index=%d)" % [player_id, card_index])
 		return {"drawn": false, "card_name": "", "card_data": {}}
-	
+
+	# クエストモード: player_deck_pools を優先
+	if card_system_ref.player_deck_pools.has(player_id):
+		var pool = card_system_ref.player_deck_pools[player_id]
+		if card_index < 0 or card_index >= pool.size():
+			print("[デッキドロー] 無効なインデックス: %d（デッキ枚数: %d）" % [card_index, pool.size()])
+			return {"drawn": false, "card_name": "", "card_data": {}}
+
+		var drawn_card_pool = pool[card_index].duplicate(true) if typeof(pool[card_index]) == TYPE_DICTIONARY else {}
+		var card_name_pool = drawn_card_pool.get("name", "?")
+		card_system_ref.player_deck_pools[player_id].remove_at(card_index)
+
+		if not drawn_card_pool.is_empty():
+			card_system_ref.return_card_to_hand(player_id, drawn_card_pool)
+			print("[フォーサイト] プレイヤー%d: デッキから『%s』を選んで引きました（プール）" % [player_id + 1, card_name_pool])
+
+		return {
+			"drawn": true,
+			"card_name": card_name_pool,
+			"card_data": drawn_card_pool
+		}
+
+	# 通常モード: player_decks（card_id 配列）
 	var deck = card_system_ref.player_decks.get(player_id, [])
-	
+
 	if card_index < 0 or card_index >= deck.size():
 		print("[デッキドロー] 無効なインデックス: %d（デッキ枚数: %d）" % [card_index, deck.size()])
 		return {"drawn": false, "card_name": "", "card_data": {}}
-	
+
 	var card_id = deck[card_index]
 	var drawn_card = CardLoader.get_card_by_id(card_id)
 	var card_name = drawn_card.get("name", "?") if drawn_card else "?"
-	
+
 	card_system_ref.player_decks[player_id].remove_at(card_index)
-	
+
 	if drawn_card:
 		card_system_ref.return_card_to_hand(player_id, drawn_card.duplicate(true))
 		print("[フォーサイト] プレイヤー%d: デッキから『%s』を選んで引きました" % [player_id + 1, card_name])
-	
+
 	return {
 		"drawn": true,
 		"card_name": card_name,

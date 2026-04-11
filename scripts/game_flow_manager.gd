@@ -491,12 +491,13 @@ func _on_warp_executed_from_board(player_id: int, from_tile: int, to_tile: int):
 func on_card_selected(card_index: int):
 	# 優先順位順にハンドラーに処理を委譲
 
-	# 1. スペルフェーズハンドラー（カード選択ハンドラー + スペル処理）
-	if spell_phase_handler and spell_phase_handler.try_handle_card_selection(card_index):
+	# 1. アイテムフェーズハンドラー（最優先: 移動侵略スペル中のバトル等、
+	#    spell_state が残ったままアイテム選択が走るケースを正しくルーティング）
+	if item_phase_handler and item_phase_handler.try_handle_card_selection(card_index):
 		return
 
-	# 2. アイテムフェーズハンドラー
-	if item_phase_handler and item_phase_handler.try_handle_card_selection(card_index):
+	# 2. スペルフェーズハンドラー（カード選択ハンドラー + スペル処理）
+	if spell_phase_handler and spell_phase_handler.try_handle_card_selection(card_index):
 		return
 
 	# 3. ドミニオコマンドハンドラー（交換モード）

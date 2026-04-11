@@ -71,8 +71,8 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			if card_type != "":
 				result = draw_card_by_type(player_id, card_type)
 			else:
-				_start_type_selection_draw(player_id)
-				result["async"] = true
+				# タイプ選択が完了するまで await（選択前にサイコロへ進まないようブロック）
+				result = await _await_type_selection_draw(player_id)
 		
 		"discard_and_draw_plus":
 			result["drawn"] = discard_and_draw_plus(player_id)
@@ -261,37 +261,36 @@ func add_specific_card_to_hand(player_id: int, card_id: int) -> Dictionary:
 # タイプ選択UI処理
 # ============================================================
 
-## タイプ選択ドロー開始（callback方式・プロフェシー用）
-func _start_type_selection_draw(player_id: int) -> void:
+## タイプ選択ドロー（await 方式・プロフェシー用）
+## 選択が確定するまで待機し、ドロー結果を返す
+func _await_type_selection_draw(player_id: int) -> Dictionary:
 	if not _spell_and_mystic_ui:
 		GameLogger.error("Card", "SpellAndMysticUIが設定されていません")
-		return
+		return {"drawn": false, "card_name": "", "card_data": {}}
 
 	if _message_service:
 		_message_service.show_action_prompt("引くカードのタイプを選択してください")
 
 	_spell_and_mystic_ui.show_type_selection()
 
-	if _spell_and_mystic_ui.is_connected("type_selected", _on_type_selected):
-		_spell_and_mystic_ui.disconnect("type_selected", _on_type_selected)
-	_spell_and_mystic_ui.type_selected.connect(_on_type_selected.bind(player_id, _spell_and_mystic_ui), CONNECT_ONE_SHOT)
+	# タイプ選択シグナルを await（ユーザー操作があるまでここで止まる）
+	var selected_type = await _spell_and_mystic_ui.type_selected
 
+	_spell_and_mystic_ui.hide_all()
 
-## タイプ選択完了時のコールバック
-func _on_type_selected(selected_type: String, player_id: int, spell_ui: Node) -> void:
-	spell_ui.hide_all()
-	
 	var result = draw_card_by_type(player_id, selected_type)
-	
+
 	if result.get("drawn", false):
 		if _message_service:
 			await _message_service.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
 	else:
 		if _message_service:
 			_message_service.show_toast("デッキに該当タイプがありません")
-	
+
 	if _card_selection_service:
 		_card_selection_service.update_hand_display(player_id)
+
+	return result
 
 
 # ============================================================

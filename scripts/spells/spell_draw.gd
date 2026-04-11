@@ -111,10 +111,11 @@ func set_spell_creature_place(spell_creature_place) -> void:
 ## エフェクトを適用（メインエントリポイント）
 func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) -> Dictionary:
 	var effect_type = effect.get("effect_type", "")
-	
+
 	# 各ハンドラーに委譲
+	# basic_draw_handler.apply_effect は draw_by_type で await するため、ここも await
 	if _basic_draw_handler and _basic_draw_handler.can_handle(effect_type):
-		return _basic_draw_handler.apply_effect(effect, player_id, context)
+		return await _basic_draw_handler.apply_effect(effect, player_id, context)
 	
 	if _destroy_handler and _destroy_handler.can_handle(effect_type):
 		return _destroy_handler.apply_effect(effect, player_id, context)

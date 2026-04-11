@@ -133,10 +133,24 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	
 	var attacker_creature = result.get("creature_data", {})
 	var tile_info = board_system_ref.get_tile_info(to_tile) if board_system_ref else {}
-	
+
+	# 移動先選択で使った NavigationService の確定ボタン等をクリア
+	# （dominio_command_handler.start_move_battle_sequence と同じ対応）
+	# これがないとアイテムなしで item phase がスキップされても確定ボタンが残る
+	var nav_service = null
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
+		nav_service = spell_phase_handler_ref.spell_ui_manager.navigation_service
+	if nav_service and nav_service.has_method("disable_navigation"):
+		nav_service.disable_navigation()
+
+	# 攻撃側プレイヤー：owner_filter=any 対応で from_tile オーナーを優先、無ければキャスター
+	var attacker_player_id = result.get("attacker_owner_id", -1)
+	if attacker_player_id < 0:
+		attacker_player_id = caster_player_id
+
 	# バトル情報を保存
 	pending_battle_result = result
-	pending_battle_caster_player_id = caster_player_id
+	pending_battle_caster_player_id = attacker_player_id
 	pending_battle_tile_info = tile_info
 	pending_attacker_item = {}
 	pending_defender_item = {}
@@ -163,9 +177,9 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 		var item_handler = game_flow_manager_ref.item_phase_handler
 		if not item_handler.item_phase_completed.is_connected(_on_spell_move_item_phase_completed):
 			item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
-		
+
 		# 攻撃側フェーズ開始（防御側情報を渡して事前選択）
-		item_handler.start_item_phase(caster_player_id, attacker_creature, tile_info)
+		item_handler.start_item_phase(attacker_player_id, attacker_creature, tile_info)
 		
 		# バトル完了シグナルを待機
 		await spell_move_battle_completed
@@ -176,14 +190,13 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 
 ## アイテムフェーズ完了時のコールバック
 func _on_spell_move_item_phase_completed() -> void:
-
 	if not is_waiting_for_defender_item:
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
-		
+
 		# 攻撃側のアイテムを保存
 		if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
 			pending_attacker_item = game_flow_manager_ref.item_phase_handler.get_selected_item()
-		
+
 		# 防御側のアイテムフェーズを開始
 		var defender_owner = pending_battle_tile_info.get("owner", -1)
 		if defender_owner >= 0:
@@ -288,20 +301,28 @@ func get_two_tiles_destinations(from_tile_index: int) -> Array:
 
 
 ## 隣接する敵ドミニオの候補を取得（アウトレイジ用）
-func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
+## base_player_id を省略した場合は from_tile のオーナー視点で敵を判定
+## （target_finder の has_adjacent_enemy チェックと整合させるため）
+func get_adjacent_enemy_destinations(from_tile_index: int, base_player_id: int = -1) -> Array:
 	var destinations: Array = []
-	
+
 	if not board_system_ref:
 		return destinations
-	
+
 	# 隣接タイルを取得
 	var adjacent_tiles: Array = []
 	if board_system_ref.tile_neighbor_system:
 		adjacent_tiles = board_system_ref.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
-	
-	# 敵ドミニオのみフィルタ
-	var current_player_id = board_system_ref.current_player_index
-	
+
+	# 敵判定の基準プレイヤー：明示指定が優先、なければ from_tile のオーナー
+	var current_player_id = base_player_id
+	if current_player_id < 0:
+		var from_tile = board_system_ref.tile_nodes.get(from_tile_index)
+		if from_tile and from_tile.owner_id >= 0:
+			current_player_id = from_tile.owner_id
+		else:
+			current_player_id = board_system_ref.current_player_index
+
 	for tile_index in adjacent_tiles:
 		var tile = board_system_ref.tile_nodes.get(tile_index)
 		if not tile:
@@ -454,17 +475,23 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	# 移動前にクリーチャーデータを取得（移動はバトル後に行う）
 	var from_tile = board_system_ref.tile_nodes.get(from_tile_index)
 	var creature_data = from_tile.creature_data.duplicate() if from_tile else {}
-	
-	# 注意: 移動はここでは実行しない（バトルシステムが処理する）
-	# バトルシステムにfrom_tile_indexを渡し、勝敗に応じて移動を処理させる
-	
+	# owner_filter=any 対応：攻撃側プレイヤーは from_tile の owner（スペルキャスターとは限らない）
+	var attacker_owner_id = from_tile.owner_id if from_tile else -1
+
+	# 移動元タイルを事前にクリア（land_action_helper.gd:358-362 と同じパターン）
+	# battle_system._apply_post_battle_effects は from_tile が既に空き地化されている前提で動作する
+	# （ATTACKER_WIN: クリーチャー配置のみ / ATTACKER_SURVIVED: from_tile に戻す / DEFENDER_WIN: 何もしない）
+	board_system_ref.remove_creature(from_tile_index)
+	board_system_ref.set_tile_owner(from_tile_index, -1)
+
 	# 戦闘発生（敵ドミニオへの移動）
 	return {
 		"success": true,
 		"from_tile": from_tile_index,
 		"to_tile": to_tile_index,
 		"trigger_battle": true,
-		"creature_data": creature_data
+		"creature_data": creature_data,
+		"attacker_owner_id": attacker_owner_id
 	}
 
 
@@ -527,17 +554,23 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 	# 移動前にクリーチャーデータを取得
 	var from_tile = board_system_ref.tile_nodes.get(from_tile_index)
 	var creature_data = from_tile.creature_data.duplicate() if from_tile else {}
-	
+	var attacker_owner_id = from_tile.owner_id if from_tile else -1
+
 	# 戦闘が発生する場合は移動を実行しない（バトルシステムに任せる）
+	# 移動元タイルを事前にクリア（インベイドと同じパターン、battle_system前提）
 	if not trigger_battle:
 		_execute_move(from_tile_index, to_tile_index)
-	
+	else:
+		board_system_ref.remove_creature(from_tile_index)
+		board_system_ref.set_tile_owner(from_tile_index, -1)
+
 	return {
 		"success": true,
 		"from_tile": from_tile_index,
 		"to_tile": to_tile_index,
 		"trigger_battle": trigger_battle,
-		"creature_data": creature_data
+		"creature_data": creature_data,
+		"attacker_owner_id": attacker_owner_id
 	}
 
 
@@ -593,18 +626,24 @@ func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatur
 	# 移動前にクリーチャーデータを取得
 	var from_tile = board_system_ref.tile_nodes.get(from_tile_index)
 	var creature_data = from_tile.creature_data.duplicate() if from_tile else {}
-	
+	var attacker_owner_id = from_tile.owner_id if from_tile else -1
+
 	# 戦闘が発生する場合は移動を実行しない（バトルシステムに任せる）
 	# ただし、exclude_enemy_creaturesの場合は戦闘が発生しないはず
+	# 移動元タイルを事前にクリア（インベイドと同じパターン、battle_system前提）
 	if not trigger_battle:
 		_execute_move(from_tile_index, to_tile_index)
-	
+	else:
+		board_system_ref.remove_creature(from_tile_index)
+		board_system_ref.set_tile_owner(from_tile_index, -1)
+
 	return {
 		"success": true,
 		"from_tile": from_tile_index,
 		"to_tile": to_tile_index,
 		"trigger_battle": trigger_battle,
-		"creature_data": creature_data
+		"creature_data": creature_data,
+		"attacker_owner_id": attacker_owner_id
 	}
 
 

@@ -304,20 +304,46 @@ func destroy_deck_card_at_index(player_id: int, card_index: int) -> Dictionary:
 	if not card_system_ref:
 		GameLogger.error("Card", "DestroyHandler: CardSystemが設定されていません (player=%d, deck_index=%d)" % [player_id, card_index])
 		return {"destroyed": false, "card_name": "", "card_data": {}}
-	
+
+	# クエストモード: player_deck_pools を優先
+	if card_system_ref.player_deck_pools.has(player_id):
+		var pool = card_system_ref.player_deck_pools[player_id]
+		if card_index < 0 or card_index >= pool.size():
+			print("[デッキ破壊] 無効なインデックス: %d（デッキ枚数: %d）" % [card_index, pool.size()])
+			return {"destroyed": false, "card_name": "", "card_data": {}}
+
+		var destroyed_card_pool = pool[card_index].duplicate(true) if typeof(pool[card_index]) == TYPE_DICTIONARY else {}
+		var card_name_pool = destroyed_card_pool.get("name", "?")
+		card_system_ref.player_deck_pools[player_id].remove_at(card_index)
+		print("[デッキ破壊] プレイヤー%d: インデックス%d の %s をデッキから破壊（プール）" % [player_id + 1, card_index, card_name_pool])
+
+		var remaining_pool = card_system_ref.player_deck_pools[player_id]
+		var show_count_pool = min(3, remaining_pool.size())
+		print("[デッキ破壊後] 次にドローされる%d枚:" % show_count_pool)
+		for i in range(show_count_pool):
+			var next_card_pool = remaining_pool[i]
+			print("  [%d] %s" % [i, next_card_pool.get("name", "?") if next_card_pool else "?"])
+
+		return {
+			"destroyed": true,
+			"card_name": card_name_pool,
+			"card_data": destroyed_card_pool
+		}
+
+	# 通常モード: player_decks（card_id 配列）
 	var deck = card_system_ref.player_decks.get(player_id, [])
-	
+
 	if card_index < 0 or card_index >= deck.size():
 		print("[デッキ破壊] 無効なインデックス: %d（デッキ枚数: %d）" % [card_index, deck.size()])
 		return {"destroyed": false, "card_name": "", "card_data": {}}
-	
+
 	var card_id = deck[card_index]
 	var destroyed_card = CardLoader.get_card_by_id(card_id)
 	var card_name = destroyed_card.get("name", "?") if destroyed_card else "?"
-	
+
 	card_system_ref.player_decks[player_id].remove_at(card_index)
 	print("[デッキ破壊] プレイヤー%d: インデックス%d の %s をデッキから破壊" % [player_id + 1, card_index, card_name])
-	
+
 	var remaining_deck = card_system_ref.player_decks[player_id]
 	var show_count = min(3, remaining_deck.size())
 	print("[デッキ破壊後] 次にドローされる%d枚:" % show_count)
@@ -325,7 +351,7 @@ func destroy_deck_card_at_index(player_id: int, card_index: int) -> Dictionary:
 		var next_card_id = remaining_deck[i]
 		var next_card = CardLoader.get_card_by_id(next_card_id)
 		print("  [%d] %s" % [i, next_card.get("name", "?") if next_card else "?"])
-	
+
 	return {
 		"destroyed": true,
 		"card_name": card_name,
