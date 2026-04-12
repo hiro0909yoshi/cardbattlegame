@@ -1,0 +1,11 @@
+{
+  "id": "map_new_3",
+  "name": "",
+  "description": "",
+  "tile_count": 0,
+  "loop_size": 0,
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "standard",
+  "tiles": [],
+  "connections": {}
+}
