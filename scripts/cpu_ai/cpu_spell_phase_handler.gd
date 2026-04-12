@@ -397,7 +397,10 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 	var target_type = parsed.get("target_type", "")
 
 	if target_type == "all_creatures":
-		var target_info = parsed.get("target_info", {})
+		var target_info = parsed.get("target_info", {}).duplicate()
+		# 堅牢チェック用にaffects_hpをtarget_infoにコピー
+		if parsed.get("affects_hp", false):
+			target_info["affects_hp"] = true
 		if spell_flow:
 			await spell_flow._execute_spell_on_all_creatures(spell_card, target_info)
 	else:

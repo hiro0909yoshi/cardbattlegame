@@ -183,6 +183,9 @@ func _evaluate_mystic_art(mystic_info: Dictionary, context: Dictionary) -> Dicti
 	# 術者情報をコンテキストに追加
 	context["caster_tile"] = mystic_info.tile_index
 	context["caster"] = mystic_info.creature
+	# 堅牢チェック用: アルカナアーツのデータをspellとしてcontextに設定
+	# _apply_protection_filter が context["spell"]["effect_parsed"]["affects_hp"] を参照する
+	context["spell"] = mystic_data
 	
 	var result = {
 		"should_use": false,
@@ -230,7 +233,7 @@ func _evaluate_has_target(mystic_data: Dictionary, context: Dictionary, base_sco
 	var damage_value = _get_damage_value(mystic_data)
 	if damage_value > 0:
 		context["damage_value"] = damage_value
-	
+
 	if target_condition:
 		targets = condition_checker.check_target_condition(target_condition, context)
 	else:
@@ -358,6 +361,9 @@ func _get_default_targets(mystic_data: Dictionary, context: Dictionary) -> Array
 	var effect_parsed = mystic_data.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
 	var target_info = effect_parsed.get("target_info", {}).duplicate()
+	# 堅牢チェック用にaffects_hpをtarget_infoにコピー
+	if effect_parsed.get("affects_hp", false):
+		target_info["affects_hp"] = true
 	
 	# selfターゲットは特別処理
 	if target_type == "self":

@@ -49,6 +49,9 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	var effect_parsed = spell.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
 	var target_info = effect_parsed.get("target_info", {}).duplicate()
+	# 堅牢チェック用にaffects_hpをtarget_infoにコピー
+	if effect_parsed.get("affects_hp", false):
+		target_info["affects_hp"] = true
 	
 	# systemsを構築
 	var systems = {

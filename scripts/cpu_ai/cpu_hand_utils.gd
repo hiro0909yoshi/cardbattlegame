@@ -116,8 +116,8 @@ func select_best_summon_card(current_player, affordable_cards: Array, tile_eleme
 			if card.is_empty():
 				continue
 			var card_element = card.get("element", "")
-			# 属性一致またはneutralタイルならOK
-			if card_element == tile_element or tile_element == "neutral":
+			# 属性一致、neutralタイル、または無属性カードならOK
+			if card_element == tile_element or tile_element == "neutral" or card_element == "neutral":
 				matching_cards.append(index)
 		
 		# 属性一致カードがあれば、その中からレート最高のものを選択
@@ -775,11 +775,11 @@ func _find_lowest_rate_card_index_for_discard(player_id: int) -> int:
 ## 捨て札判断用：重複補正込みのレート計算
 func _get_rate_for_discard(card: Dictionary, player_id: int) -> int:
 	var base_rate = CardRateEvaluator.get_rate(card)
-	
+
 	# 手札内の同名カード枚数をカウント
 	var card_id = card.get("id", -1)
 	var count = _count_same_card_in_hand(player_id, card_id)
-	
+
 	# 重複補正
 	# 2枚目: -30
 	# 3枚目以降: -100
@@ -787,8 +787,27 @@ func _get_rate_for_discard(card: Dictionary, player_id: int) -> int:
 		base_rate -= 100
 	elif count == 2:
 		base_rate -= 30
-	
+
+	# クリーチャー温存補正: 手札のクリーチャーが2枚以下なら+30
+	var is_creature = card.get("type", "") == "creature"
+	if is_creature:
+		if _count_creatures_in_hand(player_id) <= 2:
+			base_rate += 30
+		# 土地条件を満たせないクリーチャーは捨てる優先度を上げる
+		if not check_lands_required(card, player_id):
+			base_rate -= 50
+
 	return base_rate
+
+
+## 手札内のクリーチャー枚数をカウント
+func _count_creatures_in_hand(player_id: int) -> int:
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var count = 0
+	for card in hand:
+		if card.get("type", "") == "creature":
+			count += 1
+	return count
 
 
 ## 手札内の同一カード枚数をカウント

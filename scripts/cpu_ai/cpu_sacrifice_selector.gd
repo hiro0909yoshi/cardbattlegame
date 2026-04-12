@@ -17,8 +17,8 @@ var CardRateEvaluator = preload("res://scripts/cpu_ai/card_rate_evaluator.gd")
 # ============ 初期化 ============
 
 func initialize(c_system: Node, b_system: Node = null, 
-                spell_synth: SpellSynthesis = null, 
-                creature_synth: CreatureSynthesis = null) -> void:
+				spell_synth: SpellSynthesis = null, 
+				creature_synth: CreatureSynthesis = null) -> void:
 	card_system = c_system
 	board_system = b_system
 	spell_synthesis = spell_synth
@@ -69,7 +69,8 @@ func select_sacrifice_for_creature(creature_card: Dictionary, player_id: int, ti
 	var effect_type = synthesis.get("effect_type", "")
 	
 	# イド（犠牲クリーチャーに変身）の特殊処理
-	if effect_type == "transform" and synthesis.get("transform_to") == "sacrifice":
+	# transform_to は "sacrifice"(String) or カードID(数値) のため str() で統一比較
+	if effect_type == "transform" and str(synthesis.get("transform_to", "")) == "sacrifice":
 		var best_creature = _select_best_creature_for_ido(hand, tile_element)
 		if not best_creature.is_empty():
 			return {"card": best_creature, "should_synthesize": true}

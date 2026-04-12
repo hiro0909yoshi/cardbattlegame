@@ -285,10 +285,14 @@ func simulate_battle(
 		])
 
 	# ALWAYS_BATTLE_LV2用: 本体HPへの実効ダメージ量を計算
-	# land_bonus + 全ての一時HPボーナスを超えた分がbase_hpに到達する
+	# 反射・2回攻撃・攻撃順序を考慮した実際のダメージから算出する
 	var defender_all_bonuses_hp = _calculate_defender_all_bonuses(defender)
-	var effective_attack_damage = int(float(attacker_final_ap) * defender_damage_reduction)
-	var damage_to_defender_base_hp = max(0, effective_attack_damage - defender_all_bonuses_hp)
+	var actual_total_damage_to_defender = _calculate_actual_damage_to_defender(
+		attacker_final_ap, attacker_final_hp, attacker_attack_count,
+		defender_final_ap, defender_final_hp, defender_attack_count,
+		attack_order, attacker_reflect, defender_reflect, defender_damage_reduction
+	)
+	var damage_to_defender_base_hp = max(0, actual_total_damage_to_defender - defender_all_bonuses_hp)
 
 	return {
 		"result": result,
@@ -405,6 +409,60 @@ func _calculate_total_hp(participant) -> int:
 func _calculate_defender_all_bonuses(participant) -> int:
 	return participant.land_bonus_hp + participant.resonance_bonus_hp + \
 		   participant.temporary_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp
+
+## ALWAYS_BATTLE_LV2用: 防御側が実際に受けた合計ダメージを計算
+## 反射・2回攻撃・攻撃順序を考慮し、_calculate_battle_resultと同じロジックで算出
+func _calculate_actual_damage_to_defender(
+	attacker_ap: int, attacker_hp: int, attacker_attack_count: int,
+	defender_ap: int, defender_hp: int, defender_attack_count: int,
+	attack_order: String,
+	attacker_reflect: Dictionary, defender_reflect: Dictionary,
+	defender_damage_reduction: float
+) -> int:
+	var attacker_current_hp = attacker_hp
+	var defender_current_hp = defender_hp
+
+	var attacker_total_damage = int(attacker_ap * attacker_attack_count * defender_damage_reduction)
+	var defender_total_damage = defender_ap * defender_attack_count
+
+	var defender_has_reflect = defender_reflect.get("has_reflect", false)
+	var defender_self_damage_ratio = defender_reflect.get("self_damage_ratio", 1.0)
+	var attacker_has_reflect = attacker_reflect.get("has_reflect", false)
+	var attacker_self_damage_ratio = attacker_reflect.get("self_damage_ratio", 1.0)
+	var attacker_reflect_ratio = attacker_reflect.get("reflect_ratio", 0.0)
+
+	if attack_order == "attacker_first":
+		if defender_has_reflect:
+			var reflect_damage = int(attacker_total_damage * defender_reflect.get("reflect_ratio", 0.0))
+			defender_current_hp -= int(attacker_total_damage * defender_self_damage_ratio)
+			attacker_current_hp -= reflect_damage
+		else:
+			defender_current_hp -= attacker_total_damage
+
+		if defender_current_hp > 0 and attacker_current_hp > 0:
+			if attacker_has_reflect:
+				var reflect_damage = int(defender_total_damage * attacker_reflect_ratio)
+				attacker_current_hp -= int(defender_total_damage * attacker_self_damage_ratio)
+				defender_current_hp -= reflect_damage
+			else:
+				attacker_current_hp -= defender_total_damage
+	else:
+		if attacker_has_reflect:
+			var reflect_damage = int(defender_total_damage * attacker_reflect_ratio)
+			attacker_current_hp -= int(defender_total_damage * attacker_self_damage_ratio)
+			defender_current_hp -= reflect_damage
+		else:
+			attacker_current_hp -= defender_total_damage
+
+		if attacker_current_hp > 0 and defender_current_hp > 0:
+			if defender_has_reflect:
+				var reflect_damage = int(attacker_total_damage * defender_reflect.get("reflect_ratio", 0.0))
+				defender_current_hp -= int(attacker_total_damage * defender_self_damage_ratio)
+				attacker_current_hp -= reflect_damage
+			else:
+				defender_current_hp -= attacker_total_damage
+
+	return max(0, defender_hp - defender_current_hp)
 
 ## 攻撃順序決定
 func _determine_attack_order(attacker, defender) -> String:

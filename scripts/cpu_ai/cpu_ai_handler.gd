@@ -168,7 +168,7 @@ func decide_summon(current_player, tile_element: String = "") -> void:
 		var card_element = card.get("element", "")
 		
 		# 属性一致/不一致で召喚確率を判定
-		var is_element_match = (card_element == tile_element or tile_element == "neutral")
+		var is_element_match = (card_element == tile_element or tile_element == "neutral" or card_element == "neutral")
 		var should_summon = _should_summon(is_element_match)
 		var summon_rate = _get_summon_rate_for_log(is_element_match)
 		print("[CPU AI] 召喚判定: card=%s, element=%s, tile=%s, match=%s, rate=%.2f" % [
@@ -605,7 +605,7 @@ func _has_matching_creature(current_player, tile_element: String) -> bool:
 		var can_summon_element = disable_cannot_summon or hand_utils.check_cannot_summon(card_data, tile_element)
 		var can_summon = can_summon_lands and can_summon_element
 		
-		if creature_element == tile_element or tile_element == "neutral":
+		if creature_element == tile_element or tile_element == "neutral" or creature_element == "neutral":
 			if can_afford and can_summon:
 				return true
 	
