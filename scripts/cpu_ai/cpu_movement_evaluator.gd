@@ -321,68 +321,108 @@ func _get_next_tile_simulated(current_tile: int, came_from: int, player_id: int,
 
 
 ## 分岐で最良の選択肢を選ぶ（再帰的に評価）
+## CPボーナス・EPボーナスも考慮して選択（decide_branch_choiceと同じロジック）
 ## 返り値: { tile: int, skipped_cp_direction: bool }
 func _select_best_branch_choice(choices: Array, player_id: int, remaining_steps: int, came_from: int) -> Dictionary:
 	var result = {
 		"tile": choices[0] if not choices.is_empty() else -1,
 		"skipped_cp_direction": false
 	}
-	
+
 	if choices.is_empty():
 		result.tile = -1
 		return result
-	
+
 	if choices.size() == 1:
 		result.tile = choices[0]
 		return result
-	
-	var best_choice = choices[0]
-	var best_score = -999999
-	
-	# 各選択肢のスコアを計算
+
+	# 各選択肢のbase scoreを計算
 	var choice_scores = {}
 	for choice in choices:
-		# 残り歩数で停止する位置を評価
 		var eval_result = evaluate_path(choice, remaining_steps, player_id, came_from)
-		var score = eval_result.score
-		choice_scores[choice] = score
-		
-		if score > best_score:
-			best_score = score
-			best_choice = choice
-	
+		choice_scores[choice] = eval_result.score
+
 	# CP方向を判定（checkpoint_calculatorがあれば）
-	var cp_direction_tile = -1
+	var nearest_cp_tiles = []
+	var nearest_cp_distance = 9999
 	if checkpoint_calculator and came_from >= 0:
 		var visited = _get_visited_checkpoints(player_id)
-		
+
 		# 分岐タイル（came_from）がCPなら除外
 		var branch_cp = _get_checkpoint_id_at_tile(came_from)
 		if branch_cp != "" and branch_cp not in visited:
 			if typeof(visited) != TYPE_ARRAY or visited.is_read_only():
 				visited = visited.duplicate()
 			visited.append(branch_cp)
-		
+
 		# 各方向の最短CP距離を比較
-		var nearest_cp_distance = 9999
 		for choice in choices:
+			var cp_dist = 9999
 			if checkpoint_calculator.is_branch_tile(came_from):
 				var cp_result = checkpoint_calculator.get_directional_nearest_checkpoint(came_from, choice, visited)
-				if cp_result.distance < nearest_cp_distance:
-					nearest_cp_distance = cp_result.distance
-					cp_direction_tile = choice
+				cp_dist = cp_result.distance
 			else:
 				var cp_result = checkpoint_calculator.get_nearest_unvisited_checkpoint(choice, visited)
-				if cp_result.distance < nearest_cp_distance:
-					nearest_cp_distance = cp_result.distance
-					cp_direction_tile = choice
-	
+				cp_dist = cp_result.distance
+
+			if cp_dist < nearest_cp_distance:
+				nearest_cp_distance = cp_dist
+				nearest_cp_tiles = [choice]
+			elif cp_dist == nearest_cp_distance and cp_dist < 9999:
+				nearest_cp_tiles.append(choice)
+
+	# CPボーナス・EPボーナスを加算して最終スコアを計算
+	var current_magic = _get_player_magic(player_id)
+	var final_scores = {}
+	for choice in choices:
+		var final_score = choice_scores[choice]
+		if choice in nearest_cp_tiles:
+			final_score += SCORE_CHECKPOINT_DIRECTION_BONUS
+			final_score += current_magic
+		final_scores[choice] = final_score
+
+	# 最高スコアの選択肢を選択
+	var best_choice = choices[0]
+	var best_score = -999999
+	for choice in final_scores:
+		if final_scores[choice] > best_score:
+			best_score = final_scores[choice]
+			best_choice = choice
+
 	# 選択した方向がCP方向でない場合、フラグを立てる
+	# ただし、行き止まりCPの場合はペナルティ対象外（周回できないため）
+	var cp_direction_tile = nearest_cp_tiles[0] if not nearest_cp_tiles.is_empty() else -1
 	if cp_direction_tile >= 0 and best_choice != cp_direction_tile:
-		result.skipped_cp_direction = true
-	
+		if not _is_dead_end_cp_direction(came_from, cp_direction_tile):
+			result.skipped_cp_direction = true
+
 	result.tile = best_choice
 	return result
+
+
+## CP方向が行き止まり（スパー先端）かどうかを判定
+## 行き止まりCPは周回に組み込まれていないため、スキップペナルティ対象外
+func _is_dead_end_cp_direction(branch_tile: int, cp_direction_tile: int) -> bool:
+	if not checkpoint_calculator:
+		return false
+
+	# CP方向に進んだ場合の最短CPタイルを特定
+	var visited = []  # 空で全CP対象
+	var cp_result = checkpoint_calculator.get_directional_nearest_checkpoint(branch_tile, cp_direction_tile, visited)
+	var cp_id = cp_result.checkpoint_id
+	if cp_id == "":
+		return false
+
+	# そのCPのタイルを取得してconnections数を確認
+	var cp_tiles = checkpoint_calculator.checkpoints.get(cp_id, [])
+	for cp_tile_index in cp_tiles:
+		if movement_controller and movement_controller.tile_nodes.has(cp_tile_index):
+			var cp_tile = movement_controller.tile_nodes[cp_tile_index]
+			if cp_tile.connections and cp_tile.connections.size() <= 1:
+				return true  # connections が1つ以下 = 行き止まり
+
+	return false
 
 
 # =============================================================================
@@ -429,8 +469,12 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 	
 	# 空き地
 	if owner_id == -1:
+		# Blankタイルはどの属性でも配置可能なので属性一致扱い
+		var tile_type = tile_info.get("tile_type", "")
+		if tile_type == "blank" and not summonable_elements.is_empty():
+			return SCORE_STOP_EMPTY_ELEMENT_MATCH
 		# 召喚可能かチェック
-		if tile_element in summonable_elements:
+		elif tile_element in summonable_elements:
 			return SCORE_STOP_EMPTY_ELEMENT_MATCH
 		elif not summonable_elements.is_empty():
 			# 属性不一致だが召喚可能なクリーチャーはある
@@ -475,7 +519,10 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 			score -= toll
 		# 空き地
 		elif owner_id == -1:
-			if tile_element in summonable_elements:
+			# Blankタイルはどの属性でも配置可能なので属性一致扱い
+			if tile_type == "blank" and not summonable_elements.is_empty():
+				score += SCORE_STOP_EMPTY_ELEMENT_MATCH
+			elif tile_element in summonable_elements:
 				score += SCORE_STOP_EMPTY_ELEMENT_MATCH
 			elif not summonable_elements.is_empty():
 				score += SCORE_STOP_EMPTY_ELEMENT_MISMATCH
@@ -777,7 +824,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	# 最短CP方向を見つける（同距離の場合は複数）
 	var nearest_cp_distance = 9999
 	var nearest_cp_tiles = []  # 同距離のタイルを全て記録
-	
+
 	for tile_index in tile_scores:
 		var data = tile_scores[tile_index]
 		if data.cp_distance < nearest_cp_distance:
@@ -786,7 +833,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		elif data.cp_distance == nearest_cp_distance and data.cp_distance < 9999:
 			# 同距離のタイルを追加
 			nearest_cp_tiles.append(tile_index)
-	
+
 	# 最短CP方向にCPボーナス＋EPボーナスを加算
 	# 同距離の場合は両方にボーナスを付与
 	var final_scores = {}
