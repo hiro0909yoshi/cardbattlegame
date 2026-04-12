@@ -196,19 +196,20 @@ func draw_card_by_type(player_id: int, card_type: String) -> Dictionary:
 	return {"drawn": false, "card_name": "", "card_data": {}}
 
 
-## 手札全捨て+元枚数ドロー（リンカネーション用）
+## 手札全捨て+枚数+1ドロー（リンカネーション用）
 func discard_and_draw_plus(player_id: int) -> Array:
 	if not card_system_ref:
 		GameLogger.error("Card", "CardSystemが設定されていません")
 		return []
-	
+
 	var hand_size = card_system_ref.get_hand_size_for_player(player_id)
-	
+
 	for i in range(hand_size):
 		card_system_ref.discard_card(player_id, 0, "reincarnation")
-	
-	var drawn = card_system_ref.draw_cards_for_player(player_id, hand_size)
-	print("[リンカネーション] プレイヤー", player_id + 1, ": 手札入替 → ", drawn.size(), "枚ドロー")
+
+	var draw_count = hand_size + 1
+	var drawn = card_system_ref.draw_cards_for_player(player_id, draw_count)
+	print("[リンカネーション] プレイヤー", player_id + 1, ": 手札%d枚捨て → %d枚ドロー" % [hand_size, drawn.size()])
 	
 	return drawn
 

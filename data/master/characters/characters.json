@@ -523,7 +523,7 @@
 		  }
 		},
 		"summon_rate_match": 1.0,
-		"summon_rate_mismatch": 0.3,
+		"summon_rate_mismatch": 0.5,
 		"spell_use_rate": 1.0,
 		"dominio_use_rate": 0.9
 	  }
@@ -556,7 +556,7 @@
 		  }
 		},
 		"summon_rate_match": 1.0,
-		"summon_rate_mismatch": 0.5,
+		"summon_rate_mismatch": 0.6,
 		"spell_use_rate": 1.0,
 		"dominio_use_rate": 0.9
 	  }

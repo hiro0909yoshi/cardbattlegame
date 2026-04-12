@@ -528,7 +528,12 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 		callback.call(-1)
 		_finish_deck_card_selection()
 		return
-	
+
+	# CPUの場合は自動選択
+	if _is_cpu_player(current_player_id):
+		await _cpu_auto_select_deck_draw(player_id, callback)
+		return
+
 	# フィルターモードを設定（全カード選択可）
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = "destroy_any"
@@ -542,15 +547,15 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 	if ui_manager:
 		var magic = 999999
 		ui_manager.enable_card_selection(deck_card_selection_cards, magic, -1)
-	
+
 	# 入力ロックを解除（グローバルボタン対応）
 	if _unlock_input_cb.is_valid():
 		_unlock_input_cb.call()
-	
+
 	# ガイド表示
 	if _message_service:
 		_message_service.show_action_prompt("デッキから引くカードを選択")
-	
+
 	# 戻るボタンを登録（キャンセル可能に）
 	if _navigation_service:
 		_navigation_service.enable_navigation(
@@ -1068,6 +1073,38 @@ func _cpu_auto_select_deck_card(target_player_id: int, callback: Callable):
 
 	if _message_service:
 		await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
+
+	callback.call(best_index)
+	_finish_deck_card_selection()
+
+
+## CPU用: デッキカードから自動でカードを選択して手札に加える（オラクル用）
+func _cpu_auto_select_deck_draw(player_id: int, callback: Callable):
+	await get_tree().create_timer(0.5).timeout
+
+	if deck_card_selection_cards.is_empty():
+		callback.call(-1)
+		_finish_deck_card_selection()
+		return
+
+	# レートが最も高いカードを選択
+	var best_index = 0
+	var best_rate = CardRateEvaluator.get_rate(deck_card_selection_cards[0])
+	for i in range(1, deck_card_selection_cards.size()):
+		var card = deck_card_selection_cards[i]
+		var rate = CardRateEvaluator.get_rate(card)
+		if rate > best_rate:
+			best_rate = rate
+			best_index = i
+
+	var card_data = deck_card_selection_cards[best_index]
+	print("[CPU自動選択] デッキから: %s を引く (レート: %d)" % [card_data.get("name", "?"), best_rate])
+
+	# デッキからカードを手札に加える
+	_spell_draw.draw_from_deck_at_index(player_id, best_index)
+
+	if _message_service:
+		await _message_service.show_comment_and_wait("『%s』を引きました" % card_data.get("name", "?"))
 
 	callback.call(best_index)
 	_finish_deck_card_selection()

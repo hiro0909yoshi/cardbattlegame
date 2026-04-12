@@ -44,8 +44,10 @@ func initialize(board_sys, message_svc: MessageService, nav_svc: NavigationServi
 	_navigation_service = nav_svc
 	game_flow_manager = flow_mgr
 
-## マーカーアニメーション処理（_processから呼ばれる）
-func process(delta: float):
+## マーカーアニメーション処理
+func _process(delta: float):
+	if DebugSettings.disable_all_process:
+		return
 	if selection_marker and selection_marker.has_meta("rotating"):
 		TargetMarkerSystem._animate_marker(selection_marker, delta)
 

@@ -1004,6 +1004,10 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 	var target_info = {}
 	print("[SpellMysticArts]   target_type=%s (from effect_parsed)" % target_type)
 	
+	# mystic_art自体のeffect_parsedからaffects_hpを確認
+	var mystic_effect_parsed = mystic_art.get("effect_parsed", {})
+	var affects_hp = mystic_effect_parsed.get("affects_hp", false)
+
 	# spell_idがある場合はスペルデータからターゲット情報を取得
 	var spell_id = mystic_art.get("spell_id", -1)
 	if spell_id > 0:
@@ -1011,7 +1015,7 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 		if not spell_data.is_empty():
 			var effect_parsed = spell_data.get("effect_parsed", {})
 			target_type = effect_parsed.get("target_type", target_type)
-			
+
 			# target_info構造がある場合はそれを使用
 			if effect_parsed.has("target_info"):
 				target_info = effect_parsed.get("target_info", {})
@@ -1019,7 +1023,15 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 				# なければeffect_parsed直下から構築
 				var target_filter = effect_parsed.get("target_filter", "any")
 				target_info["target_filter"] = target_filter
-	
+
+			# スペルデータからもaffects_hpを確認
+			if effect_parsed.get("affects_hp", false):
+				affects_hp = true
+
+	# 堅牢チェック用にaffects_hpをtarget_infoにコピー
+	if affects_hp:
+		target_info["affects_hp"] = true
+
 	# ターゲット不要（none）または セルフターゲットは常に有効
 	if target_type == "none" or target_type == "self" or target_info.get("target_filter") == "self":
 		return true

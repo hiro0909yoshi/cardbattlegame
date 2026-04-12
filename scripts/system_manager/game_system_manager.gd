@@ -77,6 +77,7 @@ var players_container: Node
 var camera_3d: Camera3D
 var ui_layer: CanvasLayer
 var camera_controller: CameraController
+var _bankruptcy_info_panel_ui: BankruptcyInfoPanelUI = null
 
 # === 親ノード参照 ===
 var parent_node: Node
@@ -1603,7 +1604,7 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 			bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.connect(p_ui_manager.player_info_service.update_panels)
 	bankruptcy_handler_ref.bankruptcy_ui_card_info_shown.connect(
 		func(creature_data: Dictionary, tile_index: int):
-			p_ui_manager.show_card_info(creature_data, tile_index, false)
+			p_ui_manager.show_card_info_only(creature_data, tile_index)
 	)
 	bankruptcy_handler_ref.bankruptcy_ui_info_panels_hidden.connect(
 		func():
@@ -1612,11 +1613,11 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 
 	# Phase 8-C: BankruptcyInfoPanelUI を作成して接続
 	if ui_layer:
-		var bankruptcy_info_panel_ui = BankruptcyInfoPanelUI.new(ui_layer)
-		if not bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.is_connected(bankruptcy_info_panel_ui.show_panel):
-			bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.connect(bankruptcy_info_panel_ui.show_panel)
-		if not bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.is_connected(bankruptcy_info_panel_ui.hide_panel):
-			bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.connect(bankruptcy_info_panel_ui.hide_panel)
+		_bankruptcy_info_panel_ui = BankruptcyInfoPanelUI.new(ui_layer)
+		if not bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.is_connected(_bankruptcy_info_panel_ui.show_panel):
+			bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.connect(_bankruptcy_info_panel_ui.show_panel)
+		if not bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.is_connected(_bankruptcy_info_panel_ui.hide_panel):
+			bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.connect(_bankruptcy_info_panel_ui.hide_panel)
 	else:
 		GameLogger.warn("Init", "_connect_bankruptcy_signals: ui_layer が利用できません - BankruptcyInfoPanelUI を作成できません")
 

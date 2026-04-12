@@ -26,12 +26,11 @@ func show_panel(current_magic: int, land_value: int) -> void:
 
 	var viewport_size = _ui_layer.get_viewport().get_visible_rect().size
 
-	# サイズと位置
-	var panel_width = 280 * 4
-	var panel_height = 120 * 3
-	var margin = 30
-	var panel_x = viewport_size.x - panel_width - margin - 200 - 600 + 200 + 100
-	var panel_y = (viewport_size.y - panel_height) / 2 - 50 - 500
+	# サイズと位置（画面右上に表示）
+	var panel_width = 600
+	var panel_height = 160
+	var panel_x = viewport_size.x - panel_width - 15
+	var panel_y = 15
 
 	_panel.position = Vector2(panel_x, panel_y)
 	_panel.size = Vector2(panel_width, panel_height)
@@ -54,8 +53,8 @@ func show_panel(current_magic: int, land_value: int) -> void:
 	# 現在のEP
 	var current_label = Label.new()
 	current_label.text = "現在のEP: %dEP" % current_magic
-	current_label.position = Vector2(60, 60)
-	current_label.add_theme_font_size_override("font_size", 80)
+	current_label.position = Vector2(30, 20)
+	current_label.add_theme_font_size_override("font_size", 40)
 	if current_magic < 0:
 		current_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 	else:
@@ -66,8 +65,8 @@ func show_panel(current_magic: int, land_value: int) -> void:
 	var after_magic = current_magic + land_value
 	var after_label = Label.new()
 	after_label.text = "売却後: %dEP (+%dEP)" % [after_magic, land_value]
-	after_label.position = Vector2(60, 180)
-	after_label.add_theme_font_size_override("font_size", 80)
+	after_label.position = Vector2(30, 85)
+	after_label.add_theme_font_size_override("font_size", 40)
 	if after_magic >= 0:
 		after_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))
 	else:
