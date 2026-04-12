@@ -332,17 +332,21 @@ func _check_has_player_curse(context: Dictionary) -> bool:
 func _check_has_unvisited_gate(context: Dictionary) -> bool:
 	if not lap_system:
 		return false
-	
+
+	# 2ターン目まで使用しない（序盤の即使用を防止）
+	if game_flow_manager and game_flow_manager.get_current_turn() <= 2:
+		return false
+
 	var player_id = context.get("player_id", 0)
 	var player_state = lap_system.player_lap_state.get(player_id, {})
 	var required_checkpoints = lap_system.required_checkpoints
-	
+
 	# 未訪問ゲートをカウント
 	var unvisited_count = 0
 	for checkpoint in required_checkpoints:
 		if not player_state.get(checkpoint, false):
 			unvisited_count += 1
-	
+
 	# 未訪問が2つ以上あれば使用可能（1つだけだと1周完了を引き起こす）
 	return unvisited_count >= 2
 

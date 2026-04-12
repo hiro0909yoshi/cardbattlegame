@@ -433,6 +433,10 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			creature = tile_data.get("creature", tile_data.get("placed_creature", {}))
 
 	if creature.is_empty():
+		# プレイヤーターゲットの場合：刻印上書きスコアを計算（ポリシーで��効時のみ）
+		var target_player_id = target.get("player_id", -1)
+		if target_player_id >= 0 and _is_player_curse_overwrite_enabled():
+			return _calculate_player_curse_overwrite_score(player_id, target_player_id, curse_info)
 		# 空き土地の場合は専用スコア計算
 		return _calculate_empty_land_score_for_mystic(target, tile_data, mystic_data)
 
@@ -547,6 +551,66 @@ func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owne
 	print("[MysticAI] 刻印スコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
 	
 	return score
+
+
+## ポリシーでプレイヤー刻印上書きが有効かチェック
+func _is_player_curse_overwrite_enabled() -> bool:
+	if _context and _context.battle_policy:
+		return _context.battle_policy.player_curse_overwrite
+	return false
+
+
+## プレイヤー刻印の上書きスコアを計算
+func _calculate_player_curse_overwrite_score(cpu_id: int, target_player_id: int, curse_info: Dictionary) -> float:
+	var player_sys = _context.player_system if _context else null
+	if not player_sys:
+		return 0.0
+
+	if target_player_id < 0 or target_player_id >= player_sys.players.size():
+		return 0.0
+
+	var player = player_sys.players[target_player_id]
+	if not player:
+		return 0.0
+
+	var player_curse = player.curse if player.curse else {}
+	var curse_benefit = CpuCurseEvaluator.get_player_curse_benefit(player_curse)
+	var is_ally = player_sys.is_same_team(cpu_id, target_player_id)
+	var score = 0.0
+
+	if curse_benefit != 0:
+		if is_ally:
+			if curse_benefit > 0:
+				score = -300.0
+			else:
+				score = 150.0
+		else:
+			if curse_benefit > 0:
+				score = 150.0
+			else:
+				score = -300.0
+
+	print("[MysticAI] プレイヤー刻印スコア: player=%d, benefit=%d, is_ally=%s, score=%.1f" % [target_player_id, curse_benefit, str(is_ally), score])
+	return score
+
+
+## プレイヤー刻印ターゲットの中から最適なものを選択
+func _select_best_player_curse_target(targets: Array, cpu_id: int, curse_info: Dictionary) -> Dictionary:
+	if targets.is_empty():
+		return {}
+
+	var best_target = targets[0]
+	var best_score = -999.0
+
+	for target in targets:
+		var target_player_id = target.get("player_id", -1)
+		var score = _calculate_player_curse_overwrite_score(cpu_id, target_player_id, curse_info)
+		if score > best_score:
+			best_score = score
+			best_target = target
+
+	return best_target
+
 
 ## 旧互換
 func _select_best_target(targets: Array, mystic_data: Dictionary, context: Dictionary) -> Dictionary:
@@ -722,17 +786,24 @@ func _get_strategic_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 	var effect_parsed = mystic_data.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
 	var target_filter = effect_parsed.get("target_filter", "any")
-	
+
+	# 刻印アルカナアーツかどうか判定
+	var curse_info = _analyze_curse_mystic(mystic_data)
+
 	match target_type:
 		"player":
 			if target_filter == "enemy":
 				var enemies = _get_enemy_players(context)
-				if not enemies.is_empty():
-					return enemies[randi() % enemies.size()]
+				if enemies.is_empty():
+					return {}
+				# ポリシー有効 + 刻印の場合��コアベースで選択
+				if _is_player_curse_overwrite_enabled() and curse_info.get("is_curse", false):
+					return _select_best_player_curse_target(enemies, context.get("player_id", 0), curse_info)
+				return enemies[randi() % enemies.size()]
 			return {"type": "self", "player_id": context.player_id}
 		"self", "none":
 			return {"type": "self", "tile_index": context.get("caster_tile", -1)}
-	
+
 	return {"type": "self", "player_id": context.player_id}
 
 

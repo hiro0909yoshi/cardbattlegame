@@ -150,6 +150,10 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			creature = tile_data.get("creature", tile_data.get("placed_creature", {}))
 	
 	if creature.is_empty():
+		# プレイヤーターゲットの場合：刻印上書きスコアを計算（ポリシーで有効時のみ）
+		var target_player_id = target.get("player_id", -1)
+		if target_player_id >= 0 and _is_player_curse_overwrite_enabled():
+			return _calculate_player_curse_overwrite_score(player_id, target_player_id, curse_info)
 		# 空き土地の場合：配置するクリーチャーの属性と土地属性の一致をチェック
 		return _calculate_empty_land_score(target, tile_data, spell)
 	
@@ -293,6 +297,67 @@ func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owne
 	print("[SpellAI] 刻印スコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
 	
 	return score
+
+
+## プレイヤー刻印の上書きスコアを計算
+## 敵の有利な刻印を上書き → +150、自分の有利な刻印を上書き → -300
+func _calculate_player_curse_overwrite_score(cpu_id: int, target_player_id: int, curse_info: Dictionary) -> float:
+	if not player_system:
+		return 0.0
+
+	if target_player_id < 0 or target_player_id >= player_system.players.size():
+		return 0.0
+
+	var player = player_system.players[target_player_id]
+	if not player:
+		return 0.0
+
+	var player_curse = player.curse if player.curse else {}
+	var curse_benefit = CpuCurseEvaluator.get_player_curse_benefit(player_curse)
+	var is_ally = player_system.is_same_team(cpu_id, target_player_id)
+	var score = 0.0
+
+	if curse_benefit != 0:
+		if is_ally:
+			if curse_benefit > 0:
+				score = -300.0  # 自分/味方の有利な刻印を消したくない
+			else:
+				score = 150.0   # 不利な刻印を上書きしたい
+		else:
+			if curse_benefit > 0:
+				score = 150.0   # 敵の有利な刻印を上書きしたい
+			else:
+				score = -300.0  # 敵の不利な刻印を残したい
+
+	print("[SpellAI] プレイヤー刻印スコア: player=%d, benefit=%d, is_ally=%s, score=%.1f" % [target_player_id, curse_benefit, str(is_ally), score])
+
+	return score
+
+
+## プレイヤー刻印ターゲットの中から最適なものを選択
+func _select_best_player_curse_target(targets: Array, cpu_id: int, curse_info: Dictionary) -> Dictionary:
+	if targets.is_empty():
+		return {}
+
+	var best_target = targets[0]
+	var best_score = -999.0
+
+	for target in targets:
+		var target_player_id = target.get("player_id", -1)
+		var score = _calculate_player_curse_overwrite_score(cpu_id, target_player_id, curse_info)
+		if score > best_score:
+			best_score = score
+			best_target = target
+
+	print("[SpellAI] プレイヤー刻印ターゲット選択: best_player=%d, score=%.1f" % [best_target.get("player_id", -1), best_score])
+	return best_target
+
+
+## ポリシーでプレイヤー刻印上書きが有効かチェック
+func _is_player_curse_overwrite_enabled() -> bool:
+	if _context and _context.battle_policy:
+		return _context.battle_policy.player_curse_overwrite
+	return false
 
 
 ## スペルが刻印スペルかどうか判定し、有利/不利を返す
@@ -552,18 +617,30 @@ func get_strategic_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 	var target_type = effect_parsed.get("target_type", "")
 	var target_filter = effect_parsed.get("target_filter", "any")
 	
+	# 刻印スペルかどうか判定
+	var curse_info = _analyze_curse_spell(spell)
+
 	match target_type:
 		"player":
 			if target_filter == "enemy":
 				var enemies = get_enemy_players(context)
-				if not enemies.is_empty():
-					return enemies[randi() % enemies.size()]
+				if enemies.is_empty():
+					return {}
+				# ポリシー有効 + 刻印スペルの場合、上書きスコアで最適なターゲットを選択
+				if _is_player_curse_overwrite_enabled() and curse_info.get("is_curse", false):
+					return _select_best_player_curse_target(enemies, context.get("player_id", 0), curse_info)
+				return enemies[randi() % enemies.size()]
 			elif target_filter == "self":
 				return {"type": "self", "player_id": context.player_id}
 			else:
-				# any: ランダム
+				# any: ポリシー有効 + 刻印スペルの場合スコアベース、それ以外はランダム
+				if _is_player_curse_overwrite_enabled() and curse_info.get("is_curse", false):
+					var all_targets: Array[Dictionary] = []
+					all_targets.append({"type": "player", "player_id": context.get("player_id", 0)})
+					all_targets.append_array(get_enemy_players(context))
+					return _select_best_player_curse_target(all_targets, context.get("player_id", 0), curse_info)
 				if randf() < 0.5:
-					return {"type": "self", "player_id": context.player_id}
+					return {"type": "self", "player_id": context.get("player_id", 0)}
 				else:
 					var enemies = get_enemy_players(context)
 					if not enemies.is_empty():

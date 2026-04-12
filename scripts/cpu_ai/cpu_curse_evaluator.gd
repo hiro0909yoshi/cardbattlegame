@@ -50,6 +50,8 @@ const BENEFICIAL_PLAYER_CURSES: Array[String] = [
 	"protection",           # 結界
 	"life_force",           # 天使
 	"toll_share",           # 通行料共有
+	"spell_protection",     # 祝福（スペル対象にならない）
+	"restriction_release",  # 解放（制限無視）
 ]
 
 ## プレイヤーにとって不利な刻印

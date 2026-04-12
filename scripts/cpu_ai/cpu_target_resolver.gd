@@ -5,6 +5,7 @@ extends RefCounted
 
 ## 刻印判別クラス
 const CurseEvaluator = preload("res://scripts/cpu_ai/cpu_curse_evaluator.gd")
+const CardRateEvaluatorScript = preload("res://scripts/cpu_ai/card_rate_evaluator.gd")
 
 ## 参照
 var board_analyzer: CPUBoardAnalyzer = null
@@ -836,18 +837,21 @@ func _get_enemies_with_item_or_spell(context: Dictionary) -> Array:
 	for i in range(player_count):
 		if player_system.is_same_team(player_id, i):
 			continue
-		
+
 		var hand = card_system.get_all_cards_for_player(i)
 		var has_target_card = false
 		for card in hand:
 			var card_type = card.get("type", "")
 			if card_type == "item" or card_type == "spell":
-				has_target_card = true
-				break
-		
+				# レート60以上のカードのみ対象（低価値カードの変換を防止）
+				var rate = CardRateEvaluatorScript.get_rate(card)
+				if rate >= 60:
+					has_target_card = true
+					break
+
 		if has_target_card:
 			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
-	
+
 	return results
 
 ## スペルを持つ敵プレイヤーを取得（セフト用）
@@ -983,12 +987,24 @@ func filter_curse_spell_targets(curse_is_beneficial: bool, targets: Array, conte
 	for target in targets:
 		var creature = target.get("creature", {})
 		if creature.is_empty():
-			filtered.append(target)  # クリーチャー以外はそのまま
+			# プレイヤー対象の刻印判定
+			var target_player_id = target.get("player_id", -1)
+			if target_player_id >= 0:
+				if curse_is_beneficial:
+					# 有利な刻印 → 自分/味方に付ける
+					if player_system and player_system.is_same_team(player_id, target_player_id):
+						filtered.append(target)
+				else:
+					# 不利な刻印 → 敵に付ける
+					if not player_system or not player_system.is_same_team(player_id, target_player_id):
+						filtered.append(target)
+			else:
+				filtered.append(target)  # player_idがない場合はそのまま
 			continue
-		
+
 		var tile_index = target.get("tile_index", -1)
 		var owner_id = _get_tile_owner(tile_index)
-		
+
 		if curse_is_beneficial:
 			# 有利な刻印を付ける場合
 			if CpuCurseEvaluator.is_valid_beneficial_curse_target(player_id, owner_id, creature, player_system):

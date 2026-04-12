@@ -62,6 +62,9 @@ var spell_use_rate: float = 1.0
 # ドミニオコマンド使用確率（1.0 = 必ず使う、0.0 = 使わない）
 var dominio_use_rate: float = 1.0
 
+# プレイヤー刻印上書き判断（敵の有利な刻印を上書きする）
+var player_curse_overwrite: bool = false
+
 # =============================================================================
 # 初期化
 # =============================================================================
@@ -124,6 +127,10 @@ func load_from_json(policy_data: Dictionary) -> void:
 	# ドミニオコマンド使用確率
 	if policy_data.has("dominio_use_rate"):
 		dominio_use_rate = float(policy_data["dominio_use_rate"])
+
+	# プレイヤー刻印上書き
+	if policy_data.has("player_curse_overwrite"):
+		player_curse_overwrite = bool(policy_data["player_curse_overwrite"])
 
 # =============================================================================
 # 抽選ロジック

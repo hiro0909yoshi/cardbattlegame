@@ -294,6 +294,45 @@ func setup_systems(...):
         battle_policy = existing_policy
 ```
 
+## スペル・アルカナアーツ関連ポリシー
+
+### プレイヤー刻印上書き（player_curse_overwrite）
+
+| 設定 | JSONキー | デフォルト | 説明 |
+|------|----------|-----------|------|
+| プレイヤー刻印上書き | `player_curse_overwrite` | `false` | 敵プレイヤーの有利な刻印を上書きする判断を有効化 |
+
+#### 機能
+
+有効時、CPUが刻印スペル/アルカナアーツを使用する際にプレイヤーの既存刻印を評価し、ターゲット選択を最適化する。
+
+- **敵の有利な刻印（dice_fixed等）を上書き** → スコア +150（優先ターゲット）
+- **敵の不利な刻印を上書き** → スコア -300（避ける）
+- **自分/味方の有利な刻印を上書き** → スコア -300（避ける）
+- **自分/味方の不利な刻印を上書き** → スコア +150（優先ターゲット）
+
+#### 対象
+
+- `cpu_spell_target_selector.gd` の `get_strategic_target()`、`_calculate_target_score()`
+- `cpu_mystic_arts_ai.gd` の `_get_strategic_target()`、`_calculate_target_score()`
+
+#### 適用キャラクター
+
+3-8 ゴーレム以降のキャラクターに設定。序盤キャラクターはデフォルト `false` のため影響なし。
+
+#### JSON設定例
+
+```json
+{
+  "battle_policy": {
+    "attack": { ... },
+    "defense": { ... },
+    "spell_use_rate": 1.0,
+    "player_curse_overwrite": true
+  }
+}
+```
+
 ## 今後の拡張予定
 
 - [ ] 複数CPU対応（現在は最初の敵のみ）
