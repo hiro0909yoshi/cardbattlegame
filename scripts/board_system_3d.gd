@@ -296,6 +296,15 @@ func set_tile_owner(tile_index: int, owner_id: int):
 
 func place_creature(tile_index: int, creature_data: Dictionary, player_id: int = -1):
 	"""クリーチャーを配置し、スキルインデックスを更新"""
+	# Blankタイルの場合、クリーチャーの属性に変化
+	if tile_nodes.has(tile_index):
+		var tile = tile_nodes[tile_index]
+		if tile.tile_type == "blank":
+			var creature_element = creature_data.get("element", "")
+			if creature_element != "":
+				change_tile_terrain(tile_index, creature_element)
+				print("[BoardSystem3D] Blankタイル → %s に変化: タイル%d" % [creature_element, tile_index])
+
 	tile_data_manager.place_creature(tile_index, creature_data)
 
 	# player_idが指定されていない場合、タイルの所有者から取得

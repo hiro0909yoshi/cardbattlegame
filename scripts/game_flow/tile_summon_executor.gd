@@ -159,7 +159,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		card_system.use_card_for_player(current_player_index, card_index)
 		player_system.add_magic(current_player_index, -cost)
 		
-		# 土地取得とクリーチャー配置
+		# 土地取得とクリーチャー配置（Blankタイルの属性変化はplace_creature内で自動処理）
 		board_system.set_tile_owner(target_tile, current_player_index)
 		board_system.place_creature(target_tile, card_data)
 		

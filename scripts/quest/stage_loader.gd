@@ -23,7 +23,8 @@ const TILE_SCENES = {
 	"MagicStone": preload("res://scenes/Tiles/MagicStoneTile.tscn"),
 	"Magic": preload("res://scenes/Tiles/MagicTile.tscn"),
 	"Base": preload("res://scenes/Tiles/SpecialBaseTile.tscn"),
-	"Branch": preload("res://scenes/Tiles/BranchTile.tscn")
+	"Branch": preload("res://scenes/Tiles/BranchTile.tscn"),
+	"Blank": preload("res://scenes/Tiles/BlankTile.tscn")
 }
 
 # パス定数

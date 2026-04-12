@@ -420,6 +420,13 @@ static func execute_creature_move(
 		creature_data.erase("curse")
 		print("[MovementHelper] 刻印消滅（移動）: ", curse_name)
 	
+	# Blankタイルの場合、クリーチャーの属性に変化
+	if to_tile_node.tile_type == "blank":
+		var elem = creature_data.get("element", "")
+		if elem != "":
+			board_system.change_tile_terrain(to_tile, elem)
+			to_tile_node = board_system.tile_nodes.get(to_tile, to_tile_node)
+
 	# 移動先に配置（3Dカードも作成される）
 	to_tile_node.place_creature(creature_data)
 	to_tile_node.owner_id = from_tile_node.owner_id

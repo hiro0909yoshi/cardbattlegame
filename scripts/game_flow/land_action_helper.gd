@@ -380,8 +380,14 @@ static func confirm_move(handler, dest_tile_index: int):
 			
 			# 移動先にコピーを配置（刻印除去済み）
 			var copy_data = split_result["copy"]
+			# Blankタイルの場合、クリーチャーの属性に変化
+			if dest_tile.tile_type == "blank":
+				var elem = copy_data.get("element", "")
+				if elem != "":
+					handler.board_system.change_tile_terrain(dest_tile_index, elem)
+					dest_tile = handler.board_system.tile_nodes.get(dest_tile_index, dest_tile)
 			dest_tile.place_creature(copy_data)
-			
+
 			print("[LandActionHelper] バウダーイーター分裂: 移動元に残留 + 移動先にコピー配置")
 		else:
 			# 通常移動: 移動による刻印消滅
@@ -389,7 +395,13 @@ static func confirm_move(handler, dest_tile_index: int):
 				var curse_name = creature_data["curse"].get("name", "不明")
 				creature_data.erase("curse")
 				print("[LandActionHelper] 刻印消滅（移動）: ", curse_name)
-			
+
+			# Blankタイルの場合、クリーチャーの属性に変化
+			if dest_tile.tile_type == "blank":
+				var elem = creature_data.get("element", "")
+				if elem != "":
+					handler.board_system.change_tile_terrain(dest_tile_index, elem)
+					dest_tile = handler.board_system.tile_nodes.get(dest_tile_index, dest_tile)
 			# place_creature()を使って3Dカードも含めて正しく配置
 			dest_tile.place_creature(creature_data)
 		

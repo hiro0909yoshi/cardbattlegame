@@ -238,8 +238,8 @@ func level_up() -> bool:
 
 # ビジュアル更新
 func update_visual():
-	# 属性タイルの場合のみタイル本体の色を変更
-	if TileHelper.is_element_type(tile_type):
+	# 属性タイル・Blankタイルの場合のみタイル本体の色を変更
+	if TileHelper.is_element_type(tile_type) or tile_type == "blank":
 		# MeshInstance3Dの色を更新
 		if has_node("MeshInstance3D"):
 			var mesh = $MeshInstance3D
