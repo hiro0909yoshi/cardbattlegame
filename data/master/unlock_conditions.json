@@ -108,8 +108,8 @@
       "id": "c011",
       "type": "stage_clear",
       "requirement": { "stage_id": "stage_3_1" },
-      "unlock": ["character.witch"],
-      "notification": "ウィッチが使えるようになった!",
+      "unlock": ["character.witch", "map.new_1"],
+      "notification": "ウィッチとダイヤモンドクロスマップが解禁された!",
       "lock_description": "3-1クリアで解禁"
     },
     {

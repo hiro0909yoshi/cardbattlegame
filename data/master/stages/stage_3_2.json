@@ -2,7 +2,7 @@
   "id": "stage_3_2",
   "name": "凍てつく道",
   "description": "魔女とゴールドゴブリンが手を組んだ。",
-  "map_id": "map_branch_1",
+  "map_id": "map_new_1",
   "rule_preset": "standard",
   "max_turns": 40,
   "rule_overrides": {

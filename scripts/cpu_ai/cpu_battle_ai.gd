@@ -318,7 +318,13 @@ func evaluate_all_combinations_for_battle(
 			print("  [スキップ] %s: コスト不足" % creature.get("name", "?"))
 			result["creature_evaluations"].append(creature_eval)
 			continue
-		
+
+		# 土地条件チェック
+		if not hand_utils.check_lands_required(creature, current_player.id):
+			print("  [スキップ] %s: 土地条件未達" % creature.get("name", "?"))
+			result["creature_evaluations"].append(creature_eval)
+			continue
+
 		creature_eval["can_afford"] = true
 
 		print("  [評価中] %s (コスト: %d)" % [creature.get("name", "?"), creature_cost])
