@@ -99,6 +99,11 @@ func set_cpu_ai_handler(handler) -> void:
 ## チェックポイント距離が計算済みか
 var _checkpoint_distances_calculated: bool = false
 
+# 分岐回避カウンター: { "分岐タイル:方向タイル": 回避回数 }
+var _branch_avoidance_counts: Dictionary = {}
+# 前回の訪問済みCP数（CP取得時にカウンターリセット用）
+var _last_visited_cp_count: int = 0
+
 ## チェックポイント距離が未計算なら計算（遅延初期化）
 func _ensure_checkpoint_distances_calculated():
 	if _checkpoint_distances_calculated:
@@ -337,11 +342,14 @@ func _select_best_branch_choice(choices: Array, player_id: int, remaining_steps:
 		result.tile = choices[0]
 		return result
 
-	# 各選択肢のbase scoreを計算
+	# 各選択肢のbase scoreを計算（回避軽減を適用）
 	var choice_scores = {}
 	for choice in choices:
 		var eval_result = evaluate_path(choice, remaining_steps, player_id, came_from)
-		choice_scores[choice] = eval_result.score
+		var score = eval_result.score
+		var avoidance = _get_avoidance_count(came_from, choice)
+		score = _apply_avoidance_reduction(score, avoidance)
+		choice_scores[choice] = score
 
 	# CP方向を判定（checkpoint_calculatorがあれば）
 	var nearest_cp_tiles = []
@@ -423,6 +431,51 @@ func _is_dead_end_cp_direction(branch_tile: int, cp_direction_tile: int) -> bool
 				return true  # connections が1つ以下 = 行き止まり
 
 	return false
+
+
+# =============================================================================
+# 分岐回避カウンター
+# =============================================================================
+
+## 回避回数を取得
+func _get_avoidance_count(branch_tile: int, direction_tile: int) -> int:
+	var key = "%d:%d" % [branch_tile, direction_tile]
+	return _branch_avoidance_counts.get(key, 0)
+
+## 回避回数をインクリメント（選ばなかった方向）
+func _increment_avoidance(branch_tile: int, avoided_tile: int) -> void:
+	var key = "%d:%d" % [branch_tile, avoided_tile]
+	_branch_avoidance_counts[key] = _branch_avoidance_counts.get(key, 0) + 1
+	print("[CPU回避カウンター] %s → %d回" % [key, _branch_avoidance_counts[key]])
+
+## 選択した方向の回避カウンターをリセット
+func _reset_avoidance(branch_tile: int, direction_tile: int) -> void:
+	var key = "%d:%d" % [branch_tile, direction_tile]
+	if _branch_avoidance_counts.has(key):
+		_branch_avoidance_counts.erase(key)
+
+## CP取得時に全カウンターをリセット
+func _check_and_reset_avoidance_on_cp(player_id: int) -> void:
+	var visited = _get_visited_checkpoints(player_id)
+	var current_count = visited.size()
+	if current_count > _last_visited_cp_count:
+		_branch_avoidance_counts.clear()
+		_last_visited_cp_count = current_count
+		print("[CPU回避カウンター] CP取得によりリセット（訪問CP: %d）" % current_count)
+
+## 回避回数に基づくペナルティ軽減率を取得（0.0〜1.0）
+## 0回: 1.0（フルペナルティ）、1回: 0.5、2回以上: 0.0（ペナルティ無視）
+func _get_avoidance_reduction_factor(avoidance_count: int) -> float:
+	if avoidance_count <= 0:
+		return 1.0
+	return max(0.0, 1.0 - avoidance_count * CPUAIConstantsScript.AVOIDANCE_REDUCTION_RATE)
+
+## base_scoreに回避軽減を適用（マイナススコアのみ軽減）
+func _apply_avoidance_reduction(base_score: float, avoidance_count: int) -> float:
+	if avoidance_count <= 0 or base_score >= 0:
+		return base_score
+	var factor = _get_avoidance_reduction_factor(avoidance_count)
+	return base_score * factor
 
 
 # =============================================================================
@@ -766,7 +819,10 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	
 	var current_tile = branch_tile if branch_tile >= 0 else get_player_current_tile(player_id)
 	_current_branch_tile = current_tile
-	
+
+	# CP取得による回避カウンターリセットチェック
+	_check_and_reset_avoidance_on_cp(player_id)
+
 	# 手持ちEPを取得（最短CP方向のボーナスとして使用）
 	var current_magic = _get_player_magic(player_id)
 	
@@ -814,8 +870,15 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			cp_distance = result.distance
 			cp_id = result.checkpoint_id
 		
+		# 回避カウンターによるペナルティ軽減を適用
+		var avoidance = _get_avoidance_count(current_tile, tile_index)
+		var original_base = base_score
+		base_score = _apply_avoidance_reduction(base_score, avoidance)
+
 		tile_scores[tile_index] = {
 			"base_score": base_score,
+			"original_base": original_base,
+			"avoidance_count": avoidance,
 			"cp_distance": cp_distance,
 			"cp_id": cp_id,
 			"stop_tile": eval_result.stop_tile
@@ -896,6 +959,13 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			# 他にプラスの方向がある → そちらを選択
 			selected_tile = best_other_tile
 	
+	# 回避カウンター更新（選ばなかった方向をインクリメント、選んだ方向をリセット）
+	for tile_index in available_tiles:
+		if tile_index == selected_tile:
+			_reset_avoidance(current_tile, tile_index)
+		else:
+			_increment_avoidance(current_tile, tile_index)
+
 	# デバッグ出力
 	print("[CPU分岐決定] タイル%d (残り%d歩):" % [current_tile, remaining_steps])
 	for tile_index in available_tiles:
@@ -903,7 +973,10 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var is_cp_dir = tile_index in nearest_cp_tiles
 		var cp_bonus = SCORE_CHECKPOINT_DIRECTION_BONUS if is_cp_dir else 0
 		var magic_bonus = current_magic if is_cp_dir else 0
-		
+		var avoidance_info = ""
+		if data.avoidance_count > 0:
+			avoidance_info = " [回避%d回: %.0f→%.0f]" % [data.avoidance_count, data.original_base, data.base_score]
+
 		# 着地点（stop_tile）の情報を取得
 		var stop_tile = data.get("stop_tile", -1)
 		if stop_tile < 0:
@@ -915,8 +988,8 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var stop_toll = 0
 		if not player_system.is_same_team(player_id, stop_tile_owner) and stop_tile_owner >= 0:
 			stop_toll = calculate_toll(stop_tile)
-		
-		print("  →方向%d→着地%d: base=%.0f(owner=%d, toll=%d, creature=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
+
+		print("  →方向%d→着地%d: base=%.0f(owner=%d, toll=%d, creature=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s%s" % [
 			tile_index,
 			stop_tile,
 			data.base_score,
@@ -927,9 +1000,10 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			magic_bonus,
 			final_scores[tile_index],
 			data.cp_distance,
+			avoidance_info,
 			" ★" if tile_index == selected_tile else ""
 		])
-	
+
 	_current_branch_tile = -1
 	return selected_tile
 
