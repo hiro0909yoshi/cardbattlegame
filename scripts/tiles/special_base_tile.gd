@@ -116,8 +116,8 @@ func _get_cpu_special_tile_ai():
 func _get_spell_creature_place():
 	if _game_flow_manager and "spell_phase_handler" in _game_flow_manager:
 		var handler = _game_flow_manager.spell_phase_handler
-		if handler and handler.spell_creature_place:
-			return handler.spell_creature_place
+		if handler and handler.spell_systems and handler.spell_systems.spell_creature_place:
+			return handler.spell_systems.spell_creature_place
 	return null
 
 ## TargetSelectionHelperを取得

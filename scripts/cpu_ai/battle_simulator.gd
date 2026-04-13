@@ -330,6 +330,9 @@ func _create_participants(
 	var attacker_creature_data = attacker_data.duplicate(true)
 	if not attacker_item.is_empty():
 		attacker_creature_data["items"] = [attacker_item]
+		attacker_creature_data["equipped_item"] = attacker_item
+	else:
+		attacker_creature_data["equipped_item"] = {}
 	
 	var attacker = BattleParticipantScript.new(
 		attacker_creature_data,
@@ -363,6 +366,9 @@ func _create_participants(
 	var defender_creature_data = defender_data.duplicate(true)
 	if not defender_item.is_empty():
 		defender_creature_data["items"] = [defender_item]
+		defender_creature_data["equipped_item"] = defender_item
+	else:
+		defender_creature_data["equipped_item"] = {}
 	
 	var defender = BattleParticipantScript.new(
 		defender_creature_data,

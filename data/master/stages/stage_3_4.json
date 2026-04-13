@@ -2,7 +2,7 @@
   "id": "stage_3_4",
   "name": "氷の要塞",
   "description": "老賢者とファイターが守る氷の城塞。",
-  "map_id": "map_diamond_20",
+  "map_id": "map_new_2",
   "rule_preset": "standard",
   "max_turns": 40,
   "rule_overrides": {

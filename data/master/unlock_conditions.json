@@ -113,6 +113,14 @@
       "lock_description": "3-1クリアで解禁"
     },
     {
+      "id": "c015",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_3_3" },
+      "unlock": ["map.new_2"],
+      "notification": "新マップが使えるようになった!",
+      "lock_description": "3-3クリアで解禁"
+    },
+    {
       "id": "c012",
       "type": "purchase",
       "requirement": { "item_id": "character_dark_elf_pack", "currency": "gold", "price": 50000 },

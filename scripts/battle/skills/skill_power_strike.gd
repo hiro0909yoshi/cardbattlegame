@@ -112,14 +112,15 @@ static func apply_normal_power_strike(participant, context: Dictionary, silent: 
 	if condition_checker.check_power_strike(participant.creature_data, context):
 		var base_ap = participant.current_ap
 		var multiplier = 1.5  # デフォルトは1.5倍
-		
-		# ability_parsedから倍率を取得（将来的な拡張用）
+
+		# 条件を満たすpower_strikeエフェクトから倍率を取得
 		var effects = ability_parsed.get("effects", [])
 		for effect in effects:
 			if effect.get("effect_type") == "power_strike":
-				multiplier = effect.get("multiplier", 1.5)
-				break
-		
+				if condition_checker.evaluate_power_strike_conditions(effect, context):
+					multiplier = effect.get("multiplier", 1.5)
+					break
+
 		participant.current_ap = int(base_ap * multiplier)
 		if not silent:
 			print("【強化発動】", participant.creature_data.get("name", "?"), " AP: ", base_ap, " → ", participant.current_ap, " (×", multiplier, ")")

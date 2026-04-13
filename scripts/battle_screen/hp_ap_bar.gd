@@ -99,9 +99,11 @@ func _draw_hp_bar() -> void:
 	var is_dead = hp_data.get("current_hp", 0) <= 0
 	
 	# 各セグメントの現在残り値（実データから直接取得）
-	# マイナスのtemporary_bonus_hpはcurrent_hpに既に反映済み（スペクター、刻印等）
-	var green_remaining = 0 if is_dead else hp_data["current_hp"] + hp_data["item_bonus_hp"]
-	var cyan_remaining = 0 if is_dead else hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
+	var cyan_raw = 0 if is_dead else hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
+	var cyan_remaining = maxi(cyan_raw, 0)
+	# マイナスのtemporary_bonus_hpは緑セグメントから差し引く（自ドミニオ閾値ペナルティ等）
+	var cyan_deficit = mini(cyan_raw, 0)  # 負の値または0
+	var green_remaining = 0 if is_dead else maxi(hp_data["current_hp"] + hp_data["item_bonus_hp"] + cyan_deficit, 0)
 	var yellow_remaining = 0 if is_dead else hp_data["land_bonus_hp"]
 	
 	# 描画（左から右: 緑 → 水色 → 黄）
@@ -185,15 +187,15 @@ func _update_hp_label() -> void:
 		# 土地ボーナス（黄色セグメント）
 		var yellow_bonus = hp_data["land_bonus_hp"]
 		
-		# 現在値 = current_hp + ボーナス（マイナスのtemporary_bonus_hpはcurrent_hpに反映済み）
+		# 現在値 = current_hp + ボーナス（マイナスのtemporary_bonus_hpは緑セグメントから差し引き）
 		var current: int
 		if is_dead:
 			current = 0
 		else:
-			var temp_bonus = hp_data["temporary_bonus_hp"] if hp_data["temporary_bonus_hp"] > 0 else 0
 			current = hp_data["current_hp"] + hp_data["item_bonus_hp"] + \
-					  hp_data["resonance_bonus_hp"] + temp_bonus + \
+					  hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + \
 					  hp_data["spell_bonus_hp"] + hp_data["land_bonus_hp"]
+			current = maxi(current, 0)
 		
 		# 表示文字列を構築
 		var max_text = str(base_hp)

@@ -329,6 +329,9 @@ func start_turn():
 			# 移動完了後 → タイルアクション処理へスキップ
 			print("[GFM] 復帰: 移動完了済み → タイルアクション開始")
 			change_phase(GamePhase.TILE_ACTION)
+			# 人間プレイヤーの場合はドミニオコマンドボタンを表示
+			if not is_cpu_player(current_player.id) and _ui_show_dominio_btn_cb.is_valid():
+				_ui_show_dominio_btn_cb.call()
 			var current_tile = board_system_3d.get_player_tile(current_player.id) if board_system_3d else 0
 			if board_system_3d:
 				board_system_3d.process_tile_landing(current_tile)

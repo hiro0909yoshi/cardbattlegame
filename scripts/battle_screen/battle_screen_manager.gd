@@ -32,8 +32,15 @@ func _ready() -> void:
 ## バトルを開始
 func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_data = null):
 	if _is_battle_active:
-		GameLogger.warn("BattleUI", "重複検出: バトルが既にアクティブです (%s vs %s)" % [attacker_data.get("name", "?"), defender_data.get("name", "?")])
-		return
+		GameLogger.warn("BattleUI", "重複検出: 前回バトルを強制クリーンアップ (%s vs %s)" % [attacker_data.get("name", "?"), defender_data.get("name", "?")])
+		# 前回のバトル画面が残っている場合は強制クリーンアップ
+		if _battle_screen:
+			remove_child(_battle_screen)
+			if _battle_screen_pool:
+				_battle_screen_pool.return_instance(_battle_screen)
+			_battle_screen = null
+		_set_3d_scene_visible(true)
+		_is_battle_active = false
 	
 	_is_battle_active = true
 

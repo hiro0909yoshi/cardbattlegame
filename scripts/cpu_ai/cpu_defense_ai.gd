@@ -610,7 +610,10 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 	
 	# cannot_useチェックのためのフラグ確認
 	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-	
+
+	# 攻撃側が術攻撃かチェック（反射アイテムのフィルタ用）
+	var attacker_has_scroll = _is_scroll_attacker(attacker)
+
 	for i in range(hand.size()):
 		var card = hand[i]
 		if card.get("type", "") != "item":
@@ -618,6 +621,11 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 
 		# 巻物は防御時使用しない
 		if card.get("item_type", "") == "巻物":
+			continue
+
+		# 術攻撃に対して通常攻撃専用の反射アイテムはスキップ
+		if attacker_has_scroll and _is_normal_only_reflect_item(card):
+			print("[CPUDefenseAI] %s は術攻撃に無効のためスキップ" % card.get("name", "?"))
 			continue
 
 		# 敵のアイテム破壊対象ならスキップ（nullify_item_manipulation持ちアイテムは除外しない）
@@ -854,6 +862,37 @@ func _calculate_toll(tile_index: int) -> int:
 		return board_system.calculate_toll_with_curse(tile_index)
 	
 	return 0
+
+## 攻撃側が術攻撃かチェック
+func _is_scroll_attacker(attacker_data: Dictionary) -> bool:
+	var ability_parsed = attacker_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	for keyword in keywords:
+		if "術攻撃" in str(keyword):
+			return true
+	var effects = ability_parsed.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "scroll_attack":
+			return true
+	return false
+
+
+## アイテムが通常攻撃専用の反射アイテムか判定
+func _is_normal_only_reflect_item(card: Dictionary) -> bool:
+	var effect_parsed = card.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	var has_reflect = false
+	var has_other_effect = false
+	for effect in effects:
+		if effect.get("effect_type") == "reflect_damage":
+			var attack_types = effect.get("attack_types", [])
+			if "scroll" not in attack_types:
+				has_reflect = true
+		else:
+			has_other_effect = true
+	# 反射のみのアイテムで、術攻撃非対応ならtrue
+	return has_reflect and not has_other_effect
+
 
 ## 防御アイテム（防具・アクセサリ）の数をカウント
 func _count_defense_items_in_hand(player_id: int) -> int:

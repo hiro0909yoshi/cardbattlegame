@@ -23,10 +23,11 @@ func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
-	# 強化キーワードを探す
+	# 強化キーワードを探す（複数のpower_strikeエフェクトがある場合、いずれか1つでも条件を満たせばtrue）
 	for effect in effects:
 		if effect.get("effect_type") == "power_strike":
-			return _evaluate_power_strike_conditions(effect, battle_context)
+			if evaluate_power_strike_conditions(effect, battle_context):
+				return true
 	
 	# キーワードリストからも確認
 	var keywords = ability_parsed.get("keywords", [])
@@ -38,7 +39,7 @@ func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -
 	return false
 
 # 強化条件の評価
-func _evaluate_power_strike_conditions(effect: Dictionary, context: Dictionary) -> bool:
+func evaluate_power_strike_conditions(effect: Dictionary, context: Dictionary) -> bool:
 	var effect_conditions = effect.get("conditions", [])
 	
 	# 条件が空の場合は無条件発動

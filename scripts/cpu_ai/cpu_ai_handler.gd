@@ -168,7 +168,8 @@ func decide_summon(current_player, tile_element: String = "") -> void:
 		var card_element = card.get("element", "")
 		
 		# 属性一致/不一致で召喚確率を判定
-		var is_element_match = (card_element == tile_element or tile_element == "neutral" or card_element == "neutral")
+		# Blankタイル（空文字列）は全属性一致扱い
+		var is_element_match = (card_element == tile_element or tile_element == "neutral" or tile_element == "" or card_element == "neutral")
 		var should_summon = _should_summon(is_element_match)
 		var summon_rate = _get_summon_rate_for_log(is_element_match)
 		print("[CPU AI] 召喚判定: card=%s, element=%s, tile=%s, match=%s, rate=%.2f" % [
@@ -467,9 +468,13 @@ func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictio
 	var cmd_context = _build_territory_context(current_player, tile_info, "empty_land")
 	
 	# 属性一致クリーチャーがあれば召喚優先
+	# Blankタイル（無属性）は全属性一致扱い
 	var tile_element = tile_info.get("element", "")
+	var tile_type = tile_info.get("type", "")
+	if tile_type == "blank" or tile_element == "neutral" or tile_element == "":
+		return {"action": "summon"}
 	var has_matching_creature = _has_matching_creature(current_player, tile_element)
-	
+
 	if has_matching_creature:
 		return {"action": "summon"}
 	

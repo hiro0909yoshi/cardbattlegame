@@ -231,6 +231,7 @@ static func _build_board(board_system: BoardSystem3D) -> Array[Dictionary]:
 		var tile: BaseTile = board_system.tile_nodes[tile_index]
 		var tile_data: Dictionary = {
 			"index": tile_index,
+			"tile_type": tile.tile_type,
 			"owner_id": tile.owner_id,
 			"level": tile.level,
 			"down_state": tile.down_state,
@@ -420,6 +421,13 @@ static func _apply_board(board_data: Array, board_system: BoardSystem3D) -> bool
 			continue
 
 		var tile: BaseTile = board_system.tile_nodes[tile_index]
+
+		# 属性が変更されている場合はタイルを差し替え（スペルによる属性変更の復元）
+		var saved_tile_type: String = str(tile_save.get("tile_type", ""))
+		if not saved_tile_type.is_empty() and saved_tile_type != tile.tile_type:
+			board_system.change_tile_terrain(tile_index, saved_tile_type)
+			# change_tile_terrainでタイルノードが差し替わるため再取得
+			tile = board_system.tile_nodes[tile_index]
 
 		# オーナー
 		tile.owner_id = int(tile_save.get("owner_id", -1))
