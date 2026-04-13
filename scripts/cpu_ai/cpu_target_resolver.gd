@@ -164,6 +164,8 @@ func _check_target_condition_internal(target_condition: String, context: Diction
 		# 敵手札条件（enemy_hand用）
 		"has_item_or_spell":
 			return _get_enemies_with_item_or_spell(context)
+		"has_high_rate_item_or_spell":
+			return _get_enemies_with_high_rate_item_or_spell(context)
 		"has_spell":
 			return _get_enemies_with_spell(context)
 		"has_duplicate_cards":
@@ -825,8 +827,16 @@ func _get_self_player(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	return [{"type": "player", "player_id": player_id}]
 
-## アイテムまたはスペルを持つ敵プレイヤーを取得（シャッター、メタモルフォシス用）
+## アイテムまたはスペルを持つ敵プレイヤーを取得（シャッター用・レート制限なし）
 func _get_enemies_with_item_or_spell(context: Dictionary) -> Array:
+	return _get_enemies_with_item_or_spell_filtered(context, 0)
+
+## 高レートのアイテムまたはスペルを持つ敵プレイヤーを取得（メタモルフォシス用・レート60以上）
+func _get_enemies_with_high_rate_item_or_spell(context: Dictionary) -> Array:
+	return _get_enemies_with_item_or_spell_filtered(context, 60)
+
+## アイテムまたはスペルを持つ敵プレイヤーを取得（共通処理）
+func _get_enemies_with_item_or_spell_filtered(context: Dictionary, min_rate: int) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
 
@@ -843,9 +853,11 @@ func _get_enemies_with_item_or_spell(context: Dictionary) -> Array:
 		for card in hand:
 			var card_type = card.get("type", "")
 			if card_type == "item" or card_type == "spell":
-				# レート60以上のカードのみ対象（低価値カードの変換を防止）
+				if min_rate <= 0:
+					has_target_card = true
+					break
 				var rate = CardRateEvaluatorScript.get_rate(card)
-				if rate >= 60:
+				if rate >= min_rate:
 					has_target_card = true
 					break
 

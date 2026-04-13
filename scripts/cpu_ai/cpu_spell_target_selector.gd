@@ -517,6 +517,12 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 			var target_condition = cpu_rule.get("target_condition", "")
 			if target_condition == "self":
 				return {"type": "player", "player_id": context.player_id}
+			# 土地レベル系: 最高レベル土地を持つ敵を優先
+			if condition == "enemy_high_level":
+				var enemies = get_enemy_players_by_highest_land(context)
+				if not enemies.is_empty():
+					return enemies[0]
+				return {}
 			# デフォルト: 敵プレイヤー
 			var enemies = get_enemy_players(context)
 			if not enemies.is_empty():
@@ -953,6 +959,32 @@ func get_checkpoint_type_string(tile) -> String:
 # =============================================================================
 # ヘルパー関数
 # =============================================================================
+
+## 最高レベル土地を持つ敵プレイヤーを取得（土地レベル降順）
+func get_enemy_players_by_highest_land(context: Dictionary) -> Array:
+	var player_id = context.player_id
+	var results = []
+
+	if not player_system or not board_system:
+		return results
+
+	var tiles = board_system.get_all_tiles()
+	var _enemy_max_levels: Dictionary = {}
+
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id < 0 or player_system.is_same_team(player_id, owner_id):
+			continue
+		var level = tile.get("level", 1)
+		if level > _enemy_max_levels.get(owner_id, 0):
+			_enemy_max_levels[owner_id] = level
+
+	for enemy_id in _enemy_max_levels.keys():
+		results.append({"type": "player", "player_id": enemy_id, "max_land_level": _enemy_max_levels[enemy_id]})
+
+	results.sort_custom(func(a, b): return a.max_land_level > b.max_land_level)
+
+	return results
 
 ## 敵プレイヤー取得
 func get_enemy_players(context: Dictionary) -> Array:

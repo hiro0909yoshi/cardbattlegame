@@ -277,15 +277,15 @@ func test_discard_and_draw_plus():
 	assert_eq(old_hand_size, 3, "初期手札3枚")
 
 	var result = _spell_draw.discard_and_draw_plus(0)
-	assert_eq(result.size(), old_hand_size, "旧手札と同数ドロー")
-	assert_eq(_card_system.get_hand(0).size(), old_hand_size, "手札3枚")
+	assert_eq(result.size(), old_hand_size + 1, "旧手札+1枚ドロー")
+	assert_eq(_card_system.get_hand(0).size(), old_hand_size + 1, "手札4枚")
 
 
 ## 手札0枚 → 0枚ドロー
 func test_discard_and_draw_plus_empty():
 	_set_deck(0, [2016, 2023])
 	var result = _spell_draw.discard_and_draw_plus(0)
-	assert_eq(result.size(), 0, "手札0: ドロー0枚")
+	assert_eq(result.size(), 1, "手札0: +1枚ドロー")
 
 
 # ========================================

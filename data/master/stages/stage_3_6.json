@@ -2,7 +2,7 @@
   "id": "stage_3_6",
   "name": "永久凍土",
   "description": "ダークウィッチとオークの連携。",
-  "map_id": "map_cross_1",
+  "map_id": "map_new_3",
   "rule_preset": "standard",
   "max_turns": 40,
   "rule_overrides": {

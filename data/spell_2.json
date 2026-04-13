@@ -1442,7 +1442,7 @@
 			},
 			"cpu_rule": {
 				"pattern": "enemy_hand",
-				"target_condition": "has_item_or_spell",
+				"target_condition": "has_high_rate_item_or_spell",
 				"priority": "medium"
 			}
 		},

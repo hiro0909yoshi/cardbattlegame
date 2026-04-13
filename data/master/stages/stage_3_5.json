@@ -2,7 +2,7 @@
   "id": "stage_3_5",
   "name": "氷竜の領域",
   "description": "闇魔法を操るダークウィッチが現れる。",
-  "map_id": "map_branch_1",
+  "map_id": "map_new_3",
   "rule_preset": "standard",
   "max_turns": 40,
   "rule_overrides": {
