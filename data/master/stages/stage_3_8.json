@@ -2,7 +2,7 @@
   "id": "stage_3_8",
   "name": "氷河の覇者",
   "description": "氷河の守護者ゴーレムが立ちはだかる。ワールド3最終ステージ。",
-  "map_id": "map_cross_1",
+  "map_id": "map_new_4",
   "rule_preset": "standard",
   "max_turns": 40,
   "rule_overrides": {

@@ -1175,7 +1175,7 @@
 				]
 			},
 			"cpu_rule": {
-				"pattern": "immediate",
+				"pattern": "skip",
 				"priority": "low"
 			}
 		},
