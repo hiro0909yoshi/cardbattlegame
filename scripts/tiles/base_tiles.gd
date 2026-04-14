@@ -6,6 +6,7 @@ class_name BaseTile
 # 静的参照（全タイル共通）
 static var creature_manager: CreatureManager = null
 static var tile_info_display: TileInfoDisplay = null  # 通行料ラベル更新用
+static var top_renderer: TileTopRenderer = null  # 4属性タイル上面MultiMesh描画
 
 # エクスポート変数（Inspectorで設定可能）
 @export var tile_type: String = ""  # "fire", "water", "wind", "earth", "neutral"
@@ -82,6 +83,18 @@ func _ready():
 	
 	# 初期ビジュアル更新
 	update_visual()
+
+	# 4属性タイルの上面はMultiMeshで描画（位置確定後に登録）
+	if top_renderer and TileTopRenderer.MATERIALS.has(tile_type):
+		call_deferred("_register_top_renderer")
+
+func _register_top_renderer() -> void:
+	if top_renderer:
+		top_renderer.register(self, tile_type)
+
+func _exit_tree() -> void:
+	if top_renderer and TileTopRenderer.MATERIALS.has(tile_type):
+		top_renderer.unregister(self, tile_type)
 
 # プレイヤーがタイルに入った
 func _on_area_entered(body):
@@ -241,9 +254,11 @@ func update_visual():
 	# 属性タイル・Blankタイルの場合のみタイル本体の色を変更
 	if TileHelper.is_element_type(tile_type) or tile_type == "blank":
 		# MeshInstance3Dの色を更新
+		var mesh: MeshInstance3D = null
 		if has_node("MeshInstance3D"):
-			var mesh = $MeshInstance3D
+			mesh = $MeshInstance3D
 
+		if mesh:
 			# マテリアルを取得または作成
 			if not mesh.material_override:
 				mesh.material_override = StandardMaterial3D.new()

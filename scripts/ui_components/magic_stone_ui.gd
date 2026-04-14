@@ -42,58 +42,58 @@ func setup_ui():
 	
 	# メインパネル
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(2100, 1100)
+	panel.custom_minimum_size = Vector2(1220, 700)
 	add_child(panel)
-	
+
 	# パネルスタイル
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.1, 0.15, 0.95)
 	style.border_color = Color(0.3, 0.6, 0.8)
-	style.border_width_top = 6
-	style.border_width_bottom = 6
-	style.border_width_left = 6
-	style.border_width_right = 6
-	style.corner_radius_top_left = 20
-	style.corner_radius_top_right = 20
-	style.corner_radius_bottom_left = 20
-	style.corner_radius_bottom_right = 20
+	style.border_width_top = 4
+	style.border_width_bottom = 4
+	style.border_width_left = 4
+	style.border_width_right = 4
+	style.corner_radius_top_left = 16
+	style.corner_radius_top_right = 16
+	style.corner_radius_bottom_left = 16
+	style.corner_radius_bottom_right = 16
 	panel.add_theme_stylebox_override("panel", style)
-	
+
 	# マージン
 	var margin = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 30)
-	margin.add_theme_constant_override("margin_bottom", 30)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
 	panel.add_child(margin)
-	
+
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 20)
+	vbox.add_theme_constant_override("separation", 12)
 	margin.add_child(vbox)
-	
+
 	# ヘッダー（タイトル + 所持EP）
 	var header = HBoxContainer.new()
 	header.alignment = BoxContainer.ALIGNMENT_CENTER
-	header.add_theme_constant_override("separation", 100)
+	header.add_theme_constant_override("separation", 60)
 	vbox.add_child(header)
-	
+
 	title_label = Label.new()
 	title_label.text = "魔法石ショップ"
-	title_label.add_theme_font_size_override("font_size", 56)
+	title_label.add_theme_font_size_override("font_size", 36)
 	title_label.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
 	header.add_child(title_label)
-	
+
 	magic_label = Label.new()
 	magic_label.text = "所持EP: 0"
-	magic_label.add_theme_font_size_override("font_size", 44)
+	magic_label.add_theme_font_size_override("font_size", 30)
 	magic_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 	header.add_child(magic_label)
 	
 	# 石表示エリア
 	stones_container = HBoxContainer.new()
 	stones_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	stones_container.add_theme_constant_override("separation", 30)
+	stones_container.add_theme_constant_override("separation", 20)
 	vbox.add_child(stones_container)
 	
 	# 4属性のパネルを作成
@@ -105,18 +105,22 @@ func setup_ui():
 	# 閉じるボタン
 	close_button = Button.new()
 	close_button.text = "閉じる"
-	close_button.custom_minimum_size = Vector2(350, 90)
-	close_button.add_theme_font_size_override("font_size", 40)
+	close_button.custom_minimum_size = Vector2(260, 58)
+	close_button.add_theme_font_size_override("font_size", 27)
 	close_button.pressed.connect(_on_close_pressed)
-	
+
 	var btn_style = StyleBoxFlat.new()
 	btn_style.bg_color = Color(0.3, 0.3, 0.4)
-	btn_style.corner_radius_top_left = 15
-	btn_style.corner_radius_top_right = 15
-	btn_style.corner_radius_bottom_left = 15
-	btn_style.corner_radius_bottom_right = 15
+	btn_style.corner_radius_top_left = 8
+	btn_style.corner_radius_top_right = 8
+	btn_style.corner_radius_bottom_left = 8
+	btn_style.corner_radius_bottom_right = 8
 	close_button.add_theme_stylebox_override("normal", btn_style)
 	
+	var close_spacer = Control.new()
+	close_spacer.custom_minimum_size = Vector2(0, 40)
+	vbox.add_child(close_spacer)
+
 	var button_container = HBoxContainer.new()
 	button_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	button_container.add_child(close_button)
@@ -124,159 +128,159 @@ func setup_ui():
 
 func _create_stone_panel(element: String) -> Panel:
 	var stone_panel = Panel.new()
-	stone_panel.custom_minimum_size = Vector2(480, 850)
+	stone_panel.custom_minimum_size = Vector2(273, 470)
 	stone_panel.name = element + "_panel"
-	
+
 	var color = GC.ELEMENT_COLORS[element]
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(color.r * 0.2, color.g * 0.2, color.b * 0.2, 0.9)
 	panel_style.border_color = color
-	panel_style.border_width_top = 4
-	panel_style.border_width_bottom = 4
-	panel_style.border_width_left = 4
-	panel_style.border_width_right = 4
-	panel_style.corner_radius_top_left = 15
-	panel_style.corner_radius_top_right = 15
-	panel_style.corner_radius_bottom_left = 15
-	panel_style.corner_radius_bottom_right = 15
+	panel_style.border_width_top = 3
+	panel_style.border_width_bottom = 3
+	panel_style.border_width_left = 3
+	panel_style.border_width_right = 3
+	panel_style.corner_radius_top_left = 12
+	panel_style.corner_radius_top_right = 12
+	panel_style.corner_radius_bottom_left = 12
+	panel_style.corner_radius_bottom_right = 12
 	stone_panel.add_theme_stylebox_override("panel", panel_style)
-	
+
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 15)
+	vbox.add_theme_constant_override("separation", 8)
 	var inner_margin = MarginContainer.new()
 	inner_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	inner_margin.add_theme_constant_override("margin_top", 20)
-	inner_margin.add_theme_constant_override("margin_bottom", 20)
-	inner_margin.add_theme_constant_override("margin_left", 20)
-	inner_margin.add_theme_constant_override("margin_right", 20)
+	inner_margin.add_theme_constant_override("margin_top", 14)
+	inner_margin.add_theme_constant_override("margin_bottom", 14)
+	inner_margin.add_theme_constant_override("margin_left", 12)
+	inner_margin.add_theme_constant_override("margin_right", 12)
 	stone_panel.add_child(inner_margin)
 	inner_margin.add_child(vbox)
-	
+
 	# 石の名前
 	var name_label = Label.new()
 	name_label.name = "name_label"
 	name_label.text = ELEMENT_NAMES[element]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 44)
+	name_label.add_theme_font_size_override("font_size", 32)
 	name_label.add_theme_color_override("font_color", color)
 	vbox.add_child(name_label)
-	
+
 	# 現在価値
 	var value_label = Label.new()
 	value_label.name = "value_label"
 	value_label.text = "価値: 50EP"
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.add_theme_font_size_override("font_size", 40)
+	value_label.add_theme_font_size_override("font_size", 27)
 	value_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 	vbox.add_child(value_label)
-	
+
 	# 所持数
 	var owned_label = Label.new()
 	owned_label.name = "owned_label"
 	owned_label.text = "所持: 0個"
 	owned_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	owned_label.add_theme_font_size_override("font_size", 36)
+	owned_label.add_theme_font_size_override("font_size", 25)
 	owned_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	vbox.add_child(owned_label)
-	
+
 	# スペーサー
 	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(0, 30)
+	spacer.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(spacer)
-	
+
 	# 数量選択
 	var qty_container = HBoxContainer.new()
 	qty_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	qty_container.add_theme_constant_override("separation", 20)
+	qty_container.add_theme_constant_override("separation", 12)
 	vbox.add_child(qty_container)
-	
+
 	var minus_btn = Button.new()
 	minus_btn.name = "minus_btn"
 	minus_btn.text = "－"
-	minus_btn.custom_minimum_size = Vector2(90, 90)
-	minus_btn.add_theme_font_size_override("font_size", 50)
+	minus_btn.custom_minimum_size = Vector2(65, 60)
+	minus_btn.add_theme_font_size_override("font_size", 36)
 	minus_btn.pressed.connect(_on_qty_minus.bind(element))
 	qty_container.add_child(minus_btn)
-	
+
 	var qty_label = Label.new()
 	qty_label.name = "qty_label"
 	qty_label.text = "1"
-	qty_label.custom_minimum_size = Vector2(100, 90)
+	qty_label.custom_minimum_size = Vector2(60, 60)
 	qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	qty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	qty_label.add_theme_font_size_override("font_size", 52)
+	qty_label.add_theme_font_size_override("font_size", 36)
 	qty_container.add_child(qty_label)
-	
+
 	var plus_btn = Button.new()
 	plus_btn.name = "plus_btn"
 	plus_btn.text = "＋"
-	plus_btn.custom_minimum_size = Vector2(90, 90)
-	plus_btn.add_theme_font_size_override("font_size", 50)
+	plus_btn.custom_minimum_size = Vector2(65, 60)
+	plus_btn.add_theme_font_size_override("font_size", 36)
 	plus_btn.pressed.connect(_on_qty_plus.bind(element))
 	qty_container.add_child(plus_btn)
-	
+
 	# スペーサー（購入ボタン前）
 	var spacer2 = Control.new()
-	spacer2.custom_minimum_size = Vector2(0, 40)
+	spacer2.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(spacer2)
-	
+
 	# 購入ボタン
 	var buy_btn = Button.new()
 	buy_btn.name = "buy_btn"
 	buy_btn.text = "購入"
-	buy_btn.custom_minimum_size = Vector2(260, 90)
-	buy_btn.add_theme_font_size_override("font_size", 44)
+	buy_btn.custom_minimum_size = Vector2(195, 56)
+	buy_btn.add_theme_font_size_override("font_size", 27)
 	buy_btn.pressed.connect(_on_buy_pressed.bind(element))
-	
+
 	var buy_style = StyleBoxFlat.new()
 	buy_style.bg_color = Color(0.2, 0.5, 0.3)
-	buy_style.corner_radius_top_left = 12
-	buy_style.corner_radius_top_right = 12
-	buy_style.corner_radius_bottom_left = 12
-	buy_style.corner_radius_bottom_right = 12
+	buy_style.corner_radius_top_left = 8
+	buy_style.corner_radius_top_right = 8
+	buy_style.corner_radius_bottom_left = 8
+	buy_style.corner_radius_bottom_right = 8
 	buy_btn.add_theme_stylebox_override("normal", buy_style)
-	
+
 	var buy_container = HBoxContainer.new()
 	buy_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	buy_container.add_child(buy_btn)
 	vbox.add_child(buy_container)
-	
+
 	# 合計表示
 	var total_label = Label.new()
 	total_label.name = "total_label"
 	total_label.text = "合計: 50EP"
 	total_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	total_label.add_theme_font_size_override("font_size", 36)
+	total_label.add_theme_font_size_override("font_size", 25)
 	total_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 	vbox.add_child(total_label)
-	
+
 	# スペーサー（売却ボタン前）
 	var spacer3 = Control.new()
-	spacer3.custom_minimum_size = Vector2(0, 20)
+	spacer3.custom_minimum_size = Vector2(0, 6)
 	vbox.add_child(spacer3)
-	
+
 	# 売却ボタン
 	var sell_btn = Button.new()
 	sell_btn.name = "sell_btn"
 	sell_btn.text = "売却"
-	sell_btn.custom_minimum_size = Vector2(260, 90)
-	sell_btn.add_theme_font_size_override("font_size", 44)
+	sell_btn.custom_minimum_size = Vector2(195, 56)
+	sell_btn.add_theme_font_size_override("font_size", 27)
 	sell_btn.pressed.connect(_on_sell_pressed.bind(element))
-	
+
 	var sell_style = StyleBoxFlat.new()
 	sell_style.bg_color = Color(0.5, 0.3, 0.2)
-	sell_style.corner_radius_top_left = 12
-	sell_style.corner_radius_top_right = 12
-	sell_style.corner_radius_bottom_left = 12
-	sell_style.corner_radius_bottom_right = 12
+	sell_style.corner_radius_top_left = 8
+	sell_style.corner_radius_top_right = 8
+	sell_style.corner_radius_bottom_left = 8
+	sell_style.corner_radius_bottom_right = 8
 	sell_btn.add_theme_stylebox_override("normal", sell_style)
-	
+
 	var sell_container = HBoxContainer.new()
 	sell_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	sell_container.add_child(sell_btn)
 	vbox.add_child(sell_container)
-	
+
 	return stone_panel
 
 ## セットアップ
@@ -354,7 +358,7 @@ func _find_child_by_name(parent: Node, child_name: String) -> Node:
 func _center_panel():
 	if panel:
 		var viewport_size = get_viewport().get_visible_rect().size
-		panel.position = (viewport_size - panel.size) / 2 - Vector2(0, 150)
+		panel.position = (viewport_size - panel.size) / 2 - Vector2(0, 110)
 
 ## 数量マイナス
 func _on_qty_minus(element: String):

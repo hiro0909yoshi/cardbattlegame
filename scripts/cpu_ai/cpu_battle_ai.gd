@@ -235,8 +235,17 @@ func evaluate_all_combinations_for_battle(
 	var creatures = hand_utils.get_creatures_from_hand(current_player.id)
 	var items = hand_utils.get_items_from_hand(current_player.id)
 	
-	# 最初のクリーチャーを記録（aggressive用）
-	if not creatures.is_empty():
+	# ALWAYS_BATTLE用: 実際にバトル可能な（コスト&土地条件OK）最初のクリーチャーを選ぶ
+	for c in creatures:
+		var c_data = c.get("data", {})
+		if not hand_utils.can_afford_card(current_player, c["index"]):
+			continue
+		if not hand_utils.check_lands_required(c_data, current_player.id):
+			continue
+		result["first_creature_index"] = c["index"]
+		break
+	# フォールバック: どれも条件を満たさない場合は従来通り先頭
+	if result["first_creature_index"] == -1 and not creatures.is_empty():
 		result["first_creature_index"] = creatures[0]["index"]
 	
 	print("[CPU AI] バトル組み合わせ評価: クリーチャー%d体, アイテム%d個" % [creatures.size(), items.size()])

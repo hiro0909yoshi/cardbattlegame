@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://ccardbuy_tile"]
+[gd_scene load_steps=10 format=3 uid="uid://ccardbuy_tile"]
 
 [ext_resource type="Script" path="res://scripts/tiles/card_buy_tile.gd" id="1_card_buy"]
 [ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="2_frame"]
+[ext_resource type="Texture2D" uid="uid://dj8fhrenxf7oq" path="res://assets/images/tiles/card_back_color.png" id="3_card_back"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
 size = Vector3(1, 0.0951538, 1)
@@ -14,6 +15,15 @@ albedo_color = Color(0.2, 0.8, 0.3, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_card_buy"]
 size = Vector3(3.6, 0.5, 3.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_card_top"]
+albedo_color = Color(0.6, 1, 0.75, 1)
+albedo_texture = ExtResource("3_card_back")
+texture_filter = 3
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_card_top"]
+material = SubResource("StandardMaterial3D_card_top")
+size = Vector2(3.4, 3.4)
 
 [node name="CardBuyTile" type="StaticBody3D"]
 script = ExtResource("1_card_buy")
@@ -34,3 +44,7 @@ shape = SubResource("BoxShape3D_collision")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0628314, 0)
 material_override = SubResource("StandardMaterial3D_card_buy")
 mesh = SubResource("BoxMesh_card_buy")
+
+[node name="CardTopPlane" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.314, 0)
+mesh = SubResource("PlaneMesh_card_top")

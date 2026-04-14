@@ -134,7 +134,15 @@ func create_subsystems():
 		add_child(cpu_turn_processor)
 	else:
 		print("ERROR: CPUTurnProcessorクラスが読み込めません")
-	
+
+	# 4属性タイル上面のMultiMesh描画
+	var top_renderer = TileTopRenderer.new()
+	top_renderer.name = "TileTopRenderer"
+	add_child(top_renderer)
+	BaseTile.top_renderer = top_renderer
+	# 既に生成済みの属性タイルを遡って登録
+	top_renderer.register_existing_tiles(get_tree().root)
+
 	# シグナル接続
 	if not movement_controller.movement_started.is_connected(_on_movement_started):
 		movement_controller.movement_started.connect(_on_movement_started)
@@ -904,9 +912,9 @@ func get_spatial_neighbors(tile_index: int) -> Array:
 	return []
 
 ## 隣接味方土地があるか判定
-func has_adjacent_ally_land(tile_index: int, player_id: int, elements: Array = []) -> bool:
+func has_adjacent_ally_land(tile_index: int, player_id: int, _elements: Array = []) -> bool:
 	if tile_neighbor_system:
-		return tile_neighbor_system.has_adjacent_ally_land(tile_index, player_id, elements)
+		return tile_neighbor_system.has_adjacent_ally_land(tile_index, player_id, self)
 	return false
 
 # ============ tile_action_processor 委譲メソッド ============

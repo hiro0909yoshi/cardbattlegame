@@ -68,11 +68,13 @@ func _ready():
 	timer.timeout.connect(_update_stamina_display)
 	add_child(timer)
 
-	# ログインボーナスチェック
-	_check_login_bonus()
-
-	# クラッシュ復帰チェック
-	_check_crash_recovery()
+	# ログインボーナスチェック（表示後にクラッシュ復帰チェックを連鎖）
+	var login_dialog := _check_login_bonus()
+	if login_dialog:
+		login_dialog.confirmed.connect(_check_crash_recovery)
+		login_dialog.canceled.connect(_check_crash_recovery)
+	else:
+		_check_crash_recovery()
 
 	# デバッグ用：リセットボタン（後で削除）
 	if _reset_gold_button:
@@ -139,10 +141,10 @@ func _on_crash_recovery_canceled():
 
 
 ## ログインボーナスをチェックして表示
-func _check_login_bonus():
+func _check_login_bonus() -> AcceptDialog:
 	var rewards = GameData.check_login_bonus()
 	if rewards.is_empty():
-		return
+		return null
 
 	# 報酬があれば表示を更新してダイアログ表示
 	_update_user_info()
@@ -185,6 +187,7 @@ func _check_login_bonus():
 
 	add_child(dialog)
 	dialog.popup_centered()
+	return dialog
 
 
 ## 背景グラデーション設定（仮：透過テスト用）

@@ -148,7 +148,7 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 			# TileNeighborSystemで動的チェック
 			if "tile_neighbor_system" in board_system and board_system.tile_neighbor_system:
 				var result = board_system.has_adjacent_ally_land(
-					battle_tile, player_id, board_system
+					battle_tile, player_id, []
 				)
 				print("  → TileNeighborSystem判定: ", result)
 				return result

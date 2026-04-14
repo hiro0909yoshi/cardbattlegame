@@ -1,0 +1,4 @@
+[gd_resource type="PlaneMesh" load_steps=0 format=3 uid="uid://c7tileplane01"]
+
+[resource]
+size = Vector2(3.4, 3.4)

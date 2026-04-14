@@ -301,7 +301,7 @@ func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owne
 
 ## プレイヤー刻印の上書きスコアを計算
 ## 敵の有利な刻印を上書き → +150、自分の有利な刻印を上書き → -300
-func _calculate_player_curse_overwrite_score(cpu_id: int, target_player_id: int, curse_info: Dictionary) -> float:
+func _calculate_player_curse_overwrite_score(cpu_id: int, target_player_id: int, _curse_info: Dictionary) -> float:
 	if not player_system:
 		return 0.0
 
@@ -519,9 +519,9 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 				return {"type": "player", "player_id": context.player_id}
 			# 土地レベル系: 最高レベル土地を持つ敵を優先
 			if condition == "enemy_high_level":
-				var enemies = get_enemy_players_by_highest_land(context)
-				if not enemies.is_empty():
-					return enemies[0]
+				var high_level_enemies = get_enemy_players_by_highest_land(context)
+				if not high_level_enemies.is_empty():
+					return high_level_enemies[0]
 				return {}
 			# デフォルト: 敵プレイヤー
 			var enemies = get_enemy_players(context)

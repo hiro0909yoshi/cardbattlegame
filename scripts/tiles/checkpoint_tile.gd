@@ -29,6 +29,8 @@ func _load_sp_tile_model() -> void:
 	sp_node.name = "sp_tile%d" % tile_number
 	sp_node.transform = Transform3D(Basis(), Vector3(0, 0.0507739, 0))
 	add_child(sp_node)
+	# メッシュデータの準備を待ってから着色（即時だとsurface_get_arraysが空を返す場合がある）
+	await get_tree().process_frame
 	_colorize_sp_tile(sp_node)
 
 func _colorize_sp_tile(sp_node: Node) -> void:

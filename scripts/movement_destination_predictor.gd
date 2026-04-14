@@ -131,6 +131,13 @@ func _highlight_tile(tile_index: int):
 		_highlighted_destination_tiles.append(tile_index)
 
 
+## 指定タイル群をハイライト表示
+func highlight_destinations(destination_tiles: Array):
+	clear_destination_highlight()
+	for tile_index in destination_tiles:
+		_highlight_tile(tile_index)
+
+
 ## 到着予測ハイライトをクリア
 func clear_destination_highlight():
 	for tile_index in _highlighted_destination_tiles:

@@ -481,11 +481,11 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 
 	# 召喚カードをインデックスベースで除外（同IDカード2枚対応）
 	if _card_selection_service:
-		var hand = card_system_ref.get_all_cards_for_player(player_id)
+		var hand_for_exclude = card_system_ref.get_all_cards_for_player(player_id)
 		var summon_id = summon_creature.get("id", -1)
 		var exclude_idx = -1
-		for i in range(hand.size()):
-			if hand[i].get("id", -1) == summon_id:
+		for i in range(hand_for_exclude.size()):
+			if hand_for_exclude[i].get("id", -1) == summon_id:
 				exclude_idx = i
 				break
 		_card_selection_service.excluded_card_index = exclude_idx

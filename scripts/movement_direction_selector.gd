@@ -39,6 +39,9 @@ func show_direction_selection(directions: Array) -> int:
 	is_active = false
 	_clear_navigation()
 
+	# 到着予測ハイライトをクリア
+	controller.destination_predictor.clear_destination_highlight()
+
 	return result
 
 
@@ -54,6 +57,9 @@ func show_simple_direction_selection() -> int:
 	var result = await direction_selected
 	is_active = false
 	_clear_navigation()
+
+	# 到着予測ハイライトをクリア
+	controller.destination_predictor.clear_destination_highlight()
 
 	return result
 
@@ -81,15 +87,19 @@ func _update_ui():
 			if controller.board_system:
 				controller.board_system.focus_camera_slow(offset_pos, 0.5)
 
-	# 到着予想タイルに基づいて手札の配置制限表示を更新
+	# 到着予測ハイライト・手札の配置制限表示を更新
 	if player_id >= 0:
 		var ct = controller.player_tiles[player_id]
 		var first_tile = ct + selected_direction
+		var destinations: Array = []
 		if controller.current_remaining_steps > 1:
-			var destinations = controller.destination_predictor.predict_all_destinations(first_tile, controller.current_remaining_steps - 1, ct)
-			controller.destination_predictor.update_hand_restriction_for_destinations(destinations)
+			destinations = controller.destination_predictor.predict_all_destinations(first_tile, controller.current_remaining_steps - 1, ct)
 		else:
-			controller.destination_predictor.update_hand_restriction_for_destinations([first_tile])
+			destinations = [first_tile]
+		# 到着予測マーカー表示
+		controller.destination_predictor.highlight_destinations(destinations)
+		# 手札の配置制限表示
+		controller.destination_predictor.update_hand_restriction_for_destinations(destinations)
 
 
 # ナビゲーションボタンを設定

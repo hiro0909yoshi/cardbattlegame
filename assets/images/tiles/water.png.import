@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dj8fhrenxf7oq"
-path.s3tc="res://.godot/imported/card_back_color.png-5742c9063a6aa34f75794ed95c26dd6a.s3tc.ctex"
-path.etc2="res://.godot/imported/card_back_color.png-5742c9063a6aa34f75794ed95c26dd6a.etc2.ctex"
+uid="uid://ds0qrvb2j3wsy"
+path.s3tc="res://.godot/imported/water.png-d57887bf472d20d4b9c70b277b7a7a10.s3tc.ctex"
+path.etc2="res://.godot/imported/water.png-d57887bf472d20d4b9c70b277b7a7a10.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/images/tiles/card_back_color.png"
-dest_files=["res://.godot/imported/card_back_color.png-5742c9063a6aa34f75794ed95c26dd6a.s3tc.ctex", "res://.godot/imported/card_back_color.png-5742c9063a6aa34f75794ed95c26dd6a.etc2.ctex"]
+source_file="res://assets/images/tiles/water.png"
+dest_files=["res://.godot/imported/water.png-d57887bf472d20d4b9c70b277b7a7a10.s3tc.ctex", "res://.godot/imported/water.png-d57887bf472d20d4b9c70b277b7a7a10.etc2.ctex"]
 
 [params]
 

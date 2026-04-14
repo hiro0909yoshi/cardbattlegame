@@ -4,11 +4,11 @@
 	  "name": "テスト敵",
 	  "model_path": "res://scenes/Characters/Goblin.tscn",
 	  "portrait_path": "",
-	  "description": "開発テスト用。ALWAYS_BATTLE_LV2動作確認用。",
+	  "description": "開発テスト用。ALWAYS_BATTLE動作確認用。",
 	  "battle_policy": {
 		"attack": {
-		  "always_battle": 0.0,
-		  "always_battle_lv2": 1.0,
+		  "always_battle": 1.0,
+		  "always_battle_lv2": 0.0,
 		  "both_no_item": 0.0,
 		  "vs_enemy_item": 0.0,
 		  "never_battle": 0.0
