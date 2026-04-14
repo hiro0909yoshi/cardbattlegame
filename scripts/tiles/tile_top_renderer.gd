@@ -11,6 +11,7 @@ const MATERIALS: Dictionary = {
 	"earth": preload("res://scenes/Tiles/earth_tile_mat.tres"),
 	"wind": preload("res://scenes/Tiles/wind_tile_mat.tres"),
 	"neutral": preload("res://scenes/Tiles/neutral_tile_mat.tres"),
+	"blank": preload("res://scenes/Tiles/blank_tile_mat.tres"),
 }
 const TOP_Y_OFFSET: float = 0.314
 

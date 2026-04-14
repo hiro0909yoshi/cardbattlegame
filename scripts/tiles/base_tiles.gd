@@ -60,9 +60,7 @@ var down_state: bool = false  # ダウン状態（Phase 1-A追加）
 var frame_material: StandardMaterial3D = null  # プレイヤー色マテリアル
 var frame_original_material: Material = null  # 元のマテリアル保存用
 var frame_mesh_instance: MeshInstance3D = null  # 枠のMeshInstance3D参照
-var _blink_active: bool = false  # 点滅中フラグ
-var _blink_time: float = 0.0  # 点滅用タイマー
-var _blink_frame_counter: int = 0  # フレームスキップカウンター
+var _blink_frame_counter: int = 0  # フレームスキップカウンター（到着ハイライト用）
 
 # クリーチャーカード3D表示
 var creature_card_3d: Node3D = null  # 3Dカード表示ノード
@@ -282,111 +280,67 @@ func update_visual():
 	# 枠発光は全タイルで更新（属性タイル以外も含む）
 	_update_frame_glow()
 
-# 枠発光更新（所有者に応じて発光、ダウン状態で点灯/アクティブで点滅）
+# 枠発光更新（ダウン中=発光なし、アクティブ=常時発光、点滅なし）
 func _update_frame_glow():
-	# frameノードを検索
 	var frame_node = get_node_or_null("frame")
 	if not frame_node:
 		return
-	
+
 	# frameの子からMeshInstance3Dを取得（初回のみ）
 	if not frame_mesh_instance:
 		for child in frame_node.get_children():
 			if child is MeshInstance3D:
 				frame_mesh_instance = child
-				# 元のマテリアルを保存
 				if frame_mesh_instance.mesh and frame_mesh_instance.mesh.get_surface_count() > 0:
 					frame_original_material = frame_mesh_instance.mesh.surface_get_material(0)
 				break
-	
+
 	if not frame_mesh_instance:
 		return
-	
+
 	# プレイヤー色マテリアルを作成（初回のみ）
 	if not frame_material:
 		frame_material = StandardMaterial3D.new()
-	
-	if owner_id == -1:
-		# 未所有: 黒色マテリアルを明示設定（環境光反射による青色化を防止）
-		_stop_frame_blink()
-		frame_material.emission_enabled = false
-		frame_material.albedo_color = Color(0.02, 0.02, 0.02)
 		frame_material.metallic = 0.0
 		frame_material.roughness = 1.0
-		frame_mesh_instance.material_override = frame_material
+
+	# 到着予測ハイライト中は発光更新をスキップ（_processが優先制御）
+	if _destination_highlight_active:
+		return
+
+	if owner_id == -1 or down_state:
+		# 未所有 or ダウン: 色なし・発光なし
+		frame_material.emission_enabled = false
+		frame_material.emission = Color.BLACK
+		frame_material.emission_energy_multiplier = 0.0
+		frame_material.albedo_color = Color(0.02, 0.02, 0.02)
 	else:
-		# 所有者あり
+		# アクティブ: プレイヤー色で常時発光（点滅なし）
 		var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]
+		frame_material.albedo_color = player_color
 		frame_material.emission_enabled = true
-		
-		if down_state:
-			# ダウン状態: プレイヤー色で常時点灯、点滅停止
-			_stop_frame_blink()
-			frame_material.albedo_color = player_color
-			frame_material.emission = player_color.darkened(0.3)
-			frame_material.emission_energy_multiplier = 1.0
-			frame_mesh_instance.material_override = frame_material
-		else:
-			# アクティブ状態: 点滅開始
-			if not _blink_active:
-				_start_frame_blink()
+		frame_material.emission = player_color.darkened(0.3)
+		frame_material.emission_energy_multiplier = 1.0
 
-# 枠点滅開始
-func _start_frame_blink():
-	_blink_active = true
-	_blink_time = 0.0
-	set_process(true)
-
-# 枠点滅停止
-func _stop_frame_blink():
-	_blink_active = false
-	_blink_time = 0.0
-	set_process(false)
-
-# 点滅処理（_processで実行、3フレームに1回更新でモバイル負荷軽減）
-func _process(delta):
-	if DebugSettings.disable_all_process: return
-	_blink_frame_counter += 1
-
-	# 到着予測ハイライト処理（優先）
-	if _destination_highlight_active and frame_mesh_instance:
-		_destination_highlight_time += delta
-		if _blink_frame_counter % 3 != 0:
-			return
-		# sin波で0〜1を滑らかに変化（周期1.0秒 - 速めの点滅）
-		var ht = (sin(_destination_highlight_time * TAU / 1.0) + 1.0) / 2.0
-
-		# 黄色でハイライト
-		var highlight_color = Color(1.0, 0.9, 0.2)  # 黄色
-		var dim_color = Color(0.3, 0.27, 0.06)  # 暗い黄色
-
-		_destination_highlight_material.albedo_color = dim_color.lerp(highlight_color, ht)
-		_destination_highlight_material.emission = dim_color.lerp(highlight_color, ht)
-		_destination_highlight_material.emission_energy_multiplier = 0.5 + ht * 1.5  # 0.5〜2.0（明るめ）
-
-		frame_mesh_instance.material_override = _destination_highlight_material
-		return  # 到着予測ハイライト中は通常点滅を行わない
-
-	# 通常の所有者点滅処理
-	if not _blink_active or not frame_mesh_instance:
-		return
-	_blink_time += delta
-	if _blink_frame_counter % 3 != 0:
-		return
-
-	# sin波で0〜1を滑らかに変化（周期2.5秒）
-	var t = (sin(_blink_time * TAU / 2.5) + 1.0) / 2.0  # 0〜1
-
-	# 常にmaterial_overrideを使用
 	frame_mesh_instance.material_override = frame_material
 
-	# プレイヤー色と元の色（グレー）を補間
-	var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]
-	var original_color = Color(0.15, 0.15, 0.15)  # 元の枠の色（暗めグレー）
-
-	frame_material.albedo_color = original_color.lerp(player_color, t)
-	frame_material.emission = original_color.lerp(player_color.darkened(0.3), t)  # 発光色を少し暗めに
-	frame_material.emission_energy_multiplier = 0.3 + t * 0.7  # 0.3〜1.0（控えめに）
+# 到着予測ハイライト専用の_process（3フレームに1回更新でモバイル負荷軽減）
+func _process(delta):
+	if DebugSettings.disable_all_process: return
+	if not _destination_highlight_active or not frame_mesh_instance:
+		return
+	_blink_frame_counter += 1
+	_destination_highlight_time += delta
+	if _blink_frame_counter % 3 != 0:
+		return
+	# sin波で0〜1を滑らかに変化（周期1.0秒 - 速めの点滅）
+	var ht = (sin(_destination_highlight_time * TAU / 1.0) + 1.0) / 2.0
+	var highlight_color = Color(1.0, 0.9, 0.2)
+	var dim_color = Color(0.3, 0.27, 0.06)
+	_destination_highlight_material.albedo_color = dim_color.lerp(highlight_color, ht)
+	_destination_highlight_material.emission = dim_color.lerp(highlight_color, ht)
+	_destination_highlight_material.emission_energy_multiplier = 0.5 + ht * 1.5
+	frame_mesh_instance.material_override = _destination_highlight_material
 
 # frameノード以下の全MeshInstance3Dを再帰的に収集
 func _collect_mesh_instances(node: Node, result: Array[MeshInstance3D]):
@@ -509,9 +463,7 @@ func stop_destination_highlight():
 		else:
 			_update_frame_glow()
 	
-	# 通常の点滅も停止中なら処理を止める
-	if not _blink_active:
-		set_process(false)
+	set_process(false)
 
 ## 到着予測ハイライト中かチェック
 func is_destination_highlighted() -> bool:

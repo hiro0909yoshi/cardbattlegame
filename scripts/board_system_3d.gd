@@ -462,7 +462,7 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 	var old_level = old_tile.level
 	var old_owner = old_tile.owner_id
 	var old_creature = old_tile.creature_data.duplicate() if not old_tile.creature_data.is_empty() else {}
-	var old_down_state = old_tile.is_down  # BaseTileには必ずis_downプロパティがある
+	var old_down_state = old_tile.down_state
 	var old_connections = old_tile.connections.duplicate() if old_tile.connections else []  # 接続情報を保存
 	
 	# 新しいタイル生成
