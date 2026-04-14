@@ -1056,6 +1056,9 @@ func _generate_3d_map_preview(map_id: String, tiles: Array):
 	var tiles_container = Node3D.new()
 	sub_viewport.add_child(tiles_container)
 
+	# 属性タイル上面描画用TileTopRendererをプレビュー用に設置
+	var preview_top_renderer := TileTopRenderer.setup_for_preview(sub_viewport)
+
 	for tile_data in tiles:
 		var tile_type = tile_data.get("type", "Neutral")
 		var tile_scene = _get_tile_scene(tile_type)
@@ -1084,6 +1087,9 @@ func _generate_3d_map_preview(map_id: String, tiles: Array):
 
 	add_child(sub_viewport)
 
+	# タイル登録＆MultiMesh rebuildを同期実行
+	preview_top_renderer.register_and_rebuild_now(tiles_container)
+
 	await get_tree().process_frame
 	await get_tree().process_frame
 
@@ -1095,6 +1101,7 @@ func _generate_3d_map_preview(map_id: String, tiles: Array):
 		if _map_preview:
 			_map_preview.texture = texture
 
+	TileTopRenderer.teardown_preview()
 	sub_viewport.queue_free()
 
 

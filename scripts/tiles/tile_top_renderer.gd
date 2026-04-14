@@ -14,6 +14,17 @@ const MATERIALS: Dictionary = {
 }
 const TOP_Y_OFFSET: float = 0.314
 
+## プレビュー用: 指定の親ノードにTileTopRendererを生成しBaseTile.top_rendererに注入
+static func setup_for_preview(parent: Node) -> TileTopRenderer:
+	var renderer := TileTopRenderer.new()
+	parent.add_child(renderer)
+	BaseTile.top_renderer = renderer
+	return renderer
+
+## プレビュー用: BaseTile.top_rendererをクリア（タイル破棄前に呼ぶ）
+static func teardown_preview() -> void:
+	BaseTile.top_renderer = null
+
 var _mmis: Dictionary = {}  # element -> MultiMeshInstance3D
 var _tiles: Dictionary = {}  # element -> Array[Node3D]
 var _rebuild_scheduled: bool = false
@@ -38,6 +49,11 @@ func _ready():
 ## 既存シーンツリー内の属性タイルを一括登録（初期化が遅い場合の救済）
 func register_existing_tiles(root: Node) -> void:
 	_scan_and_register(root)
+
+## プレビュー用: 登録→即座にrebuild（call_deferred経由せず同期実行）
+func register_and_rebuild_now(root: Node) -> void:
+	_scan_and_register(root)
+	_rebuild()
 
 func _scan_and_register(node: Node) -> void:
 	if node is BaseTile and _tiles.has(node.tile_type):
