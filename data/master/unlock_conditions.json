@@ -116,9 +116,25 @@
       "id": "c015",
       "type": "stage_clear",
       "requirement": { "stage_id": "stage_3_3" },
-      "unlock": ["map.new_2"],
-      "notification": "新マップが使えるようになった!",
+      "unlock": ["character.old_sage", "map.new_2"],
+      "notification": "オールドセージと新マップが解禁された!",
       "lock_description": "3-3クリアで解禁"
+    },
+    {
+      "id": "c016",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_3_5" },
+      "unlock": ["character.witch2", "map.new_3"],
+      "notification": "ウィッチ2と新マップが解禁された!",
+      "lock_description": "3-5クリアで解禁"
+    },
+    {
+      "id": "c017",
+      "type": "stage_clear",
+      "requirement": { "stage_id": "stage_3_8" },
+      "unlock": ["character.golem", "map.new_4"],
+      "notification": "ゴーレムと新マップが解禁された!",
+      "lock_description": "3-8クリアで解禁"
     },
     {
       "id": "c012",

@@ -2,18 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://njdlc72v01iw"
-path.s3tc="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex"
-path.etc2="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"
+uid="uid://btkstemo3ovfk"
+path.s3tc="res://.godot/imported/base_building_Image_2.webp-79c1eb2d5d0ffd0bab7a6141da2548db.s3tc.ctex"
+path.etc2="res://.godot/imported/base_building_Image_2.webp-79c1eb2d5d0ffd0bab7a6141da2548db.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
+generator_parameters={
+"md5": "112f78654ac8614747666bacb2be8da2"
+}
 
 [deps]
 
-source_file="res://assets/images/tiles/base1.png"
-dest_files=["res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex", "res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"]
+source_file="res://models/base_building_Image_2.webp"
+dest_files=["res://.godot/imported/base_building_Image_2.webp-79c1eb2d5d0ffd0bab7a6141da2548db.s3tc.ctex", "res://.godot/imported/base_building_Image_2.webp-79c1eb2d5d0ffd0bab7a6141da2548db.etc2.ctex"]
 
 [params]
 
@@ -23,12 +26,12 @@ compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
-roughness/mode=0
-roughness/src_normal=""
+roughness/mode=1
+roughness/src_normal="res://models/base_building_Image_2.webp"
 process/channel_remap/red=0
 process/channel_remap/green=1
 process/channel_remap/blue=2

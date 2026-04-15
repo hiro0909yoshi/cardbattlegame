@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://depi4tfbk4kbg"]
+
+[ext_resource type="Texture2D" path="res://assets/images/tiles/neutral.png" id="1_tex"]
+
+[resource]
+albedo_color = Color(0.65, 0.58, 0.53, 1)
+albedo_texture = ExtResource("1_tex")
+texture_filter = 3

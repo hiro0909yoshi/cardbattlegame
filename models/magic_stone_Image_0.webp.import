@@ -2,18 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://njdlc72v01iw"
-path.s3tc="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex"
-path.etc2="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"
+uid="uid://hl23irpl4ihw"
+path.s3tc="res://.godot/imported/magic_stone_Image_0.webp-7e15f3c3d298ba09cff0a6e898f5cd5e.s3tc.ctex"
+path.etc2="res://.godot/imported/magic_stone_Image_0.webp-7e15f3c3d298ba09cff0a6e898f5cd5e.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
+generator_parameters={
+"md5": "bd952551ab8d3b032eebca19ea1ab1d8"
+}
 
 [deps]
 
-source_file="res://assets/images/tiles/base1.png"
-dest_files=["res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex", "res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"]
+source_file="res://models/magic_stone_Image_0.webp"
+dest_files=["res://.godot/imported/magic_stone_Image_0.webp-7e15f3c3d298ba09cff0a6e898f5cd5e.s3tc.ctex", "res://.godot/imported/magic_stone_Image_0.webp-7e15f3c3d298ba09cff0a6e898f5cd5e.etc2.ctex"]
 
 [params]
 

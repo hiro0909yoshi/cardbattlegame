@@ -2,22 +2,23 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://njdlc72v01iw"
-path.s3tc="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex"
-path.etc2="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"
+uid="uid://biystfvmjhxs0"
+path="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
+}
+generator_parameters={
+"md5": "e099f18a620c918a28bc166cb9eb9630"
 }
 
 [deps]
 
-source_file="res://assets/images/tiles/base1.png"
-dest_files=["res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex", "res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"]
+source_file="res://models/magic_stone_BakedCrystal.webp"
+dest_files=["res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -39,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

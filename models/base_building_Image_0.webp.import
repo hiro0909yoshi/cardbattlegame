@@ -2,18 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://njdlc72v01iw"
-path.s3tc="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex"
-path.etc2="res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"
+uid="uid://c71oiml8v5iwa"
+path.s3tc="res://.godot/imported/base_building_Image_0.webp-a08fa42e1fb5b99228f04b884957d306.s3tc.ctex"
+path.etc2="res://.godot/imported/base_building_Image_0.webp-a08fa42e1fb5b99228f04b884957d306.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
+generator_parameters={
+"md5": "acee7775cda28244037565cd7095824b"
+}
 
 [deps]
 
-source_file="res://assets/images/tiles/base1.png"
-dest_files=["res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.s3tc.ctex", "res://.godot/imported/base1.png-f354eb9985eef57f0bd0e74a131ad807.etc2.ctex"]
+source_file="res://models/base_building_Image_0.webp"
+dest_files=["res://.godot/imported/base_building_Image_0.webp-a08fa42e1fb5b99228f04b884957d306.s3tc.ctex", "res://.godot/imported/base_building_Image_0.webp-a08fa42e1fb5b99228f04b884957d306.etc2.ctex"]
 
 [params]
 

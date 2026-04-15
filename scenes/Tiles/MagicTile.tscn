@@ -1,16 +1,15 @@
-[gd_scene load_steps=7 format=3 uid="uid://op62xi7er7ij"]
+[gd_scene load_steps=8 format=3 uid="uid://op62xi7er7ij"]
 
 [ext_resource type="Script" uid="uid://dn5icl7xw2chs" path="res://scripts/tiles/magic_tile.gd" id="1_magic"]
 [ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="2_frame"]
+[ext_resource type="PackedScene" path="res://models/lava_house.glb" id="3_house"]
+[ext_resource type="StandardMaterial3D" uid="uid://cmagictilemat01" path="res://scenes/Tiles/magic_tile_mat.tres" id="4_mat"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
 size = Vector3(1, 0.0951538, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
 size = Vector3(1, 0.0983887, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_magic"]
-albedo_color = Color(0.9, 0.4, 0.7, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_magic"]
 size = Vector3(3.6, 0.5, 3.6)
@@ -32,5 +31,8 @@ shape = SubResource("BoxShape3D_collision")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0628314, 0)
-material_override = SubResource("StandardMaterial3D_magic")
+material_override = ExtResource("4_mat")
 mesh = SubResource("BoxMesh_magic")
+
+[node name="LavaHouse" parent="." instance=ExtResource("3_house")]
+transform = Transform3D(0.99, 0, 0.99, 0, 1.4, 0, -0.99, 0, 0.99, -0.6, 1.227, -0.6)
