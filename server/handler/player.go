@@ -161,3 +161,34 @@ func (h *PlayerHandler) GetUnlocks(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, unlocks)
 }
+
+func (h *PlayerHandler) SaveDeck(w http.ResponseWriter, r *http.Request) {
+	claims := auth.GetClaims(r.Context())
+	if claims == nil {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	var req struct {
+		SlotIndex int    `json:"slot_index"`
+		DeckName  string `json:"deck_name"`
+		Cards     []int  `json:"cards"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+
+	cardsJSON, err := json.Marshal(req.Cards)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "marshal failed"})
+		return
+	}
+
+	if err := h.cards.UpsertDeck(r.Context(), claims.UserID, req.SlotIndex, req.DeckName, cardsJSON); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "save failed"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}

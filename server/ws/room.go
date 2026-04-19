@@ -241,10 +241,14 @@ func (r *Room) StartGame() bool {
 			r.Players[slotIndex].Client.Send(msg)
 		}
 	}
-	onGameOver := func(results []map[string]any) {
+	onGameOver := func(totalTurns int, results []map[string]any) {
 		r.mu.Lock()
 		r.Status = RoomFinished
 		r.mu.Unlock()
+
+		if r.hub.onMatchResult != nil {
+			r.hub.onMatchResult(r.ID, r.Config.MatchType, r.Config.MapID, r.Config.RulePreset, r.Config.InitialMagic, r.Config.TargetMagic, r.Config.MaxTurns, totalTurns, results)
+		}
 	}
 
 	r.Session = game.NewSession(r.ID, r.Config.MatchType, cfg, broadcastFn, sendToFn, onGameOver)

@@ -118,37 +118,53 @@ func (p *MatchResultProcessor) ProcessRankedResult(ctx context.Context, gs *game
 }
 
 // SaveMatchHistory persists match history for all match types.
-// Called from onGameOver callback in ws/room.go.
-func (p *MatchResultProcessor) SaveMatchHistory(ctx context.Context, gs *game.GameState, matchType, mapID, rulePreset string, initialMagic, targetMagic, maxTurns, duration int) {
+// Called from onMatchResult callback via main.go wiring.
+func (p *MatchResultProcessor) SaveMatchHistory(ctx context.Context, roomID, matchType, mapID, rulePreset string, initialMagic, targetMagic, maxTurns, totalTurns int, results []map[string]any) {
 	if p.matchHistory == nil {
 		slog.Warn("match history repo not initialized")
 		return
 	}
 
-	players := make([]repository.MatchPlayerRecord, 0, len(gs.Players))
-	for _, ps := range gs.Players {
+	players := make([]repository.MatchPlayerRecord, 0, len(results))
+	for _, r := range results {
+		var userID int64
+		if v, ok := r["internal_id"].(int64); ok {
+			userID = v
+		} else if v, ok := r["internal_id"].(float64); ok {
+			userID = int64(v)
+		}
+		var finalRank int
+		if v, ok := r["final_rank"].(int); ok {
+			finalRank = v
+		} else if v, ok := r["final_rank"].(float64); ok {
+			finalRank = int(v)
+		}
+		var finalTEP int
+		if v, ok := r["tep"].(int); ok {
+			finalTEP = v
+		} else if v, ok := r["tep"].(float64); ok {
+			finalTEP = int(v)
+		}
 		players = append(players, repository.MatchPlayerRecord{
-			UserID:    ps.InternalID,
-			FinalRank: ps.FinalRank,
-			DeckID:    "", // Note: DeckID not currently tracked in PlayerState, can be added if needed
-			FinalTEP:  ps.TEP,
+			UserID:    userID,
+			FinalRank: finalRank,
+			FinalTEP:  finalTEP,
 		})
 	}
 
 	record := repository.MatchRecord{
 		MatchType:    matchType,
-		PlayerCount:  len(gs.Players),
+		PlayerCount:  len(results),
 		MapID:        mapID,
 		RulePreset:   rulePreset,
 		InitialMagic: initialMagic,
 		TargetMagic:  targetMagic,
 		MaxTurns:     maxTurns,
-		TotalTurns:   gs.TotalTurns,
-		Duration:     duration,
+		TotalTurns:   totalTurns,
 	}
 
 	if err := p.matchHistory.InsertMatch(ctx, record, players); err != nil {
-		slog.Error("failed to save match history", "err", err)
+		slog.Error("failed to save match history", "room", roomID, "err", err)
 	}
 }
 

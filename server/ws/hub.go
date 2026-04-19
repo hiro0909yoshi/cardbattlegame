@@ -14,19 +14,23 @@ const maxClients = 2000
 
 type DeckLoader func(ctx context.Context, userID int64, deckID string) ([]int, error)
 
+type MatchResultHandler func(roomID, matchType, mapID, rulePreset string, initialMagic, targetMagic, maxTurns, totalTurns int, results []map[string]any)
+
 type Hub struct {
-	mu       sync.RWMutex
-	clients  map[int64]*Client // userID -> client
-	rooms    map[string]*Room  // roomID -> room
-	queue    *matchmaking.Queue
-	loadDeck DeckLoader
+	mu            sync.RWMutex
+	clients       map[int64]*Client // userID -> client
+	rooms         map[string]*Room  // roomID -> room
+	queue         *matchmaking.Queue
+	loadDeck      DeckLoader
+	onMatchResult MatchResultHandler
 }
 
-func NewHub(loadDeck DeckLoader) *Hub {
+func NewHub(loadDeck DeckLoader, onMatchResult MatchResultHandler) *Hub {
 	h := &Hub{
-		clients:  make(map[int64]*Client),
-		rooms:    make(map[string]*Room),
-		loadDeck: loadDeck,
+		clients:       make(map[int64]*Client),
+		rooms:         make(map[string]*Room),
+		loadDeck:      loadDeck,
+		onMatchResult: onMatchResult,
 	}
 	h.queue = matchmaking.NewQueue(2, func(entries []matchmaking.QueueEntry) string {
 		// マッチ成立 → 自動ルーム作成

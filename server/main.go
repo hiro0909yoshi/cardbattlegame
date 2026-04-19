@@ -15,6 +15,7 @@ import (
 	"arcana-conquest-server/handler"
 	"arcana-conquest-server/masterdata"
 	"arcana-conquest-server/repository"
+	"arcana-conquest-server/service"
 	"arcana-conquest-server/ws"
 )
 
@@ -44,6 +45,9 @@ func main() {
 	cardRepo := repository.NewCardRepo(pool)
 	unlockRepo := repository.NewUnlockRepo(pool)
 
+	matchHistoryRepo := repository.NewMatchHistoryRepo(pool)
+	matchProcessor := service.NewMatchResultProcessor(pool, userRepo, statsRepo, matchHistoryRepo)
+
 	authH := handler.NewAuthHandler(userRepo)
 	playerH := handler.NewPlayerHandler(userRepo, statsRepo, cardRepo, unlockRepo)
 
@@ -68,7 +72,12 @@ func main() {
 		}
 		return []int{}, nil
 	}
-	hub := ws.NewHub(deckLoader)
+	matchResultHandler := func(roomID, matchType, mapID, rulePreset string, initialMagic, targetMagic, maxTurns, totalTurns int, results []map[string]any) {
+		ctx := context.Background()
+		matchProcessor.SaveMatchHistory(ctx, roomID, matchType, mapID, rulePreset, initialMagic, targetMagic, maxTurns, totalTurns, results)
+	}
+
+	hub := ws.NewHub(deckLoader, matchResultHandler)
 
 	mux := http.NewServeMux()
 
@@ -89,6 +98,7 @@ func main() {
 	protected.HandleFunc("PUT /api/player/settings", playerH.UpdateSettings)
 	protected.HandleFunc("GET /api/player/cards", playerH.GetCards)
 	protected.HandleFunc("GET /api/player/decks", playerH.GetDecks)
+	protected.HandleFunc("PUT /api/player/decks", playerH.SaveDeck)
 	protected.HandleFunc("GET /api/player/unlocks", playerH.GetUnlocks)
 	mux.Handle("/api/player/", auth.Middleware(protected))
 

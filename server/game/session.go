@@ -9,7 +9,7 @@ import (
 
 type BroadcastFunc func(msg []byte)
 type SendToFunc func(slotIndex int, msg []byte)
-type GameOverFunc func(results []map[string]any)
+type GameOverFunc func(totalTurns int, results []map[string]any)
 
 // command is a unit of work sent to the Session goroutine.
 type command struct {
@@ -432,10 +432,11 @@ func (s *Session) handleGameOver(winnerIdx int) {
 	results := make([]map[string]any, len(s.state.Players))
 	for i, p := range s.state.Players {
 		results[i] = map[string]any{
-			"user_id":    p.UserID,
-			"slot_index": p.SlotIndex,
-			"final_rank": p.FinalRank,
-			"tep":        p.TEP,
+			"user_id":     p.UserID,
+			"internal_id": p.InternalID,
+			"slot_index":  p.SlotIndex,
+			"final_rank":  p.FinalRank,
+			"tep":         p.TEP,
 		}
 	}
 
@@ -450,7 +451,7 @@ func (s *Session) handleGameOver(winnerIdx int) {
 	slog.Info("game over", "room", s.RoomID, "winner", winnerIdx, "turns", s.state.TotalTurns)
 
 	if s.onGameOver != nil {
-		s.onGameOver(results)
+		s.onGameOver(s.state.TotalTurns, results)
 	}
 
 	s.cancel()
@@ -474,6 +475,7 @@ func (s *Session) broadcastTurnStart() {
 		"phase":         s.state.Phase,
 		"player_ep":     active.EP,
 		"hand_count":    len(active.Hand),
+		"hand":          active.Hand,
 		"state_version": s.state.StateVersion,
 	}))
 

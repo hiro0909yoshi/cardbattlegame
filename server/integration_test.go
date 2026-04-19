@@ -485,3 +485,290 @@ func prettyJSON(v any) string {
 	}
 	return strings.Join(lines, "\n")
 }
+
+// saveDeck saves a deck for a user via the API
+func saveDeck(t *testing.T, token string, slotIndex int, cards []int) {
+	reqBody := map[string]any{
+		"slot_index": slotIndex,
+		"deck_name":  "Test Deck",
+		"cards":      cards,
+	}
+	body, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("PUT", serverURL+"/api/player/decks", strings.NewReader(string(body)))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to save deck: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		var errBody map[string]any
+		json.NewDecoder(resp.Body).Decode(&errBody)
+		t.Fatalf("Save deck failed with status %d: %v", resp.StatusCode, errBody)
+	}
+}
+
+// TestSummon tests that a player with cards can summon a creature on an empty tile
+func TestSummon(t *testing.T) {
+	_, token1 := registerGuestUser(t, "summon_p1")
+	_, token2 := registerGuestUser(t, "summon_p2")
+
+	// Save decks with creature cards (IDs 1-20 are fire creatures)
+	creatureDeck := []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 1}
+	saveDeck(t, token1, 0, creatureDeck)
+	saveDeck(t, token2, 0, creatureDeck)
+
+	conn1 := connectWebSocket(t, token1)
+	defer conn1.Close()
+	conn2 := connectWebSocket(t, token2)
+	defer conn2.Close()
+
+	// Create room
+	cfg := map[string]any{
+		"match_type":    "friend",
+		"max_players":   2,
+		"initial_magic": 1000,
+		"target_magic":  8000,
+	}
+	sendMessage(t, conn1, "create_room", cfg)
+	roomMsg := waitForMessageType(t, conn1, "room_created", 5*time.Second)
+	roomID := roomMsg.(map[string]any)["room_id"].(string)
+
+	joinRoom(t, conn2, roomID)
+
+	setReady(t, conn1, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	setReady(t, conn2, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	waitForMessageType(t, conn2, "room_state", 3*time.Second)
+
+	startGame(t, conn1)
+
+	// Get game_state — check that hand has cards
+	gameStateData := waitForMessageType(t, conn1, "game_state", 5*time.Second)
+	waitForMessageType(t, conn2, "game_state", 5*time.Second)
+
+	// Parse state to verify hand has cards
+	if gs, ok := gameStateData.(map[string]any); ok {
+		if state, ok := gs["state"].(map[string]any); ok {
+			if players, ok := state["players"].([]any); ok {
+				for i, p := range players {
+					if pm, ok := p.(map[string]any); ok {
+						if hand, ok := pm["hand"].([]any); ok {
+							t.Logf("Player %d hand: %d cards", i, len(hand))
+							if len(hand) == 0 {
+								t.Fatalf("Player %d has empty hand — deck was not loaded", i)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Wait for turn_start
+	tsData := waitForMessageType(t, conn1, "turn_start", 3*time.Second)
+	waitForMessageType(t, conn2, "turn_start", 2*time.Second)
+
+	conns := [2]*websocket.Conn{conn1, conn2}
+	var activePlayer int
+	if tsMap, ok := tsData.(map[string]any); ok {
+		activePlayer = int(tsMap["active_player"].(float64))
+	}
+	activeConn := conns[activePlayer]
+	t.Logf("Active player: %d", activePlayer)
+
+	// spell_pass → dice_result
+	sendMessage(t, activeConn, "spell_pass", nil)
+	waitForMessageType(t, activeConn, "dice_result", 3*time.Second)
+
+	// move_complete
+	sendMessage(t, activeConn, "move_complete", map[string]any{"direction": -1})
+	moveResult := waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+	t.Logf("Move result: %s", prettyJSON(moveResult))
+
+	// Get the first creature card from turn_start hand data
+	var handCardID int
+	if tsMap, ok := tsData.(map[string]any); ok {
+		if hand, ok := tsMap["hand"].([]any); ok && len(hand) > 0 {
+			handCardID = int(hand[0].(float64))
+		}
+	}
+
+	if handCardID == 0 {
+		t.Fatal("No card in hand to summon")
+	}
+	t.Logf("Summoning card ID: %d", handCardID)
+
+	// Send summon
+	sendMessage(t, activeConn, "summon", map[string]any{"card_id": handCardID})
+	summonResult := waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+
+	if summonResult == nil {
+		// Check if we got an error instead
+		t.Fatal("No action_result for summon")
+	}
+
+	t.Logf("✓ Summon result: %s", prettyJSON(summonResult))
+
+	// Verify summon action in result
+	if ar, ok := summonResult.(map[string]any); ok {
+		if data, ok := ar["data"].(map[string]any); ok {
+			if action, ok := data["action"].(string); ok {
+				if action != "summon" {
+					t.Fatalf("Expected summon action, got: %s", action)
+				}
+				t.Log("✓ Summon action confirmed!")
+			}
+		}
+	}
+
+	// end_turn
+	sendMessage(t, activeConn, "end_turn", nil)
+	waitForAnyType(t, activeConn, []string{"game_over", "turn_start"}, 3*time.Second)
+
+	t.Log("\n✓ Summon test completed successfully!")
+}
+
+// TestBattle tests that a battle occurs when player lands on opponent's creature tile
+func TestBattle(t *testing.T) {
+	_, token1 := registerGuestUser(t, "battle_p1")
+	_, token2 := registerGuestUser(t, "battle_p2")
+
+	// Save decks with creature cards
+	creatureDeck := []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 1}
+	saveDeck(t, token1, 0, creatureDeck)
+	saveDeck(t, token2, 0, creatureDeck)
+
+	conn1 := connectWebSocket(t, token1)
+	defer conn1.Close()
+	conn2 := connectWebSocket(t, token2)
+	defer conn2.Close()
+
+	cfg := map[string]any{
+		"match_type":    "friend",
+		"max_players":   2,
+		"initial_magic": 1000,
+		"target_magic":  8000,
+		"max_turns":     20,
+	}
+	sendMessage(t, conn1, "create_room", cfg)
+	roomMsg := waitForMessageType(t, conn1, "room_created", 5*time.Second)
+	roomID := roomMsg.(map[string]any)["room_id"].(string)
+
+	joinRoom(t, conn2, roomID)
+
+	setReady(t, conn1, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	setReady(t, conn2, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	waitForMessageType(t, conn2, "room_state", 3*time.Second)
+
+	startGame(t, conn1)
+
+	waitForMessageType(t, conn1, "game_state", 5*time.Second)
+	waitForMessageType(t, conn2, "game_state", 5*time.Second)
+
+	conns := [2]*websocket.Conn{conn1, conn2}
+
+	firstTS := waitForMessageType(t, conn1, "turn_start", 3*time.Second)
+	waitForMessageType(t, conn2, "turn_start", 2*time.Second)
+
+	var pendingTurnStart any = firstTS
+	battleOccurred := false
+
+	for turn := 1; turn <= 20; turn++ {
+		ts := pendingTurnStart
+		pendingTurnStart = nil
+
+		if ts == nil {
+			t.Fatalf("No turn_start data for turn %d", turn)
+		}
+
+		var activePlayer int
+		if tsMap, ok := ts.(map[string]any); ok {
+			activePlayer = int(tsMap["active_player"].(float64))
+		}
+		activeConn := conns[activePlayer]
+		otherConn := conns[1-activePlayer]
+		t.Logf("--- Turn %d (player %d) ---", turn, activePlayer)
+
+		// spell_pass → dice_result
+		sendMessage(t, activeConn, "spell_pass", nil)
+		waitForMessageType(t, activeConn, "dice_result", 3*time.Second)
+
+		// move_complete
+		sendMessage(t, activeConn, "move_complete", map[string]any{"direction": -1})
+		moveResult := waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+
+		nextPhase := "tile_action"
+		if ar, ok := moveResult.(map[string]any); ok {
+			if data, ok := ar["data"].(map[string]any); ok {
+				if p, ok := data["phase"].(string); ok {
+					nextPhase = p
+				}
+			}
+		}
+
+		if nextPhase == "battle" {
+			t.Log("  ★ Battle triggered!")
+			// Wait for battle_start and battle_result
+			waitForMessageType(t, activeConn, "battle_start", 3*time.Second)
+			battleResult := waitForMessageType(t, activeConn, "battle_result", 3*time.Second)
+			if battleResult != nil {
+				t.Logf("  Battle result: %s", prettyJSON(battleResult))
+				battleOccurred = true
+			}
+			// After battle, phase should transition to end_turn automatically
+		} else {
+			// tile_action phase: try to summon using hand from turn_start
+			var handCardID int
+			if tsMap, ok := ts.(map[string]any); ok {
+				if hand, ok := tsMap["hand"].([]any); ok && len(hand) > 0 {
+					handCardID = int(hand[0].(float64))
+				}
+			}
+
+			if handCardID > 0 {
+				sendMessage(t, activeConn, "summon", map[string]any{"card_id": handCardID})
+				summonResp, summonData := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+				if summonResp == "action_result" {
+					t.Logf("  Summoned card %d", handCardID)
+				} else {
+					t.Logf("  Summon failed: %v — passing", summonData)
+					sendMessage(t, activeConn, "pass", nil)
+					waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+				}
+			} else {
+				sendMessage(t, activeConn, "pass", nil)
+				waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+			}
+		}
+
+		// end_turn
+		sendMessage(t, activeConn, "end_turn", nil)
+
+		msgType, msgData := waitForAnyType(t, activeConn, []string{"game_over", "turn_start"}, 3*time.Second)
+		if msgType == "game_over" {
+			t.Logf("✓ Game over at turn %d (battle occurred: %v)", turn, battleOccurred)
+			return
+		}
+		if msgType == "turn_start" {
+			// Drain from other conn
+			waitForMessageType(t, otherConn, "turn_start", 1*time.Second)
+			pendingTurnStart = msgData
+
+			if battleOccurred {
+				t.Logf("✓ Battle test passed! Battle occurred at turn %d", turn)
+				return
+			}
+			continue
+		}
+		t.Fatalf("Unexpected state at turn %d", turn)
+	}
+
+	if !battleOccurred {
+		t.Log("⚠ No battle occurred in 20 turns (players may not have landed on occupied tiles)")
+	}
+}

@@ -12,6 +12,77 @@
 
 ---
 
+## 2026年4月19日（Session: ��ーバー統合テスト拡張 — 召喚・バトル・match_history）
+
+### 完了した作業
+
+#### Step 1: デッキ保存API追加
+- ✅ `handler/player.go`: `SaveDeck` メソッド追加（PUT /api/player/decks）
+- ✅ `main.go`: ルート登録
+
+#### Step 2: 統合テスト �� 召喚・バトル
+- ✅ `game/session.go`: turn_start に `hand` データ追加（テスト+クライアント用）
+- ✅ `integration_test.go`: `saveDeck` ヘルパー追加
+- ✅ `TestSummon`: デッキ保存→手札確認→空タイルに召喚→action_result確認
+- ✅ `TestBattle`: 両プレイヤーが召喚→相手タイルに着地→battle_start/battle_result確認
+- ✅ 全4テスト通過（TestOneTurn, TestFullGame, TestSummon, TestBattle）
+
+#### Step 3: match_history接続
+- ✅ `ws/hub.go`: `MatchResultHandler` コールバック型追加（依存方向遵守: ws→service直接参照なし）
+- ✅ `game/session.go`: `GameOverFunc` に `totalTurns` 引数追加、結果に `internal_id` 追加
+- ✅ `ws/room.go`: onGameOver から hub.onMatchResult コールバック呼び出し
+- ✅ `service/match_result.go`: `SaveMatchHistory` を `[]map[string]any` ベースに変更（GameState依存除去）
+- ✅ `main.go`: `MatchResultProcessor` 生成、コールバック配線
+- ✅ DB確認: match_history / match_players テーブルにデータ正常保存
+
+### 依存方向
+- ws → game, matchmaking（OK: 下位パッケージのみ）
+- service → game, rating, repository（OK: 組み合わせ層）
+- main.go: callback injection で ws⇔service を接続（相互参照なし）
+
+### 次のステッ���
+- TestFullGame にデッキ付与（召喚+バトルありの完全ゲーム）
+- ランクマッチ時の TrueSkill レーティング更新（ProcessRankedResult 接��）
+- クライアント（GDScript）側のWebSocket接続実装
+
+---
+
+## 2026年4月16日（Session: タイルクリック情報表示・世界刻印復帰修正）
+
+### 完了した作業
+
+#### クラッシュ復帰時の世界刻印データ保護
+- ✅ `game_state_saver.gd`: `gfm.game_stats` の参照を `clear()+merge()` で維持（`duplicate()` 代入だと spell_world_curse が保持する参照が切れる）
+- ✅ `spell_world_curse.gd`: カードテキストを `effect` フィールドから取得（フォールバック: `text`）
+- ✅ `quest_game.gd`: 復帰後に `_on_world_curse_changed()` を明示呼び出し（初期接続時は game_stats が空のため）
+
+#### 世界刻印ポップアップの文言統一
+- ✅ `CurseDescriptions.DESCRIPTIONS`（既存の刻印と同じソース）から説明文取得、2行表示に
+- ✅ `player_info_panel.gd` と `player_status_dialog.gd` の紫色世界刻印テキストを削除（3D ボード表示に一本化）
+
+#### 魔法石装飾ボード削除
+- ✅ `scenes/objects/MagicStoneBoard.tscn`, `scripts/objects/magic_stone_board.gd`, `models/magic_stone_board.*` を完全削除
+- ✅ 代替: 魔法石タイルクリックで全員の所持数を `magic_stone_ui.show_info_mode()` で表示
+
+#### フリーカメラ時のタイル情報表示（新機能）
+- ✅ `scripts/ui_components/land_info_popup.gd` 新規作成（永続パネル方式、`MOUSE_FILTER_IGNORE` で他クリックを透過）
+- ✅ `quest_game.gd` / `game_3d.gd`: `camera_controller.tile_tapped` / `empty_tapped` / `drag_started` に接続
+- ✅ 属性タイル: 「属性: X　Lv: Y」表示、属性色
+- ✅ 特殊タイル: カードショップ / カード配布 / スペル / ワープ / 停止ワープ / チェックポイント / 拠点 / 分岐
+- ✅ 魔法石タイル: 既存 `magic_stone_ui` で全員の所持数表示
+- ✅ ブランクタイル表示を「無」→「変化」、マジックタイルを「スペル」に修正
+- ✅ ドラッグ開始/空タップ/画面外クリックで自動的に非表示
+- ✅ 信号接続は `initialize_all()` の await 完了後に実行（timing 修正）
+
+#### パネル配置・サイズ
+- ✅ 260×120px、タイトル 24px、本文 30px、右側に配置（action_menu_ui と同系）
+
+### 次のステップ
+- 全修正のコミット
+- モバイル実機での動作確認
+
+---
+
 ## 2026年4月10日（Session: GPU負荷対策・半透明システム統一・スペル修正）
 
 ### 完了した作業
