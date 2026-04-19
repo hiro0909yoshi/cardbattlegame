@@ -17,6 +17,11 @@ web_build.zip
 android/build/
 ios_build/
 
+# Go server (binaries)
+server/arcana-server
+server/arcana-conquest-server
+server/server
+
 # Blender
 *.blend
 *.blend1
