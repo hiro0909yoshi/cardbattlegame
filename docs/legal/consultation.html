@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法律相談資料 — Arcana Conquest</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; background: #f5f5f5; color: #333; line-height: 1.8; }
+  .header { background: #2c3e50; color: #fff; padding: 30px 20px; }
+  .header h1 { font-size: 1.5em; max-width: 800px; margin: 0 auto; }
+  .header a { color: #87ceeb; text-decoration: none; font-size: 0.9em; }
+  .container { max-width: 800px; margin: 0 auto; padding: 30px 20px; }
+  h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 6px; margin: 30px 0 15px; font-size: 1.3em; }
+  h3 { color: #34495e; margin: 20px 0 10px; font-size: 1.1em; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #ecf0f1; }
+  ul, ol { margin: 10px 0 10px 20px; }
+  li { margin-bottom: 6px; }
+  p { margin-bottom: 10px; }
+  strong { color: #2c3e50; }
+  .highlight { background: #fff3cd; padding: 12px 16px; border-left: 4px solid #ffc107; margin: 15px 0; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="max-width:800px;margin:0 auto;">
+    <a href="index.html">&larr; トップに戻る</a>
+    <h1>法律相談資料 — Arcana Conquest</h1>
+  </div>
+</div>
+
+<div class="container">
+
+<h2>1. アプリ概要</h2>
+
+<table>
+  <tr><th>項目</th><th>内容</th></tr>
+  <tr><td>アプリ名</td><td>Arcana Conquest（アルカナコンクエスト）</td></tr>
+  <tr><td>ジャンル</td><td>カードバトル＋ボードゲーム（カルドセプト風）</td></tr>
+  <tr><td>開発者</td><td>個人開発</td></tr>
+  <tr><td>エンジン</td><td>Godot Engine 4.5（オープンソース）</td></tr>
+  <tr><td>プラットフォーム</td><td>iOS / Android</td></tr>
+  <tr><td>価格</td><td>無料（アプリ内課金あり）</td></tr>
+  <tr><td>開発段階</td><td>開発中（リリース前）</td></tr>
+</table>
+
+<h2>2. ゲームシステム</h2>
+
+<ul>
+  <li>周回型ボード上をダイスで移動</li>
+  <li>マスにクリーチャー（カード）を配置し、土地を支配</li>
+  <li>他プレイヤーの土地に止まると通行料が発生</li>
+  <li>カードバトルで土地の奪い合い</li>
+  <li>先にEP（勝利ポイント）を貯めたプレイヤーが勝利</li>
+</ul>
+
+<p><strong>着想元</strong>: 「カルドセプト」（大宮ソフト/任天堂）</p>
+<ul>
+  <li>ゲームシステム（ボード移動→土地配置→通行料→バトル）が類似</li>
+  <li>カード名・キャラクター名・画像は全てオリジナル</li>
+  <li>UI・演出も独自に設計</li>
+</ul>
+
+<h3>画面比較（参考資料）</h3>
+
+<p><strong>ボード画面の比較</strong></p>
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin:15px 0;">
+  <div style="flex:1;min-width:280px;">
+    <p style="text-align:center;font-weight:bold;color:#3498db;">本アプリ（Arcana Conquest）</p>
+    <img src="screenshot_board.png" alt="Arcana Conquest ボード画面" style="width:100%;border:2px solid #3498db;border-radius:6px;">
+  </div>
+  <div style="flex:1;min-width:280px;">
+    <p style="text-align:center;font-weight:bold;color:#e67e22;">着想元（カルドセプト）</p>
+    <img src="ref_culdcept_board.png" alt="カルドセプト ボード画面" style="width:100%;border:2px solid #e67e22;border-radius:6px;">
+  </div>
+</div>
+
+<p><strong>バトル画面の比較</strong></p>
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin:15px 0;">
+  <div style="flex:1;min-width:280px;">
+    <p style="text-align:center;font-weight:bold;color:#3498db;">本アプリ（Arcana Conquest）</p>
+    <img src="screenshot_battle.png" alt="Arcana Conquest バトル画面" style="width:100%;border:2px solid #3498db;border-radius:6px;">
+  </div>
+  <div style="flex:1;min-width:280px;">
+    <p style="text-align:center;font-weight:bold;color:#e67e22;">着想元（カルドセプト）</p>
+    <img src="ref_culdcept_battle.png" alt="カルドセプト バトル画面" style="width:100%;border:2px solid #e67e22;border-radius:6px;">
+  </div>
+</div>
+
+<h2>3. 課金システム</h2>
+
+<h3>3-1. ゲーム内通貨</h3>
+
+<table>
+  <tr><th>通貨</th><th>入手方法</th><th>用途</th></tr>
+  <tr><td>ゴールド</td><td>ゲームプレイ報酬</td><td>ゴールドガチャ</td></tr>
+  <tr><td>ジェム</td><td>App Store / Google Play で購入</td><td>課金ガチャ</td></tr>
+</table>
+
+<ul>
+  <li>ジェムは現金に換金不可</li>
+  <li>アプリ内でのみ使用可能</li>
+  <li>決済はApple/Googleのシステムを経由（開発者がカード情報を扱わない）</li>
+</ul>
+
+<h3>3-2. ガチャシステム</h3>
+
+<p><strong>ゴールドガチャ（ゲーム内通貨）</strong>:</p>
+
+<table>
+  <tr><th>タイプ</th><th>1回</th><th>10連</th><th>100連</th><th>排出レアリティ</th></tr>
+  <tr><td>ノーマル</td><td>50G</td><td>500G</td><td>5,000G</td><td>C: 60% / N: 40%</td></tr>
+  <tr><td>Sガチャ</td><td>80G</td><td>800G</td><td>8,000G</td><td>C: 50% / N: 35% / S: 15%</td></tr>
+  <tr><td>Rガチャ</td><td>100G</td><td>1,000G</td><td>10,000G</td><td>C: 50% / N: 35% / S: 12% / R: 3%</td></tr>
+</table>
+
+<p><strong>課金ガチャ（ジェム）</strong>:</p>
+
+<table>
+  <tr><th>回数</th><th>価格</th><th>排出レアリティ</th></tr>
+  <tr><td>1回</td><td>100石</td><td>S: 70% / R: 30%</td></tr>
+  <tr><td>10連</td><td>900石</td><td>S: 70% / R: 30%</td></tr>
+</table>
+
+<ul>
+  <li>7タイプ（火/水/地/風/無属性 + スペル + アイテム）から選択</li>
+  <li>各タイプ内で該当カードが均等確率で排出</li>
+  <li>排出確率はアプリ内「提供割合」ボタンで常時確認可能</li>
+  <li>合成・変身専用カード（3種）はガチャから排出されない</li>
+</ul>
+
+<h3>3-3. コレクションコンプリート演出</h3>
+
+<ul>
+  <li>各属性のカードを全種類揃えるとお祝いポップアップが表示される</li>
+  <li><strong>コンプリートによる追加報酬（レアカード等）は一切なし</strong></li>
+  <li>演出のみで、ガチャを促進する仕組みではない</li>
+</ul>
+
+<h2>4. 相談事項</h2>
+
+<h3>4-1. ガチャの適法性</h3>
+<ul>
+  <li>現在の確率設定・表示方法が景品表示法に抵触しないか</li>
+  <li>コレクションコンプリート演出がコンプガチャに該当しないか</li>
+</ul>
+
+<h3>4-2. 課金通貨の法的扱い</h3>
+<ul>
+  <li>ジェムが資金決済法の「前払式支払手段」に該当するか</li>
+  <li>該当する場合の届出義務</li>
+</ul>
+
+<h3>4-3. 既存ゲームとの類似性</h3>
+<ul>
+  <li>ゲームシステムの類似が著作権侵害にあたるか</li>
+  <li>関連する特許の有無</li>
+  <li>ストア説明文での言及方法</li>
+</ul>
+
+<h3>4-4. 法務文書のレビュー</h3>
+<ul>
+  <li>利用規約（<a href="terms.html">別紙1</a>）</li>
+  <li>プライバシーポリシー（<a href="privacy.html">別紙2</a>）</li>
+  <li>特定商取引法に基づく表記（<a href="tokushoho_page.html">別紙3</a>）</li>
+</ul>
+
+<h3>4-5. 未成年者への対応</h3>
+<ul>
+  <li>必要な注意喚起・課金制限の範囲</li>
+</ul>
+
+</div>
+
+</body>
+</html>
