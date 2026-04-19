@@ -249,8 +249,7 @@ func get_own_without_land_bonus(player_id: int) -> Array:
 
 ## クリーチャーが刻印を持っているか
 func has_curse(creature: Dictionary) -> bool:
-	var ability = creature.get("ability_parsed", {})
-	if ability.get("curses", []).size() > 0:
+	if creature.has("curse") and creature["curse"].size() > 0:
 		return true
 	return false
 

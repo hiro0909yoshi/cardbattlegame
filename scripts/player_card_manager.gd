@@ -40,7 +40,8 @@ func _on_reset_pressed():
 
 func _on_reset_confirmed():
 	UserCardDB.reset_database()
-	print("[PlayerCardManager] 所持カードをリセットしました")
+	GameData.reset_collection_complete()
+	print("[PlayerCardManager] 所持カードとコンプリートフラグをリセットしました")
 	
 	_update_status()
 	

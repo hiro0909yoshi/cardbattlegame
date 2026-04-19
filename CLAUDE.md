@@ -157,7 +157,9 @@ data/
 
 ### Agent Workflow
 
-**Opus**: 対話・企画・計画・設計判断 | **Haiku**: 実装・コード記述 | **Sonnet**: 廃止
+**Opus**: 対話・企画・計画・設計判断・小規模修正（数行のEdit） | **Haiku**: 実装・コード記述・大規模ファイル作成/書き換え（Agent経由で委譲） | **Sonnet**: 廃止
+
+**使い分け基準**: 数行のEdit修正はOpusが直接実行してよい。新規ファイル作成、ドキュメント全面書き換え、大きなコード実装はAgent(model="haiku")で委譲すること。
 
 ### Before Making Changes
 1. Check `docs/README.md` first

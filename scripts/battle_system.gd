@@ -170,6 +170,7 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 
 # バトルコア処理（共通化）
 func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1):
+	GameData.record_creature_battle()
 	print("========== バトル開始 ==========")
 
 	var tile_index = tile_info.get("index", -1)

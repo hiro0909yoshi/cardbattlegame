@@ -264,7 +264,7 @@
 		},
 		{
 			"id": 9011,
-			"name": "ライフドレイン",
+			"name": "ミニマム",
 			"dev_name": "MHP減少（敵クリーチャー）",
 			"rarity": "N",
 			"type": "mystic",

@@ -170,6 +170,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 			else:
 				print("[TileSummonExecutor] 奮闘により召喚後もダウンしません: タイル", target_tile)
 		
+		GameData.record_creature_summon()
 		if is_remote_placement:
 			print("遠隔召喚成功！タイル%dを取得しました" % target_tile)
 		else:

@@ -245,37 +245,54 @@ func update_label():
 		name_label.text = card_data.get("name", "???")
 		name_label.add_theme_color_override("font_color", Color.WHITE)
 	
+	var card_type: String = String(card_data.get("type", ""))
+	var is_creature: bool = card_type == "" or card_type == "creature"
+
 	# 攻撃力（AP）
 	var left_stat_label = get_node_or_null("LeftStatBadge/LeftStatCircle/LeftStatLabel")
 	if left_stat_label:
-		var ap = card_data.get("ap", 0)
-		left_stat_label.text = str(ap)
+		if is_creature:
+			var ap = card_data.get("ap", 0)
+			left_stat_label.text = str(ap)
+		else:
+			left_stat_label.text = ""
 		left_stat_label.add_theme_color_override("font_color", Color.WHITE)
-	
+
 	# 最大HP
 	var right_stat_label = get_node_or_null("RightStatBadge/RightStatCircle/RightStatLabel")
 	if right_stat_label:
-		var hp = card_data.get("hp", 0)
-		right_stat_label.text = str(hp)
+		if is_creature:
+			var hp = card_data.get("hp", 0)
+			right_stat_label.text = str(hp)
+		else:
+			right_stat_label.text = ""
 		right_stat_label.add_theme_color_override("font_color", Color.WHITE)
-	
+
 	# 現在HP（初期状態では最大HPと同じ）
 	var current_hp_label = get_node_or_null("CurrentHPBadge/CurrentHPCircle/CurrentHPLabel")
 	if current_hp_label:
-		var hp = card_data.get("hp", 0)
-		current_hp_label.text = str(hp)
+		if is_creature:
+			var hp = card_data.get("hp", 0)
+			current_hp_label.text = str(hp)
+		else:
+			current_hp_label.text = ""
 		current_hp_label.add_theme_color_override("font_color", Color.WHITE)
-	
-	# 説明文
+
+	# 説明文（クリーチャーは ability、アイテム/スペルは effect）
 	var desc_label = get_node_or_null("DescriptionBox/DescriptionLabel")
 	if desc_label:
-		var ability_text = card_data.get("ability", "")
-		var element = card_data.get("element", "")
-		
-		if ability_text.is_empty():
-			ability_text = element + "属性"
-		
-		desc_label.text = ability_text
+		var desc_text: String = ""
+		if is_creature:
+			desc_text = String(card_data.get("ability", ""))
+			if desc_text.is_empty():
+				desc_text = String(card_data.get("element", "")) + "属性"
+		else:
+			desc_text = String(card_data.get("effect", ""))
+			if desc_text.is_empty():
+				var sub: String = String(card_data.get("item_type", card_data.get("spell_type", card_type)))
+				desc_text = sub
+
+		desc_label.text = desc_text
 		desc_label.add_theme_color_override("font_color", Color(0.25, 0.2, 0.15))
 
 # 動的ステータスを更新（MHP/ST増加を反映）

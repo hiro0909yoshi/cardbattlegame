@@ -93,6 +93,9 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 
 	GameLogger.info("Spell", "効果完了: P%d %s(id:%d) result=%s" % [current_player_id_log + 1, spell_name, spell_id, "success"])
 
+	if handler.game_flow_manager and not handler.game_flow_manager.is_cpu_player(current_player_id_log):
+		GameData.record_spell_use()
+
 	# 効果発動完了
 	handler.spell_used.emit(spell_card)
 

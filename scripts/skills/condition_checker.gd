@@ -24,18 +24,26 @@ func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -
 	var effects = ability_parsed.get("effects", [])
 	
 	# 強化キーワードを探す（複数のpower_strikeエフェクトがある場合、いずれか1つでも条件を満たせばtrue）
+	var _has_power_strike_effect := false
 	for effect in effects:
 		if effect.get("effect_type") == "power_strike":
+			_has_power_strike_effect = true
 			if evaluate_power_strike_conditions(effect, battle_context):
 				return true
-	
-	# キーワードリストからも確認
+
+	# effectsにpower_strikeがあった場合は条件不成立でfalse（キーワードfallbackをスキップ）
+	if _has_power_strike_effect:
+		return false
+
+	# キーワードリストからも確認（effectsにpower_strikeが無いレガシー形式用）
 	var keywords = ability_parsed.get("keywords", [])
 	if "強化" in keywords:
 		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 		var keyword_cond_data = keyword_conditions.get("強化", {})
+		if keyword_cond_data.is_empty():
+			return true
 		return evaluate_single_condition(keyword_cond_data, battle_context)
-	
+
 	return false
 
 # 強化条件の評価

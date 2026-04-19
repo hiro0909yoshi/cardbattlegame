@@ -39,6 +39,7 @@ func _setup_viewport():
 	_camera.fov = 23
 	_sub_viewport.add_child(_camera)
 	_camera.look_at(Vector3(0, 1.8, 0))
+	_camera.current = true
 
 	# ライト
 	_light = DirectionalLight3D.new()
@@ -91,9 +92,12 @@ func set_character_model(model_path: String) -> void:
 	if walk_model:
 		walk_model.visible = false
 
+	# カメラを確実にアクティブ化
+	_camera.current = true
+
 	# アニメーション適用後にキャプチャ（数フレーム待つ）
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	for i in range(3):
+	for i in range(5):
 		if not is_inside_tree():
 			return
 		await get_tree().process_frame
@@ -102,9 +106,9 @@ func set_character_model(model_path: String) -> void:
 		return
 	# アニメーション停止して静止画化
 	if idle_model and is_instance_valid(idle_model):
-		var anim_player = idle_model.find_child("AnimationPlayer", true, false)
-		if anim_player:
-			anim_player.pause()
+		var anim_player2 := idle_model.find_child("AnimationPlayer", true, false)
+		if anim_player2:
+			anim_player2.pause()
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
