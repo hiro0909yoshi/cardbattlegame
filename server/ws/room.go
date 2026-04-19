@@ -2,10 +2,10 @@ package ws
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"sync"
 	"time"
 
@@ -58,7 +58,7 @@ type Room struct {
 }
 
 func NewRoom(hub *Hub, hostClient *Client, cfg RoomConfig) *Room {
-	roomID := generateRoomID()
+	roomID := hub.uniqueRoomID()
 	r := &Room{
 		ID:               roomID,
 		HostID:           hostClient.UserID,
@@ -467,9 +467,7 @@ func (r *Room) ToListEntry() map[string]any {
 }
 
 func generateRoomID() string {
-	b := make([]byte, 6)
-	rand.Read(b)
-	return hex.EncodeToString(b)
+	return fmt.Sprintf("%04d", rand.IntN(10000))
 }
 
 func (p *PlayerSlot) MarshalJSON() ([]byte, error) {

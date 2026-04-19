@@ -102,6 +102,18 @@ func (h *Hub) GetClient(userID int64) *Client {
 	return h.clients[userID]
 }
 
+func (h *Hub) uniqueRoomID() string {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for i := 0; i < 100; i++ {
+		id := generateRoomID()
+		if _, exists := h.rooms[id]; !exists {
+			return id
+		}
+	}
+	return generateRoomID()
+}
+
 func (h *Hub) RemoveRoom(roomID string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()

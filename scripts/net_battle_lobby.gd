@@ -1,16 +1,20 @@
 extends Control
 
 # ネット対戦ロビー画面
-# サーバー認証 → WebSocket接続 → ルーム作成/参加 → ゲーム開始
+# ランクマッチ / フレンドマッチ をタブで切り替え
 
 # ===== ネットワーク =====
 var _api: ApiClient
 var _ws: WsClient
 var _access_token: String = ""
-var _refresh_token: String = ""
 var _room_id: String = ""
 var _is_host: bool = false
 var _player_slot: int = -1
+var _status_label: Label
+var _room_state_label: Label
+var _ready_button: Button
+var _start_button: Button
+var _is_ready: bool = false
 
 # ===== UI要素 =====
 var _main_vbox: VBoxContainer
@@ -19,30 +23,33 @@ var _rank_tab: Control
 var _friend_tab: Control
 var _room_id_input: LineEdit
 var _player_count_option: OptionButton
-var _status_label: Label
-var _room_info_panel: VBoxContainer
-var _room_players_label: Label
-var _ready_button: Button
-var _start_button: Button
-var _is_ready: bool = false
+
+# ===== 定数 =====
+const SERVER_HOST: String = "localhost"
+const SERVER_PORT: int = 8080
 
 # ===== データ =====
 var _creature_images: Array[String] = []
 
-# ===== 定数 =====
+# ===== 色定義 =====
 const PANEL_COLOR = Color(0.12, 0.12, 0.16, 0.75)
-const SERVER_HOST: String = "localhost"
-const SERVER_PORT: int = 8080
+const TAB_ACTIVE_COLOR = Color(0.3, 0.5, 0.8, 1.0)
+const TAB_INACTIVE_COLOR = Color(0.25, 0.25, 0.30, 1.0)
+
+# ===== パス定義 =====
 const CREATURES_IMAGE_PATH = "res://assets/images/creatures/"
 
 
 func _ready():
 	modulate = Color.WHITE
-	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 
+	var viewport_size = get_viewport().get_visible_rect().size
+
+	# 背景: クリーチャーカード画像タイリング
 	_load_creature_images()
 	_build_card_background(viewport_size)
 
+	# ルート VBox レイアウト
 	_main_vbox = VBoxContainer.new()
 	_main_vbox.name = "MainVBox"
 	_main_vbox.position = Vector2.ZERO
@@ -50,6 +57,7 @@ func _ready():
 	_main_vbox.add_theme_constant_override("separation", 0)
 	add_child(_main_vbox)
 
+	# UI構築
 	_build_top_bar()
 	_build_tab_area()
 
@@ -66,193 +74,9 @@ func _ready():
 	_ws.disconnected.connect(_on_ws_disconnected)
 	_ws.message_received.connect(_on_ws_message)
 
-	# 自動認証開始
-	_set_status("サーバーに接続中...")
-	var user_id: String = GameData.player_data.user_id
-	var display_name: String = GameData.player_data.profile.name
-	_api.guest_register(user_id, display_name)
+	_api.guest_register(GameData.player_data.user_id, GameData.player_data.profile.name)
+	print("ネット対戦ロビーを初期化しました")
 
-
-func _exit_tree() -> void:
-	if _ws and _ws.is_connected_to_server():
-		_ws.disconnect_from_server()
-
-
-# ===== 認証コールバック =====
-
-func _on_registered(_user_id: String, access_token: String, refresh_token: String) -> void:
-	_access_token = access_token
-	_refresh_token = refresh_token
-	_set_status("認証完了、WebSocket接続中...")
-	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
-
-
-func _on_login_success(access_token: String, refresh_token: String) -> void:
-	_access_token = access_token
-	_refresh_token = refresh_token
-	_set_status("ログイン完了、WebSocket接続中...")
-	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
-
-
-func _on_login_failed(error: String) -> void:
-	if "Register" in error:
-		_set_status("既存アカウントでログイン中...")
-		_api.guest_login(GameData.player_data.user_id)
-	else:
-		_set_status("接続失敗: " + error)
-
-
-# ===== WebSocket コールバック =====
-
-func _on_ws_connected() -> void:
-	_set_status("サーバー接続完了！")
-
-
-func _on_ws_disconnected() -> void:
-	_set_status("サーバーから切断されました")
-	_room_id = ""
-	_hide_room_info()
-
-
-func _on_ws_message(msg_type: String, data: Variant) -> void:
-	print("[NetLobby] ← %s" % msg_type)
-
-	match msg_type:
-		"room_created":
-			_room_id = data.room_id if data is Dictionary else ""
-			_is_host = true
-			_set_status("ルーム作成: %s" % _room_id)
-			_show_room_info()
-		"room_state":
-			_update_room_state(data)
-		"game_state":
-			_on_game_start(data)
-		"error":
-			var err_msg: String = data.message if data is Dictionary else str(data)
-			_set_status("エラー: " + err_msg)
-
-
-# ===== ルーム状態管理 =====
-
-func _update_room_state(data: Variant) -> void:
-	if not data is Dictionary:
-		return
-
-	var players: Array = data.get("players", [])
-	var text: String = "ルーム: %s (%d人参加中)\n" % [_room_id, players.size()]
-	for i in range(players.size()):
-		var p: Dictionary = players[i] if players[i] is Dictionary else {}
-		var name_str: String = p.get("display_name", "Player %d" % i)
-		var ready_str: String = " [準備完了]" if p.get("ready", false) else ""
-		text += "  %d. %s%s\n" % [i + 1, name_str, ready_str]
-
-	if _room_players_label:
-		_room_players_label.text = text
-
-	_show_room_info()
-
-
-func _on_game_start(data: Variant) -> void:
-	GameData.set_meta("online_game_state", data)
-	GameData.set_meta("online_ws", _ws)
-	GameData.set_meta("online_access_token", _access_token)
-	GameData.set_meta("online_player_slot", _player_slot)
-	GameData.current_game_mode = "net_battle"
-
-	remove_child(_ws)
-
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/OnlineGame.tscn")
-
-
-# ===== UIボタン処理 =====
-
-func _on_create_room_pressed():
-	if not _ws or not _ws.is_connected_to_server():
-		_set_status("サーバーに接続されていません")
-		return
-
-	var player_counts: Array[int] = [2, 3, 4]
-	var max_players: int = player_counts[_player_count_option.get_selected_id()]
-
-	_ws.send_msg("create_room", {
-		"match_type": "friend",
-		"max_players": max_players,
-		"initial_magic": 1000,
-		"target_magic": 8000,
-	})
-	_set_status("ル��ム作成中...")
-
-
-func _on_join_room_pressed():
-	if not _ws or not _ws.is_connected_to_server():
-		_set_status("サーバーに接続されていません")
-		return
-
-	var room_id: String = _room_id_input.text.strip_edges()
-	if room_id.is_empty():
-		_set_status("ルームIDを入力してく��さい")
-		return
-
-	_room_id = room_id
-	_is_host = false
-	_ws.send_msg("join_room", {
-		"room_id": room_id,
-		"deck_id": "0",
-	})
-	_set_status("ルーム参加��...")
-
-
-func _on_ready_pressed():
-	if not _ws or not _ws.is_connected_to_server():
-		return
-	_is_ready = not _is_ready
-	_ws.send_msg("set_ready", {"ready": _is_ready})
-	if _ready_button:
-		_ready_button.text = "準備取消" if _is_ready else "準備完了"
-
-
-func _on_start_game_pressed():
-	if not _ws or not _ws.is_connected_to_server():
-		return
-	if not _is_host:
-		return
-	_ws.send_msg("start_game", null)
-	_set_status("ゲーム開始中...")
-
-
-func _on_tab_selected(index: int):
-	_tab_container.current_tab = index
-
-
-func _on_back_pressed():
-	if _ws and _ws.is_connected_to_server():
-		_ws.disconnect_from_server()
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")
-
-
-func _on_rank_match_pressed():
-	_set_status("ラ��クマッチは準備中です")
-
-
-# ===== ステータス表示 =====
-
-func _set_status(text: String) -> void:
-	if _status_label:
-		_status_label.text = text
-	print("[NetLobby] %s" % text)
-
-
-func _show_room_info() -> void:
-	if _room_info_panel:
-		_room_info_panel.visible = true
-
-
-func _hide_room_info() -> void:
-	if _room_info_panel:
-		_room_info_panel.visible = false
-
-
-# ===== UI構築 =====
 
 func _build_top_bar():
 	var top_hbox = HBoxContainer.new()
@@ -260,6 +84,7 @@ func _build_top_bar():
 	top_hbox.custom_minimum_size = Vector2(0, 120)
 	_main_vbox.add_child(top_hbox)
 
+	# 戻るボタン
 	var back_button = Button.new()
 	back_button.text = "← 戻る"
 	back_button.custom_minimum_size = Vector2(260, 100)
@@ -267,6 +92,7 @@ func _build_top_bar():
 	back_button.pressed.connect(_on_back_pressed)
 	top_hbox.add_child(back_button)
 
+	# タイトル
 	var title_label = Label.new()
 	title_label.text = "ネット対戦"
 	title_label.add_theme_font_size_override("font_size", 72)
@@ -275,12 +101,13 @@ func _build_top_bar():
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	top_hbox.add_child(title_label)
 
+	# 右側：タブ切替ボタン
 	var tab_hbox = HBoxContainer.new()
 	tab_hbox.add_theme_constant_override("separation", 12)
 	top_hbox.add_child(tab_hbox)
 
 	var rank_tab_btn = Button.new()
-	rank_tab_btn.text = "ランクマッ��"
+	rank_tab_btn.text = "ランクマッチ"
 	rank_tab_btn.custom_minimum_size = Vector2(420, 100)
 	rank_tab_btn.add_theme_font_size_override("font_size", 60)
 	rank_tab_btn.pressed.connect(_on_tab_selected.bind(0))
@@ -295,14 +122,6 @@ func _build_top_bar():
 
 
 func _build_tab_area():
-	_status_label = Label.new()
-	_status_label.text = ""
-	_status_label.add_theme_font_size_override("font_size", 48)
-	_status_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
-	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status_label.custom_minimum_size = Vector2(0, 60)
-	_main_vbox.add_child(_status_label)
-
 	var content_margin = MarginContainer.new()
 	content_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -312,71 +131,23 @@ func _build_tab_area():
 	content_margin.add_theme_constant_override("margin_bottom", 20)
 	_main_vbox.add_child(content_margin)
 
-	var split = HBoxContainer.new()
-	split.add_theme_constant_override("separation", 20)
-	content_margin.add_child(split)
-
+	# タブコンテンツ
 	_tab_container = TabContainer.new()
 	_tab_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tab_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tab_container.tabs_visible = false
-	split.add_child(_tab_container)
+	_tab_container.tabs_visible = false  # タブヘッダーはトップバーのボタンで制御
+	content_margin.add_child(_tab_container)
 
+	# ランクマッチタブ
 	_rank_tab = _build_rank_tab()
 	_tab_container.add_child(_rank_tab)
 
+	# フレンドマッチタブ
 	_friend_tab = _build_friend_tab()
 	_tab_container.add_child(_friend_tab)
 
+	# デフォルトはフレンドマッチ
 	_tab_container.current_tab = 1
-
-	# ルーム情報パネル（右側）
-	_room_info_panel = VBoxContainer.new()
-	_room_info_panel.custom_minimum_size = Vector2(600, 0)
-	_room_info_panel.visible = false
-	split.add_child(_room_info_panel)
-
-	var room_panel_bg = PanelContainer.new()
-	room_panel_bg.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var room_style = StyleBoxFlat.new()
-	room_style.bg_color = PANEL_COLOR
-	room_style.content_margin_left = 30
-	room_style.content_margin_right = 30
-	room_style.content_margin_top = 30
-	room_style.content_margin_bottom = 30
-	room_panel_bg.add_theme_stylebox_override("panel", room_style)
-	_room_info_panel.add_child(room_panel_bg)
-
-	var room_vbox = VBoxContainer.new()
-	room_vbox.add_theme_constant_override("separation", 20)
-	room_panel_bg.add_child(room_vbox)
-
-	_room_players_label = Label.new()
-	_room_players_label.text = ""
-	_room_players_label.add_theme_font_size_override("font_size", 48)
-	_room_players_label.add_theme_color_override("font_color", Color.WHITE)
-	_room_players_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	room_vbox.add_child(_room_players_label)
-
-	var button_hbox = HBoxContainer.new()
-	button_hbox.add_theme_constant_override("separation", 20)
-	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	room_vbox.add_child(button_hbox)
-
-	_ready_button = Button.new()
-	_ready_button.text = "準備完了"
-	_ready_button.custom_minimum_size = Vector2(300, 100)
-	_ready_button.add_theme_font_size_override("font_size", 54)
-	_ready_button.pressed.connect(_on_ready_pressed)
-	button_hbox.add_child(_ready_button)
-
-	_start_button = Button.new()
-	_start_button.text = "ゲーム開始"
-	_start_button.custom_minimum_size = Vector2(300, 100)
-	_start_button.add_theme_font_size_override("font_size", 54)
-	_start_button.add_theme_color_override("font_color", Color.YELLOW)
-	_start_button.pressed.connect(_on_start_game_pressed)
-	button_hbox.add_child(_start_button)
 
 
 func _build_rank_tab() -> Control:
@@ -394,15 +165,59 @@ func _build_rank_tab() -> Control:
 	vbox.add_theme_constant_override("separation", 30)
 	panel.add_child(vbox)
 
+	# ランク情報
+	var rank_info_hbox = HBoxContainer.new()
+	rank_info_hbox.add_theme_constant_override("separation", 40)
+	vbox.add_child(rank_info_hbox)
+
 	var rank_label = Label.new()
-	rank_label.text = "ランクマッチは準備中です"
+	rank_label.text = "現在のランク: シルバー I"
 	rank_label.add_theme_font_size_override("font_size", 66)
 	rank_label.add_theme_color_override("font_color", Color.WHITE)
-	vbox.add_child(rank_label)
+	rank_info_hbox.add_child(rank_label)
 
+	var rate_label = Label.new()
+	rate_label.text = "レート: 10.0"
+	rate_label.add_theme_font_size_override("font_size", 66)
+	rate_label.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
+	rank_info_hbox.add_child(rate_label)
+
+	# 対戦人数選択
+	var player_count_hbox = HBoxContainer.new()
+	player_count_hbox.add_theme_constant_override("separation", 20)
+	vbox.add_child(player_count_hbox)
+
+	var pc_label = Label.new()
+	pc_label.text = "対戦人数:"
+	pc_label.add_theme_font_size_override("font_size", 66)
+	pc_label.add_theme_color_override("font_color", Color.WHITE)
+	player_count_hbox.add_child(pc_label)
+
+	var rank_player_option = OptionButton.new()
+	rank_player_option.custom_minimum_size = Vector2(240, 80)
+	rank_player_option.add_theme_font_size_override("font_size", 66)
+	rank_player_option.get_popup().add_theme_font_size_override("font_size", 66)
+	rank_player_option.add_item("2人", 0)
+	rank_player_option.add_item("4人", 1)
+	rank_player_option.select(0)
+	player_count_hbox.add_child(rank_player_option)
+
+	# ルール表示
+	var rule_label = Label.new()
+	rule_label.text = "ルール: スタンダード（固定）"
+	rule_label.add_theme_font_size_override("font_size", 60)
+	rule_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(rule_label)
+
+	# スペーサー
 	var spacer = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
+
+	# マッチング開始ボタン
+	var match_hbox = HBoxContainer.new()
+	match_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(match_hbox)
 
 	var match_button = Button.new()
 	match_button.text = "【 マッチング開始 】"
@@ -410,7 +225,15 @@ func _build_rank_tab() -> Control:
 	match_button.add_theme_font_size_override("font_size", 66)
 	match_button.add_theme_color_override("font_color", Color.YELLOW)
 	match_button.pressed.connect(_on_rank_match_pressed)
-	vbox.add_child(match_button)
+	match_hbox.add_child(match_button)
+
+	# 未実装注記
+	var note_label = Label.new()
+	note_label.text = "※ バックエンド未接続のためマッチングは動作しません"
+	note_label.add_theme_font_size_override("font_size", 40)
+	note_label.add_theme_color_override("font_color", Color(0.6, 0.4, 0.4))
+	note_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(note_label)
 
 	return panel
 
@@ -430,6 +253,7 @@ func _build_friend_tab() -> Control:
 	vbox.add_theme_constant_override("separation", 30)
 	panel.add_child(vbox)
 
+	# ===== ルーム作成セクション =====
 	var create_label = Label.new()
 	create_label.text = "■ ルーム作成"
 	create_label.add_theme_font_size_override("font_size", 66)
@@ -440,6 +264,7 @@ func _build_friend_tab() -> Control:
 	create_hbox.add_theme_constant_override("separation", 30)
 	vbox.add_child(create_hbox)
 
+	# 対戦人数
 	var create_pc_label = Label.new()
 	create_pc_label.text = "対戦人数:"
 	create_pc_label.add_theme_font_size_override("font_size", 60)
@@ -453,9 +278,10 @@ func _build_friend_tab() -> Control:
 	_player_count_option.add_item("2人", 0)
 	_player_count_option.add_item("3人", 1)
 	_player_count_option.add_item("4人", 2)
-	_player_count_option.select(0)
+	_player_count_option.select(2)  # デフォルト4人
 	create_hbox.add_child(_player_count_option)
 
+	# ルーム作成ボタン
 	var create_button = Button.new()
 	create_button.text = "ルーム作成"
 	create_button.custom_minimum_size = Vector2(380, 100)
@@ -464,10 +290,12 @@ func _build_friend_tab() -> Control:
 	create_button.pressed.connect(_on_create_room_pressed)
 	create_hbox.add_child(create_button)
 
+	# セパレーター
 	var separator = HSeparator.new()
 	separator.custom_minimum_size = Vector2(0, 20)
 	vbox.add_child(separator)
 
+	# ===== ルーム参加セクション =====
 	var join_label = Label.new()
 	join_label.text = "■ ルーム参加"
 	join_label.add_theme_font_size_override("font_size", 66)
@@ -479,7 +307,7 @@ func _build_friend_tab() -> Control:
 	vbox.add_child(join_hbox)
 
 	var id_label = Label.new()
-	id_label.text = "ルー���ID:"
+	id_label.text = "ルームID:"
 	id_label.add_theme_font_size_override("font_size", 60)
 	id_label.add_theme_color_override("font_color", Color.WHITE)
 	join_hbox.add_child(id_label)
@@ -497,6 +325,7 @@ func _build_friend_tab() -> Control:
 	join_button.pressed.connect(_on_join_room_pressed)
 	join_hbox.add_child(join_button)
 
+	# スペーサー
 	var spacer = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
@@ -504,25 +333,80 @@ func _build_friend_tab() -> Control:
 	return panel
 
 
+# ===== コールバック =====
+
+func _on_tab_selected(index: int):
+	_tab_container.current_tab = index
+
+
+func _on_back_pressed():
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")
+
+
+func _on_rank_match_pressed():
+	print("ランクマッチ マッチング開始（未実装）")
+
+
+func _on_create_room_pressed():
+	if not _ws or not _ws.is_connected_to_server():
+		_show_error_dialog("サーバーに接続されていません")
+		return
+
+	var player_counts: Array[int] = [2, 3, 4]
+	var max_players = player_counts[_player_count_option.get_selected_id()]
+
+	_is_host = true
+	_ws.send_msg("create_room", {
+		"match_type": "friend",
+		"max_players": max_players,
+		"initial_magic": 1000,
+		"target_magic": 8000,
+	})
+	print("ルーム作成送信: 最大%d人" % max_players)
+
+
+func _on_join_room_pressed():
+	if not _ws or not _ws.is_connected_to_server():
+		_show_error_dialog("サーバーに接続されていません")
+		return
+
+	var room_id = _room_id_input.text.strip_edges()
+	if room_id.is_empty():
+		_show_error_dialog("ルームIDを入力してください")
+		return
+
+	_room_id = room_id
+	_is_host = false
+	_ws.send_msg("join_room", {
+		"room_id": room_id,
+		"deck_id": "0",
+	})
+	print("ルーム参加送信: %s" % room_id)
+
+
 # ===== 背景 =====
 
+## クリーチャー画像パスを収集
 func _load_creature_images():
 	_creature_images.clear()
 	var elements: Array[String] = ["fire", "water", "earth", "wind", "neutral"]
 	for element in elements:
-		var dir_path: String = CREATURES_IMAGE_PATH + element + "/"
-		var dir: DirAccess = DirAccess.open(dir_path)
+		var dir_path = CREATURES_IMAGE_PATH + element + "/"
+		var dir = DirAccess.open(dir_path)
 		if dir:
 			dir.list_dir_begin()
-			var file_name: String = dir.get_next()
+			var file_name = dir.get_next()
 			while file_name != "":
 				if file_name.ends_with(".png"):
 					_creature_images.append(dir_path + file_name)
 				file_name = dir.get_next()
+	print("背景用クリーチャー画像: %d枚" % _creature_images.size())
 
 
+## クリーチャーカード画像をグリッド状に並べた背景を生成
 func _build_card_background(viewport_size: Vector2) -> void:
 	if _creature_images.is_empty():
+		# フォールバック: 単色背景
 		var bg = ColorRect.new()
 		bg.color = Color(0.08, 0.08, 0.12, 1.0)
 		bg.position = Vector2.ZERO
@@ -531,22 +415,26 @@ func _build_card_background(viewport_size: Vector2) -> void:
 		add_child(bg)
 		return
 
+	# 画像をシャッフルして55枚に制限
 	var shuffled: Array[String] = _creature_images.duplicate()
 	shuffled.shuffle()
 	if shuffled.size() > 55:
 		shuffled.resize(55)
 
+	# カードサイズ（元画像200x200、大きめに表示）
 	var card_width := 360
 	var card_height := 360
-	var cols: int = int(ceil(viewport_size.x / card_width)) + 1
-	var rows: int = int(ceil(viewport_size.y / card_height)) + 1
+	var cols = int(ceil(viewport_size.x / card_width)) + 1
+	var rows = int(ceil(viewport_size.y / card_height)) + 1
 
+	# 背景コンテナ
 	var bg_container = Control.new()
 	bg_container.position = Vector2.ZERO
 	bg_container.size = viewport_size
 	bg_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg_container)
 
+	# 暗い背景ベース
 	var bg_base = ColorRect.new()
 	bg_base.color = Color(0.05, 0.05, 0.08, 1.0)
 	bg_base.position = Vector2.ZERO
@@ -554,12 +442,14 @@ func _build_card_background(viewport_size: Vector2) -> void:
 	bg_base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg_container.add_child(bg_base)
 
+	# カード画像を並べる
 	var img_index := 0
 	for row in range(rows):
 		for col in range(cols):
 			if shuffled.is_empty():
 				break
-			var texture: Texture2D = load(shuffled[img_index % shuffled.size()])
+
+			var texture = load(shuffled[img_index % shuffled.size()])
 			if texture:
 				var tex_rect = TextureRect.new()
 				tex_rect.texture = texture
@@ -569,11 +459,87 @@ func _build_card_background(viewport_size: Vector2) -> void:
 				tex_rect.modulate = Color(0.75, 0.75, 0.75, 0.8)
 				tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				bg_container.add_child(tex_rect)
+
 			img_index += 1
 
+	# 暗いオーバーレイ（UIの視認性確保）
 	var overlay = ColorRect.new()
 	overlay.color = Color(0.0, 0.0, 0.05, 0.15)
 	overlay.position = Vector2.ZERO
 	overlay.size = viewport_size
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg_container.add_child(overlay)
+
+
+# ===== ヘルパー =====
+
+## 4桁数字のルームIDを生成
+func _generate_room_id() -> String:
+	return "%04d" % randi_range(0, 9999)
+
+
+func _show_error_dialog(message: String):
+	var dialog = AcceptDialog.new()
+	dialog.title = "エラー"
+	dialog.dialog_text = message
+	add_child(dialog)
+	dialog.popup_centered_ratio(0.6)
+
+
+func _exit_tree() -> void:
+	if _ws and _ws.is_connected_to_server():
+		_ws.disconnect_from_server()
+
+
+# ===== ネットワークコールバック =====
+
+func _on_registered(_user_id: String, access_token: String, _refresh_token: String) -> void:
+	_access_token = access_token
+	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
+
+
+func _on_login_success(access_token: String, _refresh_token: String) -> void:
+	_access_token = access_token
+	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
+
+
+func _on_login_failed(error: String) -> void:
+	if "Register" in error:
+		_api.guest_login(GameData.player_data.user_id)
+	else:
+		_show_error_dialog("サーバー接続失敗: " + error)
+
+
+func _on_ws_connected() -> void:
+	print("[NetLobby] サーバー接続完了")
+
+
+func _on_ws_disconnected() -> void:
+	print("[NetLobby] サーバー切断")
+
+
+func _on_ws_message(msg_type: String, data: Variant) -> void:
+	print("[NetLobby] ← %s" % msg_type)
+	match msg_type:
+		"room_created":
+			if data is Dictionary:
+				_room_id = data.get("room_id", "")
+			_is_host = true
+			print("[NetLobby] ルーム作成完了: %s" % _room_id)
+			GameData.set_meta("net_battle_mode", {
+				"is_host": true,
+				"room_id": _room_id
+			})
+			get_tree().call_deferred("change_scene_to_file", "res://scenes/NetBattleSetup.tscn")
+		"room_state":
+			print("[NetLobby] room_state受信")
+		"game_state":
+			GameData.set_meta("online_game_state", data)
+			GameData.set_meta("online_ws", _ws)
+			GameData.set_meta("online_player_slot", _player_slot)
+			GameData.current_game_mode = "net_battle"
+			remove_child(_ws)
+			get_tree().call_deferred("change_scene_to_file", "res://scenes/OnlineGame.tscn")
+		"error":
+			var err_msg: String = data.message if data is Dictionary else str(data)
+			_show_error_dialog("エラー: " + err_msg)
