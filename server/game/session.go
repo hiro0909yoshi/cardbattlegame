@@ -141,6 +141,13 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 		return
 	}
 
+	slog.Debug("action received",
+		"slot", slotIndex,
+		"type", msgType,
+		"phase", s.state.Phase,
+		"turn", s.state.CurrentTurn,
+	)
+
 	var actionErr *ActionError
 
 	switch msgType {
@@ -190,6 +197,33 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 					"phase":    s.state.Phase,
 				})
 			}
+			// PhaseBattle: resolve immediately (no item selection yet)
+			if s.state.Phase == PhaseBattle {
+				s.state.StartBattle(slotIndex)
+				if bc := s.state.PendingBattle; bc != nil {
+					s.broadcast(newMsg("battle_start", map[string]any{
+						"attacker":   bc.AttackerSlot,
+						"defender":   bc.DefenderSlot,
+						"tile_index": bc.TileIndex,
+					}))
+					result := s.state.ResolveBattle(*bc)
+					s.state.PendingBattle = nil
+					if result != nil {
+						slog.Info("battle resolved",
+							"attacker", bc.AttackerSlot,
+							"defender", bc.DefenderSlot,
+							"attacker_won", result.AttackerWon,
+						)
+						s.broadcast(newMsg("battle_result", result))
+					} else {
+						slog.Warn("battle skipped: no valid cards",
+							"attacker", bc.AttackerSlot,
+							"defender", bc.DefenderSlot,
+						)
+					}
+					s.state.TransitionTo(PhaseEndTurn)
+				}
+			}
 		}
 
 	case "summon":
@@ -235,6 +269,30 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 		actionErr = s.state.Pass(slotIndex)
 		if actionErr == nil {
 			s.broadcastAction(slotIndex, "pass", nil)
+		}
+
+	case "battle_item":
+		var req struct {
+			ItemID int `json:"item_id"`
+		}
+		if err := json.Unmarshal(data, &req); err != nil {
+			s.sendTo(slotIndex, newMsg("action_error", &ActionError{Code: "bad_request", Message: "invalid JSON"}))
+			return
+		}
+		actionErr = s.state.BattleItemSelect(slotIndex, req.ItemID)
+		if actionErr == nil {
+			s.broadcastAction(slotIndex, "battle_item_selected", map[string]any{
+				"player": slotIndex,
+			})
+			// Check if both ready
+			if s.state.BattleBothReady() && s.state.PendingBattle != nil {
+				result := s.state.ResolveBattle(*s.state.PendingBattle)
+				s.state.PendingBattle = nil
+				if result != nil {
+					s.broadcast(newMsg("battle_result", result))
+				}
+				s.state.TransitionTo(PhaseEndTurn)
+			}
 		}
 
 	case "end_turn":
@@ -404,6 +462,12 @@ func (s *Session) broadcastTurnStart() {
 		slog.Error("broadcastTurnStart: active player is nil", "room", s.RoomID, "active", s.state.ActivePlayer)
 		return
 	}
+	slog.Info("turn start",
+		"room", s.RoomID,
+		"turn", s.state.CurrentTurn,
+		"player", s.state.ActivePlayer,
+		"phase", s.state.Phase,
+	)
 	s.broadcast(newMsg("turn_start", map[string]any{
 		"turn":          s.state.CurrentTurn,
 		"active_player": s.state.ActivePlayer,

@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS decks;
+DROP TABLE IF EXISTS user_deck_slots;
+DROP TABLE IF EXISTS user_cards;

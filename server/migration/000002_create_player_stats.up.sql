@@ -1,0 +1,23 @@
+CREATE TABLE player_stats (
+    user_id             BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    total_battles       INTEGER DEFAULT 0,
+    total_wins          INTEGER DEFAULT 0,
+    total_losses        INTEGER DEFAULT 0,
+    play_time_seconds   INTEGER DEFAULT 0,
+    story_cleared       INTEGER DEFAULT 0,
+    gacha_count         INTEGER DEFAULT 0,
+    cards_obtained      INTEGER DEFAULT 0,
+    total_gold_earned   INTEGER DEFAULT 0,
+    quest_plays         INTEGER DEFAULT 0,
+    quest_clears        INTEGER DEFAULT 0,
+    quest_battles       INTEGER DEFAULT 0,
+    quest_creature_summons INTEGER DEFAULT 0,
+    quest_spell_uses    INTEGER DEFAULT 0,
+    net_battle_plays    INTEGER DEFAULT 0,
+    net_battle_wins     INTEGER DEFAULT 0,
+    net_battle_battles  INTEGER DEFAULT 0,
+    net_battle_creature_summons INTEGER DEFAULT 0,
+    net_battle_spell_uses INTEGER DEFAULT 0,
+    collection_complete JSONB DEFAULT '{}',
+    updated_at          TIMESTAMPTZ DEFAULT NOW()
+);

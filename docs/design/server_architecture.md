@@ -1,8 +1,8 @@
 # Arcana Conquest サーバー アーキテク���ャ詳細設計書
 
 **最終更新**: 2026-04-19
-**ステータス**: Phase 1 実装完了（コアエンジン + 認証 + 対戦基盤） + セキュリティレビュー4周完了
-**総コード量**: Go 約4,000行 / 30ファイル / 14パッケージ
+**ステータス**: Phase 1 実装完了（コアエンジン + 認証 + 対戦基盤） + セキュリティレビュー4周完了 + 依存方向修正済み
+**総コード量**: Go 約4,000行 / 31ファイル / 15パッケージ
 
 ---
 
@@ -88,16 +88,19 @@ server/
 │   ├── client.go             # クライアント接続（103行）
 │   ��── message.go            # メッセージフォーマット（34行）
 │
-├── game/                     # ゲームロジック（サーバー権威）
-│   ├── session.go            # セッション管理（単一goroutine）（457行）
-│   ├── state.go              # ゲ��ム状態（229行）
-│   ├── action.go             # アクション処理（388行）
-│   ├─��� battle.go             # バトル解決（124行）
-│   └── result.go             # 試合結果・レーティング更新（90行）
+├── game/                     # ゲームロジック（pure logic — DB依存禁止）
+│   ├── session.go            # セッション管理（単一goroutine）
+│   ├── state.go              # ゲーム状態
+│   ├── action.go             # アクション処理
+│   ├── battle.go             # バトル解決
+│   └── result.go             # PlayerResult型・FormatRateChange（データのみ）
 │
-├── masterdata/card.go        # カードマスタデータ読込（131行）
-├── rating/trueskill.go       # TrueSkillレーティング計算（138行）
-├── matchmaking/queue.go      # レート別マッチメイキング（273行）
+├── service/                  # ビジネスロジック層（game + repository を組み合わせ）
+│   └── match_result.go       # 試合結果DB保存・レーティング更新
+│
+├── masterdata/card.go        # カードマスタデータ読込
+├── rating/trueskill.go       # TrueSkillレーティング計算
+├── matchmaking/queue.go      # レート別マッチメイキング
 │
 └── migration/                # DBマイグレーション（7組 × up/down）
     ├── 000001_create_users
@@ -108,6 +111,29 @@ server/
     ├── 000006_create_match_history
     └── 000007_create_operation_logs
 ```
+
+---
+
+### 1.4 パッケージ依存方向
+
+上位→下位の一方向のみ。逆方向・横断参照・相互参照は禁止。
+
+```
+main.go (組み立て — 全パッケージを知る唯一の場所)
+  ├── handler ──→ auth, repository, ws, model
+  ├── ws ────────→ game, matchmaking           ※ repository禁止、callback注入
+  ├── service ──→ game, rating, repository     ※ DB操作はここで
+  │
+  ├── game ─────→ masterdata                   ※ pure logic、DB/repository禁止
+  ├── repository → model
+  └── model, auth, config, db, masterdata, rating (基盤層)
+```
+
+**設計原則:**
+- **game パッケージ**: 計算のみ。結果を返すだけでDBを知らない
+- **ws パッケージ**: 接続管理のみ。DB操作は `DeckLoader` 関数型のcallback注入で対応
+- **service パッケージ**: game + repository を組み合わせるDB操作レイヤー
+- **main.go**: 全パッケージを組み立てる唯一の場所
 
 ---
 

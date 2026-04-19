@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS room_players;
+DROP TABLE IF EXISTS rooms;

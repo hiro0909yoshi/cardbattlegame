@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -178,9 +179,9 @@ func (r *Room) SetDeck(c *Client, deckID string) {
 // Room does NOT touch GameState after this point.
 func (r *Room) StartGame() bool {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	if r.Status != RoomReady {
+		r.mu.Unlock()
 		return false
 	}
 	r.Status = RoomPlaying
@@ -194,12 +195,24 @@ func (r *Room) StartGame() bool {
 
 	var players []game.PlayerInit
 	for _, p := range r.Players {
-		// TODO: DeckCardsをDBから取得する（CardRepo.GetDeck経由）
+		var deckCards []int
+		if r.hub.loadDeck != nil {
+			cards, err := r.hub.loadDeck(context.Background(), p.UserID, p.DeckID)
+			if err != nil {
+				slog.Warn("failed to load deck", "user", p.UserID, "deck", p.DeckID, "err", err)
+			} else {
+				deckCards = cards
+			}
+		}
+		if deckCards == nil {
+			deckCards = []int{}
+		}
+
 		players = append(players, game.PlayerInit{
 			UserID:     p.UserUUID,
 			InternalID: p.UserID,
 			SlotIndex:  p.SlotIndex,
-			DeckCards:  []int{},
+			DeckCards:  deckCards,
 		})
 	}
 
@@ -235,6 +248,9 @@ func (r *Room) StartGame() bool {
 	}
 
 	r.Session = game.NewSession(r.ID, r.Config.MatchType, cfg, broadcastFn, sendToFn, onGameOver)
+
+	// Unlock BEFORE Start() — Start() broadcasts game_state which needs RLock
+	r.mu.Unlock()
 	r.Session.Start()
 	return true
 }
