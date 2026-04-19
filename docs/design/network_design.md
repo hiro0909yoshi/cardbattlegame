@@ -1,175 +1,340 @@
 # ネット対戦基盤 設計書
 
-カルドセプト風カードバトルゲーム（Godot 4.5 / GDScript）にオンライン対戦機能を追加する。
-ターン制のため通信量・リアルタイム性の要求は低い。
-モバイル（Android / iOS）での配布を想定。
+**最終更新**: 2026-04-19
+**ステータス**: Phase 1 実装完了 — Go サーバー権威モデル
 
 ---
 
-## 1. アーキテクチャ（2案比較、未決定）
+## 1. アーキテクチャ
 
-### 案A: Godotヘッドレス専用サーバー
-
-```
-スマホA ─── WebSocket ──→ [VPS: Godotヘッドレス] ←── WebSocket ─── スマホB
-                              ↑
-                         ゲームロジック実行（GDScript）
-                         ＋ DB保存（SQLite）
-                         画面描画なし
-```
-
-- Unreal Engine（Fortnite等）、Unity（Fall Guys等）と同じ方式
-- VPS上でGodotを画面なしで起動し、GDScriptでゲームロジック実行
-
-### 案B: リレーサーバー
+### 採用方式: サーバー権威（Server-Authoritative）
 
 ```
-スマホA（ホスト役）─── WebSocket ──→ [VPS: Python/Go] ←── WebSocket ─── スマホB
-    ↑                                     ↑
-  ゲームロジック実行                   メッセージ転送のみ
-  （GDScript）                        ＋ DB保存
+スマホ/PC ─── WebSocket ──→ [VPS: Go サーバー] ←── WebSocket ─── スマホ/PC
+                                  ↑
+                           ゲームロジック全実行
+                           ＋ PostgreSQL
+                           ＋ TrueSkillレーティング
+                           ＋ マスタデータ検証
 ```
 
-- VPSはメッセージを中継するだけ（ゲームロジックはホスト側で実行）
-- サーバー側は別言語（Python/Go）で実装
+ダイス、EP、HP、ダメージ、勝敗の全てをサーバーが計算。クライアントは操作を送信し、結果を受け取って表示するのみ。
 
-### 比較表
+### 選定理由
 
-| 比較項目 | 案A: Godotヘッドレス | 案B: リレーサーバー |
-|----------|---------------------|-------------------|
-| サーバー言語 | GDScript（同じ） | Python/Go（別言語） |
-| 新言語の学習 | 不要 | 必要 |
-| コード共有 | ゲームロジック丸ごと共有 | 不可（2言語管理） |
-| チート対策 | 強い（サーバーで判定） | 弱い（クライアント側で判定） |
-| サーバー費用 | 月1,500円〜 | 月500円〜 |
-| バグ修正 | 1箇所 | 2箇所（サーバー＋クライアント） |
-| メモリ使用 | 重い（200〜500MB） | 軽い（10〜50MB） |
-| 同時接続（VPS1台） | 100〜300人 | 1,000〜10,000人 |
+| 観点 | 評価 |
+|------|------|
+| チート対策 | 強い（サーバーで全判定） |
+| メモリ効率 | Go は 10-50MB（Godotヘッドレスの200-500MBと比較） |
+| 同時接続 | 1台で1,000-10,000人対応可能 |
+| コード管理 | サーバーとクライアントで別言語だが、プロトコル（JSON）で分離 |
+| 将来性 | スケールアウト容易（Go + PostgreSQL） |
 
 ---
 
-## 2. インフラ構成
+## 2. 通信プロトコル
 
-### VPS（Virtual Private Server）
+### 2.1 REST API（認証・データ管理）
 
-ネット上に借りる自分専用のPC。24時間稼働。プレイヤーのPCは常時稼働不要。
+| メソッド | パス | 認証 | 説明 |
+|---------|------|------|------|
+| POST | `/api/auth/guest/register` | 不要 | ゲスト登録 |
+| POST | `/api/auth/guest/login` | 不要 | ゲストログイン |
+| POST | `/api/auth/refresh` | 不要 | トークンリフレッシュ |
+| GET | `/api/player/profile` | JWT | プロフィール取得 |
+| PUT | `/api/player/profile` | JWT | プロフィール更新 |
+| GET | `/api/player/stats` | JWT | プレイ統計取得 |
+| PUT | `/api/player/settings` | JWT | 設定更新 |
+| GET | `/api/player/cards` | JWT | 所持カード一覧 |
+| GET | `/api/player/decks` | JWT | デッキ一覧 |
+| GET | `/api/player/unlocks` | JWT | 解放状態一覧 |
 
-| サービス | 最安プラン | 特徴 |
-|----------|-----------|------|
-| さくらVPS | 月643円〜 | 国内、日本語サポート |
-| ConoHa | 月296円〜 | 国内、時間課金あり |
-| Vultr | 月$2.5〜 | 海外、安い |
+### 2.2 WebSocket（リアルタイム通信）
 
-ターン制カードゲームは通信量もCPU負荷も極小のため、月1,500円程度のプランで十分。
+接続: `ws://server:8080/ws?token=<access_token>`
 
-### DB（データベース）
+接続時にJWT検証。`Client`構造体に`UserID`(DB内部ID)と`UserUUID`(クライアントUUID)を保持。
 
-VPSの中にSQLiteファイル1個を配置。別途DBサーバーは不要。
+### 2.3 認証フロー
 
 ```
-┌─── VPS ──────────────────────────┐
-│  サーバーアプリ                      │
-│       │                           │
-│       ▼                           │
-│  SQLiteファイル（users.db、数MB）   │
-└──────────────────────────────────┘
+[初回起動]
+Client → POST /api/auth/guest/register { user_id, device_id, display_name }
+       ← 201 { access_token, refresh_token, expires_in: 900, user_id }
+
+[再ログイン]
+Client → POST /api/auth/guest/login { user_id, device_id }
+       ← 200 { access_token, refresh_token, expires_in: 900, user_id }
+
+[トークン更新]
+Client → POST /api/auth/refresh { user_id, refresh_token }
+       ← 200 { access_token, refresh_token(新), expires_in: 900, user_id }
 ```
 
-#### DB設計（最小限）
-
-| テーブル | カラム | 用途 |
-|----------|--------|------|
-| users | id, name, password_hash, rating, created_at | ユーザーアカウント |
-| decks | id, user_id, name, cards_json | 対戦用デッキ |
-| match_history | id, winner_id, loser_id, turns, duration, created_at | 対戦履歴 |
-
-#### メモリのみ（DB不要）
-
-- ロビー（部屋リスト）: 対戦終わったら消える一時データ
-- ゲーム中の状態: サーバーのインスタンスが保持
-- WebSocketセッション: 接続中のみ
-
-#### あると良い（将来）
-
-| テーブル | 用途 |
-|----------|------|
-| rankings | レーティング・マッチメイキング |
-| card_collection | 所持カード（UserCardDBのサーバー版） |
-| friends | フレンドリスト |
+| トークン | 方式 | 有効期限 | 保存 |
+|---------|------|---------|------|
+| Access Token | JWT HS256 | 15分 | クライアントメモリ |
+| Refresh Token | ランダム64hex + bcryptハッシュ | 30日 | DB（ハッシュのみ） |
 
 ---
 
-## 3. 通信プロトコル（JSON over WebSocket）
+## 3. WebSocket メッセージ体系
 
-### 接続〜ロビー
+### 3.1 メッセージフォーマット
 
+**ロビーメッセージ**（ws/message.go）:
 ```json
-// ログイン
-→ {"type": "login", "name": "Player1", "token": "xxx"}
-← {"type": "login_ok", "user_id": 1, "rating": 1500}
-
-// 部屋作成
-→ {"type": "create_room", "room_name": "test", "max_players": 2, "rule_preset": "quick"}
-← {"type": "room_created", "room_id": "abc123"}
-
-// 部屋参加
-→ {"type": "join_room", "room_id": "abc123"}
-← {"type": "room_joined", "players": [{"id": 0, "name": "Player1"}, {"id": 1, "name": "Player2"}]}
-
-// 準備完了
-→ {"type": "ready"}
-← {"type": "game_start", "seed": 12345, "player_order": [0, 1]}
+{"type": "room_state", "data": {...}, "ts": 1713500000000}
 ```
 
-### ゲーム中（サーバー → 全クライアントに送信）
-
+**ゲームメッセージ**（game/session.go newMsg）:
 ```json
-{"type": "turn_start", "player_id": 0, "turn_number": 1}
-{"type": "spell_cast", "player_id": 0, "spell_id": 42, "target": {"type": "player", "id": 1}}
-{"type": "spell_pass", "player_id": 0}
-{"type": "dice_result", "player_id": 0, "dice1": 3, "dice2": 4, "total": 7}
-{"type": "move_complete", "player_id": 0, "tile_index": 12}
-{"type": "summon", "player_id": 0, "card_id": 15, "tile_index": 12}
-{"type": "battle_start", "attacker_id": 0, "card_id": 15, "item_id": 3, "tile_index": 7}
-{"type": "battle_result", "winner": "attacker", "attacker_hp": 20, "defender_hp": 0}
-{"type": "dominio_action", "player_id": 0, "action": "level_up", "tile_index": 5, "level": 3}
-{"type": "turn_end", "player_id": 0, "next_player_id": 1}
-{"type": "game_over", "winner_id": 0, "reason": "magic_target_reached"}
+{
+  "type": "action_result",
+  "data": {
+    "player": 0,
+    "action_type": "summon",
+    "turn_number": 5,
+    "state_version": 42,
+    "data": {"card_id": 101, "tile": 7, "creature": {...}}
+  },
+  "ts": 1713500000000
+}
 ```
 
-### クライアント → サーバー（操作入力）
+ゲームメッセージには常に`state_version`（単調増加カウンター）を含む。
 
-```json
-{"type": "card_selected", "player_id": 1, "card_index": 3}
-{"type": "pass", "player_id": 1, "phase": "spell"}
-{"type": "dominio_input", "player_id": 1, "action": "level_up", "tile_index": 8}
+### 3.2 ロビーメッセージ一覧
+
+| Client → Server | 説明 |
+|----------------|------|
+| `create_room` | ルーム作成 |
+| `join_room` | ルーム参加 |
+| `leave_room` | ルーム退出 |
+| `set_ready` | 準備完了/解除 |
+| `set_deck` | デッキ設定 |
+| `start_game` | ゲーム開始（ホストのみ） |
+| `list_rooms` | ルーム一覧取得 |
+| `reconnect` | 再接続 |
+| `start_matchmaking` | マッチング開始 |
+| `cancel_matchmaking` | マッチング取消 |
+
+### 3.3 ゲームアクション一覧
+
+| Client → Server | フェーズ | 説明 |
+|----------------|---------|------|
+| `spell_cast` | spell | スペルカード使用 |
+| `spell_pass` | spell | スペルスキップ → 自動ダイスロール |
+| `move_complete` | move | 移動方向確定 |
+| `summon` | tile_action | クリーチャー召喚 |
+| `dominio_action` | tile_action | レベルアップ / 移動 / 交換 |
+| `pass` | spell / tile_action | フェーズスキップ |
+| `end_turn` | end_turn | ターン終了 |
+| `card_selected` | - | カード選択通知（情報のみ） |
+
+| Server → Client | 説明 |
+|----------------|------|
+| `game_state` | 完全なゲーム状態（開始時・再接続時） |
+| `turn_start` | ターン開始通知 |
+| `your_hand` | 手札情報（個別送信） |
+| `action_result` | アクション結果（全員送信） |
+| `dice_result` | ダイス結果（全員送信） |
+| `action_error` | アクションエラー（個別送信） |
+| `turn_timeout` | ターンタイムアウト通知 |
+| `game_over` | ゲーム終了結果 |
+
+---
+
+## 4. 接続管理
+
+### 4.1 Hub（接続管理中枢）
+
+全クライアント接続とルームを管理するシングルトン。`sync.RWMutex`で保護。
+
+**重複接続処理**: 同一UserIDの新規接続時、旧接続に`error`メッセージ送信後`conn.Close()`。
+`close(send)`ではなく`conn.Close()`を使用（Room.Broadcastからのパニック防止）。
+
+### 4.2 Room（接続管理層）
+
+Roomは接続の管理のみを担当。ゲームロジックには一切関与しない。
+
+```
+ライフサイクル:
+NewRoom (waiting) → Join × N → SetReady × N → AllReady (ready)
+  → StartGame (host) → Playing（Session.Start()）
+  → Finished（Session.Stop() or GameOver）
+```
+
+### 4.3 切断・再接続
+
+```
+切断検知（ReadPump終了）
+  → Room.HandleDisconnect
+    → PlayerSlot.Connected = false
+    → Session.HandleDisconnect（channel経由）
+    → 切断タイマー開始
+      ├─ ranked: 30秒 → Session.HandleDefeat
+      └─ friend: 60秒 → AI引き継ぎ通知
+
+再接続
+  → Room.HandleReconnect
+    → PlayerSlot復元 → タイマーキャンセル
+    → Session.HandleReconnect（完全state同期）
+```
+
+### 4.4 Keep-Alive
+
+| パラメータ | 値 |
+|-----------|-----|
+| pingInterval | 10秒 |
+| pongWait | 30秒 |
+| writeWait | 10秒 |
+
+---
+
+## 5. ゲームエンジン（単一goroutineモデル）
+
+### 5.1 設計原則
+
+Sessionの全状態は1つのgoroutineからのみアクセス。mutexは不要。
+外部からの全操作はchannel経由（バッファ64）でキューイングされ、厳密な順序保証のもと処理。
+
+```go
+// 全ての公開メソッドはノンブロッキングなchannel送信のみ
+func (s *Session) HandleAction(slotIndex int, msgType string, data json.RawMessage) {
+    select {
+    case s.commands <- command{kind: cmdAction, slot: slotIndex, ...}:
+    case <-s.ctx.Done():
+    }
+}
+```
+
+### 5.2 ターンフロー
+
+```
+turn_start + your_hand（個別）
+  → spell_cast / spell_pass / pass
+  → 自動DiceRoll → dice_result
+  → move_complete → TransitionAfterLanding
+    → 敵タイル: Battle / 空・味方: TileAction
+  → summon / dominio_action / pass
+  → end_turn → 勝利チェック → 次プレイヤー → DrawCard
+```
+
+### 5.3 ターンタイムアウト（60秒）
+
+タイマーはchannel経由でcmdTimeoutを送信。フェーズに応じた強制進行:
+- PhaseSpell → 自動dice → 自動移動 → EndTurn
+- PhaseDice → 自動dice → 自動移動 → EndTurn
+- PhaseMove/TileAction/Battle → 強制EndTurn
+
+---
+
+## 6. マッチメイキング
+
+### レートティア
+
+| ティア | DisplayRate範囲 |
+|--------|----------------|
+| Bronze | 0 - 9.99 |
+| Silver | 10 - 19.99 |
+| Gold | 20 - 29.99 |
+| Platinum | 30 - 39.99 |
+| Diamond | 40+ |
+
+### マッチング方式
+
+1. **同ティア内**: 1秒間隔スキャン、ベースレート範囲 ±5.0、待機時間に応じて閾値拡大
+2. **クロスティア**: 30秒以上待機で発動、全ティアの長期待機者を集約
+
+---
+
+## 7. セキュリティ
+
+### 7.1 実装済み
+
+| 対策 | 実装 |
+|------|------|
+| JWT署名検証 | HS256、環境変数`JWT_SECRET` |
+| リフレッシュトークン | bcryptハッシュDB保存 + 有効期限チェック（NULL=無効） |
+| WS Origin検証 | `ALLOWED_ORIGINS`環境変数で許可オリジン制御 |
+| WSメッセージサイズ制限 | `SetReadLimit(64KB)` |
+| WSレートリミット | 30メッセージ/秒（スライディングウィンドウ） |
+| WS同時接続制限 | maxClients = 2000 |
+| WS送信バッファ溢れ | バッファフル時にconn.Close()で強制切断 |
+| 重複接続防止 | conn.Close()で旧接続を安全に切断 |
+| HTTPボディ制限 | 全POSTでMaxBytesReader(1MB) |
+| RoomConfig検証 | InitialMagic/TargetMagic/MaxTurnsの範囲制限 |
+| マスタデータ検証 | Summon: creature型, SpellCast: spell型チェック |
+| アクションバリデーション | 手番・フェーズ・カード所持チェック |
+| サーバー権威ダイス | math/rand/v2 PCG（シード記録） |
+| Repositoryエラーラップ | 全DB操作でfmt.Errorf("operation: %w", err) |
+| メッセージMarshalエラー | 失敗時にフォールバックJSON返却 |
+
+### 7.2 防御的コーディング
+
+「起きないはず」ではなく「起きても死なない」方針:
+- ActivePlayerState() nilガード — session.go全5箇所
+- Board長ゼロガード — processTurnTimeoutでゼロ除算防止
+- Board/OwnerIndex範囲チェック — TransitionAfterLanding, ResolveBattle
+- EndTurn最大ターン時の正確な勝者SlotIndex返却
+
+### 7.3 本番環境で必要（未実装）
+
+- JWT_SECRET 256bit以上のランダム値
+- WSS (TLS) — Let's Encrypt等
+- CORS設定 — 本番ドメインのみ
+- REST Rate Limiting — 認証エンドポイント
+- operation_logs活用 — チート検知ロジック
+
+---
+
+## 8. Godot クライアント側対応
+
+### 8.1 実装済み基盤
+
+- **control_type システム**: `"local"` / `"cpu"` / 将来 `"remote"`
+- **CPU切り替え機構**: `convert_to_cpu()` / `convert_to_local()`（切断時のAI引き継ぎ受け口）
+- **対戦モード通知**: `battle_auto_advance`（3秒自動進行）
+- **ロビーUI**: `NetBattleLobby.tscn` / `net_battle_lobby.gd`
+- **NetworkManager**: `network_manager.gd` WebSocket基盤
+
+### 8.2 未実装（サーバー統合後）
+
+- `control_type` に `"remote"` 追加 → サーバーからの結果待ち
+- ローカルプレイヤーの操作 → サーバーに送信
+- 回線切断検知 → `convert_to_cpu()` 呼び出し
+- REST API クライアント（認証・データ同期）
+- ログイン画面
+- 接続状態表示UI
+
+---
+
+## 9. インフラ構成
+
+| 項目 | 選定 |
+|------|------|
+| サーバー | Go バイナリ（1プロセス） |
+| DB | PostgreSQL 16+（同一VPS or 別サーバー） |
+| VPS | 月1,500円程度で十分（ターン制のため通信量・CPU負荷は極小） |
+
+### スケーラビリティ
+
+```
+【〜1,000人】 VPS 1台、Go + PostgreSQL
+     ↓
+【〜5,000人】 VPS性能アップ（月2,000〜5,000円）
+     ↓
+【〜10,000人】 VPS複数台 + ロードバランサー
+     ↓
+【10,000人超】 水平スケーリング + DB分離
 ```
 
 ---
 
-## 4. ゲームフロー（ネット対戦時）
+## 10. プラットフォーム対応
 
-```
-【サーバー】
-1. 部屋が成立 → ゲームインスタンス生成
-2. ゲームロジック実行
-3. プレイヤーの操作待ち → WebSocketで受信
-4. 結果を全クライアントにブロードキャスト
-5. 勝敗決定 → DB保存
-
-【クライアント（スマホ/PC）】
-1. ロビーで部屋に参加
-2. ゲーム開始通知 → 盤面初期化
-3. 自分のターン: 操作をサーバーに送信
-4. 相手のターン: サーバーからの結果を受信 → 画面更新
-5. 勝敗決定 → 結果表示
-```
-
----
-
-## 5. プラットフォーム対応
-
-Godotはマルチプラットフォーム対応。同じGDScriptコードから全プラットフォームにビルド可能。
+全プラットフォームから同じサーバーに接続。クロスプレイ対応。
 
 ```
 同じGDScriptコード
@@ -179,163 +344,10 @@ Godotはマルチプラットフォーム対応。同じGDScriptコードから�
   └── Web版（.html）    → ブラウザで遊べる
 ```
 
-全プラットフォームから同じサーバーに接続。クロスプレイ対応。
-
-### ストア配布時の注意
-
-| 項目 | 内容 |
-|------|------|
-| アプリ更新 | ストアの審査が必要（数日かかることも） |
-| 課金 | ストア手数料30%（将来課金する場合） |
-| データ更新 | カードステータス等のJSON → サーバー配信でアプリ更新不要にできる |
-
 ---
 
-## 6. Godot側の変更点
+## 関連ドキュメント
 
-### 6-1. サーバー側（案Aと案Bで異なる）
-
-**案A（Godotヘッドレス）の場合:**
-- 既存プロジェクトをベースにヘッドレス用に調整
-- 描画・UI・サウンドを無効化、ゲームロジックのみ稼働
-- WebSocketサーバー機能を追加（既存 network_manager.gd を拡張）
-
-**案B（リレーサーバー）の場合:**
-- Python/Go でWebSocketサーバーを新規作成（200〜300行）
-- メッセージ転送 + DB保存のみ
-
-### 6-2. クライアント側の変更（既存プロジェクト、どちらの案でも共通）
-
-#### 実装済み基盤
-- **control_type システム**: `_player_control_types: Array[String]`（"local"/"cpu"、将来"remote"追加）
-  - `player_is_cpu` 互換プロパティ維持（外部11ファイルの参照をそのまま動作）
-  - `get_control_type(player_id)` / `is_cpu_player(player_id)` 統一メソッド
-  - GFM内・TileActionProcessor・BoardSystem3D・DiscardHandler のCPU判定を統一化済み
-- **CPU切り替え機構**: `convert_to_cpu(player_id)` / `convert_to_local(player_id)`
-  - フラグ変更のみ、即実行しない（次のターン/フェーズ開始時に反映）
-  - `_control_type_overridden` で明示的切り替えが `DebugSettings.manual_control_all` より優先
-  - 切り替え時に "balanced" ポリシー自動適用
-- **対戦モード通知**: `GlobalCommentUI` / `SpellCastNotificationUI` の `battle_auto_advance`（3秒自動進行）
-- **ロビーUI**: `NetBattleLobby.tscn` / `net_battle_lobby.gd` 実装済み
-- **NetworkManager**: `network_manager.gd` WebSocket P2P 基盤あり
-- **デバッグ**: `C`キーでP2のCPU/ローカル切り替え、`DebugSettings.test_cpu_takeover`
-
-#### 未実装（サーバー構築後）
-- `control_type` に `"remote"` 追加 → リモートプレイヤーのターンはサーバーからの結果を待つ
-- ローカルプレイヤーの操作 → サーバーに送信
-- オフライン（CPU対戦）は今まで通り動く（変更なし）
-- 回線切断検知 → `convert_to_cpu()` 呼び出し
-- ターンタイムアウト（60秒で自動パス → `convert_to_cpu()`）
-
-### 6-3. 新規UI
-- ログイン画面
-- ロビー画面（部屋一覧、作成、参加） **[実装済み: NetBattleLobby]**
-- 対戦中の接続状態表示
-
-### 6-4. データ配信機能
-- 起動時にサーバーからカードデータ（JSON）を取得
-- 新しいデータがあればダウンロード → ローカルにキャッシュ
-- アプリ更新なしでバランス調整・新カード追加が可能
-
----
-
-## 7. スケーラビリティ（将来の拡張）
-
-### 案Aの場合（Godotヘッドレス）
-
-```
-【〜300人】 VPS 1台（月1,500円）、Godotヘッドレス + SQLite
-     ↓
-【〜1,000人】VPS性能アップ or 複数台（月3,000〜5,000円）
-     ↓
-【1,000人超】Go/Rustに移行を検討
-```
-
-### 案Bの場合（リレーサーバー）
-
-```
-【〜1,000人】VPS 1台（月500円）、Python + SQLite
-     ↓
-【〜5,000人】VPS性能アップ（月2,000〜5,000円）
-     ↓
-【〜10,000人】Go に移行、PostgreSQL
-     ↓
-【10,000人超】VPS複数台 + ロードバランサー
-```
-
-### 共通: SQLite → PostgreSQL 移行
-
-コード変更は最小限（ORM使用の場合、接続先1行のみ）。
-データはエクスポート→インポートで移行。数時間のメンテナンスで完了。
-
-### 共通: サーバー言語の移行
-
-サーバー側のみ書き換え。
-クライアント側（Godot）は一切変更なし（JSONプロトコルが同じため）。
-
----
-
-## 8. リスクと対策
-
-| リスク | 対策 |
-|--------|------|
-| 回線切断 | 60秒タイムアウト → AI引き継ぎ |
-| チート | 案A: サーバーで全判定（強い） / 案B: ホスト側バリデーション（弱い） |
-| サーバーダウン | 対戦中のゲームは失われる（初期は許容） |
-| 遅延 | ターン制なので1秒程度の遅延は問題なし |
-| サーバーバグ修正 | VPSにファイルアップ → 再起動（30秒）、ユーザーはアプリ更新不要 |
-| クライアントバグ修正 | ストア経由でアプリ更新（審査あり） |
-| バランス調整 | JSON配信で対応（アプリ更新不要） |
-
----
-
-## 9. 段階的実装計画
-
-### Phase 1: サーバー基盤
-- サーバープロジェクト作成（案A or 案Bに応じて）
-- WebSocketサーバー機能実装
-- VPSにデプロイ、接続テスト
-- **ゴール**: 2台の端末でメッセージが行き来する
-
-### Phase 2: ロビー
-- 部屋作成・参加・退出
-- 準備完了 → ゲーム開始の流れ
-- ロビーUI（クライアント側）
-- **ゴール**: ロビーで部屋を作って相手と合流できる
-
-### Phase 3: ターン同期
-- サーバー: ゲームロジック稼働
-- クライアント: `control_type` に `"remote"` 追加（基盤は実装済み）、操作の送受信
-- 各フェーズ（スペル、ダイス、召喚、バトル、ドミニオ）の同期
-- **ゴール**: 2人でオンライン対戦が成立する
-
-### Phase 4: 安定化
-- 回線切断検知 → AI引き継ぎ（`convert_to_cpu()` が受け口） **[受け口は実装済み]**
-- ターンタイムアウト（60秒で自動パス → `convert_to_cpu()` 呼び出し）
-- CPU代行時のデフォルトAI設定 **[実装済み]**
-  - プレイヤーキャラにはCPU AI設定（バトルポリシー、AI思考レベル）がないため、
-    `convert_to_cpu()` 時に統一デフォルトポリシー（"balanced"）を自動適用
-  - ネット対戦は全員人間スタート → 切断者1人のみCPU化のため、ポリシー1つで十分
-  - クエストモードは切断なし（オフライン）→ ステージ設定のCPUポリシーがそのまま使われる
-  - デッキ・手札・キャラはプレイヤーのものをそのまま使用
-- グローバルコメントUIのモード分離 **[実装済み]**
-  - クエストモード: クリック待ち + 7秒タイムアウト（現行通り）
-  - 対戦モード: 全コメント3秒自動進行（`battle_auto_advance = true`）
-  - `GlobalCommentUI` と `SpellCastNotificationUI` の両方に対応済み
-  - ソロバトル時に自動で有効化（`game_3d.gd`）
-- 対戦結果のDB保存（SQLite）
-- ユーザー認証（ログイン/登録）
-- **ゴール**: 安定して遊べる状態
-
-### Phase 5: モバイル対応
-- Android / iOS ビルド
-- タッチ操作の最適化
-- ストア配布準備
-- **ゴール**: スマホで対戦できる
-
-### Phase 6: 拡張（将来）
-- レーティング・マッチメイキング
-- フレンド対戦
-- チーム戦対応（TeamSystem連携）
-- データ配信機能（アプリ更新なしのバランス調整）
-- スケールアップ（PostgreSQL移行、VPS複数台）
+- `docs/design/server_architecture.md` — サーバー全体設計（詳細）
+- `docs/design/database_design.md` — データベース設計
+- `docs/design/backend_design.md` — バックエンド詳細設計
