@@ -31,7 +31,7 @@
 | データ | 型 | 現在の実装 | 説明 |
 |--------|-----|-----------|------|
 | gold | int | GameData.profile.gold | ゲーム内通貨（ガチャ・ショップ） |
-| stone | int | GameData.profile.stone | 課金石 |
+| stone | int | GameData.profile.stone | ジェム |
 
 ### 2-3. カード所持
 
@@ -613,7 +613,7 @@ CREATE TABLE match_history (
 |-----------|-----|------|
 | ガチャ実行 | POST `/api/gacha/pull` | 通貨消費 + カード付与をサーバーで計算 |
 | 対戦終了 | POST `/api/match/result` | レーティング計算はサーバー |
-| 課金購入 | POST `/api/shop/purchase` | 課金石操作はサーバー必須 |
+| 課金購入 | POST `/api/shop/purchase` | ジェム操作はサーバー必須 |
 
 #### 一括同期（まとめて保存）
 
@@ -819,7 +819,7 @@ device_id の役割:
 |---------|------|-------------|
 | 初期解放 | 全ユーザーが最初から使用可能 | `default` |
 | クエストクリア | 特定ステージをクリアすると解放 | `quest_clear` |
-| ショップ購入 | ゴールドまたは課金石で購入 | `purchase` |
+| ショップ購入 | ゴールドまたはジェムで購入 | `purchase` |
 
 ### 12-3. キャラクターマスターデータ
 

@@ -1,0 +1,47 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5vehusou4213"]
+
+[ext_resource type="Script" path="res://scripts/ui_components/gacha_animation.gd" id="1_gacha_anim"]
+
+[node name="GachaAnimation" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_gacha_anim")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="BgDim" type="ColorRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.8)
+mouse_filter = 2
+
+[node name="CardsLayer" type="Control" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="FxLayer" type="Control" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="HintLabel" type="Label" parent="Root"]
+anchor_left = 0.5
+anchor_top = 0.9
+anchor_right = 0.5
+anchor_bottom = 0.9
+offset_left = -100.0
+offset_right = 100.0
+offset_bottom = 40.0
+horizontal_alignment = 1
+text = "タップでスキップ"
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 0.9)
+theme_override_font_sizes/font_size = 22

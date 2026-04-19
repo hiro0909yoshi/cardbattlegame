@@ -31,7 +31,13 @@ theme_override_constants/separation = 20
 
 [node name="Header" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 50
+theme_override_constants/separation = 30
+
+[node name="HeaderBackButton" type="Button" parent="VBoxContainer/Header"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "← 戻る"
 
 [node name="TitleLabel" type="Label" parent="VBoxContainer/Header"]
 layout_mode = 2
@@ -69,7 +75,7 @@ text = "アイテム購入"
 custom_minimum_size = Vector2(300, 100)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "課金石購入"
+text = "ジェム購入"
 
 [node name="SellButton" type="Button" parent="VBoxContainer/ModeButtons"]
 custom_minimum_size = Vector2(300, 100)
@@ -149,7 +155,7 @@ theme_override_constants/separation = 30
 [node name="StonePurchaseTitleLabel" type="Label" parent="VBoxContainer/ContentPanel/StonePurchaseSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "課金石購入"
+text = "ジェム購入"
 
 [node name="StonePurchaseScroll" type="ScrollContainer" parent="VBoxContainer/ContentPanel/StonePurchaseSection"]
 layout_mode = 2
@@ -176,7 +182,7 @@ theme_override_constants/separation = 30
 [node name="ItemShopTitleLabel" type="Label" parent="VBoxContainer/ContentPanel/ItemShopSection"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "アイテム購入（課金石）"
+text = "アイテム購入（ジェム）"
 
 [node name="ItemShopGrid" type="GridContainer" parent="VBoxContainer/ContentPanel/ItemShopSection"]
 layout_mode = 2
@@ -245,6 +251,7 @@ columns = 8
 
 [node name="Footer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
 
 [node name="BackButton" type="Button" parent="VBoxContainer/Footer"]
 custom_minimum_size = Vector2(200, 80)

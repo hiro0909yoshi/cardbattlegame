@@ -115,7 +115,7 @@
 | 時間経過 | 不可 | 5分に1回復 |
 | 回復薬（小） | 可 | +20 |
 | 回復薬（大） | 不可 | 最大値まで |
-| 課金石 | 不可 | 全回復（将来実装） |
+| ジェム | 不可 | 全回復（将来実装） |
 | レベルアップ | 不可 | 全回復（将来実装） |
 
 ---
@@ -223,5 +223,5 @@ Storage (Control)
 ## 関連ドキュメント
 
 - `docs/design/main_menu_design.md` — スタミナ・倉庫の設計仕様
-- `docs/design/gacha_system.md` — ショップ・課金石
+- `docs/design/gacha_system.md` — ショップ・ジェム
 - `docs/design/quest_system_design.md` — クエストシステム

@@ -30,8 +30,11 @@ var ui_debug_mode: bool = false
 ## シグナルレジストリのデバッグログ表示
 var signal_registry_debug: bool = true
 
-## 課金石を表示する（false=非表示、公開時にtrueに変更）
+## ジェムを表示する（false=非表示、公開時にtrueに変更）
 var show_premium_stone: bool = true
+
+## ガチャ演出をスキップ（true=演出なしで即結果表示）
+var skip_gacha_animation: bool = true
 
 ## CPU切り替えテスト（true=ソロバトルでCPU1を人間操作で開始、途中CPU切り替え可能）
 var test_cpu_takeover: bool = false

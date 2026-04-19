@@ -1,6 +1,7 @@
 extends Control
 
 const GC = preload("res://scripts/game_constants.gd")
+const _GachaSystem = preload("res://scripts/gacha_system.gd")
 
 @onready var left_panel = $MarginContainer/HBoxContainer/LeftPanel
 @onready var left_vbox = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer
@@ -176,6 +177,7 @@ func _on_card_list_pressed():
 func _on_reset_cards_pressed():
 	UserCardDB.reset_database()
 	UserCardDB.flush()
+	GameData.reset_collection_complete()
 	_show_collection_stats()
 
 func _on_back_pressed():
@@ -294,9 +296,12 @@ func _create_stats_panel(title: String, data: Dictionary, category: String) -> C
 func _show_category_cards(category: String):
 	_current_category = category
 
-	# カードをフィルタリング
+	# カードをフィルタリング（排出不能カードは除外）
 	_filtered_cards.clear()
 	for card in CardLoader.all_cards:
+		var card_id: int = int(card.get("id", 0))
+		if card_id in _GachaSystem.EXCLUDED_CARD_IDS:
+			continue
 		var card_type = card.get("type", "")
 		var element = card.get("element", "")
 
@@ -716,12 +721,14 @@ func _calculate_collection_stats() -> Dictionary:
 			"R": {"owned": 0, "total": 0}
 		}
 	
-	# 全カードをチェック
+	# 全カードをチェック（排出不能カードは除外）
 	for card in CardLoader.all_cards:
+		var card_id: int = int(card.get("id", 0))
+		if card_id in _GachaSystem.EXCLUDED_CARD_IDS:
+			continue
 		var card_type = card.get("type", "")
 		var element = card.get("element", "")
 		var rarity = card.get("rarity", "N")
-		var card_id = card.get("id", 0)
 		
 		# カテゴリ判定
 		var category = ""
