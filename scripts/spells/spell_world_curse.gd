@@ -5,6 +5,9 @@ class_name SpellWorldCurse
 # ゲーム全体に影響を与える刻印効果を管理
 # ドキュメント: docs/design/spells/世界刻印.md
 
+## 世界刻印状態が変化したとき発火（付与・ラウンド経過・消滅）
+signal world_curse_changed(world_curse: Dictionary)
+
 # ========================================
 # 参照
 # ========================================
@@ -130,18 +133,25 @@ func get_cost_multiplier_for_card(card: Dictionary) -> float:
 # ========================================
 
 ## effect辞書から世界刻印を適用
-func apply(effect: Dictionary) -> void:
+## spell_card: 発動に使ったカードデータ（ボード表示用、省略可）
+func apply(effect: Dictionary, spell_card: Dictionary = {}) -> void:
 	var curse_type = effect.get("curse_type", "")
 	var curse_name = effect.get("name", "")
 	var duration = effect.get("duration", 6)
 	var params = effect.get("params", {})
 	params["name"] = curse_name
-	
+
+	# カード情報（id/effect_text 等）を params に格納してボード表示に使う
+	if not spell_card.is_empty():
+		params["card_id"] = int(spell_card.get("id", 0))
+		params["card_text"] = String(spell_card.get("effect", spell_card.get("text", "")))
+
 	spell_curse.curse_world(curse_type, duration, params)
 	print("[世界刻印] %s を発動（%dR間）" % [curse_name, duration])
-	
+
 	# UIを更新（世界刻印表示）
 	_update_ui()
+	world_curse_changed.emit(game_stats.get("world_curse", {}) if game_stats else {})
 
 # ========================================
 # 判定メソッド（static）
@@ -262,9 +272,10 @@ func on_round_start():
 			var expired_name = world_curse.get("name", "不明")
 			game_stats.erase("world_curse")
 			print("[世界刻印消滅] %s" % expired_name)
-		
+
 		# UIを更新
 		_update_ui()
+		world_curse_changed.emit(game_stats.get("world_curse", {}))
 
 # ========================================
 # UI更新

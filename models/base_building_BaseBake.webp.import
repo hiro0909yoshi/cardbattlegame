@@ -2,21 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://biystfvmjhxs0"
-path.s3tc="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.s3tc.ctex"
-path.etc2="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.etc2.ctex"
+uid="uid://dbsopg8kng5g3"
+path.s3tc="res://.godot/imported/base_building_BaseBake.webp-994b4ecc0f3ad097741812e6c84a57b7.s3tc.ctex"
+path.etc2="res://.godot/imported/base_building_BaseBake.webp-994b4ecc0f3ad097741812e6c84a57b7.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "e099f18a620c918a28bc166cb9eb9630"
+"md5": "c26e94b7102b934c15109b78ee4b0aaf"
 }
 
 [deps]
 
-source_file="res://models/magic_stone_BakedCrystal.webp"
-dest_files=["res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.s3tc.ctex", "res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.etc2.ctex"]
+source_file="res://models/base_building_BaseBake.webp"
+dest_files=["res://.godot/imported/base_building_BaseBake.webp-994b4ecc0f3ad097741812e6c84a57b7.s3tc.ctex", "res://.godot/imported/base_building_BaseBake.webp-994b4ecc0f3ad097741812e6c84a57b7.etc2.ctex"]
 
 [params]
 

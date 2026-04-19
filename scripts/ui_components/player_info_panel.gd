@@ -17,10 +17,7 @@ var parent_node: Node     # 親ノード参照
 # システム参照（型指定なし - 3D対応）
 var player_system_ref = null
 var board_system_ref = null
-var game_flow_manager_ref = null  # 世界刻印取得用
-
-# 世界刻印表示用
-var world_curse_label: RichTextLabel = null
+var game_flow_manager_ref = null
 
 # 設定
 var panel_count = 2       # 表示するパネル数
@@ -44,7 +41,6 @@ func initialize(parent: Node, player_system: PlayerSystem, board_system, count: 
 	panel_count = count
 	
 	create_panels()
-	create_world_curse_label()
 	update_all_panels()
 	
 	# EP変更シグナルを接続（即座更新用）
@@ -69,24 +65,6 @@ func create_panels():
 		var panel = create_single_panel(i)
 		parent_node.add_child(panel)
 		panels.append(panel)
-
-# 世界刻印ラベルを作成
-func create_world_curse_label():
-	world_curse_label = RichTextLabel.new()
-	
-	# プレイヤーパネルの下に配置
-	var label_y = start_y + (panel_height + panel_spacing) * panel_count
-	world_curse_label.position = Vector2(start_x, label_y)
-	world_curse_label.size = Vector2(panel_width, 32)
-	world_curse_label.bbcode_enabled = true
-	world_curse_label.scroll_active = false
-	world_curse_label.fit_content = false
-	world_curse_label.add_theme_font_size_override("normal_font_size", 17)
-	world_curse_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	world_curse_label.visible = false  # 初期は非表示
-	
-	parent_node.add_child(world_curse_label)
-		
 
 # 単一パネルを作成
 func create_single_panel(player_id: int) -> Panel:
@@ -151,26 +129,6 @@ func update_all_panels():
 	
 	for i in range(info_labels.size()):
 		update_single_panel(i)
-	
-	# 世界刻印ラベルを更新
-	update_world_curse_label()
-
-# 世界刻印ラベルを更新
-func update_world_curse_label():
-	if not world_curse_label:
-		return
-	
-	var world_curse = {}
-	if game_flow_manager_ref and "game_stats" in game_flow_manager_ref:
-		world_curse = game_flow_manager_ref.game_stats.get("world_curse", {})
-	
-	if world_curse.is_empty():
-		world_curse_label.visible = false
-	else:
-		var curse_name = world_curse.get("name", "世界刻印")
-		var duration = world_curse.get("duration", 0)
-		world_curse_label.text = "[color=purple]世界刻印[%s]{%dR}[/color]" % [curse_name, duration]
-		world_curse_label.visible = true
 
 # 単一パネルを更新
 func update_single_panel(player_id: int):

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/tiles/magic_stone_tile.gd" id="1_magic_stone"]
 [ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="2_frame"]
 [ext_resource type="StandardMaterial3D" uid="uid://cmsttmat0001" path="res://scenes/Tiles/magic_stone_tile_mat.tres" id="3_mat"]
-[ext_resource type="PackedScene" path="res://models/magic_stone.glb" id="4_crystal"]
+[ext_resource type="PackedScene" uid="uid://bkmaobqenh2ey" path="res://models/well.glb" id="4_crystal"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
 size = Vector3(1, 0.0951538, 1)
@@ -34,5 +34,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0628314, 0)
 material_override = ExtResource("3_mat")
 mesh = SubResource("BoxMesh_magic_stone")
 
-[node name="Crystal" parent="." instance=ExtResource("4_crystal")]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -0.6, -0.2, -0.6)
+[node name="Well" parent="." instance=ExtResource("4_crystal")]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, 0.75, 0)

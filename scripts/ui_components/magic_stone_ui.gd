@@ -13,6 +13,10 @@ var stone_system = null
 var player_system_ref = null
 var transaction_done: bool = false
 
+# 閲覧モード（全プレイヤー所持状況表示）
+var is_info_mode: bool = false
+var all_players_stones: Array = []  # [{name, stones}, ...]
+
 # UI要素
 var panel: Panel
 var title_label: Label
@@ -42,7 +46,7 @@ func setup_ui():
 	
 	# メインパネル
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(1220, 700)
+	panel.custom_minimum_size = Vector2(1195, 675)
 	add_child(panel)
 
 	# パネルスタイル
@@ -118,7 +122,7 @@ func setup_ui():
 	close_button.add_theme_stylebox_override("normal", btn_style)
 	
 	var close_spacer = Control.new()
-	close_spacer.custom_minimum_size = Vector2(0, 40)
+	close_spacer.custom_minimum_size = Vector2(0, 25)
 	vbox.add_child(close_spacer)
 
 	var button_container = HBoxContainer.new()
@@ -297,34 +301,72 @@ func setup(p_id: int, p_magic: int, p_stones: Dictionary, s_values: Dictionary, 
 
 ## ショップ表示
 func show_shop():
+	is_info_mode = false
+	_apply_mode_visibility()
 	_update_display()
 	_center_panel()
 	visible = true
 
+## 閲覧モード表示（全プレイヤー所持状況）
+func show_info_mode(players_data: Array, s_values: Dictionary):
+	is_info_mode = true
+	all_players_stones = players_data
+	stone_values = s_values.duplicate()
+	if title_label:
+		title_label.text = "魔法石所持状況"
+	if magic_label:
+		magic_label.visible = false
+	_apply_mode_visibility()
+	_update_display()
+	_center_panel()
+	visible = true
+
+## ショップ操作要素の表示/非表示切替
+func _apply_mode_visibility():
+	var shop_visible: bool = not is_info_mode
+	if magic_label:
+		magic_label.visible = shop_visible
+	for element in ELEMENTS:
+		if not stone_panels.has(element):
+			continue
+		var panel_node = stone_panels[element]
+		for ctrl_name in ["minus_btn", "plus_btn", "qty_label", "buy_btn", "sell_btn", "total_label"]:
+			var ctrl = _find_child_by_name(panel_node, ctrl_name)
+			if ctrl:
+				ctrl.visible = shop_visible
+
 ## 表示更新
 func _update_display():
 	# EP表示更新
-	if magic_label:
+	if magic_label and not is_info_mode:
 		magic_label.text = "所持EP: %dEP" % player_magic
-	
+
 	# 各属性パネル更新
 	for element in ELEMENTS:
 		if not stone_panels.has(element):
 			continue
-		
+
 		var panel_node = stone_panels[element]
 		var value = stone_values.get(element, 50)
 		var owned = player_stones.get(element, 0)
-		
+
 		# 価値
 		var value_label = _find_child_by_name(panel_node, "value_label")
 		if value_label:
 			value_label.text = "価値: %dEP" % value
-		
-		# 所持数
+
+		# 所持数（モード別表示）
 		var owned_label = _find_child_by_name(panel_node, "owned_label")
 		if owned_label:
-			owned_label.text = "所持: %d個" % owned
+			if is_info_mode:
+				var lines: Array[String] = []
+				for p_data in all_players_stones:
+					var p_name: String = p_data.get("name", "P?")
+					var p_stones: Dictionary = p_data.get("stones", {})
+					lines.append("%s: %d個" % [p_name, p_stones.get(element, 0)])
+				owned_label.text = "\n".join(lines)
+			else:
+				owned_label.text = "所持: %d個" % owned
 		
 		# 数量
 		var qty_label = _find_child_by_name(panel_node, "qty_label")

@@ -68,12 +68,25 @@ func _ready():
 	if system_manager.game_flow_manager:
 		system_manager.game_flow_manager.current_stage_id = stage_id
 		system_manager.game_flow_manager.current_game_mode = "quest"
+		GameData.current_game_mode = "quest"
+
+	# 世界刻印ボードのシグナル接続（system_manager 初期化後に実施）
+	_connect_world_curse_signal()
 
 	# ステージ固有の設定を適用
 	_apply_stage_settings()
-	
+
 	# ゲーム開始待機
 	await get_tree().create_timer(0.5).timeout
+
+	# タイルクリック検出（camera_controllerはinitialize_allのawait後に作成される）
+	if system_manager.camera_controller:
+		if not system_manager.camera_controller.tile_tapped.is_connected(_on_tile_tapped):
+			system_manager.camera_controller.tile_tapped.connect(_on_tile_tapped)
+		if not system_manager.camera_controller.empty_tapped.is_connected(_on_empty_tapped):
+			system_manager.camera_controller.empty_tapped.connect(_on_empty_tapped)
+		if not system_manager.camera_controller.drag_started.is_connected(_hide_land_info):
+			system_manager.camera_controller.drag_started.connect(_hide_land_info)
 
 	# クラッシュ復帰チェック
 	var _is_restoring = false
@@ -83,6 +96,9 @@ func _ready():
 		if not save_data.is_empty():
 			_is_restoring = true
 			system_manager.restore_game(save_data)
+			# 復帰後に世界刻印ボードを再描画
+			if system_manager.game_flow_manager:
+				_on_world_curse_changed(system_manager.game_flow_manager.game_stats.get("world_curse", {}))
 			print("[QuestGame] クラッシュ復帰完了")
 
 	# 通常のゲーム開始（復帰でない場合）
@@ -169,6 +185,9 @@ func _setup_3d_scene_before_init():
 	castle_env.rotation.y = deg_to_rad(45)
 	add_child(castle_env)
 	castle_env.setup_from_tiles(tiles_container)
+
+	# 装飾オブジェクト配置（魔法石ボード等）
+	_place_decorative_objects()
 
 	# プレイヤーコンテナ作成
 	var players_container: Node3D = Node3D.new()
@@ -487,6 +506,167 @@ func _setup_cpu_battle_policies():
 			cpu_movement_evaluator.set_cpu_ai_handler(cpu_ai_handler)
 		else:
 			print("[QuestGame] cpu_movement_evaluator が見つかりません")
+
+## 装飾オブジェクト配置（魔法石ボード・世界刻印ボード）
+## CP1タイルの実位置を基準に配置するため、ステージによらず同じ相対位置になる
+func _place_decorative_objects() -> void:
+	var cp1_pos: Vector3 = _get_cp1_world_position()
+
+	var world_curse_board_scene: PackedScene = load("res://scenes/objects/WorldCurseBoard.tscn") as PackedScene
+	if world_curse_board_scene:
+		_world_curse_board = world_curse_board_scene.instantiate()
+		(_world_curse_board as Node3D).position = cp1_pos + Vector3(-4.0, 0.0, -8.0)
+		add_child(_world_curse_board)
+		if _world_curse_board.has_signal("clicked"):
+			_world_curse_board.clicked.connect(_on_world_curse_board_clicked)
+
+
+## 世界刻印シグナルを接続し、既存刻印がある場合は初期表示
+func _connect_world_curse_signal() -> void:
+	if not system_manager or not system_manager.game_flow_manager:
+		return
+	var container: SpellSystemContainer = system_manager.game_flow_manager.spell_container
+	if not container or not container.spell_world_curse:
+		return
+	var swc: SpellWorldCurse = container.spell_world_curse
+	if not swc.world_curse_changed.is_connected(_on_world_curse_changed):
+		swc.world_curse_changed.connect(_on_world_curse_changed)
+	# 復帰時の初期表示
+	var stats: Dictionary = system_manager.game_flow_manager.game_stats
+	if stats:
+		_on_world_curse_changed(stats.get("world_curse", {}))
+
+
+func _on_world_curse_changed(world_curse: Dictionary) -> void:
+	if _world_curse_board and _world_curse_board.has_method("update_display"):
+		_world_curse_board.update_display(world_curse)
+
+
+func _on_world_curse_board_clicked() -> void:
+	if not system_manager or not system_manager.game_flow_manager:
+		return
+	var gfm = system_manager.game_flow_manager
+	var world_curse: Dictionary = gfm.game_stats.get("world_curse", {})
+	# フォールバック: spell_container 経由で取得（game_stats 参照ズレ対策）
+	if world_curse.is_empty() and gfm.spell_container and gfm.spell_container.spell_world_curse:
+		var swc = gfm.spell_container.spell_world_curse
+		if swc.game_stats:
+			world_curse = swc.game_stats.get("world_curse", {})
+	_show_world_curse_info(world_curse)
+
+
+func _show_world_curse_info(world_curse: Dictionary) -> void:
+	var msg: String = ""
+	if world_curse.is_empty():
+		msg = "現在発動中の世界刻印はありません"
+	else:
+		var curse_name: String = world_curse.get("name", "")
+		var duration: int = world_curse.get("duration", 0)
+		var desc: String = CurseDescriptions.DESCRIPTIONS.get(curse_name, "")
+		msg = "%s（残り %d ターン）\n%s" % [curse_name, duration, desc]
+
+	var ui_mgr: UIManager = system_manager.ui_manager if system_manager else null
+	if ui_mgr and ui_mgr.global_comment_ui:
+		ui_mgr.global_comment_ui.show_and_wait(msg, -1, true)
+	else:
+		print("[WorldCurseBoard] %s" % msg)
+
+
+## CP1タイルのワールド座標を返す（見つからない場合は原点）
+func _get_cp1_world_position() -> Vector3:
+	if not stage_loader:
+		return Vector3.ZERO
+	for idx in stage_loader.generated_tiles.keys():
+		var tile = stage_loader.generated_tiles[idx]
+		if tile and "checkpoint_type" in tile and tile.checkpoint_type == 0:
+			return (tile as Node3D).global_position
+	return Vector3.ZERO
+
+
+## キャッシュされた魔法石ボードUI
+var _magic_stone_board_ui: Control = null
+
+## 土地情報ポップアップ
+var _land_info_popup: LandInfoPopup = null
+
+## 世界刻印ボード参照
+var _world_curse_board: Node = null
+
+
+func _on_tile_tapped(_tile_index: int, tile_data: Dictionary) -> void:
+	var t: String = String(tile_data.get("type", ""))
+	match t:
+		"magic_stone":
+			_hide_land_info()
+			_show_magic_stone_info()
+		"fire", "water", "earth", "wind", "blank":
+			_show_land_info(tile_data)
+		"card_buy", "card_give", "magic", "warp", "warp_stop", "checkpoint", "base", "branch":
+			_show_special_tile_info(t)
+		_:
+			_hide_land_info()
+
+
+func _show_special_tile_info(tile_type: String) -> void:
+	if not _land_info_popup or not is_instance_valid(_land_info_popup):
+		var ui_layer: CanvasLayer = CanvasLayer.new()
+		ui_layer.layer = 50
+		add_child(ui_layer)
+		_land_info_popup = LandInfoPopup.new()
+		_land_info_popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ui_layer.add_child(_land_info_popup)
+	_land_info_popup.show_special_info(tile_type)
+
+
+func _on_empty_tapped() -> void:
+	_hide_land_info()
+
+
+func _hide_land_info() -> void:
+	if _land_info_popup and is_instance_valid(_land_info_popup):
+		_land_info_popup.hide_info()
+
+
+func _show_magic_stone_info() -> void:
+	if not system_manager:
+		return
+	var player_sys = system_manager.player_system
+	var stone_sys = system_manager.game_flow_manager.magic_stone_system if system_manager.game_flow_manager else null
+	if not player_sys or not stone_sys:
+		return
+
+	var players_data: Array = []
+	for p in player_sys.players:
+		players_data.append({"name": p.name, "stones": p.magic_stones.duplicate()})
+	var stone_values: Dictionary = stone_sys.get_all_stone_values()
+
+	if not _magic_stone_board_ui or not is_instance_valid(_magic_stone_board_ui):
+		var ui_layer: CanvasLayer = CanvasLayer.new()
+		ui_layer.layer = 50
+		add_child(ui_layer)
+		var ui_script = load("res://scripts/ui_components/magic_stone_ui.gd")
+		_magic_stone_board_ui = Control.new()
+		_magic_stone_board_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_magic_stone_board_ui.set_script(ui_script)
+		ui_layer.add_child(_magic_stone_board_ui)
+		_magic_stone_board_ui.setup_ui()
+		_magic_stone_board_ui.shop_closed.connect(func(_done): _magic_stone_board_ui.visible = false)
+
+	_magic_stone_board_ui.show_info_mode(players_data, stone_values)
+
+
+func _show_land_info(tile_data: Dictionary) -> void:
+	var element: String = String(tile_data.get("type", ""))
+	var level: int = int(tile_data.get("level", 1))
+	if not _land_info_popup or not is_instance_valid(_land_info_popup):
+		var ui_layer: CanvasLayer = CanvasLayer.new()
+		ui_layer.layer = 50
+		add_child(ui_layer)
+		_land_info_popup = LandInfoPopup.new()
+		_land_info_popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ui_layer.add_child(_land_info_popup)
+	_land_info_popup.show_info(element, level)
+
 
 func _setup_fps_counter() -> void:
 	var canvas := CanvasLayer.new()

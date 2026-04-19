@@ -54,8 +54,9 @@ func execute(context: Dictionary) -> Dictionary:
 
 	_log("効果実行開始 (effect_type: world_curse)")
 
-	# spell_world_curse に委譲
-	spell_world_curse.apply(effect)
+	# spell_world_curse に委譲（カード情報も渡してボード表示用に利用）
+	var spell_card: Dictionary = context.get("spell_card", {})
+	spell_world_curse.apply(effect, spell_card)
 
 	# ★ effect_message を構築（JSONの name を使用）
 	var curse_name = effect.get("name", "")

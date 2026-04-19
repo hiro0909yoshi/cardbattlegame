@@ -2,21 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://biystfvmjhxs0"
-path.s3tc="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.s3tc.ctex"
-path.etc2="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.etc2.ctex"
+uid="uid://dntljl7lslaqv"
+path.s3tc="res://.godot/imported/world_curse_board_WorldCurseBoardBake.webp-703fcd22bd80852bb572b2d7e414fd2d.s3tc.ctex"
+path.etc2="res://.godot/imported/world_curse_board_WorldCurseBoardBake.webp-703fcd22bd80852bb572b2d7e414fd2d.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "e099f18a620c918a28bc166cb9eb9630"
+"md5": "9ca8ebfb5000dab1e58e1d4938b92021"
 }
 
 [deps]
 
-source_file="res://models/magic_stone_BakedCrystal.webp"
-dest_files=["res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.s3tc.ctex", "res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.etc2.ctex"]
+source_file="res://models/world_curse_board_WorldCurseBoardBake.webp"
+dest_files=["res://.godot/imported/world_curse_board_WorldCurseBoardBake.webp-703fcd22bd80852bb572b2d7e414fd2d.s3tc.ctex", "res://.godot/imported/world_curse_board_WorldCurseBoardBake.webp-703fcd22bd80852bb572b2d7e414fd2d.etc2.ctex"]
 
 [params]
 

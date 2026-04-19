@@ -504,10 +504,11 @@ static func _apply_progress(
 						if buff is Dictionary:
 							buff_system.player_buffs[pid].append(buff.duplicate())
 
-	# ゲーム統計を復元
+	# ゲーム統計を復元（参照を保持するため clear + merge で上書き）
 	if gfm:
 		var saved_stats = data.get("game_stats", {})
 		if saved_stats is Dictionary:
-			gfm.game_stats = saved_stats.duplicate()
+			gfm.game_stats.clear()
+			gfm.game_stats.merge(saved_stats.duplicate(true))
 
 	return true

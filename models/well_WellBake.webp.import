@@ -2,21 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://biystfvmjhxs0"
-path.s3tc="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.s3tc.ctex"
-path.etc2="res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.etc2.ctex"
+uid="uid://bwkpefkmsg80d"
+path.s3tc="res://.godot/imported/well_WellBake.webp-30761432be68f9f2ee4480e67e8e1c94.s3tc.ctex"
+path.etc2="res://.godot/imported/well_WellBake.webp-30761432be68f9f2ee4480e67e8e1c94.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "e099f18a620c918a28bc166cb9eb9630"
+"md5": "f67d07b13065bbb1e0f6dd9db87c5679"
 }
 
 [deps]
 
-source_file="res://models/magic_stone_BakedCrystal.webp"
-dest_files=["res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.s3tc.ctex", "res://.godot/imported/magic_stone_BakedCrystal.webp-45b1a7de9a5a3999eba2353c73fa55db.etc2.ctex"]
+source_file="res://models/well_WellBake.webp"
+dest_files=["res://.godot/imported/well_WellBake.webp-30761432be68f9f2ee4480e67e8e1c94.s3tc.ctex", "res://.godot/imported/well_WellBake.webp-30761432be68f9f2ee4480e67e8e1c94.etc2.ctex"]
 
 [params]
 
