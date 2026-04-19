@@ -118,6 +118,25 @@ func IsItem(id int) bool {
 	return c != nil && c.Type == "item"
 }
 
+func HasKeyword(id int, keyword string) bool {
+	c := GetCard(id)
+	if c == nil || c.AbilityParsed == nil {
+		return false
+	}
+	var parsed struct {
+		Keywords []string `json:"keywords"`
+	}
+	if err := json.Unmarshal(c.AbilityParsed, &parsed); err != nil {
+		return false
+	}
+	for _, kw := range parsed.Keywords {
+		if kw == keyword {
+			return true
+		}
+	}
+	return false
+}
+
 func GetItemStatBonus(id int) StatBonus {
 	c := GetCard(id)
 	if c == nil || c.EffectParsed == nil {

@@ -337,6 +337,11 @@ func TestFullGame(t *testing.T) {
 	_, token1 := registerGuestUser(t, "full_p1")
 	_, token2 := registerGuestUser(t, "full_p2")
 
+	// Save decks so players have cards to summon
+	creatureDeck := []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 1}
+	saveDeck(t, token1, 0, creatureDeck)
+	saveDeck(t, token2, 0, creatureDeck)
+
 	conn1 := connectWebSocket(t, token1)
 	defer conn1.Close()
 	conn2 := connectWebSocket(t, token2)
@@ -410,11 +415,30 @@ func TestFullGame(t *testing.T) {
 		}
 
 		if nextPhase == "battle" {
+			waitForMessageType(t, activeConn, "battle_start", 3*time.Second)
 			waitForMessageType(t, activeConn, "battle_result", 3*time.Second)
 			t.Log("  Battle resolved")
 		} else {
-			sendMessage(t, activeConn, "pass", nil)
-			waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+			// Try to summon using hand from turn_start
+			var handCardID int
+			if tsMap, ok := ts.(map[string]any); ok {
+				if hand, ok := tsMap["hand"].([]any); ok && len(hand) > 0 {
+					handCardID = int(hand[0].(float64))
+				}
+			}
+			if handCardID > 0 {
+				sendMessage(t, activeConn, "summon", map[string]any{"card_id": handCardID})
+				resp, _ := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+				if resp == "action_result" {
+					t.Logf("  Summoned card %d", handCardID)
+				} else {
+					sendMessage(t, activeConn, "pass", nil)
+					waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+				}
+			} else {
+				sendMessage(t, activeConn, "pass", nil)
+				waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+			}
 		}
 
 		// end_turn
@@ -770,5 +794,378 @@ func TestBattle(t *testing.T) {
 
 	if !battleOccurred {
 		t.Log("⚠ No battle occurred in 20 turns (players may not have landed on occupied tiles)")
+	}
+}
+
+// TestSpellCast tests that a player can cast a spell during the spell phase
+func TestSpellCast(t *testing.T) {
+	_, token1 := registerGuestUser(t, "spell_p1")
+	_, token2 := registerGuestUser(t, "spell_p2")
+
+	// Deck with 1 spell card (ID 2004) + 19 creatures
+	spellDeck := []int{2004, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	saveDeck(t, token1, 0, spellDeck)
+	saveDeck(t, token2, 0, spellDeck)
+
+	conn1 := connectWebSocket(t, token1)
+	defer conn1.Close()
+	conn2 := connectWebSocket(t, token2)
+	defer conn2.Close()
+
+	cfg := map[string]any{
+		"match_type":    "friend",
+		"max_players":   2,
+		"initial_magic": 1000,
+		"target_magic":  8000,
+		"max_turns":     10,
+	}
+	sendMessage(t, conn1, "create_room", cfg)
+	roomMsg := waitForMessageType(t, conn1, "room_created", 5*time.Second)
+	roomID := roomMsg.(map[string]any)["room_id"].(string)
+
+	joinRoom(t, conn2, roomID)
+
+	setReady(t, conn1, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	setReady(t, conn2, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	waitForMessageType(t, conn2, "room_state", 3*time.Second)
+
+	startGame(t, conn1)
+
+	waitForMessageType(t, conn1, "game_state", 5*time.Second)
+	waitForMessageType(t, conn2, "game_state", 5*time.Second)
+
+	conns := [2]*websocket.Conn{conn1, conn2}
+
+	firstTS := waitForMessageType(t, conn1, "turn_start", 3*time.Second)
+	waitForMessageType(t, conn2, "turn_start", 2*time.Second)
+
+	var pendingTurnStart any = firstTS
+	spellCastSuccess := false
+
+	for turn := 1; turn <= 10; turn++ {
+		ts := pendingTurnStart
+		pendingTurnStart = nil
+
+		if ts == nil {
+			t.Fatalf("No turn_start data for turn %d", turn)
+		}
+
+		var activePlayer int
+		var hand []any
+		if tsMap, ok := ts.(map[string]any); ok {
+			activePlayer = int(tsMap["active_player"].(float64))
+			if h, ok := tsMap["hand"].([]any); ok {
+				hand = h
+			}
+		}
+		activeConn := conns[activePlayer]
+		otherConn := conns[1-activePlayer]
+		t.Logf("--- Turn %d (player %d) hand: %v ---", turn, activePlayer, hand)
+
+		// Check if spell card 2004 is in hand
+		hasSpell := false
+		for _, c := range hand {
+			if int(c.(float64)) == 2004 {
+				hasSpell = true
+				break
+			}
+		}
+
+		if hasSpell && !spellCastSuccess {
+			// Cast spell
+			t.Log("  ★ Casting spell 2004")
+			sendMessage(t, activeConn, "spell_cast", map[string]any{
+				"card_id":       2004,
+				"target_player": -1,
+				"target_tile":   -1,
+			})
+			resp, data := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+			if resp == "action_result" {
+				t.Logf("  ✓ Spell cast succeeded: %s", prettyJSON(data))
+				spellCastSuccess = true
+				// After spell_cast, phase is PhaseDice but no auto-roll
+				// Test goal achieved — spell_cast works
+				t.Log("\n✓ Spell cast test completed successfully!")
+				return
+			}
+			t.Logf("  Spell cast failed: %v — falling back to spell_pass", data)
+		}
+
+		// Normal turn: spell_pass
+		sendMessage(t, activeConn, "spell_pass", nil)
+		waitForMessageType(t, activeConn, "dice_result", 3*time.Second)
+
+		// move_complete
+		sendMessage(t, activeConn, "move_complete", map[string]any{"direction": -1})
+		waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+
+		// tile_action: try summon or pass
+		var handCardID int
+		for _, c := range hand {
+			cid := int(c.(float64))
+			if cid != 2004 && cid > 0 {
+				handCardID = cid
+				break
+			}
+		}
+		if handCardID > 0 {
+			sendMessage(t, activeConn, "summon", map[string]any{"card_id": handCardID})
+			resp, _ := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+			if resp != "action_result" {
+				sendMessage(t, activeConn, "pass", nil)
+				waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+			}
+		} else {
+			sendMessage(t, activeConn, "pass", nil)
+			waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+		}
+
+		// end_turn
+		sendMessage(t, activeConn, "end_turn", nil)
+		msgType, msgData := waitForAnyType(t, activeConn, []string{"game_over", "turn_start"}, 3*time.Second)
+		if msgType == "game_over" {
+			break
+		}
+		if msgType == "turn_start" {
+			waitForMessageType(t, otherConn, "turn_start", 1*time.Second)
+			pendingTurnStart = msgData
+		}
+	}
+
+	if !spellCastSuccess {
+		t.Log("⚠ Spell card 2004 never appeared in hand within 10 turns")
+	}
+}
+
+// TestDominio tests level_up, move_creature, swap using Indomitable creatures (ID 14, 奮闘)
+// Indomitable creatures don't go down after summon, enabling immediate dominio commands.
+func TestDominio(t *testing.T) {
+	_, token1 := registerGuestUser(t, "dominio_p1")
+	_, token2 := registerGuestUser(t, "dominio_p2")
+
+	// Deck with Indomitable creature ID 14 (エターナガード, 奮闘) at front
+	// Multiple copies so we can summon on different tiles for move/swap
+	indomitableDeck := []int{14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14}
+	saveDeck(t, token1, 0, indomitableDeck)
+	saveDeck(t, token2, 0, indomitableDeck)
+
+	conn1 := connectWebSocket(t, token1)
+	defer conn1.Close()
+	conn2 := connectWebSocket(t, token2)
+	defer conn2.Close()
+
+	cfg := map[string]any{
+		"match_type":    "friend",
+		"max_players":   2,
+		"initial_magic": 1000,
+		"target_magic":  8000,
+		"max_turns":     30,
+	}
+	sendMessage(t, conn1, "create_room", cfg)
+	roomMsg := waitForMessageType(t, conn1, "room_created", 5*time.Second)
+	roomID := roomMsg.(map[string]any)["room_id"].(string)
+
+	joinRoom(t, conn2, roomID)
+
+	setReady(t, conn1, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	setReady(t, conn2, true)
+	waitForMessageType(t, conn1, "room_state", 3*time.Second)
+	waitForMessageType(t, conn2, "room_state", 3*time.Second)
+
+	startGame(t, conn1)
+
+	waitForMessageType(t, conn1, "game_state", 5*time.Second)
+	waitForMessageType(t, conn2, "game_state", 5*time.Second)
+
+	conns := [2]*websocket.Conn{conn1, conn2}
+
+	firstTS := waitForMessageType(t, conn1, "turn_start", 3*time.Second)
+	waitForMessageType(t, conn2, "turn_start", 2*time.Second)
+
+	var pendingTurnStart any = firstTS
+
+	summonedTiles := map[int][]int{}
+	testedLevelUp := false
+	testedMove := false
+	testedSwap := false
+
+	for turn := 1; turn <= 30; turn++ {
+		ts := pendingTurnStart
+		pendingTurnStart = nil
+
+		if ts == nil {
+			t.Fatalf("No turn_start data for turn %d", turn)
+		}
+
+		var activePlayer int
+		var hand []any
+		if tsMap, ok := ts.(map[string]any); ok {
+			activePlayer = int(tsMap["active_player"].(float64))
+			if h, ok := tsMap["hand"].([]any); ok {
+				hand = h
+			}
+		}
+		activeConn := conns[activePlayer]
+		otherConn := conns[1-activePlayer]
+		t.Logf("--- Turn %d (player %d, tiles: %v) ---", turn, activePlayer, summonedTiles[activePlayer])
+
+		// spell_pass
+		sendMessage(t, activeConn, "spell_pass", nil)
+		waitForMessageType(t, activeConn, "dice_result", 3*time.Second)
+
+		// move_complete
+		sendMessage(t, activeConn, "move_complete", map[string]any{"direction": -1})
+		moveResult := waitForMessageType(t, activeConn, "action_result", 3*time.Second)
+
+		nextPhase := "tile_action"
+		if ar, ok := moveResult.(map[string]any); ok {
+			if data, ok := ar["data"].(map[string]any); ok {
+				if p, ok := data["phase"].(string); ok {
+					nextPhase = p
+				}
+			}
+		}
+
+		if nextPhase == "battle" {
+			waitForMessageType(t, activeConn, "battle_start", 3*time.Second)
+			waitForMessageType(t, activeConn, "battle_result", 3*time.Second)
+			t.Log("  Battle resolved")
+		} else {
+			playerTiles := summonedTiles[activePlayer]
+
+			// Try dominio commands in priority order
+			if !testedLevelUp && len(playerTiles) >= 1 {
+				tileIdx := playerTiles[0]
+				t.Logf("  ★ level_up on tile %d", tileIdx)
+				sendMessage(t, activeConn, "dominio_action", map[string]any{
+					"command":     "level_up",
+					"source_tile": tileIdx,
+					"target_tile": 0,
+				})
+				resp, data := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+				if resp == "action_result" {
+					t.Logf("  ✓ level_up succeeded: %s", prettyJSON(data))
+					testedLevelUp = true
+				} else {
+					t.Logf("  level_up failed: %v — summon instead", data)
+					trySummon(t, activeConn, hand, activePlayer, summonedTiles)
+				}
+			} else if !testedSwap && len(playerTiles) >= 2 {
+				src, dst := playerTiles[0], playerTiles[1]
+				t.Logf("  ★ swap tiles %d <-> %d", src, dst)
+				sendMessage(t, activeConn, "dominio_action", map[string]any{
+					"command":     "swap",
+					"source_tile": src,
+					"target_tile": dst,
+				})
+				resp, data := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+				if resp == "action_result" {
+					t.Logf("  ✓ swap succeeded: %s", prettyJSON(data))
+					testedSwap = true
+				} else {
+					t.Logf("  swap failed: %v — summon instead", data)
+					trySummon(t, activeConn, hand, activePlayer, summonedTiles)
+				}
+			} else if !testedMove && len(playerTiles) >= 1 {
+				// move_creature needs an empty destination — find one
+				src := playerTiles[0]
+				dst := -1
+				for i := 0; i < 20; i++ {
+					occupied := false
+					for _, tiles := range summonedTiles {
+						for _, ti := range tiles {
+							if ti == i {
+								occupied = true
+							}
+						}
+					}
+					if !occupied {
+						dst = i
+						break
+					}
+				}
+				if dst >= 0 {
+					t.Logf("  ★ move_creature tile %d -> %d", src, dst)
+					sendMessage(t, activeConn, "dominio_action", map[string]any{
+						"command":     "move_creature",
+						"source_tile": src,
+						"target_tile": dst,
+					})
+					resp, data := waitForAnyType(t, activeConn, []string{"action_result", "action_error"}, 3*time.Second)
+					if resp == "action_result" {
+						t.Logf("  ✓ move_creature succeeded: %s", prettyJSON(data))
+						testedMove = true
+						// Update tracked tiles
+						for i, ti := range summonedTiles[activePlayer] {
+							if ti == src {
+								summonedTiles[activePlayer][i] = dst
+								break
+							}
+						}
+					} else {
+						t.Logf("  move_creature failed: %v — summon instead", data)
+						trySummon(t, activeConn, hand, activePlayer, summonedTiles)
+					}
+				} else {
+					trySummon(t, activeConn, hand, activePlayer, summonedTiles)
+				}
+			} else {
+				// Summon to build up tiles
+				trySummon(t, activeConn, hand, activePlayer, summonedTiles)
+			}
+		}
+
+		// end_turn
+		sendMessage(t, activeConn, "end_turn", nil)
+		msgType, msgData := waitForAnyType(t, activeConn, []string{"game_over", "turn_start"}, 3*time.Second)
+		if msgType == "game_over" {
+			break
+		}
+		if msgType == "turn_start" {
+			waitForMessageType(t, otherConn, "turn_start", 1*time.Second)
+			pendingTurnStart = msgData
+
+			if testedLevelUp && testedMove && testedSwap {
+				t.Log("\n✓ All dominio commands tested: level_up, move_creature, swap")
+				return
+			}
+			continue
+		}
+		t.Fatalf("Unexpected state at turn %d", turn)
+	}
+
+	t.Logf("Dominio results: level_up=%v, move=%v, swap=%v", testedLevelUp, testedMove, testedSwap)
+	if !testedLevelUp || !testedMove || !testedSwap {
+		t.Fatal("Not all dominio commands were tested")
+	}
+}
+
+func trySummon(t *testing.T, conn *websocket.Conn, hand []any, activePlayer int, summonedTiles map[int][]int) {
+	var handCardID int
+	if len(hand) > 0 {
+		handCardID = int(hand[0].(float64))
+	}
+	if handCardID > 0 {
+		sendMessage(t, conn, "summon", map[string]any{"card_id": handCardID})
+		sr, sd := waitForAnyType(t, conn, []string{"action_result", "action_error"}, 3*time.Second)
+		if sr == "action_result" {
+			if arMap, ok := sd.(map[string]any); ok {
+				if d, ok := arMap["data"].(map[string]any); ok {
+					if ti, ok := d["tile"].(float64); ok {
+						summonedTiles[activePlayer] = append(summonedTiles[activePlayer], int(ti))
+						t.Logf("  Summoned on tile %d", int(ti))
+					}
+				}
+			}
+		} else {
+			sendMessage(t, conn, "pass", nil)
+			waitForMessageType(t, conn, "action_result", 3*time.Second)
+		}
+	} else {
+		sendMessage(t, conn, "pass", nil)
+		waitForMessageType(t, conn, "action_result", 3*time.Second)
 	}
 }

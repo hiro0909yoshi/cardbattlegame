@@ -160,7 +160,7 @@ func (gs *GameState) Summon(slotIndex, cardID int) *ActionError {
 	tile.CreatureID = cardID
 	tile.CreatureHP = card.HP
 	tile.Level = 1
-	tile.IsDown = true
+	tile.IsDown = !masterdata.HasKeyword(cardID, "奮闘")
 
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
