@@ -17,6 +17,10 @@ var stage_id: String = "stage_test_4p"
 # チュートリアルモードフラグ
 var is_tutorial_mode: bool = false
 
+# オンライン対戦モード
+var _is_net_battle: bool = false
+var _network_bridge: Node = null
+
 # チュートリアルマネージャー
 var tutorial_manager = null
 
@@ -51,10 +55,31 @@ func _ready():
 	stage_loader.name = "StageLoader"
 	add_child(stage_loader)
 
+	# ネット対戦モード判定
+	_is_net_battle = GameData.has_meta("net_battle_config")
+
 	# ソロバトル準備画面からの設定があればそちらを使用
 	var stage_data: Dictionary = {}
 	var is_solo_battle = GameData.has_meta("solo_battle_config")
-	if is_solo_battle:
+	if _is_net_battle:
+		var config = GameData.get_meta("net_battle_config")
+		GameData.remove_meta("net_battle_config")
+		var net_player_count: int = config.get("player_count", 2)
+		var net_player_names: Array = config.get("player_names", [])
+		# net_player_names は **サーバースロット順**。後で PlayerSystem に上書きする
+		GameData.set_meta("net_player_names", net_player_names)
+		var built_stage = _build_stage_from_config({
+			"map_id": config.get("map_id", "map_diamond_20"),
+			"rule_preset": config.get("rule_preset", "standard"),
+			"initial_magic_player": config.get("initial_magic", 1000),
+			"initial_magic_cpu": config.get("initial_magic", 1000),
+			"target_magic": config.get("target_magic", 8000),
+			"max_turns": config.get("max_turns", 0),
+			"enemies": _build_net_enemies(net_player_count, net_player_names),
+		})
+		stage_data = stage_loader.load_stage_from_data(built_stage)
+		print("[Game3D] ネット対戦モード: %d人" % net_player_count)
+	elif is_solo_battle:
 		var config = GameData.get_meta("solo_battle_config")
 		GameData.remove_meta("solo_battle_config")
 		var built_stage = _build_stage_from_config(config)
@@ -95,9 +120,19 @@ func _ready():
 	# ステージIDをGFMに設定（セーブ/復帰用）
 	if system_manager.game_flow_manager:
 		system_manager.game_flow_manager.current_stage_id = stage_id
+		if _is_net_battle:
+			GameData.current_game_mode = "net_battle"
+		else:
+			GameData.current_game_mode = "solo"
+
+	# ネット対戦の表示名は _apply_stage_settings() 内で適用する
+	# （_apply_stage_settings が後で名前を再上書きするため、そこで net_player_names を優先）
+
+	# 世界刻印ボードのシグナル接続（system_manager 初期化後に実施）
+	_connect_world_curse_signal()
 
 	# ソロバトル（対戦モード）: 全通知を3秒自動進行に設定
-	if is_solo_battle:
+	if is_solo_battle or _is_net_battle:
 		var ui_mgr = system_manager.ui_manager if system_manager else null
 		if ui_mgr and ui_mgr.global_comment_ui:
 			ui_mgr.global_comment_ui.battle_auto_advance = true
@@ -114,9 +149,24 @@ func _ready():
 	# チュートリアルモード初期化
 	if is_tutorial_mode:
 		_setup_tutorial()
-	
+
 	# ゲーム開始待機
 	await get_tree().create_timer(0.5).timeout
+
+	# タイルクリック検出（camera_controllerはinitialize_allのawait後に作成される）
+	if system_manager.camera_controller:
+		if not system_manager.camera_controller.tile_tapped.is_connected(_on_tile_tapped):
+			system_manager.camera_controller.tile_tapped.connect(_on_tile_tapped)
+		if not system_manager.camera_controller.empty_tapped.is_connected(_on_empty_tapped):
+			system_manager.camera_controller.empty_tapped.connect(_on_empty_tapped)
+		if not system_manager.camera_controller.drag_started.is_connected(_hide_land_info):
+			system_manager.camera_controller.drag_started.connect(_hide_land_info)
+
+	# ネット対戦モード: ゲームループ不使用、NetworkBridgeで駆動
+	if _is_net_battle:
+		_setup_network_bridge()
+		print("[Game3D] ネット対戦: NetworkBridge起動、ローカルゲームループはスキップ")
+		return
 
 	# クラッシュ復帰チェック
 	var _is_restoring = false
@@ -126,6 +176,8 @@ func _ready():
 		if not save_data.is_empty():
 			_is_restoring = true
 			system_manager.restore_game(save_data)
+			if system_manager.game_flow_manager:
+				_on_world_curse_changed(system_manager.game_flow_manager.game_stats.get("world_curse", {}))
 			print("[Game3D] クラッシュ復帰完了")
 
 	# 通常のゲーム開始（復帰でない場合）
@@ -221,6 +273,9 @@ func _setup_3d_scene_before_init():
 	castle_env.rotation.y = deg_to_rad(45)
 	add_child(castle_env)
 	castle_env.setup_from_tiles(tiles_container)
+
+	# 装飾オブジェクト配置（魔法石ボード等）
+	_place_decorative_objects()
 
 	# プレイヤーコンテナを確認・作成
 	var players_container = get_node_or_null("Players")
@@ -412,18 +467,27 @@ func _apply_stage_settings():
 		print("[Game3D] 初期EP設定完了")
 
 		# プレイヤー名を設定
-		# プレイヤー0: GameDataの名前を使用
-		system_manager.player_system.players[0].name = GameData.player_data.profile.name
+		if _is_net_battle:
+			# ネット対戦: サーバーから受け取った表示名（スロット順）を使用
+			var net_names: Array = GameData.get_meta("net_player_names") if GameData.has_meta("net_player_names") else []
+			GameData.remove_meta("net_player_names")
+			for i in range(system_manager.player_system.players.size()):
+				if i < net_names.size():
+					system_manager.player_system.players[i].name = String(net_names[i])
+			print("[Game3D] ネット対戦プレイヤー名設定完了: %s" % str(net_names))
+		else:
+			# プレイヤー0: GameDataの名前を使用
+			system_manager.player_system.players[0].name = GameData.player_data.profile.name
 
-		# CPU敵: キャラクター名を使用
-		var enemies_for_name = stage_loader.get_enemies()
-		for i in range(enemies_for_name.size()):
-			var char_data = stage_loader.get_enemy_character(i)
-			var cpu_name = char_data.get("name", "CPU " + str(i + 1))
-			if i + 1 < system_manager.player_system.players.size():
-				system_manager.player_system.players[i + 1].name = cpu_name
+			# CPU敵: キャラクター名を使用
+			var enemies_for_name = stage_loader.get_enemies()
+			for i in range(enemies_for_name.size()):
+				var char_data = stage_loader.get_enemy_character(i)
+				var cpu_name = char_data.get("name", "CPU " + str(i + 1))
+				if i + 1 < system_manager.player_system.players.size():
+					system_manager.player_system.players[i + 1].name = cpu_name
 
-		print("[Game3D] プレイヤー名設定完了")
+			print("[Game3D] プレイヤー名設定完了")
 
 	# 勝利条件を設定
 	var win_condition = stage_loader.get_win_condition()
@@ -582,3 +646,178 @@ func _process(delta: float) -> void:
 		if _fps_log_timer >= 1.0:
 			_fps_log_timer = 0.0
 			print("[PERF] FPS:%d" % fps)
+
+
+## 装飾オブジェクト配置（魔法石ボード・世界刻印ボード）
+var _magic_stone_board_ui: Control = null
+var _world_curse_board: Node = null
+var _land_info_popup: LandInfoPopup = null
+
+func _place_decorative_objects() -> void:
+	var cp1_pos: Vector3 = _get_cp1_world_position()
+
+	var world_curse_board_scene: PackedScene = load("res://scenes/objects/WorldCurseBoard.tscn") as PackedScene
+	if world_curse_board_scene:
+		_world_curse_board = world_curse_board_scene.instantiate()
+		(_world_curse_board as Node3D).position = cp1_pos + Vector3(-4.0, 0.0, -8.0)
+		add_child(_world_curse_board)
+		if _world_curse_board.has_signal("clicked"):
+			_world_curse_board.clicked.connect(_on_world_curse_board_clicked)
+
+
+func _connect_world_curse_signal() -> void:
+	if not system_manager or not system_manager.game_flow_manager:
+		return
+	var container: SpellSystemContainer = system_manager.game_flow_manager.spell_container
+	if not container or not container.spell_world_curse:
+		return
+	var swc: SpellWorldCurse = container.spell_world_curse
+	if not swc.world_curse_changed.is_connected(_on_world_curse_changed):
+		swc.world_curse_changed.connect(_on_world_curse_changed)
+	var stats: Dictionary = system_manager.game_flow_manager.game_stats
+	if stats:
+		_on_world_curse_changed(stats.get("world_curse", {}))
+
+
+func _on_world_curse_changed(world_curse: Dictionary) -> void:
+	if _world_curse_board and _world_curse_board.has_method("update_display"):
+		_world_curse_board.update_display(world_curse)
+
+
+func _on_world_curse_board_clicked() -> void:
+	if not system_manager or not system_manager.game_flow_manager:
+		return
+	var gfm = system_manager.game_flow_manager
+	var world_curse: Dictionary = gfm.game_stats.get("world_curse", {})
+	if world_curse.is_empty() and gfm.spell_container and gfm.spell_container.spell_world_curse:
+		var swc = gfm.spell_container.spell_world_curse
+		if swc.game_stats:
+			world_curse = swc.game_stats.get("world_curse", {})
+	var msg: String = ""
+	if world_curse.is_empty():
+		msg = "現在発動中の世界刻印はありません"
+	else:
+		var curse_name: String = world_curse.get("name", "")
+		var duration: int = world_curse.get("duration", 0)
+		var desc: String = CurseDescriptions.DESCRIPTIONS.get(curse_name, "")
+		msg = "%s（残り %d ターン）\n%s" % [curse_name, duration, desc]
+
+	var ui_mgr: UIManager = system_manager.ui_manager if system_manager else null
+	if ui_mgr and ui_mgr.global_comment_ui:
+		ui_mgr.global_comment_ui.show_and_wait(msg, -1, true)
+	else:
+		print("[WorldCurseBoard] %s" % msg)
+
+
+func _get_cp1_world_position() -> Vector3:
+	if not stage_loader:
+		return Vector3.ZERO
+	for idx in stage_loader.generated_tiles.keys():
+		var tile = stage_loader.generated_tiles[idx]
+		if tile and "checkpoint_type" in tile and tile.checkpoint_type == 0:
+			return (tile as Node3D).global_position
+	return Vector3.ZERO
+
+
+func _on_tile_tapped(_tile_index: int, tile_data: Dictionary) -> void:
+	var t: String = String(tile_data.get("type", ""))
+	match t:
+		"magic_stone":
+			_hide_land_info()
+			_show_magic_stone_info()
+		"fire", "water", "earth", "wind", "blank":
+			_show_land_info(tile_data)
+		"card_buy", "card_give", "magic", "warp", "warp_stop", "checkpoint", "base", "branch":
+			_show_special_tile_info(t)
+		_:
+			_hide_land_info()
+
+
+func _show_special_tile_info(tile_type: String) -> void:
+	if not _land_info_popup or not is_instance_valid(_land_info_popup):
+		var ui_layer: CanvasLayer = CanvasLayer.new()
+		ui_layer.layer = 50
+		add_child(ui_layer)
+		_land_info_popup = LandInfoPopup.new()
+		_land_info_popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ui_layer.add_child(_land_info_popup)
+	_land_info_popup.show_special_info(tile_type)
+
+
+func _on_empty_tapped() -> void:
+	_hide_land_info()
+
+
+func _hide_land_info() -> void:
+	if _land_info_popup and is_instance_valid(_land_info_popup):
+		_land_info_popup.hide_info()
+
+
+func _show_magic_stone_info() -> void:
+	if not system_manager:
+		return
+	var player_sys = system_manager.player_system
+	var stone_sys = system_manager.game_flow_manager.magic_stone_system if system_manager.game_flow_manager else null
+	if not player_sys or not stone_sys:
+		return
+
+	var players_data: Array = []
+	for p in player_sys.players:
+		players_data.append({"name": p.name, "stones": p.magic_stones.duplicate()})
+	var stone_values: Dictionary = stone_sys.get_all_stone_values()
+
+	if not _magic_stone_board_ui or not is_instance_valid(_magic_stone_board_ui):
+		var ui_layer: CanvasLayer = CanvasLayer.new()
+		ui_layer.layer = 50
+		add_child(ui_layer)
+		var ui_script = load("res://scripts/ui_components/magic_stone_ui.gd")
+		_magic_stone_board_ui = Control.new()
+		_magic_stone_board_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_magic_stone_board_ui.set_script(ui_script)
+		ui_layer.add_child(_magic_stone_board_ui)
+		_magic_stone_board_ui.setup_ui()
+		_magic_stone_board_ui.shop_closed.connect(func(_done): _magic_stone_board_ui.visible = false)
+
+	_magic_stone_board_ui.show_info_mode(players_data, stone_values)
+
+
+func _show_land_info(tile_data: Dictionary) -> void:
+	var element: String = String(tile_data.get("type", ""))
+	var level: int = int(tile_data.get("level", 1))
+	if not _land_info_popup or not is_instance_valid(_land_info_popup):
+		var ui_layer: CanvasLayer = CanvasLayer.new()
+		ui_layer.layer = 50
+		add_child(ui_layer)
+		_land_info_popup = LandInfoPopup.new()
+		_land_info_popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ui_layer.add_child(_land_info_popup)
+	_land_info_popup.show_info(element, level)
+
+
+# ===== ネット対戦用 =====
+
+func _build_net_enemies(total_players: int, names: Array = []) -> Array:
+	var enemies: Array = []
+	for i in range(total_players - 1):
+		# enemies は slot 1 以降（self は slot 0）
+		var slot_index: int = i + 1
+		var name: String = "Player %d" % (slot_index + 1)
+		if slot_index < names.size():
+			name = String(names[slot_index])
+		enemies.append({
+			"name": name,
+			"character": {"model_path": "res://scenes/Characters/Necromancer.tscn"},
+			"is_cpu": false,
+		})
+	return enemies
+
+
+func _setup_network_bridge() -> void:
+	var NetworkBridgeClass = load("res://scripts/network/network_bridge.gd")
+	if not NetworkBridgeClass:
+		print("[Game3D] NetworkBridge読み込み失敗")
+		return
+	_network_bridge = NetworkBridgeClass.new()
+	_network_bridge.name = "NetworkBridge"
+	add_child(_network_bridge)
+	_network_bridge.setup(system_manager)

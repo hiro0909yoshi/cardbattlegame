@@ -19,6 +19,10 @@ var _player_slots: Array[Dictionary] = []  # [{name_label, ready_label}, ...]
 var _player_preview_viewports: Array[SubViewport] = []  # 各プレイヤーのSubViewport
 var _player_preview_char_nodes: Array[Node] = []  # 各キャラノード（差し替え用）
 
+# ===== ネットワーク =====
+var _ws: WsClient
+var _navigating_away: bool = false
+
 # ===== データ =====
 var _selected_deck_index: int = 0
 var _selected_map_id: String = ""
@@ -72,14 +76,30 @@ func _ready():
 	# データ読み込み
 	_load_maps()
 
-	# ダミープレイヤーを設定（ネットワーク未接続時のテスト用）
-	_setup_dummy_players()
+	# WsClientをGameDataから引き継ぎ
+	if GameData.has_meta("online_ws"):
+		_ws = GameData.get_meta("online_ws")
+		add_child(_ws)
+		_ws.message_received.connect(_on_ws_message)
+		_ws.disconnected.connect(_on_ws_disconnected)
+		GameData.remove_meta("online_ws")
+		# 初期ルーム状態を適用
+		if GameData.has_meta("online_room_state"):
+			var initial_state = GameData.get_meta("online_room_state")
+			GameData.remove_meta("online_room_state")
+			call_deferred("_apply_room_state", initial_state)
+	else:
+		_setup_dummy_players()
 
 	# UI構築
 	_build_top_bar()
 	_build_content_area()
 
-	print("ネット対戦準備画面を初期化しました（ホスト=%s, 最大%d人）" % [str(_is_host), _max_players])
+	# ホストはデッキ選択を通知
+	if _ws and _is_host:
+		_ws.send_msg("set_deck", {"deck_id": str(_selected_deck_index)})
+
+	print("ネット対戦準備画面を初期化しました（ホスト=%s, 最大%d人, WS=%s）" % [str(_is_host), _max_players, str(_ws != null)])
 
 
 func _build_top_bar():
@@ -567,6 +587,8 @@ func _build_bottom_area():
 func _on_deck_selected(index: int):
 	_selected_deck_index = index
 	_update_book_highlight()
+	if _ws:
+		_ws.send_msg("set_deck", {"deck_id": str(index)})
 	print("デッキ %d を選択しました" % (index + 1))
 
 
@@ -660,7 +682,8 @@ func _on_ready_pressed():
 			break
 
 	_update_player_display()
-	# TODO: ネットワーク経由でホストに準備状態を通知
+	if _ws:
+		_ws.send_msg("set_ready", {"ready": _local_ready})
 
 
 func _on_battle_start_pressed():
@@ -690,13 +713,18 @@ func _on_battle_start_pressed():
 
 	print("ネット対戦開始: ", config)
 
-	# TODO: ネットワーク経由で全員にゲーム開始を通知
-	# Main.tscn へ遷移
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
+	if _ws:
+		# ホストも準備完了にしてからゲーム開始
+		_ws.send_msg("set_ready", {"ready": true})
+		_ws.send_msg("start_game", null)
+	else:
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
 
 
 func _on_back_pressed():
-	# TODO: ネットワーク切断処理
+	if _ws:
+		_ws.send_msg("leave_room", null)
+		_ws.disconnect_from_server()
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/NetBattleLobby.tscn")
 
 
@@ -755,11 +783,13 @@ func _update_player_display():
 	_update_action_button_state()
 
 
-## 全員準備完了かチェック
+## 全員準備完了かチェック（ホストは自分を除く）
 func _all_players_ready() -> bool:
 	if _players.size() < 2:
 		return false
 	for player in _players:
+		if player.get("is_local", false) and _is_host:
+			continue
 		if not player.get("is_ready", false):
 			return false
 	return true
@@ -1251,6 +1281,94 @@ func _build_castle_background(viewport_size: Vector2) -> void:
 	overlay.size = viewport_size
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(overlay)
+
+
+# ===== ネットワーク受信 =====
+
+func _on_ws_message(msg_type: String, data: Variant) -> void:
+	print("[NetSetup] ← %s" % msg_type)
+	match msg_type:
+		"room_state":
+			_apply_room_state(data)
+		"game_state":
+			_on_game_start(data)
+		"error":
+			var err_msg: String = data.message if data is Dictionary else str(data)
+			_show_error_dialog("エラー: " + err_msg)
+
+
+func _on_ws_disconnected() -> void:
+	print("[NetSetup] サーバー切断")
+	_show_error_dialog("サーバーから切断されました")
+
+
+func _apply_room_state(data: Variant) -> void:
+	if not data is Dictionary:
+		return
+
+	var server_players: Array = data.get("players", [])
+	var my_uuid: String = GameData.player_data.user_id
+
+	_players.clear()
+	for sp in server_players:
+		if not sp is Dictionary:
+			continue
+		var is_local: bool = (sp.get("user_uuid", "") == my_uuid)
+		_players.append({
+			"id": str(sp.get("user_id", 0)),
+			"name": sp.get("display_name", "???"),
+			"is_ready": sp.get("is_ready", false),
+			"is_local": is_local,
+			"model_path": GameData.get_selected_character_model_path() if is_local else "res://scenes/Characters/Hero.tscn"
+		})
+
+	_update_player_display()
+	_rebuild_all_player_previews()
+
+	# ゲストはホストの設定を反映
+	if not _is_host:
+		var config: Dictionary = data.get("config", {})
+		if not config.is_empty():
+			on_config_received(config)
+
+
+func _on_game_start(data: Variant) -> void:
+	_navigating_away = true
+	# 自分のスロット番号を特定
+	var my_slot: int = -1
+	for i in range(_players.size()):
+		if _players[i].get("is_local", false):
+			my_slot = i
+			break
+	GameData.set_meta("online_game_state", data)
+	GameData.set_meta("online_player_slot", my_slot)
+	remove_child(_ws)
+	GameData.set_meta("online_ws", _ws)
+	GameData.current_game_mode = "net_battle"
+	# プレイヤー名一覧（スロット順）
+	var player_names: Array[String] = []
+	for p in _players:
+		player_names.append(String(p.get("name", "???")))
+	# オンライン用ステージ設定
+	GameData.set_meta("net_battle_config", {
+		"map_id": _selected_map_id if not _selected_map_id.is_empty() else "map_diamond_20",
+		"rule_preset": "standard",
+		"initial_magic": 1000,
+		"target_magic": 8000,
+		"max_turns": 0,
+		"player_count": _players.size(),
+		"player_names": player_names,
+	})
+	print("[NetSetup] ゲーム開始 → Main.tscn (slot=%d, players=%d)" % [my_slot, _players.size()])
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
+
+
+func _exit_tree() -> void:
+	if _navigating_away:
+		return
+	if _ws and _ws.is_connected_to_server():
+		_ws.send_msg("leave_room", null)
+		_ws.disconnect_from_server()
 
 
 func _on_map_scroll_input(event: InputEvent, scroll: ScrollContainer) -> void:
