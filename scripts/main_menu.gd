@@ -59,6 +59,7 @@ func _ready():
 
 	# ユーザー情報を表示
 	_update_user_info()
+	_update_mission_badge()
 
 	# スタミナ表示の定期更新（1秒ごと）
 	var timer = Timer.new()
@@ -169,7 +170,7 @@ func _check_login_bonus() -> AcceptDialog:
 		if stone > 0 and DebugSettings.show_premium_stone:
 			if gold > 0:
 				text += "\n"
-			text += "  💎 %d 課金石" % stone
+			text += "  💎 %d ジェム" % stone
 
 		label.text = text
 		vbox.add_child(label)
@@ -246,12 +247,12 @@ func _update_stamina_display():
 	var max_val = GameData.get_stamina_max()
 	_stamina_label.text = "%d/%d" % [current, max_val]
 
-# デバッグ用：ゴールドを100000にリセット（後で削除）
+# デバッグ用：ゴールドを1000000にリセット（後で削除）
 func _on_reset_gold():
-	GameData.player_data.profile.gold = 100000
+	GameData.player_data.profile.gold = 1000000
 	GameData.save_to_file()
 	_update_user_info()
-	print("[DEBUG] ゴールドを100000にリセットしました")
+	print("[DEBUG] ゴールドを1000000にリセットしました")
 
 
 # デバッグ用：スタミナを50にリセット（後で削除）
@@ -263,12 +264,12 @@ func _on_reset_stamina():
 	print("[DEBUG] スタミナを50にリセットしました")
 
 
-# デバッグ用：課金石を100000にリセット（後で削除）
+# デバッグ用：ジェムを1000000にリセット（後で削除）
 func _on_reset_stone():
-	GameData.player_data.profile.stone = 100000
+	GameData.player_data.profile.stone = 1000000
 	GameData.save_to_file()
 	_update_user_info()
-	print("[DEBUG] 課金石を100000にリセットしました")
+	print("[DEBUG] ジェムを1000000にリセットしました")
 
 
 # ========== デッキ検証 ==========
@@ -377,7 +378,22 @@ func _on_shop_pressed():
 
 # ========== 上部バーアイコン処理 ==========
 func _on_daily_quest_pressed():
-	print("デイリークエスト（未実装）")
+	var mission_screen := preload("res://scenes/ui/MissionScreen.tscn").instantiate()
+	add_child(mission_screen)
+	mission_screen.closed.connect(_on_mission_screen_closed)
+
+func _on_mission_screen_closed() -> void:
+	_update_mission_badge()
+
+func _update_mission_badge() -> void:
+	var mm := get_node_or_null("/root/MissionManager")
+	if not mm or not mm.has_method("get_unclaimed_count"):
+		return
+	var count: int = mm.get_unclaimed_count()
+	if count > 0:
+		_daily_quest_button.text = "📋%d" % count
+	else:
+		_daily_quest_button.text = "📋"
 
 
 func _on_announcement_pressed():
@@ -444,7 +460,7 @@ func _on_gold_plus_pressed():
 
 
 func _on_stone_plus_pressed():
-	print("課金石購入（未実装）")
+	print("ジェム購入（未実装）")
 
 
 func _on_player_name_pressed():

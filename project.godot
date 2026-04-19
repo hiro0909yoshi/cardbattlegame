@@ -25,6 +25,7 @@ UserCardDB="*res://scripts/user_card_db.gd"
 GameData="*res://scripts/game_data.gd"
 CpuDeckData="*res://scripts/cpu_deck_data.gd"
 UnlockManager="*res://scripts/autoload/unlock_manager.gd"
+MissionManager="*res://scripts/autoload/mission_manager.gd"
 
 [display]
 

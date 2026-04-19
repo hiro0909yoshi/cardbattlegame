@@ -50,9 +50,33 @@ var player_data = {
 		"wins": 0,
 		"losses": 0,
 		"play_time_seconds": 0,
-		"story_cleared": 0,      # クリアしたストーリー数
-		"gacha_count": 0,        # ガチャを引いた回数
-		"cards_obtained": 0      # 入手したカード総数
+		"story_cleared": 0,
+		"gacha_count": 0,
+		"cards_obtained": 0,
+		"collection_complete": {
+			"fire_1": false, "fire_4": false,
+			"water_1": false, "water_4": false,
+			"earth_1": false, "earth_4": false,
+			"wind_1": false, "wind_4": false,
+			"neutral_1": false, "neutral_4": false,
+			"spell_1": false, "spell_4": false,
+			"item_1": false, "item_4": false,
+			"all_1": false, "all_4": false
+		},
+		"quest": {
+			"clears": 0,
+			"plays": 0,
+			"battles": 0,
+			"creature_summons": 0,
+			"spell_uses": 0
+		},
+		"net_battle": {
+			"wins": 0,
+			"plays": 0,
+			"battles": 0,
+			"creature_summons": 0,
+			"spell_uses": 0
+		}
 	},
 	
 	# === スタミナ ===
@@ -95,6 +119,8 @@ var player_data = {
 	# === ゲーム中フラグ（クラッシュ復帰判定用） ===
 	"in_game": false
 }
+
+var current_game_mode: String = ""
 
 # プレイアブルキャラクターマスターデータ
 const PLAYABLE_CHARACTERS: Dictionary = {
@@ -267,6 +293,25 @@ func equip_title(title_name: String) -> bool:
 ## 装備中の称号を取得
 func get_equipped_title() -> String:
 	return player_data.get("equipped_title", "はじまりの一歩")
+
+
+## コレクションコンプリート達成済みか確認
+func is_collection_complete(key: String) -> bool:
+	return player_data.stats.collection_complete.get(key, false)
+
+
+## コレクションコンプリートを達成済みに設定（セーブも実行）
+func set_collection_complete(key: String) -> void:
+	if player_data.stats.collection_complete.has(key):
+		player_data.stats.collection_complete[key] = true
+		save_to_file()
+
+
+## コレクションコンプリートフラグを全リセット（カードリセット時用）
+func reset_collection_complete() -> void:
+	for key in player_data.stats.collection_complete.keys():
+		player_data.stats.collection_complete[key] = false
+	save_to_file()
 
 
 ## キャラクターを選択（解放判定はUnlockManager経由）
@@ -501,6 +546,16 @@ func _validate_save_data():
 			"gacha_count": 0,
 			"cards_obtained": 0
 		}
+	if not player_data.stats.has("quest"):
+		player_data.stats["quest"] = {
+			"clears": 0, "plays": 0, "battles": 0,
+			"creature_summons": 0, "spell_uses": 0
+		}
+	if not player_data.stats.has("net_battle"):
+		player_data.stats["net_battle"] = {
+			"wins": 0, "plays": 0, "battles": 0,
+			"creature_summons": 0, "spell_uses": 0
+		}
 	if not player_data.has("stamina"):
 		player_data["stamina"] = {
 			"current": 50,
@@ -518,6 +573,18 @@ func _validate_save_data():
 		}
 	if not player_data.has("equipped_title"):
 		player_data["equipped_title"] = "はじまりの一歩"
+	# collection_complete マイグレーション
+	if not player_data.stats.has("collection_complete"):
+		player_data.stats["collection_complete"] = {
+			"fire_1": false, "fire_4": false,
+			"water_1": false, "water_4": false,
+			"earth_1": false, "earth_4": false,
+			"wind_1": false, "wind_4": false,
+			"neutral_1": false, "neutral_4": false,
+			"spell_1": false, "spell_4": false,
+			"item_1": false, "item_4": false,
+			"all_1": false, "all_4": false
+		}
 	if not player_data.has("has_initialized"):
 		# 既存セーブデータは初期化済みとみなす
 		player_data["has_initialized"] = true
@@ -715,17 +782,17 @@ func spend_gold(amount: int) -> bool:
 func add_stone(amount: int):
 	player_data.profile.stone += amount
 	save_to_file()
-	print("💎 課金石 +", amount, " (合計: ", player_data.profile.stone, ")")
+	print("💎 ジェム +", amount, " (合計: ", player_data.profile.stone, ")")
 
 
 func spend_stone(amount: int) -> bool:
 	if player_data.profile.stone < amount:
-		print("❌ 課金石不足")
+		print("❌ ジェム不足")
 		return false
 
 	player_data.profile.stone -= amount
 	save_to_file()
-	print("💎 課金石 -", amount, " (残り: ", player_data.profile.stone, ")")
+	print("💎 ジェム -", amount, " (残り: ", player_data.profile.stone, ")")
 	return true
 
 
@@ -736,14 +803,52 @@ func get_stone() -> int:
 # 統計情報
 # ==========================================
 
-func record_battle_result(won: bool):
+func _get_mode_stats() -> Dictionary:
+	if current_game_mode == "quest":
+		return player_data.stats.get("quest", {})
+	elif current_game_mode == "net_battle":
+		return player_data.stats.get("net_battle", {})
+	return {}
+
+func record_game_result(won: bool):
 	player_data.stats.total_battles += 1
 	if won:
 		player_data.stats.wins += 1
 	else:
 		player_data.stats.losses += 1
-	
+	var mode_stats := _get_mode_stats()
+	if mode_stats.size() > 0:
+		mode_stats["plays"] = mode_stats.get("plays", 0) + 1
+		if won:
+			if current_game_mode == "quest":
+				mode_stats["clears"] = mode_stats.get("clears", 0) + 1
+			else:
+				mode_stats["wins"] = mode_stats.get("wins", 0) + 1
 	save_to_file()
+	_notify_mission("quest_play", 1)
+	if won:
+		_notify_mission("quest_clear", 1)
+
+func record_battle_result(won: bool):
+	record_game_result(won)
+
+func record_creature_battle():
+	var mode_stats := _get_mode_stats()
+	if mode_stats.size() > 0:
+		mode_stats["battles"] = mode_stats.get("battles", 0) + 1
+	_notify_mission("creature_battle", 1)
+
+func record_creature_summon():
+	var mode_stats := _get_mode_stats()
+	if mode_stats.size() > 0:
+		mode_stats["creature_summons"] = mode_stats.get("creature_summons", 0) + 1
+	_notify_mission("creature_summon", 1)
+
+func record_spell_use():
+	var mode_stats := _get_mode_stats()
+	if mode_stats.size() > 0:
+		mode_stats["spell_uses"] = mode_stats.get("spell_uses", 0) + 1
+	_notify_mission("spell_use", 1)
 
 func add_play_time(seconds: int):
 	player_data.stats.play_time_seconds += seconds
@@ -751,6 +856,16 @@ func add_play_time(seconds: int):
 
 func record_gacha():
 	player_data.stats.gacha_count += 1
+	_notify_mission("gacha_pull", 1)
+
+func _notify_mission(condition_type: String, amount: int = 1) -> void:
+	var mm := Engine.get_singleton("MissionManager") if Engine.has_singleton("MissionManager") else null
+	if not mm:
+		var node := get_node_or_null("/root/MissionManager")
+		if node and node.has_method("add_progress"):
+			node.add_progress(condition_type, amount)
+	elif mm.has_method("add_progress"):
+		mm.add_progress(condition_type, amount)
 
 # ==========================================
 # ログインボーナス

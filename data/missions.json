@@ -1,0 +1,359 @@
+{
+  "daily": [
+    {
+      "id": "d001",
+      "title": "クエストに挑戦",
+      "description": "クエストを3回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 3
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 300
+      }
+    },
+    {
+      "id": "d002",
+      "title": "クリーチャー召喚",
+      "description": "クリーチャーを9回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 9
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 300
+      }
+    },
+    {
+      "id": "d003",
+      "title": "スペルを使おう",
+      "description": "スペルを5回使用する",
+      "condition": {
+        "type": "spell_use",
+        "target": 5
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 300
+      }
+    },
+    {
+      "id": "d004",
+      "title": "ガチャを回そう",
+      "description": "ガチャを1回引く",
+      "condition": {
+        "type": "gacha_pull",
+        "target": 1
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 100
+      }
+    }
+  ],
+  "weekly": [
+    {
+      "id": "w001",
+      "title": "週間クエストマスター",
+      "description": "クエストを30回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 30
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 5000
+      }
+    },
+    {
+      "id": "w002",
+      "title": "召喚の達人",
+      "description": "クリーチャーを50回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 50
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 2000
+      }
+    },
+    {
+      "id": "w003",
+      "title": "スペルマスター",
+      "description": "スペルを20回使用する",
+      "condition": {
+        "type": "spell_use",
+        "target": 20
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 1000
+      }
+    },
+    {
+      "id": "w004",
+      "title": "歴戦の勇者",
+      "description": "クリーチャーバトルを30回行う",
+      "condition": {
+        "type": "creature_battle",
+        "target": 30
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 2000
+      }
+    }
+  ],
+  "permanent": [
+    {
+      "id": "p001",
+      "title": "はじめてのクエスト",
+      "description": "クエストを1回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 1
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 1000
+      }
+    },
+    {
+      "id": "p002",
+      "title": "駆け出し冒険者",
+      "description": "クエストを10回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 10
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 3000
+      }
+    },
+    {
+      "id": "p003",
+      "title": "熟練冒険者",
+      "description": "クエストを20回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 20
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 5000
+      }
+    },
+    {
+      "id": "p004",
+      "title": "英雄の道",
+      "description": "クエストを30回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 30
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 8000
+      }
+    },
+    {
+      "id": "p005",
+      "title": "伝説の冒険者",
+      "description": "クエストを50回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 50
+      },
+      "reward": {
+        "type": "stone",
+        "amount": 2000
+      }
+    },
+    {
+      "id": "p006",
+      "title": "歴戦の王",
+      "description": "クエストを60回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 60
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 10000
+      }
+    },
+    {
+      "id": "p007",
+      "title": "覇者の証",
+      "description": "クエストを80回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 80
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 12000
+      }
+    },
+    {
+      "id": "p008",
+      "title": "百戦の覇王",
+      "description": "クエストを100回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 100
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 15000
+      }
+    },
+    {
+      "id": "p008b",
+      "title": "究極の冒険者",
+      "description": "クエストを150回クリアする",
+      "condition": {
+        "type": "quest_clear",
+        "target": 150
+      },
+      "reward": {
+        "type": "stone",
+        "amount": 6000
+      }
+    },
+    {
+      "id": "p009",
+      "title": "召喚師見習い",
+      "description": "クリーチャーを10回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 10
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 2000
+      }
+    },
+    {
+      "id": "p010",
+      "title": "召喚師",
+      "description": "クリーチャーを50回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 50
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 5000
+      }
+    },
+    {
+      "id": "p011",
+      "title": "大召喚師",
+      "description": "クリーチャーを100回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 100
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 10000
+      }
+    },
+    {
+      "id": "p012",
+      "title": "召喚王",
+      "description": "クリーチャーを150回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 150
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 12000
+      }
+    },
+    {
+      "id": "p013",
+      "title": "万象の召喚師",
+      "description": "クリーチャーを200回召喚する",
+      "condition": {
+        "type": "creature_summon",
+        "target": 200
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 15000
+      }
+    },
+    {
+      "id": "p014",
+      "title": "初陣",
+      "description": "クリーチャーバトルを10回行う",
+      "condition": {
+        "type": "creature_battle",
+        "target": 10
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 1000
+      }
+    },
+    {
+      "id": "p015",
+      "title": "歴戦の戦士",
+      "description": "クリーチャーバトルを50回行う",
+      "condition": {
+        "type": "creature_battle",
+        "target": 50
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 3000
+      }
+    },
+    {
+      "id": "p016",
+      "title": "百戦錬磨",
+      "description": "クリーチャーバトルを100回行う",
+      "condition": {
+        "type": "creature_battle",
+        "target": 100
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 10000
+      }
+    },
+    {
+      "id": "p017",
+      "title": "修羅の道",
+      "description": "クリーチャーバトルを300回行う",
+      "condition": {
+        "type": "creature_battle",
+        "target": 300
+      },
+      "reward": {
+        "type": "gold",
+        "amount": 10000
+      }
+    },
+    {
+      "id": "p018",
+      "title": "千戦錬磨",
+      "description": "クリーチャーバトルを1000回行う",
+      "condition": {
+        "type": "creature_battle",
+        "target": 1000
+      },
+      "reward": {
+        "type": "stone",
+        "amount": 6000
+      }
+    }
+  ]
+}

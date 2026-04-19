@@ -71,13 +71,17 @@ func _update_display():
 	_stamina_value.text = "%d / %d" % [GameData.get_stamina(), GameData.get_stamina_max()]
 
 	# 戦績
-	_battle_value.text = "%d" % int(stats.total_battles)
-	_win_loss_value.text = "%d / %d" % [int(stats.wins), int(stats.losses)]
+	var quest_stats = stats.get("quest", {})
+	var quest_plays = int(quest_stats.get("plays", stats.get("total_battles", 0)))
+	var quest_clears = int(quest_stats.get("clears", stats.get("wins", 0)))
+	var quest_losses = quest_plays - quest_clears
+	_battle_value.text = "%d" % quest_plays
+	_win_loss_value.text = "%d / %d" % [quest_clears, quest_losses]
 	var win_rate = 0.0
-	if int(stats.total_battles) > 0:
-		win_rate = float(stats.wins) / float(stats.total_battles) * 100.0
+	if quest_plays > 0:
+		win_rate = float(quest_clears) / float(quest_plays) * 100.0
 	_win_rate_value.text = "%.1f%%" % win_rate
-	_story_clear_value.text = "%d" % int(stats.story_cleared)
+	_story_clear_value.text = "%d" % quest_clears
 
 	# 所持情報
 	var owned_cards = UserCardDB.get_all_obtained_cards()
@@ -94,7 +98,7 @@ func _update_display():
 	_streak_value.text = "%d 日" % login.login_streak
 	_total_login_value.text = "%d 日" % login.total_login_days
 
-	# 課金石の表示制御
+	# ジェムの表示制御
 	var stone_row = _stone_value.get_parent()
 	if stone_row:
 		stone_row.visible = DebugSettings.show_premium_stone

@@ -174,7 +174,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "課金石"
+text = "ジェム"
 
 [node name="StoneValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/ProfileSection/StoneRow"]
 layout_mode = 2
@@ -213,7 +213,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "総バトル数"
+text = "総クエスト数"
 
 [node name="BattleValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/BattleRow"]
 layout_mode = 2
@@ -252,7 +252,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(207, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "ストーリークリア"
+text = "クエストクリア"
 
 [node name="StoryClearValue" type="Label" parent="MainVBox/ContentArea/RightPanel/RightMargin/MenuVBox/StatsSection/StoryClearRow"]
 layout_mode = 2
