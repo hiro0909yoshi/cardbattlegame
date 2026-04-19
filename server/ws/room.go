@@ -75,13 +75,14 @@ func NewRoom(hub *Hub, hostClient *Client, cfg RoomConfig) *Room {
 func (r *Room) addPlayer(c *Client, deckID string) int {
 	slot := len(r.Players)
 	r.Players = append(r.Players, &PlayerSlot{
-		Client:    c,
-		UserID:    c.UserID,
-		UserUUID:  c.UserUUID,
-		SlotIndex: slot,
-		DeckID:    deckID,
-		IsReady:   false,
-		Connected: true,
+		Client:      c,
+		UserID:      c.UserID,
+		UserUUID:    c.UserUUID,
+		DisplayName: c.DisplayName,
+		SlotIndex:   slot,
+		DeckID:      deckID,
+		IsReady:     false,
+		Connected:   true,
 	})
 	c.Room = r
 	return slot

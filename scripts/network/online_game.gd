@@ -39,6 +39,9 @@ func _ready() -> void:
 		GameData.remove_meta("online_game_state")
 		if initial_state is Dictionary:
 			_apply_game_state(initial_state)
+			# turn_startがシーン遷移中に消える場合の補完
+			if _current_phase.is_empty():
+				_current_phase = "spell"
 
 	_build_ui()
 	_update_display()
@@ -96,6 +99,8 @@ func _apply_game_state(data: Variant) -> void:
 		_game_state = state
 		_active_player = int(state.get("active_player", -1))
 		_current_phase = state.get("phase", "")
+		_is_my_turn = (_active_player == _player_slot)
+		_update_action_buttons()
 
 
 func _on_turn_start(data: Variant) -> void:

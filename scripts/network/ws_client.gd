@@ -23,7 +23,7 @@ func disconnect_from_server() -> void:
 
 
 func send_msg(msg_type: String, data: Variant = null) -> void:
-	if not _ws or not _is_connected:
+	if not _ws or not _is_connected or _ws.get_ready_state() != WebSocketPeer.STATE_OPEN:
 		return
 
 	var msg: Dictionary = {"type": msg_type}

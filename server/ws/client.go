@@ -17,18 +17,20 @@ const (
 )
 
 type Client struct {
-	UserID   int64
-	UserUUID string
-	hub      *Hub
-	conn     *websocket.Conn
-	send     chan []byte
-	Room     *Room
+	UserID      int64
+	UserUUID    string
+	DisplayName string
+	hub         *Hub
+	conn        *websocket.Conn
+	send        chan []byte
+	Room        *Room
 }
 
-func NewClient(hub *Hub, conn *websocket.Conn, userID int64, userUUID string) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, userID int64, userUUID string, displayName string) *Client {
 	return &Client{
-		UserID:   userID,
-		UserUUID: userUUID,
+		UserID:      userID,
+		UserUUID:    userUUID,
+		DisplayName: displayName,
 		hub:      hub,
 		conn:     conn,
 		send:     make(chan []byte, 256),

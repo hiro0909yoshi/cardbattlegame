@@ -9,12 +9,6 @@ var _ws: WsClient
 var _access_token: String = ""
 var _room_id: String = ""
 var _is_host: bool = false
-var _player_slot: int = -1
-var _status_label: Label
-var _room_state_label: Label
-var _ready_button: Button
-var _start_button: Button
-var _is_ready: bool = false
 
 # ===== UI要素 =====
 var _main_vbox: VBoxContainer
@@ -25,7 +19,7 @@ var _room_id_input: LineEdit
 var _player_count_option: OptionButton
 
 # ===== 定数 =====
-const SERVER_HOST: String = "localhost"
+const SERVER_HOST: String = "192.168.3.10"
 const SERVER_PORT: int = 8080
 
 # ===== データ =====
@@ -486,7 +480,26 @@ func _show_error_dialog(message: String):
 	dialog.popup_centered_ratio(0.6)
 
 
+var _navigating_to_setup: bool = false
+
+
+func _navigate_to_setup(is_host: bool, initial_state: Variant = null) -> void:
+	_navigating_to_setup = true
+	remove_child(_ws)
+	GameData.set_meta("online_ws", _ws)
+	GameData.set_meta("net_battle_mode", {
+		"is_host": is_host,
+		"room_id": _room_id,
+		"max_players": 4,
+	})
+	if initial_state is Dictionary:
+		GameData.set_meta("online_room_state", initial_state)
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/NetBattleSetup.tscn")
+
+
 func _exit_tree() -> void:
+	if _navigating_to_setup:
+		return
 	if _ws and _ws.is_connected_to_server():
 		_ws.disconnect_from_server()
 
@@ -494,16 +507,19 @@ func _exit_tree() -> void:
 # ===== ネットワークコールバック =====
 
 func _on_registered(_user_id: String, access_token: String, _refresh_token: String) -> void:
+	print("[NetLobby] 登録成功、WS接続開始")
 	_access_token = access_token
 	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
 
 
 func _on_login_success(access_token: String, _refresh_token: String) -> void:
+	print("[NetLobby] ログイン成功、WS接続開始")
 	_access_token = access_token
 	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
 
 
 func _on_login_failed(error: String) -> void:
+	print("[NetLobby] 認証失敗: %s" % error)
 	if "Register" in error:
 		_api.guest_login(GameData.player_data.user_id)
 	else:
@@ -526,20 +542,13 @@ func _on_ws_message(msg_type: String, data: Variant) -> void:
 				_room_id = data.get("room_id", "")
 			_is_host = true
 			print("[NetLobby] ルーム作成完了: %s" % _room_id)
-			GameData.set_meta("net_battle_mode", {
-				"is_host": true,
-				"room_id": _room_id
-			})
-			get_tree().call_deferred("change_scene_to_file", "res://scenes/NetBattleSetup.tscn")
+			_navigate_to_setup(true, data)
 		"room_state":
-			print("[NetLobby] room_state受信")
+			if data is Dictionary and not _room_id.is_empty():
+				print("[NetLobby] room_state受信 → セットアップ画面へ")
+				_navigate_to_setup(false, data)
 		"game_state":
-			GameData.set_meta("online_game_state", data)
-			GameData.set_meta("online_ws", _ws)
-			GameData.set_meta("online_player_slot", _player_slot)
-			GameData.current_game_mode = "net_battle"
-			remove_child(_ws)
-			get_tree().call_deferred("change_scene_to_file", "res://scenes/OnlineGame.tscn")
+			print("[NetLobby] game_state受信（ロビーでは無視）")
 		"error":
 			var err_msg: String = data.message if data is Dictionary else str(data)
 			_show_error_dialog("エラー: " + err_msg)

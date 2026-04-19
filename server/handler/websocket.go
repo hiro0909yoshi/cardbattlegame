@@ -49,10 +49,10 @@ func WebSocket(hub *ws.Hub) http.HandlerFunc {
 			return
 		}
 
-		client := ws.NewClient(hub, conn, claims.UserID, claims.Sub)
+		client := ws.NewClient(hub, conn, claims.UserID, claims.Sub, claims.DisplayName)
 		hub.Register(client)
 
-		slog.Info("websocket connected", "user", claims.UserID, "uuid", claims.Sub)
+		slog.Info("websocket connected", "user", claims.UserID, "uuid", claims.Sub, "name", claims.DisplayName)
 
 		go client.WritePump()
 		go client.ReadPump()

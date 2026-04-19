@@ -7,7 +7,7 @@ signal login_success(access_token: String, refresh_token: String)
 signal login_failed(error: String)
 signal token_refreshed(access_token: String)
 
-var _base_url: String = "http://localhost:8080"
+var _base_url: String = "http://192.168.3.10:8080"
 var _http: HTTPRequest
 var _current_request_type: String = ""
 var _current_user_id: String = ""

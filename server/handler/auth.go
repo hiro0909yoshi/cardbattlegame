@@ -68,7 +68,7 @@ func (h *AuthHandler) GuestRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := auth.GenerateAccessToken(u.ID, u.UserID)
+	accessToken, err := auth.GenerateAccessToken(u.ID, u.UserID, u.DisplayName)
 	if err != nil {
 		slog.Error("generate access token failed", "err", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "token generation failed"})
@@ -124,7 +124,7 @@ func (h *AuthHandler) GuestLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := auth.GenerateAccessToken(u.ID, u.UserID)
+	accessToken, err := auth.GenerateAccessToken(u.ID, u.UserID, u.DisplayName)
 	if err != nil {
 		slog.Error("generate access token failed", "err", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "token generation failed"})
@@ -180,7 +180,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := auth.GenerateAccessToken(u.ID, u.UserID)
+	accessToken, err := auth.GenerateAccessToken(u.ID, u.UserID, u.DisplayName)
 	if err != nil {
 		slog.Error("generate access token failed", "err", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "token generation failed"})
