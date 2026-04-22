@@ -55,6 +55,9 @@ var is_net_battle: bool = false
 # ネット対戦時の自分のスロット（_player_slot と同じ値を保持）
 var net_local_slot: int = 0
 
+# 直前に _setup_net_phase_ui で処理したフェーズ（重複回避）
+var _net_last_setup_phase: String = ""
+
 # システム参照
 var player_system: PlayerSystem = null
 var card_system: CardSystem = null
@@ -614,6 +617,17 @@ func end_turn():
 		if current_phase == GamePhase.END_TURN:
 			server_msg = "end_turn"
 		GameLogger.info("GFM", "net_battle: end_turn呼び出し → %s送信 (current_phase=%d)" % [server_msg, current_phase])
+		# ローカルのUIクリーンアップ（ドミニオマーカー・カード選択・ドミニオボタン等）
+		# ネット対戦でも自分が実行したコマンドの後始末は必要
+		if dominio_command_handler:
+			GameLogger.info("GFM", "net_battle cleanup: dominio state=%d" % dominio_command_handler.current_state)
+			if dominio_command_handler.current_state != dominio_command_handler.State.CLOSED:
+				dominio_command_handler.close_dominio_order()
+				GameLogger.info("GFM", "net_battle cleanup: close_dominio_order 呼出")
+		if _ui_hide_dominio_btn_cb.is_valid():
+			_ui_hide_dominio_btn_cb.call()
+		if _ui_hide_card_selection_cb.is_valid():
+			_ui_hide_card_selection_cb.call()
 		net_action_requested.emit(server_msg, null)
 		_is_ending_turn = false
 		return
@@ -811,15 +825,21 @@ func set_phase1a_handlers(
 
 # Phase 1-A: ドミニオコマンドが閉じられたときの処理
 func _on_dominio_command_closed():
-	
+
 	# ターンエンド中またはターンエンドフェーズの場合は処理しない
 	if _is_ending_turn or current_phase == GamePhase.END_TURN:
 		return
-	
+
+	# ネット対戦: level_up/move_creature 成功後に close_dominio_order が呼ばれるが、
+	# サーバー側は既に PhaseEndTurn に遷移済みで、turn_start(end_turn) が直後に来る。
+	# ここで card selection UI を再表示するのは不要（ターン終了が確定している）。
+	if is_net_battle:
+		return
+
 	# カメラをプレイヤーに戻す
 	if board_system_3d:
 		board_system_3d.return_camera_to_player()
-	
+
 	# カード選択UIの再初期化を次のフレームで実行（awaitを避ける）
 	_reinitialize_card_selection.call_deferred()
 
@@ -1204,9 +1224,18 @@ func on_server_turn_started(data: Dictionary) -> void:
 
 	# 自分のターンの場合、フェーズに応じたUIを起動
 	if active_player_slot == net_local_slot:
-		_setup_net_phase_ui(server_phase)
+		# 同一フェーズの重複turn_startを無視（summon後のpass broadcastで再発火するケース等）
+		# 例: summon → turn_start(end_turn) → end_turn送信 → pass処理→ turn_start(end_turn) 再発火
+		#     2回目の _setup_net_phase_ui("end_turn") で end_turn を重複送信してしまう
+		var phase_key: String = "%d:%s" % [active_player_slot, server_phase]
+		if _net_last_setup_phase == phase_key:
+			GameLogger.info("GFM", "net: turn_start 重複スキップ (%s)" % phase_key)
+		else:
+			_net_last_setup_phase = phase_key
+			_setup_net_phase_ui(server_phase)
 	else:
 		# 相手のターン: ナビゲーション無効化
+		_net_last_setup_phase = ""
 		_disable_net_phase_ui()
 
 
@@ -1238,9 +1267,15 @@ func _setup_net_phase_ui(server_phase: String) -> void:
 			# 既存の TileActionProcessor 経由で UI が自動で出る
 			var ctp_player = player_system.get_current_player()
 			if ctp_player and board_system_3d:
-				var current_tile = board_system_3d.get_player_tile(ctp_player.id)
-				GameLogger.info("GFM", "net: tile_action → process_tile_landing(tile=%d)" % current_tile)
-				board_system_3d.process_tile_landing(current_tile)
+				# 既に _on_movement_completed 経由で process_tile_landing が走って
+				# UI が出ていれば二重実行しない（tile_action_processor の is_action_processing で判定）
+				var tap = board_system_3d.tile_action_processor if board_system_3d else null
+				if tap and tap.is_action_processing:
+					GameLogger.info("GFM", "net: tile_action → 既に処理中のため process_tile_landing スキップ")
+				else:
+					var current_tile = board_system_3d.get_player_tile(ctp_player.id)
+					GameLogger.info("GFM", "net: tile_action → process_tile_landing(tile=%d)" % current_tile)
+					board_system_3d.process_tile_landing(current_tile)
 				# ドミニオコマンドボタン（D）を明示表示（自分の土地があれば自動判定）
 				if _ui_show_dominio_btn_cb.is_valid():
 					_ui_show_dominio_btn_cb.call()
@@ -1383,8 +1418,59 @@ func on_server_action_broadcast(data: Dictionary) -> void:
 			if _ui_update_panels_cb.is_valid():
 				_ui_update_panels_cb.call()
 		"dominio_action":
-			# 他プレイヤーのドミニオコマンド結果反映（Phase 2で実装）
-			pass
+			# 他プレイヤーのドミニオコマンド結果反映
+			var cmd: String = String(payload.get("command", ""))
+			match cmd:
+				"level_up":
+					var t_idx: int = int(payload.get("source_tile", -1))
+					var new_level: int = int(payload.get("target_level", -1))
+					var ep_cost: int = int(payload.get("cost", 0))
+					if t_idx < 0 or new_level <= 0 or not board_system_3d:
+						GameLogger.warn("Game", "net: dominio level_up payload 不正")
+						return
+					if not board_system_3d.tile_nodes.has(t_idx):
+						return
+					var lu_tile = board_system_3d.tile_nodes[t_idx]
+					GameLogger.info("Game", "net: P%d dominio level_up tile=%d Lv→%d cost=%d" % [player, t_idx, new_level, ep_cost])
+					lu_tile.level = new_level
+					if board_system_3d.level_up_completed:
+						board_system_3d.level_up_completed.emit(t_idx, new_level)
+					if player_system and player >= 0 and player < player_system.players.size():
+						player_system.players[player].magic_power -= ep_cost
+					# ダウン状態設定（奮闘除く）
+					if lu_tile.has_method("set_down_state") and not PlayerBuffSystem.has_unyielding(lu_tile.creature_data):
+						lu_tile.set_down_state(true)
+				"move_creature":
+					var src: int = int(payload.get("source_tile", -1))
+					var dst: int = int(payload.get("target_tile", -1))
+					if src < 0 or dst < 0 or not board_system_3d:
+						GameLogger.warn("Game", "net: dominio move_creature payload 不正")
+						return
+					if not board_system_3d.tile_nodes.has(src) or not board_system_3d.tile_nodes.has(dst):
+						return
+					var src_tile = board_system_3d.tile_nodes[src]
+					var dst_tile = board_system_3d.tile_nodes[dst]
+					if src_tile.creature_data.is_empty():
+						GameLogger.warn("Game", "net: dominio move 元タイル %d にクリーチャーなし" % src)
+						return
+					var moving_creature: Dictionary = src_tile.creature_data.duplicate(true)
+					# 移動時に curse 消滅（通常移動の仕様）
+					if moving_creature.has("curse"):
+						moving_creature.erase("curse")
+					GameLogger.info("Game", "net: P%d dominio move_creature tile=%d→%d name=%s" % [player, src, dst, moving_creature.get("name", "?")])
+					# 移動元を空地化
+					board_system_3d.remove_creature(src)
+					board_system_3d.set_tile_owner(src, -1)
+					# 移動先へ配置
+					board_system_3d.set_tile_owner(dst, player)
+					board_system_3d.place_creature(dst, moving_creature, player)
+					if dst_tile.has_method("set_down_state") and not PlayerBuffSystem.has_unyielding(moving_creature):
+						dst_tile.set_down_state(true)
+				_:
+					GameLogger.info("Game", "net: 未実装ドミニオコマンド %s" % cmd)
+			# UI更新
+			if _ui_update_panels_cb.is_valid():
+				_ui_update_panels_cb.call()
 		"lap_complete":
 			# 他プレイヤーの周回完了を反映（ダウン解除 + HP回復+10）
 			var lap_player: int = int(payload.get("player_id", player))

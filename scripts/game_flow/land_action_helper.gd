@@ -75,6 +75,20 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 			var growth_comment = "【昇華】%s MHP+%d → MHP%d" % [creature_name, hp_bonus, new_mhp]
 			handler.board_system.tile_action_processor.add_pending_comment(growth_comment)
 
+	# ネット対戦: 相手プレイヤーに level_up を通知
+	if handler.game_flow_manager and handler.game_flow_manager.is_net_battle:
+		handler.game_flow_manager.net_action_requested.emit("dominio_action", {
+			"command": "level_up",
+			"source_tile": handler.selected_tile_index,
+			"target_level": target_level,
+			"cost": cost,
+		})
+		# ネット対戦ではサーバーが即 turn_start(end_turn) を返すため phase が
+		# END_TURN に遷移し、_on_tile_action_completed_3d の早期returnで
+		# end_turn() が呼ばれず cleanup が走らない。ここで明示的に cleanup する。
+		GameLogger.info("Dominio", "net: level_up 完了 → close_dominio_order 呼出")
+		handler.close_dominio_order()
+
 	# アクション完了を通知（正しいターン終了フロー）
 	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
@@ -414,6 +428,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.board_system.set_tile_owner(dest_tile_index, current_player_index)
 		
 		# 移動完了：状態をリセット
+		# source_tile はリセット前の値を保存（ネット送信に使用）
+		var _move_source_for_net: int = handler.move_source_tile
 		handler.move_destinations.clear()
 		handler.move_source_tile = -1
 		handler.current_destination_index = 0
@@ -424,12 +440,23 @@ static func confirm_move(handler, dest_tile_index: int):
 			handler.board_system.set_pending_comment(
 				"%s がドミニオコマンド：移動" % player_name
 			)
-		
+
+		# ネット対戦: 相手プレイヤーに move_creature を通知（空き地移動のみ）
+		if handler.game_flow_manager and handler.game_flow_manager.is_net_battle:
+			handler.game_flow_manager.net_action_requested.emit("dominio_action", {
+				"command": "move_creature",
+				"source_tile": _move_source_for_net,
+				"target_tile": dest_tile_index,
+			})
+			# ネット対戦では phase が END_TURN に即遷移するため cleanup を明示実行
+			GameLogger.info("Dominio", "net: move_creature 完了 → close_dominio_order 呼出")
+			handler.close_dominio_order()
+
 		# アクション完了を通知
 		# 注: ドミニオコマンドはend_turn()で閉じられる
 		if handler.board_system and handler.board_system.tile_action_processor:
 			handler.board_system.complete_action()
-		
+
 	elif dest_owner == current_player_index or (handler.player_system and handler.player_system.is_same_team(current_player_index, dest_owner)):
 		# 自分 or 同盟の土地の場合: エラー（通常はありえない）
 		# クリーチャーを元に戻す
