@@ -126,7 +126,9 @@ func (gs *GameState) MoveComplete(slotIndex, direction int) *ActionError {
 	return nil
 }
 
-// Summon places a creature on the current tile
+// Summon: 薄型リレー方式ではタイル状態（HP初期値・IsDown・奮闘スキル判定）は
+// クライアント計算に委譲し、結果を action_result_report で受信する（Phase 2）。
+// サーバー側は所有権・手札所持検証と手札消費のみ行う。
 func (gs *GameState) Summon(slotIndex, cardID int) *ActionError {
 	if err := gs.ValidateActivePlayer(slotIndex); err != nil {
 		return err
@@ -137,7 +139,6 @@ func (gs *GameState) Summon(slotIndex, cardID int) *ActionError {
 	if !gs.hasCard(slotIndex, cardID) {
 		return errCardNotInHand()
 	}
-
 	p := gs.ActivePlayerState()
 	if p == nil {
 		return errInvalidTile()
@@ -149,19 +150,9 @@ func (gs *GameState) Summon(slotIndex, cardID int) *ActionError {
 	if tile.OwnerIndex >= 0 {
 		return errTileOccupied()
 	}
-
-	card := masterdata.GetCard(cardID)
-	if card == nil || card.Type != "creature" {
-		return &ActionError{Code: "invalid_card", Message: "not a creature card"}
-	}
-
+	// card type / HP / 奮闘キーワード判定はクライアント計算結果を待つため削除。
+	// 手札からの消費のみ行う（カードを使った事実は記録）。
 	gs.RemoveFromHand(slotIndex, cardID)
-	tile.OwnerIndex = slotIndex
-	tile.CreatureID = cardID
-	tile.CreatureHP = card.HP
-	tile.Level = 1
-	tile.IsDown = !masterdata.HasKeyword(cardID, "奮闘")
-
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }
@@ -187,6 +178,11 @@ func (gs *GameState) DominioAction(slotIndex int, command string, sourceTile, ta
 	}
 }
 
+// levelUp / moveCreature / swapCreature: 薄型リレー方式ではクライアントが
+// コスト計算・タイル状態更新を行い、結果を action_result_report で送信する（Phase 2）。
+// 現在は最小限の所有権検証のみ実施し、フェーズ遷移で進行を止めないようにする。
+// 実際の EP 消費・タイル状態変更・レベル更新はクライアント報告受信時に反映予定。
+
 func (gs *GameState) levelUp(slotIndex, tileIdx int) *ActionError {
 	if tileIdx < 0 || tileIdx >= len(gs.Board) {
 		return errInvalidTile()
@@ -198,16 +194,7 @@ func (gs *GameState) levelUp(slotIndex, tileIdx int) *ActionError {
 	if tile.IsDown {
 		return &ActionError{Code: "tile_down", Message: "tile is down"}
 	}
-
-	cost := tile.Level * 100
-	p := gs.Players[slotIndex]
-	if p.EP < cost {
-		return errNotEnoughEP(cost, p.EP)
-	}
-
-	p.EP -= cost
-	tile.Level++
-	tile.IsDown = true
+	// コスト検証・EP消費・レベル更新はクライアント計算結果を待つため削除。
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }
@@ -218,7 +205,6 @@ func (gs *GameState) moveCreature(slotIndex, src, dst int) *ActionError {
 	}
 	srcTile := gs.Board[src]
 	dstTile := gs.Board[dst]
-
 	if srcTile.OwnerIndex != slotIndex {
 		return errInvalidTile()
 	}
@@ -228,19 +214,7 @@ func (gs *GameState) moveCreature(slotIndex, src, dst int) *ActionError {
 	if srcTile.IsDown {
 		return &ActionError{Code: "tile_down", Message: "source tile is down"}
 	}
-
-	dstTile.OwnerIndex = slotIndex
-	dstTile.CreatureID = srcTile.CreatureID
-	dstTile.CreatureHP = srcTile.CreatureHP
-	dstTile.Level = srcTile.Level
-	dstTile.IsDown = true
-
-	srcTile.OwnerIndex = -1
-	srcTile.CreatureID = 0
-	srcTile.CreatureHP = 0
-	srcTile.Level = 1
-	srcTile.IsDown = false
-
+	// タイル状態変更はクライアント計算結果を待つため削除。
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }
@@ -251,19 +225,13 @@ func (gs *GameState) swapCreature(slotIndex, src, dst int) *ActionError {
 	}
 	srcTile := gs.Board[src]
 	dstTile := gs.Board[dst]
-
 	if srcTile.OwnerIndex != slotIndex || dstTile.OwnerIndex != slotIndex {
 		return errInvalidTile()
 	}
 	if srcTile.IsDown || dstTile.IsDown {
 		return &ActionError{Code: "tile_down", Message: "cannot swap down tiles"}
 	}
-
-	srcTile.CreatureID, dstTile.CreatureID = dstTile.CreatureID, srcTile.CreatureID
-	srcTile.CreatureHP, dstTile.CreatureHP = dstTile.CreatureHP, srcTile.CreatureHP
-	srcTile.IsDown = true
-	dstTile.IsDown = true
-
+	// クリーチャー入れ替えはクライアント計算結果を待つため削除。
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }

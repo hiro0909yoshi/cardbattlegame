@@ -66,6 +66,10 @@ func NewSession(roomID, matchType string, cfg InitConfig, broadcast BroadcastFun
 func (s *Session) Start() {
 	go s.run()
 
+	// クライアントの start_turn() と対称に、ゲーム開始時にも active player に 1 枚ドロー
+	// （EndTurn 時は次プレイヤーにドローする実装と合わせる）
+	s.state.DrawCard(s.state.ActivePlayer)
+
 	s.broadcast(newMsg("game_state", map[string]any{
 		"state": s.state,
 	}))
@@ -174,7 +178,17 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 		actionErr = s.state.SpellPass(slotIndex)
 		if actionErr == nil {
 			s.broadcastAction(slotIndex, "spell_pass", nil)
-			result, _ := s.state.DiceRoll(slotIndex)
+			// 薄型リレー方式: 自動ダイスロールを廃止。
+			// PhaseDice 遷移後、クライアントから dice_roll メッセージを待つ。
+			// フェーズ変更を通知するため turn_start を再送信
+			s.broadcastTurnStart()
+		}
+
+	case "dice_roll":
+		// 薄型リレー方式: クライアントからの明示的な dice_roll 要求でダイスを振る
+		result, err := s.state.DiceRoll(slotIndex)
+		actionErr = err
+		if actionErr == nil {
 			s.broadcast(newMsg("dice_result", map[string]any{
 				"player": slotIndex,
 				"result": result,
@@ -197,33 +211,9 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 					"phase":    s.state.Phase,
 				})
 			}
-			// PhaseBattle: resolve immediately (no item selection yet)
-			if s.state.Phase == PhaseBattle {
-				s.state.StartBattle(slotIndex)
-				if bc := s.state.PendingBattle; bc != nil {
-					s.broadcast(newMsg("battle_start", map[string]any{
-						"attacker":   bc.AttackerSlot,
-						"defender":   bc.DefenderSlot,
-						"tile_index": bc.TileIndex,
-					}))
-					result := s.state.ResolveBattle(*bc)
-					s.state.PendingBattle = nil
-					if result != nil {
-						slog.Info("battle resolved",
-							"attacker", bc.AttackerSlot,
-							"defender", bc.DefenderSlot,
-							"attacker_won", result.AttackerWon,
-						)
-						s.broadcast(newMsg("battle_result", result))
-					} else {
-						slog.Warn("battle skipped: no valid cards",
-							"attacker", bc.AttackerSlot,
-							"defender", bc.DefenderSlot,
-						)
-					}
-					s.state.TransitionTo(PhaseEndTurn)
-				}
-			}
+			// 薄型リレー: フェーズ遷移をクライアントに通知
+			s.broadcastTurnStart()
+			// 旧: PhaseBattle でサーバーが ResolveBattle を実行していた処理は削除済み。
 		}
 
 	case "summon":
@@ -244,6 +234,8 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 					"creature": tile,
 				})
 			}
+			// 薄型リレー: phase 遷移通知（PhaseEndTurn へ）
+			s.broadcastTurnStart()
 		}
 
 	case "dominio_action":
@@ -263,37 +255,24 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 				"source_tile": req.SourceTile,
 				"target_tile": req.TargetTile,
 			})
+			// 薄型リレー: phase 遷移通知
+			s.broadcastTurnStart()
 		}
 
 	case "pass":
 		actionErr = s.state.Pass(slotIndex)
 		if actionErr == nil {
 			s.broadcastAction(slotIndex, "pass", nil)
+			// 薄型リレー: フェーズ遷移通知
+			s.broadcastTurnStart()
 		}
 
 	case "battle_item":
-		var req struct {
-			ItemID int `json:"item_id"`
-		}
-		if err := json.Unmarshal(data, &req); err != nil {
-			s.sendTo(slotIndex, newMsg("action_error", &ActionError{Code: "bad_request", Message: "invalid JSON"}))
-			return
-		}
-		actionErr = s.state.BattleItemSelect(slotIndex, req.ItemID)
-		if actionErr == nil {
-			s.broadcastAction(slotIndex, "battle_item_selected", map[string]any{
-				"player": slotIndex,
-			})
-			// Check if both ready
-			if s.state.BattleBothReady() && s.state.PendingBattle != nil {
-				result := s.state.ResolveBattle(*s.state.PendingBattle)
-				s.state.PendingBattle = nil
-				if result != nil {
-					s.broadcast(newMsg("battle_result", result))
-				}
-				s.state.TransitionTo(PhaseEndTurn)
-			}
-		}
+		// 旧: サーバー側でバトルアイテム選択を処理していた。薄型リレー方式では
+		// クライアントがバトル計算全体を担当するため、このアクションは廃止。
+		// Phase 2 でクライアントから battle_result_report を受ける形に置き換え。
+		s.sendTo(slotIndex, newMsg("action_error", &ActionError{Code: "deprecated", Message: "battle_item is deprecated in thin-relay mode"}))
+		return
 
 	case "end_turn":
 		winner, finished, err := s.state.EndTurn(slotIndex)

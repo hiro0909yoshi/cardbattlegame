@@ -222,17 +222,11 @@ func (gs *GameState) TransitionTo(next Phase) {
 }
 
 func (gs *GameState) TransitionAfterLanding(slotIndex int) {
-	p := gs.Players[slotIndex]
-	if p.Position < 0 || p.Position >= len(gs.Board) {
-		gs.TransitionTo(PhaseTileAction)
-		return
-	}
-	tile := gs.Board[p.Position]
-	if tile.OwnerIndex >= 0 && tile.OwnerIndex < len(gs.Players) && tile.OwnerIndex != slotIndex {
-		gs.TransitionTo(PhaseBattle)
-	} else {
-		gs.TransitionTo(PhaseTileAction)
-	}
+	// 薄型リレー方式（2026-04-20 移行中）: バトル計算はクライアント側で行う。
+	// 敵タイル着地時もサーバーは PhaseTileAction に遷移し、クライアントからの
+	// バトル結果報告（battle_result_report）を待つ設計。
+	// 現在はクライアント側報告が未実装のため、着地後は常に TileAction に進む。
+	gs.TransitionTo(PhaseTileAction)
 }
 
 func (gs *GameState) StartBattle(attackerSlot int) {

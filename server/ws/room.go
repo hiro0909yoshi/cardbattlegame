@@ -21,14 +21,20 @@ const (
 	RoomFinished RoomStatus = "finished"
 )
 
+type TileConfig struct {
+	Element string `json:"element"`
+}
+
 type RoomConfig struct {
-	MatchType    string `json:"match_type"`
-	MaxPlayers   int    `json:"max_players"`
-	MapID        string `json:"map_id"`
-	RulePreset   string `json:"rule_preset"`
-	InitialMagic int    `json:"initial_magic"`
-	TargetMagic  int    `json:"target_magic"`
-	MaxTurns     int    `json:"max_turns"`
+	MatchType    string       `json:"match_type"`
+	MaxPlayers   int          `json:"max_players"`
+	MapID        string       `json:"map_id"`
+	RulePreset   string       `json:"rule_preset"`
+	InitialMagic int          `json:"initial_magic"`
+	TargetMagic  int          `json:"target_magic"`
+	MaxTurns     int          `json:"max_turns"`
+	InitialCards int          `json:"initial_cards"`
+	MapTiles     []TileConfig `json:"map_tiles"`
 }
 
 type PlayerSlot struct {
@@ -176,6 +182,42 @@ func (r *Room) SetDeck(c *Client, deckID string) {
 	r.broadcastRoomState()
 }
 
+// UpdateConfigAndBroadcast: patch をマージして room_state を全員に配信
+// セットアップ画面でホストが設定変更したときに呼ばれる
+func (r *Room) UpdateConfigAndBroadcast(patch RoomConfig) {
+	r.UpdateConfig(patch)
+	r.broadcastRoomState()
+}
+
+// UpdateConfig merges non-zero fields from patch into Config.
+// Used when the host sends final config (MapTiles, etc.) right before StartGame.
+func (r *Room) UpdateConfig(patch RoomConfig) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if patch.MapID != "" {
+		r.Config.MapID = patch.MapID
+	}
+	if patch.RulePreset != "" {
+		r.Config.RulePreset = patch.RulePreset
+	}
+	if patch.InitialMagic > 0 {
+		r.Config.InitialMagic = patch.InitialMagic
+	}
+	if patch.TargetMagic > 0 {
+		r.Config.TargetMagic = patch.TargetMagic
+	}
+	if patch.MaxTurns > 0 {
+		r.Config.MaxTurns = patch.MaxTurns
+	}
+	if patch.InitialCards > 0 {
+		r.Config.InitialCards = patch.InitialCards
+	}
+	if len(patch.MapTiles) > 0 {
+		r.Config.MapTiles = patch.MapTiles
+	}
+}
+
 // StartGame creates a Session and delegates all game logic to it.
 // Room does NOT touch GameState after this point.
 func (r *Room) StartGame() bool {
@@ -187,11 +229,10 @@ func (r *Room) StartGame() bool {
 	}
 	r.Status = RoomPlaying
 
-	tileCount := 20
-	elements := []string{"fire", "water", "earth", "wind", "neutral"}
-	tiles := make([]game.TileInit, tileCount)
-	for i := range tiles {
-		tiles[i] = game.TileInit{Element: elements[i%len(elements)]}
+	// クライアント送信のマップ情報を使用（ハードコード廃止）
+	tiles := make([]game.TileInit, len(r.Config.MapTiles))
+	for i, t := range r.Config.MapTiles {
+		tiles[i] = game.TileInit{Element: t.Element}
 	}
 
 	var players []game.PlayerInit
@@ -223,7 +264,7 @@ func (r *Room) StartGame() bool {
 		TargetTEP:    r.Config.TargetMagic,
 		MaxTurns:     r.Config.MaxTurns,
 		InitialEP:    r.Config.InitialMagic,
-		InitialCards: 4,
+		InitialCards: r.Config.InitialCards,
 	}
 
 	broadcastFn := func(msg []byte) {

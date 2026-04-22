@@ -153,8 +153,10 @@ func (h *Hub) HandleMessage(c *Client, msg *Message) {
 		h.handleSetReady(c, msg.Data)
 	case "set_deck":
 		h.handleSetDeck(c, msg.Data)
+	case "update_config":
+		h.handleUpdateConfig(c, msg.Data)
 	case "start_game":
-		h.handleStartGame(c)
+		h.handleStartGame(c, msg.Data)
 	case "list_rooms":
 		c.Send(NewMessage("room_list", h.ListRooms()))
 	case "reconnect":
@@ -213,6 +215,21 @@ func (h *Hub) handleCreateRoom(c *Client, data json.RawMessage) {
 	}
 	if cfg.MaxTurns > 999 {
 		cfg.MaxTurns = 999
+	}
+	if cfg.InitialCards <= 0 {
+		cfg.InitialCards = 5
+	}
+	if cfg.InitialCards > 10 {
+		cfg.InitialCards = 10
+	}
+	// MapTiles が未指定の場合は暫定デフォルト（20マス, 5属性巡回）を適用。
+	// 本来はクライアントから必ず送られる想定だが、旧クライアント互換のため残す。
+	// TODO: 新方式完了後は厳格化（未指定ならエラー返却）
+	if len(cfg.MapTiles) == 0 {
+		defaultElements := []string{"fire", "water", "earth", "wind", "neutral"}
+		for i := 0; i < 20; i++ {
+			cfg.MapTiles = append(cfg.MapTiles, TileConfig{Element: defaultElements[i%len(defaultElements)]})
+		}
 	}
 
 	room := NewRoom(h, c, cfg)
@@ -286,7 +303,25 @@ func (h *Hub) handleSetDeck(c *Client, data json.RawMessage) {
 	c.Room.SetDeck(c, req.DeckID)
 }
 
-func (h *Hub) handleStartGame(c *Client) {
+// handleUpdateConfig: ホストがセットアップ画面で設定を変更したとき呼ばれる
+// 受信した patch を Room.Config にマージし、room_state を全員に再配信
+func (h *Hub) handleUpdateConfig(c *Client, data json.RawMessage) {
+	if c.Room == nil {
+		return
+	}
+	if c.Room.HostID != c.UserID {
+		c.Send(NewMessage("error", map[string]string{"message": "only host can update config"}))
+		return
+	}
+	var patch RoomConfig
+	if err := json.Unmarshal(data, &patch); err != nil {
+		c.Send(NewMessage("error", map[string]string{"message": "invalid config patch"}))
+		return
+	}
+	c.Room.UpdateConfigAndBroadcast(patch)
+}
+
+func (h *Hub) handleStartGame(c *Client, data json.RawMessage) {
 	if c.Room == nil {
 		slog.Debug("start_game: no room", "user", c.UserID)
 		return
@@ -296,6 +331,17 @@ func (h *Hub) handleStartGame(c *Client) {
 		c.Send(NewMessage("error", map[string]string{"message": "only host can start"}))
 		return
 	}
+
+	// ホストから受信したconfig更新（MapTiles等）を反映
+	if len(data) > 0 {
+		var patch RoomConfig
+		if err := json.Unmarshal(data, &patch); err == nil {
+			c.Room.UpdateConfig(patch)
+		} else {
+			slog.Warn("start_game: invalid config patch", "err", err)
+		}
+	}
+
 	slog.Debug("start_game: calling StartGame", "user", c.UserID, "room_status", string(c.Room.Status))
 	if !c.Room.StartGame() {
 		slog.Debug("start_game: StartGame returned false", "user", c.UserID)
