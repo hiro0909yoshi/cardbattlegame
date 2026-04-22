@@ -139,7 +139,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 
 	# UIManagerから手札ノードを取得（指定されたプレイヤーの手札）
 	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id) if ui_manager_ref else []
-	
+	GameLogger.info("CardSel", "enable_card_selection: player=%d hand_data=%d hand_nodes=%d mode=%s filter=%s" % [player_id, hand_data.size(), hand_nodes.size(), selection_mode, filter_mode])
+	var _selectable_count: int = 0
+
 	# 最初に全カードのmodulateをリセット（前の状態をクリア）
 	for card_node in hand_nodes:
 		if card_node and is_instance_valid(card_node):
@@ -421,6 +423,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				add_card_highlight(card_node, card_data, 999999, true)  # 全て選択可能
 			else:
 				add_card_highlight(card_node, card_data, available_magic, is_selectable)
+			if is_selectable:
+				_selectable_count += 1
+	GameLogger.info("CardSel", "enable_card_selection 完了: selectable=%d / %d" % [_selectable_count, hand_nodes.size()])
 
 # 到着予想タイルに基づいて制限表示のみ更新
 func update_restriction_for_destinations(destination_tiles: Array):
@@ -670,12 +675,14 @@ func _confirm_card_selection(card_index: int):
 
 # カードが選択された（外部から呼ばれる）
 func on_card_selected(card_index: int):
+	GameLogger.info("CardSel", "on_card_selected: idx=%d mode=%s is_active=%s" % [card_index, selection_mode, str(is_active)])
 	# プレイヤーステータスダイアログが開いていたら閉じるだけで処理終了
 	if ui_manager_ref and ui_manager_ref.player_status_dialog and ui_manager_ref.player_status_dialog.is_dialog_visible():
 		ui_manager_ref.player_status_dialog.hide_dialog()
 		return
 
 	if not is_active:
+		GameLogger.warn("CardSel", "is_active=false のため中断")
 		return
 
 	var card_data = _get_card_data_for_index(card_index)
@@ -729,10 +736,12 @@ func on_card_selected(card_index: int):
 
 # クリーチャー情報パネルを表示
 func _show_creature_info_panel(card_index: int, card_data: Dictionary):
+	GameLogger.info("CardSel", "_show_creature_info_panel: idx=%d ui_mgr=%s panel=%s" % [card_index, str(ui_manager_ref != null), str(ui_manager_ref != null and ui_manager_ref.creature_info_panel_ui != null)])
 	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
 	if ui_manager_ref:
 		ui_manager_ref.save_navigation_state()
 	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
+		GameLogger.warn("CardSel", "creature_info_panel_ui が null → _confirm_card_selection フォールバック")
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return

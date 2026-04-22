@@ -652,6 +652,9 @@ func _input(event):
 	# 入力ロック中は無視
 	var game_flow_manager = _game_flow_manager_ref
 	if game_flow_manager and game_flow_manager.is_input_locked():
+		# 選択可能なカードへの左クリックのみログ（ノイズ削減）
+		if is_selectable and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			GameLogger.warn("Card", "card[%d] タップ無視: is_input_locked=true" % card_index)
 		return
 
 	# アルカナアーツ選択フェーズ中はインフォパネル表示のみ許可
@@ -677,6 +680,9 @@ func _input(event):
 				return
 	
 	# カード選択モード時のクリック処理（グレーアウト時もインフォパネル表示のみ許可）
+	# 診断: 選択可能カードへの左クリックが届いたかログ
+	if is_selectable and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		GameLogger.info("Card", "card[%d] クリック検知: mouse_over=%s selectable=%s grayed=%s" % [card_index, str(mouse_over), str(is_selectable), str(is_grayed_out)])
 	if (is_selectable or is_grayed_out) and mouse_over and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			# グレーアウト時はインフォパネル表示のみ（使用不可）

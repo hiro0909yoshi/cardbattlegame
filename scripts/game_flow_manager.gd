@@ -10,6 +10,8 @@ signal turn_ended(player_id: int)
 @warning_ignore("unused_signal")  # 旧版ダイス用、互換性のため残す
 signal dice_rolled(value: int)
 signal creature_updated_relay(tile_index: int, creature_data: Dictionary)
+# ネット対戦: GFM内部の操作をサーバー送信に置き換えるため、NetworkBridge が接続する
+signal net_action_requested(msg_type: String, data: Variant)
 
 # ゲーム状態
 enum GamePhase {
@@ -44,6 +46,14 @@ var player_is_cpu: Array:
 
 # チュートリアルモード（CPUは常にバトルを仕掛ける）
 var is_tutorial_mode: bool = false
+
+# ネット対戦モード: 薄型リレー方式。
+# true の場合、GFM は自律的なターン遷移・ダイス生成・CPU起動を行わず、
+# サーバー指示（on_server_* メソッド経由）で動作する。
+var is_net_battle: bool = false
+
+# ネット対戦時の自分のスロット（_player_slot と同じ値を保持）
+var net_local_slot: int = 0
 
 # システム参照
 var player_system: PlayerSystem = null
@@ -271,6 +281,12 @@ func start_game():
 	for player in player_system.players:
 		player.direction_choice_pending = true
 
+	# ネット対戦: サーバーの turn_start を待機（change_phase/start_turn はスキップ）
+	# NetworkBridge.setup() 内で meta game_state から初期フェーズが発火される
+	if is_net_battle:
+		GameLogger.info("Game", "net_battle: start_game → サーバー指示待ち (state_machine初期化済み)")
+		return
+
 	change_phase(GamePhase.DICE_ROLL)
 	start_turn()
 
@@ -287,7 +303,13 @@ func start_turn():
 
 	# ターン開始時に順番アイコンを即座に更新（最初に呼ぶ）
 	emit_signal("turn_started", current_player.id)
-	
+
+	# ネット対戦: 以降の自律動作（ドロー・スペルフェーズ・CPU判定等）は
+	# サーバー指示で行うためスキップ。on_server_turn_started() で別途処理。
+	if is_net_battle:
+		GameLogger.info("GFM", "net_battle: start_turn をサーバー指示待ちで終了 (P%d)" % (current_player.id + 1))
+		return
+
 	# カードドロー処理（常に1枚引く）
 	# チュートリアルモードではドローをスキップ
 	if not _is_tutorial_mode():
@@ -408,6 +430,12 @@ func _setup_dice_phase_navigation():
 
 # サイコロを振る
 func roll_dice():
+	# ネット対戦: ダイス生成はサーバー権威のためローカル実行せず、送信のみ
+	if is_net_battle:
+		GameLogger.info("GFM", "net_battle: dice_roll をサーバー送信")
+		net_action_requested.emit("dice_roll", null)
+		return
+
 	if not dice_phase_handler:
 		GameLogger.error("GFM", "roll_dice: dice_phase_handler が初期化されていません")
 		return
@@ -449,7 +477,20 @@ func _on_invasion_completed_from_board(success: bool, tile_index: int):
 		dominio_command_handler._on_invasion_completed(success, tile_index)
 
 func _on_movement_completed_from_board(player_id: int, final_tile: int):
-	# 各ハンドラーへ通知
+	# ネット対戦: 自分のターンの時だけ move_complete をサーバーに送信
+	# （他プレイヤーの移動アニメもローカル再生されるが、送信権限があるのは動かしている本人のみ）
+	if is_net_battle:
+		if player_id == net_local_slot:
+			# 薄型リレー: クライアントが計算した final_tile をサーバーに渡す。
+			# サーバーの MoveComplete は direction >= 0 && direction < tileCount なら
+			# その値をそのまま最終位置として使う（action.go:115-117）。
+			GameLogger.info("GFM", "net: 移動完了 → move_complete送信 (player=%d tile=%d)" % [player_id, final_tile])
+			net_action_requested.emit("move_complete", {"direction": final_tile})
+		else:
+			GameLogger.info("GFM", "net: 他プレイヤー移動完了 (player=%d)、送信なし" % player_id)
+		return
+
+	# ローカル: 各ハンドラーへ通知
 	if dominio_command_handler:
 		dominio_command_handler._on_movement_completed(player_id, final_tile)
 
@@ -554,13 +595,26 @@ func end_turn():
 	if _is_ending_turn:
 		print("Warning: Already ending turn (flag check)")
 		return
-	
+
 	if current_phase == GamePhase.END_TURN:
 		print("Warning: Already ending turn (phase check)")
 		return
-	
+
 	# ★重要: フラグを最優先で立てる
 	_is_ending_turn = true
+
+	# ネット対戦: サーバーは PhaseEndTurn でしか end_turn を受け付けないため、
+	# tile_action 等の中間フェーズからは pass を送って phase 遷移を進める。
+	# サーバー: pass → PhaseEndTurn → turn_start(phase=end_turn) broadcast
+	# クライアント: _setup_net_phase_ui("end_turn") で end_turn 送信
+	if is_net_battle:
+		var server_msg: String = "pass"
+		if current_phase == GamePhase.END_TURN:
+			server_msg = "end_turn"
+		GameLogger.info("GFM", "net_battle: end_turn呼び出し → %s送信 (current_phase=%d)" % [server_msg, current_phase])
+		net_action_requested.emit(server_msg, null)
+		_is_ending_turn = false
+		return
 	
 	# Phase 1-A: ドミニオコマンドを閉じる、カード選択UIとボタンを隠す
 	if dominio_command_handler and dominio_command_handler.current_state != dominio_command_handler.State.CLOSED:
@@ -838,13 +892,35 @@ func set_cpu_movement_evaluator(cpu_movement_evaluator: CPUMovementEvaluator) ->
 func _update_camera_mode(phase: GamePhase):
 	if not board_system_3d:
 		return
-	
+
+	# ネット対戦: 現在プレイヤー（active）の位置にカメラを移動
+	# 相手ターン: follow mode で相手を追う
+	# 自分ターン: 自分の位置にカメラ移動（フェーズに応じて manual/follow）
+	if is_net_battle and player_system:
+		var active_slot: int = player_system.current_player_index
+		var is_local_turn: bool = active_slot == net_local_slot
+		GameLogger.info("Camera", "net: update active=%d local=%d phase=%d" % [active_slot, net_local_slot, phase])
+		board_system_3d.set_camera_player(active_slot)
+		if is_local_turn:
+			# 自分ターン: ダイス/タイルアクションは手動、それ以外は追従
+			match phase:
+				GamePhase.DICE_ROLL, GamePhase.TILE_ACTION:
+					board_system_3d.enable_manual_camera()
+				_:
+					board_system_3d.enable_follow_camera()
+		else:
+			board_system_3d.enable_follow_camera()
+		# 自分/相手問わず、新フェーズ開始時はカメラを active プレイヤーの位置に寄せる
+		if board_system_3d.has_method("focus_camera_on_player_pos"):
+			board_system_3d.focus_camera_on_player_pos(active_slot, true)
+		return
+
 	var is_my_turn = _is_current_player_human()
-	
+
 	if not is_my_turn:
 		board_system_3d.enable_follow_camera()
 		return
-	
+
 	# ダイスロールとタイルアクションで手動モード
 	match phase:
 		GamePhase.DICE_ROLL, GamePhase.TILE_ACTION:
@@ -1027,7 +1103,10 @@ func get_control_type(player_id: int) -> String:
 	return _player_control_types[player_id]
 
 ## CPUプレイヤーかどうかを判定（統一メソッド・既存互換）
+## ネット対戦時は全プレイヤーを remote 扱いとし、ローカルでのCPU AI起動を防ぐ。
 func is_cpu_player(player_id: int) -> bool:
+	if is_net_battle:
+		return false
 	return get_control_type(player_id) == "cpu"
 
 ## 制御タイプをCPUに変更（次のターン/フェーズ開始時に反映）
@@ -1067,3 +1146,233 @@ func _sync_board_cpu_flags() -> void:
 func _on_creature_updated_from_board(tile_index: int, creature_data: Dictionary):
 	# シグナルリレー（UIManager はこのシグナルを受信）
 	creature_updated_relay.emit(tile_index, creature_data)
+
+
+# =============================================================================
+# ネット対戦 API（薄型リレー方式）
+# =============================================================================
+# サーバーからの指示をGFMに流すためのエントリーポイント。
+# NetworkBridge が WSメッセージ受信時に呼び出す。
+# 実装方針: 既存のシグナル（turn_started / phase_changed / dice_rolled）を
+# emit することで、UIManager・HandDisplay等の既存UIが自然に反応する。
+# =============================================================================
+
+## ネット対戦モードを設定
+func set_is_net_battle(enabled: bool, local_slot: int = 0) -> void:
+	is_net_battle = enabled
+	net_local_slot = local_slot
+	GameLogger.info("Game", "is_net_battle=%s local_slot=%d" % [str(enabled), local_slot])
+
+
+## サーバーからの turn_start メッセージを受けて、GFMのターン状態を更新する
+## data: {"active_player": int, "phase": String, "hand": [int], "turn": int, ...}
+func on_server_turn_started(data: Dictionary) -> void:
+	if not is_net_battle:
+		return
+	var active_player_slot: int = int(data.get("active_player", -1))
+	if active_player_slot < 0:
+		return
+
+	# PlayerSystem の current_player_index を同期
+	if player_system:
+		player_system.current_player_index = active_player_slot
+
+	# BoardSystem3D の current_player_index も同期（process_tile_landing 等で使用）
+	if board_system_3d:
+		board_system_3d.current_player_index = active_player_slot
+
+	# ターン番号
+	if data.has("turn"):
+		current_turn_number = int(data.get("turn", 1))
+
+	# 既存シグナル発火 → UIManager.set_current_turn 等が自然に動く
+	turn_started.emit(active_player_slot)
+
+	# UI更新
+	if _ui_update_panels_cb.is_valid():
+		_ui_update_panels_cb.call()
+
+	# フェーズを反映（文字列→enum）
+	var server_phase: String = String(data.get("phase", "spell"))
+	var gfm_phase = _server_phase_to_enum(server_phase)
+	if gfm_phase != current_phase:
+		change_phase(gfm_phase)
+
+	# 自分のターンの場合、フェーズに応じたUIを起動
+	if active_player_slot == net_local_slot:
+		_setup_net_phase_ui(server_phase)
+	else:
+		# 相手のターン: ナビゲーション無効化
+		_disable_net_phase_ui()
+
+
+## ネット対戦: サーバーフェーズに応じて既存UIを起動（自分のターンのみ）
+func _setup_net_phase_ui(server_phase: String) -> void:
+	match server_phase:
+		"spell":
+			# 暫定: スペルフェーズは自動パス（Phase 2でスペル選択UI実装）
+			GameLogger.info("GFM", "net: spell phase → auto-pass (暫定)")
+			net_action_requested.emit("spell_pass", null)
+		"dice":
+			# 既存のダイス待機UIを起動
+			if _ui_set_phase_text_cb.is_valid():
+				_ui_set_phase_text_cb.call("サイコロを振ってください")
+			if _ui_show_action_prompt_cb.is_valid():
+				_ui_show_action_prompt_cb.call("サイコロを振ってください")
+			if board_system_3d:
+				board_system_3d.enable_manual_camera()
+			_setup_dice_phase_navigation()
+		"move":
+			# 移動フェーズ: 分岐がなければ自動、分岐があればUIが出る
+			# Phase 2 で分岐処理を実装
+			GameLogger.info("GFM", "net: move phase (待機)")
+		"tile_action":
+			# 既存のタイル着地処理を起動（空タイル=召喚UI、自タイル=ドミニオ、敵タイル=バトル）
+			# 既存の TileActionProcessor 経由で UI が自動で出る
+			var ctp_player = player_system.get_current_player()
+			if ctp_player and board_system_3d:
+				var current_tile = board_system_3d.get_player_tile(ctp_player.id)
+				GameLogger.info("GFM", "net: tile_action → process_tile_landing(tile=%d)" % current_tile)
+				board_system_3d.process_tile_landing(current_tile)
+			else:
+				GameLogger.warn("GFM", "net: tile_action → player or board 不在、auto-pass")
+				net_action_requested.emit("pass", null)
+		"end_turn":
+			# サーバー指示で end_turn を送信
+			net_action_requested.emit("end_turn", null)
+		_:
+			GameLogger.warn("GFM", "net: unknown phase %s" % server_phase)
+
+
+## ネット対戦: 相手ターン時のUI抑制
+func _disable_net_phase_ui() -> void:
+	if _ui_set_phase_text_cb.is_valid():
+		_ui_set_phase_text_cb.call("相手のターン")
+	if _ui_hide_card_selection_cb.is_valid():
+		_ui_hide_card_selection_cb.call()
+
+
+## サーバーからの dice_result メッセージを受けて、既存ダイス演出を再生
+## data: {"value": int} または {"dice_value": int} または {"result": int, "player": int}
+func on_server_dice_result(data: Dictionary) -> void:
+	if not is_net_battle:
+		return
+	var value: int = int(data.get("dice_value", data.get("value", data.get("result", 0))))
+	if value <= 0:
+		return
+	var player_id: int = int(data.get("player", net_local_slot))
+	last_dice_result = value
+	GameLogger.info("Game", "dice_result受信: player=%d value=%d" % [player_id, value])
+	# 既存 dice_rolled シグナルを発火 → UIが演出再生
+	dice_rolled.emit(value)
+	# フェーズを MOVING に遷移
+	change_phase(GamePhase.MOVING)
+
+	# 自分のターンの時だけ move_player_3d を呼ぶ（分岐UIも出るため）
+	# 他プレイヤーのターンでは待機し、action_broadcast(move_complete) で最終位置を反映する
+	if player_id == net_local_slot and board_system_3d:
+		if _ui_set_phase_text_cb.is_valid():
+			_ui_set_phase_text_cb.call("移動中...")
+		board_system_3d.move_player_3d(player_id, value, value)
+	else:
+		GameLogger.info("Game", "net: 他プレイヤー(%d)の移動、action_broadcast待ち" % player_id)
+
+
+## サーバーからの action_result (broadcast) を受けて、他プレイヤーのアクションをローカルに反映
+## サーバーペイロード形式（session.go:broadcastAction）:
+##   {"player": int, "action_type": string, "turn_number": int, "state_version": int, "data": {...}}
+## data フィールドにアクション別の詳細が入る（例: move_complete なら {"position": int, "phase": string}）
+func on_server_action_broadcast(data: Dictionary) -> void:
+	if not is_net_battle:
+		return
+	var action_type: String = String(data.get("action_type", data.get("type", data.get("action", ""))))
+	var player: int = int(data.get("player", -1))
+	var payload: Dictionary = data.get("data", {}) if data.has("data") and data["data"] is Dictionary else {}
+	GameLogger.info("Game", "action_broadcast受信: player=%d type=%s" % [player, action_type])
+
+	# 自分が送信したアクションは既に反映済みなのでスキップ
+	if player == net_local_slot:
+		return
+
+	match action_type:
+		"move_complete":
+			# 他プレイヤーの移動結果を反映: 駒を最終位置に瞬間配置（3Dモデル位置も更新）
+			# Phase 2 で経路アニメ補間に置き換え予定
+			var final_position: int = int(payload.get("position", -1))
+			if final_position >= 0 and board_system_3d:
+				GameLogger.info("Game", "net: P%d 移動結果反映 → tile=%d" % [player, final_position])
+				if board_system_3d.has_method("place_player_at_tile"):
+					board_system_3d.place_player_at_tile(player, final_position)
+				elif board_system_3d.has_method("set_player_tile"):
+					board_system_3d.set_player_tile(player, final_position)
+				# カメラを移動したプレイヤーに実際に追従させる（瞬間移動のため手動更新）
+				GameLogger.info("Camera", "net: move_complete → P%d に追従" % player)
+				board_system_3d.set_camera_player(player)
+				board_system_3d.enable_follow_camera()
+				if board_system_3d.has_method("focus_camera_on_player_pos"):
+					board_system_3d.focus_camera_on_player_pos(player, true)
+		"summon":
+			# 他プレイヤーの召喚結果反映: タイル所有権・クリーチャー配置・手札/EP更新
+			var card_id: int = int(payload.get("card_id", -1))
+			var tile_index: int = int(payload.get("tile", -1))
+			if card_id <= 0 or tile_index < 0 or not board_system_3d:
+				GameLogger.warn("Game", "net: summon payload 不正 card_id=%d tile=%d" % [card_id, tile_index])
+				return
+			var creature_data: Dictionary = CardLoader.get_card_by_id(card_id)
+			if creature_data.is_empty():
+				GameLogger.warn("Game", "net: summon カードID不明 card_id=%d" % card_id)
+				return
+			GameLogger.info("Game", "net: P%d 召喚結果反映 card=%d tile=%d name=%s" % [player, card_id, tile_index, creature_data.get("name", "?")])
+
+			# タイル所有権・クリーチャー配置
+			board_system_3d.set_tile_owner(tile_index, player)
+			board_system_3d.place_creature(tile_index, creature_data.duplicate(true), player)
+
+			# EP消費（コスト計算）
+			if player_system and player >= 0 and player < player_system.players.size():
+				var p = player_system.players[player]
+				var cost_dict: Dictionary = creature_data.get("cost", {})
+				var cost: int = int(cost_dict.get("base", 0))
+				p.magic_power -= cost
+
+			# 手札から該当カードを削除（card_id で検索）
+			if card_system and card_system.player_hands.has(player):
+				var hand_data: Array = card_system.player_hands[player]["data"]
+				for i in range(hand_data.size()):
+					if int(hand_data[i].get("id", -1)) == card_id:
+						card_system.remove_card_from_hand(player, i)
+						break
+
+			# UI更新
+			if _ui_update_panels_cb.is_valid():
+				_ui_update_panels_cb.call()
+		"dominio_action":
+			# 他プレイヤーのドミニオコマンド結果反映（Phase 2で実装）
+			pass
+		"spell_pass", "spell_cast", "pass":
+			# 何もしない（フェーズ遷移は turn_start で通知される）
+			pass
+		_:
+			GameLogger.info("Game", "net: 未実装アクション種別 %s" % action_type)
+
+
+## サーバーからの game_over メッセージを受けて、試合終了処理
+## data: {"winner": int, ...}
+func on_server_game_over(data: Dictionary) -> void:
+	if not is_net_battle:
+		return
+	var winner: int = int(data.get("winner", -1))
+	GameLogger.info("Game", "game_over受信: winner=%d" % winner)
+	# TODO Phase 2: GameResultHandler 経由で勝敗演出・シーン遷移
+
+
+## サーバーフェーズ文字列を GFM の GamePhase enum に変換
+func _server_phase_to_enum(server_phase: String) -> int:
+	match server_phase:
+		"spell": return GamePhase.SETUP  # スペルフェーズは既存の SETUP 相当として扱う
+		"dice": return GamePhase.DICE_ROLL
+		"move": return GamePhase.MOVING
+		"tile_action": return GamePhase.TILE_ACTION
+		"battle": return GamePhase.BATTLE
+		"end_turn": return GamePhase.END_TURN
+		_: return current_phase

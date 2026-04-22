@@ -162,15 +162,15 @@ func _ready():
 		if not system_manager.camera_controller.drag_started.is_connected(_hide_land_info):
 			system_manager.camera_controller.drag_started.connect(_hide_land_info)
 
-	# ネット対戦モード: ゲームループ不使用、NetworkBridgeで駆動
-	if _is_net_battle:
-		_setup_network_bridge()
-		print("[Game3D] ネット対戦: NetworkBridge起動、ローカルゲームループはスキップ")
-		return
+	# ネット対戦モード: GFMに先に is_net_battle フラグを設定（start_game前に必須）
+	if _is_net_battle and system_manager.game_flow_manager:
+		var local_slot: int = GameData.get_meta("online_player_slot") if GameData.has_meta("online_player_slot") else 0
+		system_manager.game_flow_manager.set_is_net_battle(true, local_slot)
+		print("[Game3D] ネット対戦: GFMにis_net_battle=true設定 (slot=%d)" % local_slot)
 
-	# クラッシュ復帰チェック
+	# クラッシュ復帰チェック（ネット対戦ではサーバー側のgame_stateを信頼するためスキップ）
 	var _is_restoring = false
-	if GameData.has_meta("restore_game") and GameData.get_meta("restore_game"):
+	if not _is_net_battle and GameData.has_meta("restore_game") and GameData.get_meta("restore_game"):
 		GameData.remove_meta("restore_game")
 		var save_data = GameStateSaver.load_from_file()
 		if not save_data.is_empty():
@@ -181,8 +181,15 @@ func _ready():
 			print("[Game3D] クラッシュ復帰完了")
 
 	# 通常のゲーム開始（復帰でない場合）
+	# ネット対戦時も start_game() を呼ぶが、GFM は is_net_battle=true のため
+	# state_machine初期化のみ実行し、change_phase/start_turn はスキップして待機
 	if not _is_restoring:
 		system_manager.start_game()
+
+	# ネット対戦モード: NetworkBridgeを起動（meta game_state から初期フェーズ発火）
+	if _is_net_battle:
+		_setup_network_bridge()
+		print("[Game3D] ネット対戦: NetworkBridge起動、薄型リレーモードで動作")
 
 	# チュートリアル開始
 	if is_tutorial_mode and tutorial_manager:

@@ -1,7 +1,9 @@
 extends Node
 
-## NetworkBridge: WebSocket受信を3Dゲームシステムに反映するブリッジ
-## 原則: 状態はサーバー側、クライアントは表示のみ（受信→表示→送信）
+## NetworkBridge: WebSocket ↔ GameFlowManager の橋渡し
+## 原則: ゲームロジックはクライアント（GFM + 既存システム）が計算、サーバーは検証+リレー
+## 受信 → GFM.on_server_*() → 既存UI（turn_started / phase_changed 等のシグナル経由）
+## 送信 → GFM.net_action_requested シグナル → _send(msg_type, data)
 
 const TAG: String = "NetBridge"
 
@@ -16,9 +18,6 @@ var _card_system: Node = null
 var _game_flow_manager: Node = null
 var _ui_manager: Node = null
 
-var _action_overlay: CanvasLayer = null
-var _action_buttons: Array[Button] = []
-
 
 func _ready() -> void:
 	pass
@@ -30,12 +29,21 @@ func setup(system_manager: GameSystemManager) -> void:
 	_ws_client = GameData.get_meta("online_ws") if GameData.has_meta("online_ws") else null
 	_player_slot = GameData.get_meta("online_player_slot") if GameData.has_meta("online_player_slot") else 0
 	_current_game_state = GameData.get_meta("online_game_state") if GameData.has_meta("online_game_state") else {}
+	GameLogger.info(TAG, "setup: slot=%d" % _player_slot)
 
 	_board_system = _system_manager.board_system_3d
 	_player_system = _system_manager.player_system
 	_card_system = _system_manager.card_system
 	_game_flow_manager = _system_manager.game_flow_manager
 	_ui_manager = _system_manager.ui_manager
+
+	# GFM をネット対戦モードに設定（自律動作を抑制）
+	if _game_flow_manager and _game_flow_manager.has_method("set_is_net_battle"):
+		_game_flow_manager.set_is_net_battle(true, _player_slot)
+		# GFMからの送信リクエストを受けてサーバーに転送
+		if _game_flow_manager.has_signal("net_action_requested"):
+			if not _game_flow_manager.net_action_requested.is_connected(_on_net_action_requested):
+				_game_flow_manager.net_action_requested.connect(_on_net_action_requested)
 
 	if _ws_client and _ws_client.get_parent() == null:
 		add_child(_ws_client)
@@ -46,14 +54,72 @@ func setup(system_manager: GameSystemManager) -> void:
 		if not _ws_client.is_connected("disconnected", Callable(self, "_on_ws_disconnected")):
 			_ws_client.connect("disconnected", Callable(self, "_on_ws_disconnected"))
 
-	_create_action_overlay()
-
-	# ネット対戦: 自分以外の手札はサーバーから来ない → ローカル乱数手札をクリア
-	_clear_opponent_hands()
+	# ネット対戦: ローカルで生成された初期手札をクリア（サーバーの game_state / turn_start で上書きされる）
+	_clear_all_local_hands()
 
 	if _current_game_state.size() > 0:
 		_apply_game_state(_current_game_state)
+		# 初期 turn_start 相当を GFM に発火（NetSetup 画面で受信した turn_start は破棄されているため）
+		_emit_initial_turn_start_from_state(_current_game_state)
 
+
+## meta game_state から初期ターン情報を抽出して GFM に通知
+## NetSetup 画面で受信した turn_start は破棄されているため、game_state から再構築
+func _emit_initial_turn_start_from_state(data: Dictionary) -> void:
+	if not _game_flow_manager or not _game_flow_manager.has_method("on_server_turn_started"):
+		return
+	var state: Dictionary = data
+	if data.has("state") and data["state"] is Dictionary:
+		state = data["state"]
+
+	var active_player: int = int(state.get("active_player", 0))
+	var turn_data: Dictionary = {
+		"active_player": active_player,
+		"phase": String(state.get("phase", "spell")),
+		"turn": int(state.get("current_turn", 1)),
+	}
+
+	# active_player の手札を抽出
+	var players: Variant = state.get("players", [])
+	if players is Array and active_player < players.size():
+		var p: Variant = players[active_player]
+		if p is Dictionary:
+			turn_data["hand"] = p.get("hand", [])
+
+	GameLogger.info(TAG, "初期turn_start発火: active=%d phase=%s" % [active_player, turn_data["phase"]])
+	_game_flow_manager.on_server_turn_started(turn_data)
+
+
+func _clear_all_local_hands() -> void:
+	if not _system_manager or not _system_manager.card_system:
+		return
+	var card_system: Node = _system_manager.card_system
+	for pid in card_system.player_hands.keys():
+		card_system.player_hands[pid] = {"data": []}
+	if _ui_manager and _ui_manager.has_method("update_hand_display"):
+		_ui_manager.update_hand_display(0)
+	GameLogger.info(TAG, "Cleared all local hands (waiting for server turn_start)")
+
+
+# ============================================================================
+# 送信側: GFM から net_action_requested を受けてサーバー送信
+# ============================================================================
+
+func _on_net_action_requested(msg_type: String, data: Variant) -> void:
+	_send(msg_type, data)
+
+
+func _send(msg_type: String, data: Variant) -> void:
+	if not _ws_client:
+		GameLogger.warn(TAG, "WebSocket client not available")
+		return
+	GameLogger.info(TAG, "Send: %s" % msg_type)
+	_ws_client.send_msg(msg_type, data)
+
+
+# ============================================================================
+# 受信側: WSメッセージを GFM に渡す
+# ============================================================================
 
 func _on_ws_message(msg_type: String, data: Variant) -> void:
 	var data_dict: Dictionary = data if data is Dictionary else {}
@@ -68,6 +134,8 @@ func _on_ws_message(msg_type: String, data: Variant) -> void:
 			_handle_dice_result(data_dict)
 		"action_result":
 			_handle_action_result(data_dict)
+		"action_broadcast":
+			_handle_action_broadcast(data_dict)
 		"battle_start":
 			_handle_battle_start(data_dict)
 		"battle_result":
@@ -83,47 +151,104 @@ func _on_ws_disconnected() -> void:
 
 
 # ============================================================================
-# Message Handlers (受信→表示のみ。状態書き換えは行わない)
+# Message Handlers
 # ============================================================================
 
-func _apply_game_state(state: Dictionary) -> void:
-	if state.is_empty():
+## game_state: ゲーム開始時・再接続時の初期状態スナップショット
+## サーバー構造: { "state": { "active_player": N, "players": [ { "hand": [...] } ], ... } }
+func _apply_game_state(data: Dictionary) -> void:
+	if data.is_empty():
 		return
-	_current_game_state = state
-	# TODO: 表示更新（player info/board）はUI側のシグナル経由で実装
+	_current_game_state = data
+
+	var state: Dictionary = data
+	if data.has("state") and data["state"] is Dictionary:
+		state = data["state"]
+
+	var players: Variant = state.get("players", [])
+	if players is Array:
+		# 全プレイヤーの手札を CardSystem に反映（表示切替は後段）
+		for i in range(players.size()):
+			var p: Variant = players[i]
+			if p is Dictionary:
+				var raw_hand: Variant = p.get("hand", [])
+				if raw_hand is Array:
+					_write_hand_to_card_system(raw_hand, i)
+
+	# active_player の手札を画面に表示
+	var active_player_slot: int = int(state.get("active_player", -1))
+	if active_player_slot >= 0 and _ui_manager and _ui_manager.has_method("update_hand_display"):
+		_ui_manager.update_hand_display(active_player_slot)
+		GameLogger.info(TAG, "Applied hands, display=slot %d" % active_player_slot)
 
 
+## turn_start: 新ターン開始通知
 func _handle_turn_start(data: Dictionary) -> void:
 	if not data.has("active_player"):
 		return
 	var active_player_slot: int = int(data.get("active_player", -1))
-	GameLogger.info(TAG, "Turn started: Player %d" % active_player_slot)
+	GameLogger.info(TAG, "turn_start: P%d phase=%s" % [active_player_slot, String(data.get("phase", ""))])
 
-	if data.has("hand"):
-		_current_game_state["hand"] = data.get("hand", [])
+	# 手札をローカルに反映（ターン保持者分）
+	# 変更なしの場合は UI 再描画をスキップ（card_index リセット防止）
+	if data.has("hand") and active_player_slot >= 0:
+		var raw_hand: Variant = data.get("hand", [])
+		if raw_hand is Array:
+			if _is_hand_unchanged(raw_hand, active_player_slot):
+				GameLogger.info(TAG, "turn_start hand: 変更なし、UI再描画スキップ (%d cards)" % raw_hand.size())
+			else:
+				_apply_hand_to_card_system(raw_hand, active_player_slot)
 
-	if active_player_slot == _player_slot:
-		_show_action_buttons(data)
-	else:
-		_hide_action_buttons()
+	# GFM にターン開始を通知（既存シグナル経由でUIが動く）
+	if _game_flow_manager and _game_flow_manager.has_method("on_server_turn_started"):
+		_game_flow_manager.on_server_turn_started(data)
 
 
+## your_hand: 自分がターン保持者の時に個別送信される手札
 func _handle_your_hand(data: Dictionary) -> void:
-	# サーバーは "hand" キー（[]int カードID）を送る
 	var raw_hand: Variant = data.get("hand", data.get("cards", []))
 	if not raw_hand is Array:
 		return
-	_current_game_state["hand"] = raw_hand
-	_apply_hand_to_card_system(raw_hand)
-	GameLogger.info(TAG, "Your hand updated (%d cards)" % raw_hand.size())
+	# 現在のCardSystemの手札と比較し、変わっていなければUI再描画をスキップ
+	# （カード選択中に手札UIをリセットすると is_selectable が失われ、召喚できなくなる）
+	if _is_hand_unchanged(raw_hand, _player_slot):
+		GameLogger.info(TAG, "your_hand: 変更なし、UI再描画スキップ (%d cards)" % raw_hand.size())
+		return
+	_apply_hand_to_card_system(raw_hand, _player_slot)
+	GameLogger.info(TAG, "your_hand updated (%d cards)" % raw_hand.size())
 
 
-func _apply_hand_to_card_system(card_ids: Array) -> void:
+## 現在の手札と比較して同じならtrue
+func _is_hand_unchanged(new_card_ids: Array, player_id: int) -> bool:
+	if not _system_manager or not _system_manager.card_system:
+		return false
+	var card_system: Node = _system_manager.card_system
+	if not card_system.player_hands.has(player_id):
+		return false
+	var current_data: Array = card_system.player_hands[player_id].get("data", [])
+	if current_data.size() != new_card_ids.size():
+		return false
+	for i in range(current_data.size()):
+		var cur_id: int = int(current_data[i].get("id", -1))
+		var new_id: int = int(new_card_ids[i])
+		if cur_id != new_id:
+			return false
+	return true
+
+
+func _apply_hand_to_card_system(card_ids: Array, player_id: int) -> void:
+	_write_hand_to_card_system(card_ids, player_id)
+	if _ui_manager and _ui_manager.has_method("update_hand_display"):
+		_ui_manager.update_hand_display(player_id)
+
+
+## 表示更新なしで CardSystem に書き込む
+func _write_hand_to_card_system(card_ids: Array, player_id: int) -> void:
 	if not _system_manager or not _system_manager.card_system:
 		return
 	var card_system: Node = _system_manager.card_system
-	if not card_system.player_hands.has(_player_slot):
-		card_system.player_hands[_player_slot] = {"data": []}
+	if not card_system.player_hands.has(player_id):
+		card_system.player_hands[player_id] = {"data": []}
 
 	var hand_data: Array[Dictionary] = []
 	for cid in card_ids:
@@ -131,162 +256,45 @@ func _apply_hand_to_card_system(card_ids: Array) -> void:
 		if not card.is_empty():
 			hand_data.append(card)
 
-	card_system.player_hands[_player_slot]["data"] = hand_data
-
-	if _ui_manager and _ui_manager.has_method("update_hand_display"):
-		_ui_manager.update_hand_display(_player_slot)
+	card_system.player_hands[player_id]["data"] = hand_data
 
 
-func _clear_opponent_hands() -> void:
-	if not _system_manager or not _system_manager.card_system:
-		return
-	var card_system: Node = _system_manager.card_system
-	for pid in card_system.player_hands.keys():
-		if int(pid) != _player_slot:
-			card_system.player_hands[pid] = {"data": []}
-	GameLogger.info(TAG, "Cleared opponent hands (my_slot=%d)" % _player_slot)
-
-
+## dice_result: サーバー生成のダイス値
 func _handle_dice_result(data: Dictionary) -> void:
-	var dice_value: int = int(data.get("dice_value", data.get("result", 0)))
-	GameLogger.info(TAG, "Dice result: %d" % dice_value)
+	var dice_value: int = int(data.get("dice_value", data.get("value", data.get("result", 0))))
+	GameLogger.info(TAG, "dice_result: %d" % dice_value)
+	if _game_flow_manager and _game_flow_manager.has_method("on_server_dice_result"):
+		_game_flow_manager.on_server_dice_result(data)
 
 
-func _handle_action_result(_data: Dictionary) -> void:
-	# 状態は次の game_state で同期されるためログのみ
-	GameLogger.info(TAG, "Action result received")
+## action_result: 全員に配信されるアクション結果（他プレイヤー・自分共通）
+## サーバーペイロード: {"player": int, "action_type": string, "data": {...}, "turn_number": int, "state_version": int}
+func _handle_action_result(data: Dictionary) -> void:
+	var action_type: String = String(data.get("action_type", ""))
+	var player: int = int(data.get("player", -1))
+	GameLogger.info(TAG, "action_result: player=%d action=%s" % [player, action_type])
+	if _game_flow_manager and _game_flow_manager.has_method("on_server_action_broadcast"):
+		_game_flow_manager.on_server_action_broadcast(data)
+
+
+## action_broadcast: 旧名称互換（現サーバーは action_result で送信）
+func _handle_action_broadcast(data: Dictionary) -> void:
+	if _game_flow_manager and _game_flow_manager.has_method("on_server_action_broadcast"):
+		_game_flow_manager.on_server_action_broadcast(data)
 
 
 func _handle_battle_start(_data: Dictionary) -> void:
-	GameLogger.info(TAG, "Battle started")
+	GameLogger.info(TAG, "battle_start received")
 
 
 func _handle_battle_result(_data: Dictionary) -> void:
-	GameLogger.info(TAG, "Battle result received")
+	GameLogger.info(TAG, "battle_result received")
 
 
 func _handle_game_over(data: Dictionary) -> void:
-	if not data.has("winner"):
-		return
 	var winner: int = int(data.get("winner", -1))
-	GameLogger.info(TAG, "Game over! Winner: Player %d" % winner)
-
+	GameLogger.info(TAG, "game_over: winner=%d" % winner)
+	if _game_flow_manager and _game_flow_manager.has_method("on_server_game_over"):
+		_game_flow_manager.on_server_game_over(data)
 	await get_tree().create_timer(5.0).timeout
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
-
-
-# ============================================================================
-# Action UI and Sending
-# ============================================================================
-
-func _create_action_overlay() -> void:
-	_action_overlay = CanvasLayer.new()
-	_action_overlay.layer = 100
-	add_child(_action_overlay)
-
-	var button_container: VBoxContainer = VBoxContainer.new()
-	button_container.anchor_left = 0.5
-	button_container.anchor_top = 1.0
-	button_container.anchor_right = 0.5
-	button_container.anchor_bottom = 1.0
-	button_container.offset_top = -100
-	button_container.offset_left = -150
-	button_container.custom_minimum_size = Vector2(300, 80)
-	button_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	_action_overlay.add_child(button_container)
-
-	_action_buttons.clear()
-	_hide_action_buttons()
-
-
-func _show_action_buttons(turn_data: Dictionary) -> void:
-	if not _action_overlay:
-		return
-
-	var phase: String = String(turn_data.get("phase", ""))
-
-	for btn in _action_buttons:
-		btn.queue_free()
-	_action_buttons.clear()
-
-	var button_container: Node = _action_overlay.get_child(0) if _action_overlay.get_child_count() > 0 else null
-	if not button_container:
-		return
-
-	match phase:
-		"spell":
-			_create_button("スペルパス", Callable(self, "_on_spell_pass"), button_container)
-		"dice":
-			_create_button("ダイスロール", Callable(self, "_on_dice_roll"), button_container)
-		"move":
-			_create_button("移動確定", Callable(self, "_on_move_complete"), button_container)
-		"tile_action":
-			var hand: Array = _current_game_state.get("hand", [])
-			for i in range(hand.size()):
-				var card_id: int = int(hand[i])
-				_create_button("召喚 #%d" % card_id, Callable(self, "_on_summon").bind(card_id), button_container)
-			_create_button("パス", Callable(self, "_on_tile_action_pass"), button_container)
-		"end_turn":
-			_create_button("ターン終了", Callable(self, "_on_end_turn"), button_container)
-
-	_action_overlay.visible = true
-
-
-func _hide_action_buttons() -> void:
-	if _action_overlay:
-		_action_overlay.visible = false
-
-	for btn in _action_buttons:
-		btn.queue_free()
-	_action_buttons.clear()
-
-
-func _create_button(label: String, callback: Callable, container: Node) -> void:
-	var btn: Button = Button.new()
-	btn.text = label
-	btn.custom_minimum_size = Vector2(280, 40)
-	btn.connect("pressed", callback)
-	container.add_child(btn)
-	_action_buttons.append(btn)
-
-
-# ============================================================================
-# Action Senders（メッセージタイプ直送、サーバー仕様に合わせる）
-# ============================================================================
-
-func _on_spell_pass() -> void:
-	_send("spell_pass", null)
-	_hide_action_buttons()
-
-
-func _on_dice_roll() -> void:
-	_send("dice_roll", null)
-	_hide_action_buttons()
-
-
-func _on_move_complete() -> void:
-	_send("move_complete", {"direction": -1})
-	_hide_action_buttons()
-
-
-func _on_summon(card_id: int) -> void:
-	_send("summon", {"card_id": card_id})
-	_hide_action_buttons()
-
-
-func _on_tile_action_pass() -> void:
-	_send("pass", null)
-	_hide_action_buttons()
-
-
-func _on_end_turn() -> void:
-	_send("end_turn", null)
-	_hide_action_buttons()
-
-
-func _send(msg_type: String, data: Variant) -> void:
-	if not _ws_client:
-		GameLogger.warn(TAG, "WebSocket client not available")
-		return
-	GameLogger.info(TAG, "Send: %s" % msg_type)
-	_ws_client.send_msg(msg_type, data)

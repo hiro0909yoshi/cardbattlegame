@@ -586,6 +586,10 @@ func _on_turn_started(player_id: int) -> void:
 		#  残ってしまった場合に前ターンの手札が残り続ける）
 		if ui_manager.hand_display:
 			ui_manager.hand_display.is_enemy_card_selection_active = false
+		# ネット対戦: turn_start はフェーズ変更の度に来るので毎回手札再描画すると
+		# card_index がリセットされて選択UIが壊れる。NetworkBridge が手札管理するため不要。
+		if game_flow_manager and game_flow_manager.is_net_battle:
+			return
 		ui_manager.update_hand_display(player_id)
 
 func _on_turn_ended(_player_id: int) -> void:

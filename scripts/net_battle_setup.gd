@@ -98,6 +98,8 @@ func _ready():
 	# ホストはデッキ選択を通知
 	if _ws and _is_host:
 		_ws.send_msg("set_deck", {"deck_id": str(_selected_deck_index)})
+		# ホストの初期config（デフォルトマップ選択等）をゲストに通知
+		_send_config_update()
 
 	print("ネット対戦準備画面を初期化しました（ホスト=%s, 最大%d人, WS=%s）" % [str(_is_host), _max_players, str(_ws != null)])
 
@@ -616,7 +618,22 @@ func _on_map_selected(map_id: String):
 	_update_map_highlight()
 	_show_map_preview(map_id)
 	print("マップ %s を選択しました" % map_id)
-	# TODO: ネットワーク経由でゲストに通知
+	# ホストからゲストへ config 変更を通知（サーバー経由で room_state 再配信）
+	_send_config_update()
+
+
+## ホストが設定を変更した時にサーバーに update_config を送信
+## サーバーは受信した config を Room.Config にマージし、room_state を全員に broadcast
+func _send_config_update() -> void:
+	if not _is_host or not _ws:
+		return
+	_ws.send_msg("update_config", {
+		"map_id": _selected_map_id,
+		"rule_preset": _selected_rule_preset,
+		"initial_magic": int(_initial_ep_spin.value) if _initial_ep_spin else 1000,
+		"target_magic": int(_target_tep_spin.value) if _target_tep_spin else 8000,
+		"max_turns": int(_max_turns_spin.value) if _max_turns_spin else 0,
+	})
 
 
 func _update_map_highlight():
@@ -716,9 +733,55 @@ func _on_battle_start_pressed():
 	if _ws:
 		# ホストも準備完了にしてからゲーム開始
 		_ws.send_msg("set_ready", {"ready": true})
-		_ws.send_msg("start_game", null)
+		# start_game に最終config（マップタイル属性配列含む）を含めて送信
+		var map_tiles: Array = _build_map_tiles_config(_selected_map_id)
+		_ws.send_msg("start_game", {
+			"map_id": _selected_map_id,
+			"rule_preset": _selected_rule_preset,
+			"initial_magic": int(_initial_ep_spin.value),
+			"target_magic": int(_target_tep_spin.value),
+			"max_turns": int(_max_turns_spin.value),
+			"map_tiles": map_tiles,
+		})
 	else:
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
+
+
+## 選択中マップのタイル情報をサーバー送信用フォーマットに変換
+## 各タイルは `{"element": "fire"}` のみを送る（位置・分岐は非対戦ロジックなのでサーバー不要）
+func _build_map_tiles_config(map_id: String) -> Array:
+	if map_id.is_empty():
+		return []
+	var path: String = "res://data/master/maps/%s.json" % map_id
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		GameLogger.warn("NetSetup", "マップファイルが見つかりません: %s" % path)
+		return []
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not parsed is Dictionary:
+		return []
+	var tiles: Variant = parsed.get("tiles", [])
+	if not tiles is Array:
+		return []
+	var result: Array = []
+	for tile in tiles:
+		if not tile is Dictionary:
+			continue
+		var type_name: String = String(tile.get("type", "")).to_lower()
+		var element: String = _tile_type_to_element(type_name)
+		result.append({"element": element})
+	return result
+
+
+## タイルタイプ名をサーバー側の element 文字列に変換
+func _tile_type_to_element(type_name: String) -> String:
+	match type_name:
+		"fire": return "fire"
+		"water": return "water"
+		"earth": return "earth"
+		"wind": return "wind"
+		_: return "neutral"  # Checkpoint, CardBuy, Spell, Warp等
 
 
 func _on_back_pressed():

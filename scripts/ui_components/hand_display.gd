@@ -88,7 +88,8 @@ func update_hand_display(player_id: int):
 		return
 	if not card_system_ref or not hand_container:
 		return
-	
+	GameLogger.info("HandDisplay", "update_hand_display(%d) 呼出 → 全カード破棄＆再生成" % player_id)
+
 	# 全プレイヤーの既存カードノードを削除（ターン切り替え時に前のプレイヤーの手札を消す）
 	for pid in player_card_nodes.keys():
 		for card_node in player_card_nodes[pid]:
@@ -330,10 +331,11 @@ func _on_card_used(_card_data: Dictionary):
 var is_enemy_card_selection_active: bool = false
 
 func _on_hand_updated():
+	GameLogger.info("HandDisplay", "_on_hand_updated シグナル受信")
 	# 敵手札選択中は自動更新をスキップ
 	if is_enemy_card_selection_active:
 		return
-	
+
 	# 現在のターンプレイヤーの手札を表示
 	if player_system_ref:
 		var current_player = player_system_ref.get_current_player()

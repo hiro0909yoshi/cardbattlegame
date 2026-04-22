@@ -147,10 +147,13 @@ func set_item_phase_handler(handler) -> void:
 
 # タイル到着時のメイン処理
 func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array):
+	GameLogger.info("TileAction", "process_tile_landing 呼出: tile=%d player=%d processing=%s" % [tile_index, current_player_index, str(is_action_processing)])
 	if is_action_processing:
+		GameLogger.warn("TileAction", "is_action_processing=true のため中断")
 		return
 
 	if not board_system.tile_nodes.has(tile_index):
+		GameLogger.warn("TileAction", "tile_nodes にタイル %d なし" % tile_index)
 		emit_signal("action_completed")
 		return
 
@@ -158,6 +161,7 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_info = board_system.get_tile_info(tile_index)
+	GameLogger.info("TileAction", "tile情報: type=%s owner=%s" % [tile.tile_type, str(tile_info.get("owner", "?"))])
 
 	# 特殊マス処理
 	if _is_special_tile(tile.tile_type):
@@ -166,6 +170,7 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 
 	# CPUかプレイヤーかで分岐（GFMの統一判定を使用）
 	var is_cpu_turn = game_flow_manager.is_cpu_player(current_player_index) if game_flow_manager else (player_is_cpu[current_player_index] and not DebugSettings.manual_control_all)
+	GameLogger.info("TileAction", "is_cpu_turn=%s → %s処理へ" % [str(is_cpu_turn), "CPU" if is_cpu_turn else "Player"])
 	if is_cpu_turn:
 		_process_cpu_tile(tile, tile_info, current_player_index)
 	else:
@@ -215,9 +220,12 @@ func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int)
 # === UI表示 ===
 
 func show_summon_ui():
+	GameLogger.info("TileAction", "show_summon_ui: service=%s" % str(_card_selection_service != null))
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = ""
 		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
+	else:
+		GameLogger.error("TileAction", "_card_selection_service が null！召喚UI表示不可")
 	if _message_service:
 		_message_service.show_action_prompt("召喚するクリーチャーを選択")
 
@@ -284,6 +292,14 @@ func on_card_selected(card_index: int):
 		return
 	elif tile_info["owner"] == -1 or tile_info["owner"] == current_player_index or player_system.is_same_team(current_player_index, tile_info["owner"]):
 		# 召喚処理
+		# ネット対戦: サーバーに summon を送信（クライアント計算結果の報告）
+		if game_flow_manager and game_flow_manager.is_net_battle:
+			var hand_data: Array = card_system.player_hands[current_player_index]["data"] if card_system.player_hands.has(current_player_index) else []
+			if card_index >= 0 and card_index < hand_data.size():
+				var card_id: int = int(hand_data[card_index].get("id", -1))
+				if card_id > 0:
+					GameLogger.info("TileAction", "net: summon送信 card_id=%d" % card_id)
+					game_flow_manager.net_action_requested.emit("summon", {"card_id": card_id})
 		summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
 	else:
 		# バトル処理
