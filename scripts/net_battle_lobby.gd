@@ -19,8 +19,7 @@ var _room_id_input: LineEdit
 var _player_count_option: OptionButton
 
 # ===== 定数 =====
-const SERVER_HOST: String = "192.168.3.10"
-const SERVER_PORT: int = 8080
+# サーバー接続先は NetConfig (autoload) から取得
 
 # ===== データ =====
 var _creature_images: Array[String] = []
@@ -61,6 +60,7 @@ func _ready():
 	_api.registered.connect(_on_registered)
 	_api.login_success.connect(_on_login_success)
 	_api.login_failed.connect(_on_login_failed)
+	_api.deck_saved.connect(_on_deck_saved)
 
 	_ws = WsClient.new()
 	add_child(_ws)
@@ -85,6 +85,14 @@ func _build_top_bar():
 	back_button.add_theme_font_size_override("font_size", 54)
 	back_button.pressed.connect(_on_back_pressed)
 	top_hbox.add_child(back_button)
+
+	# サーバー設定ボタン
+	var config_button = Button.new()
+	config_button.text = "⚙"
+	config_button.custom_minimum_size = Vector2(120, 100)
+	config_button.add_theme_font_size_override("font_size", 54)
+	config_button.pressed.connect(_on_server_config_pressed)
+	top_hbox.add_child(config_button)
 
 	# タイトル
 	var title_label = Label.new()
@@ -355,6 +363,7 @@ func _on_create_room_pressed():
 		"max_players": max_players,
 		"initial_magic": 1000,
 		"target_magic": 8000,
+		"initial_cards": GameConstants.INITIAL_HAND_SIZE,
 	})
 	print("ルーム作成送信: 最大%d人" % max_players)
 
@@ -480,6 +489,68 @@ func _show_error_dialog(message: String):
 	dialog.popup_centered_ratio(0.6)
 
 
+func _on_server_config_pressed() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "サーバー接続設定"
+	dialog.ok_button_text = "保存"
+	dialog.add_cancel_button("キャンセル")
+	var reset_btn: Button = dialog.add_button("初期値", true, "reset")
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 16)
+	dialog.add_child(vbox)
+
+	var host_label := Label.new()
+	host_label.text = "ホスト (IPアドレス)"
+	host_label.add_theme_font_size_override("font_size", 36)
+	vbox.add_child(host_label)
+
+	var host_input := LineEdit.new()
+	host_input.text = NetConfig.server_host
+	host_input.placeholder_text = "例: 192.168.3.10"
+	host_input.custom_minimum_size = Vector2(600, 80)
+	host_input.add_theme_font_size_override("font_size", 40)
+	vbox.add_child(host_input)
+
+	var port_label := Label.new()
+	port_label.text = "ポート"
+	port_label.add_theme_font_size_override("font_size", 36)
+	vbox.add_child(port_label)
+
+	var port_input := LineEdit.new()
+	port_input.text = str(NetConfig.server_port)
+	port_input.placeholder_text = "例: 8080"
+	port_input.custom_minimum_size = Vector2(300, 80)
+	port_input.add_theme_font_size_override("font_size", 40)
+	vbox.add_child(port_input)
+
+	var hint := Label.new()
+	hint.text = "初期値: %s:%d\n保存後、アプリを再起動すると新しい設定で接続します。" % [NetConfig.DEFAULT_HOST, NetConfig.DEFAULT_PORT]
+	hint.add_theme_font_size_override("font_size", 24)
+	hint.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	vbox.add_child(hint)
+
+	add_child(dialog)
+
+	dialog.confirmed.connect(func():
+		var new_host: String = host_input.text.strip_edges()
+		var new_port: int = int(port_input.text.strip_edges())
+		if new_host == "" or new_port <= 0:
+			_show_error_dialog("ホスト/ポートの値が不正です")
+			return
+		NetConfig.set_server(new_host, new_port)
+		_show_error_dialog("保存しました。アプリを再起動してください。")
+	)
+
+	dialog.custom_action.connect(func(action: StringName):
+		if action == &"reset":
+			host_input.text = NetConfig.DEFAULT_HOST
+			port_input.text = str(NetConfig.DEFAULT_PORT)
+	)
+
+	dialog.popup_centered(Vector2(800, 700))
+
+
 var _navigating_to_setup: bool = false
 
 
@@ -509,13 +580,41 @@ func _exit_tree() -> void:
 func _on_registered(_user_id: String, access_token: String, _refresh_token: String) -> void:
 	print("[NetLobby] 登録成功、WS接続開始")
 	_access_token = access_token
-	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
+	_upload_current_deck()
+	_ws.connect_to_server(NetConfig.server_host, NetConfig.server_port, _access_token)
 
 
 func _on_login_success(access_token: String, _refresh_token: String) -> void:
 	print("[NetLobby] ログイン成功、WS接続開始")
 	_access_token = access_token
-	_ws.connect_to_server(SERVER_HOST, SERVER_PORT, _access_token)
+	_upload_current_deck()
+	_ws.connect_to_server(NetConfig.server_host, NetConfig.server_port, _access_token)
+
+
+## 現在のデッキをサーバーに保存（ゲーム開始前に必須）
+## GameData.get_current_deck() の {card_id: count} を配列 [id, id, ...] に変換して送信
+func _upload_current_deck() -> void:
+	var deck: Dictionary = GameData.get_current_deck()
+	var cards_dict: Dictionary = deck.get("cards", {})
+	var deck_name: String = String(deck.get("name", "Deck"))
+	var cards_array: Array = []
+	for card_id_key in cards_dict.keys():
+		var count: int = int(cards_dict[card_id_key])
+		var card_id: int = int(card_id_key)
+		for i in range(count):
+			cards_array.append(card_id)
+	if cards_array.is_empty():
+		print("[NetLobby] デッキが空のためサーバー保存をスキップ")
+		return
+	print("[NetLobby] デッキをサーバーに保存: slot=%d, %d枚" % [GameData.selected_deck_index, cards_array.size()])
+	_api.save_deck(_access_token, GameData.selected_deck_index, deck_name, cards_array)
+
+
+func _on_deck_saved(success: bool, error: String) -> void:
+	if success:
+		print("[NetLobby] デッキ保存成功")
+	else:
+		print("[NetLobby] デッキ保存失敗: %s" % error)
 
 
 func _on_login_failed(error: String) -> void:

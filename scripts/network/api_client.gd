@@ -6,14 +6,17 @@ signal registered(user_id: String, access_token: String, refresh_token: String)
 signal login_success(access_token: String, refresh_token: String)
 signal login_failed(error: String)
 signal token_refreshed(access_token: String)
+signal deck_saved(success: bool, error: String)
 
-var _base_url: String = "http://192.168.3.10:8080"
+var _base_url: String = ""
 var _http: HTTPRequest
 var _current_request_type: String = ""
 var _current_user_id: String = ""
 
 
 func _ready() -> void:
+	if _base_url == "":
+		_base_url = NetConfig.get_api_url()
 	_http = HTTPRequest.new()
 	add_child(_http)
 	_http.request_completed.connect(_on_request_completed)
@@ -42,6 +45,22 @@ func refresh_token(ref_token: String) -> void:
 	_http.request(_base_url + "/api/auth/refresh", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 
+## デッキをサーバーに保存（PUT /api/player/decks）
+## cards: カードIDの配列（重複あり、例: [1,1,2,2,3,...]）
+func save_deck(access_token: String, slot_index: int, deck_name: String, cards: Array) -> void:
+	_current_request_type = "save_deck"
+	var body: String = JSON.stringify({
+		"slot_index": slot_index,
+		"deck_name": deck_name,
+		"cards": cards,
+	})
+	var headers: PackedStringArray = [
+		"Content-Type: application/json",
+		"Authorization: Bearer " + access_token,
+	]
+	_http.request(_base_url + "/api/player/decks", headers, HTTPClient.METHOD_PUT, body)
+
+
 func _on_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	var json: JSON = JSON.new()
 	var data: Dictionary = {}
@@ -67,3 +86,8 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 				token_refreshed.emit(data.get("access_token", ""))
 			else:
 				login_failed.emit("Refresh failed: %d" % response_code)
+		"save_deck":
+			if response_code == 200 or response_code == 201 or response_code == 204:
+				deck_saved.emit(true, "")
+			else:
+				deck_saved.emit(false, "SaveDeck failed: %d" % response_code)
