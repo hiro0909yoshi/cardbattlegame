@@ -105,7 +105,9 @@ var _ui_hide_dominio_btn_cb: Callable = Callable()
 var _ui_show_card_selection_cb: Callable = Callable()
 var _ui_hide_card_selection_cb: Callable = Callable()
 var _ui_enable_navigation_cb: Callable = Callable()
+var _ui_disable_navigation_cb: Callable = Callable()
 var _ui_show_action_prompt_cb: Callable = Callable()
+var _ui_show_big_dice_cb: Callable = Callable()
 
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
@@ -964,7 +966,9 @@ func inject_ui_callbacks(callbacks: Dictionary) -> void:
 	_ui_show_card_selection_cb = callbacks.get("show_card_selection", Callable())
 	_ui_hide_card_selection_cb = callbacks.get("hide_card_selection", Callable())
 	_ui_enable_navigation_cb = callbacks.get("enable_navigation", Callable())
+	_ui_disable_navigation_cb = callbacks.get("disable_navigation", Callable())
 	_ui_show_action_prompt_cb = callbacks.get("show_action_prompt", Callable())
+	_ui_show_big_dice_cb = callbacks.get("show_big_dice", Callable())
 
 # ============================================================
 # チュートリアルモード判定
@@ -1234,6 +1238,9 @@ func _setup_net_phase_ui(server_phase: String) -> void:
 				var current_tile = board_system_3d.get_player_tile(ctp_player.id)
 				GameLogger.info("GFM", "net: tile_action → process_tile_landing(tile=%d)" % current_tile)
 				board_system_3d.process_tile_landing(current_tile)
+				# ドミニオコマンドボタン（D）を明示表示（自分の土地があれば自動判定）
+				if _ui_show_dominio_btn_cb.is_valid():
+					_ui_show_dominio_btn_cb.call()
 			else:
 				GameLogger.warn("GFM", "net: tile_action → player or board 不在、auto-pass")
 				net_action_requested.emit("pass", null)
@@ -1250,6 +1257,12 @@ func _disable_net_phase_ui() -> void:
 		_ui_set_phase_text_cb.call("相手のターン")
 	if _ui_hide_card_selection_cb.is_valid():
 		_ui_hide_card_selection_cb.call()
+	# グローバルアクションボタン（✓/×/▲/▼/特殊）を全てグレーアウト
+	if _ui_disable_navigation_cb.is_valid():
+		_ui_disable_navigation_cb.call()
+	# ドミニオコマンドボタンも隠す
+	if _ui_hide_dominio_btn_cb.is_valid():
+		_ui_hide_dominio_btn_cb.call()
 
 
 ## サーバーからの dice_result メッセージを受けて、既存ダイス演出を再生
@@ -1265,6 +1278,9 @@ func on_server_dice_result(data: Dictionary) -> void:
 	GameLogger.info("Game", "dice_result受信: player=%d value=%d" % [player_id, value])
 	# 既存 dice_rolled シグナルを発火 → UIが演出再生
 	dice_rolled.emit(value)
+	# 大きなダイス結果を表示（両プレイヤー画面で視認性向上）
+	if _ui_show_big_dice_cb.is_valid():
+		_ui_show_big_dice_cb.call(value)
 	# フェーズを MOVING に遷移
 	change_phase(GamePhase.MOVING)
 
@@ -1327,6 +1343,12 @@ func on_server_action_broadcast(data: Dictionary) -> void:
 			# タイル所有権・クリーチャー配置
 			board_system_3d.set_tile_owner(tile_index, player)
 			board_system_3d.place_creature(tile_index, creature_data.duplicate(true), player)
+
+			# ダウン状態を設定（奮闘キーワードを持たないクリーチャーはダウン）
+			var _tile_node = board_system_3d.tile_nodes.get(tile_index) if board_system_3d.tile_nodes.has(tile_index) else null
+			if _tile_node and _tile_node.has_method("set_down_state"):
+				if not PlayerBuffSystem.has_unyielding(creature_data):
+					_tile_node.set_down_state(true)
 
 			# EP消費（コスト計算）
 			if player_system and player >= 0 and player < player_system.players.size():

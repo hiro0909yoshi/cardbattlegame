@@ -1688,7 +1688,9 @@ func _setup_ui_callbacks(
 			"show_card_selection": func(player): p_ui_manager.show_card_selection_ui(player),
 			"hide_card_selection": func(): p_ui_manager.hide_card_selection_ui(),
 			"enable_navigation": func(confirm, back): p_ui_manager.enable_navigation(confirm, back),
+			"disable_navigation": func(): p_ui_manager.disable_navigation(),
 			"show_action_prompt": func(text): p_ui_manager.show_action_prompt(text),
+			"show_big_dice": func(value): p_ui_manager.show_big_dice_result(value, 1.5),
 		})
 
 	# === UIManager Callable 注入 ===
