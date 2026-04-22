@@ -1231,6 +1231,9 @@ func _setup_net_phase_ui(server_phase: String) -> void:
 			# Phase 2 で分岐処理を実装
 			GameLogger.info("GFM", "net: move phase (待機)")
 		"tile_action":
+			# ダイスフェーズで設定した ✓ボタン=roll_dice のバインディングを解除（誤発火防止）
+			if _ui_disable_navigation_cb.is_valid():
+				_ui_disable_navigation_cb.call()
 			# 既存のタイル着地処理を起動（空タイル=召喚UI、自タイル=ドミニオ、敵タイル=バトル）
 			# 既存の TileActionProcessor 経由で UI が自動で出る
 			var ctp_player = player_system.get_current_player()
@@ -1280,7 +1283,10 @@ func on_server_dice_result(data: Dictionary) -> void:
 	dice_rolled.emit(value)
 	# 大きなダイス結果を表示（両プレイヤー画面で視認性向上）
 	if _ui_show_big_dice_cb.is_valid():
+		GameLogger.info("Dice", "show_big_dice_result(%d) 呼出" % value)
 		_ui_show_big_dice_cb.call(value)
+	else:
+		GameLogger.warn("Dice", "show_big_dice_cb が未接続")
 	# フェーズを MOVING に遷移
 	change_phase(GamePhase.MOVING)
 
@@ -1327,6 +1333,14 @@ func on_server_action_broadcast(data: Dictionary) -> void:
 				board_system_3d.enable_follow_camera()
 				if board_system_3d.has_method("focus_camera_on_player_pos"):
 					board_system_3d.focus_camera_on_player_pos(player, true)
+				# 着地タイルがチェックポイントならダウン解除（停止型checkpointの効果を再現）
+				# 周回完了は別途 lap_complete broadcast で反映される
+				if board_system_3d.tile_nodes.has(final_position):
+					var landed_tile = board_system_3d.tile_nodes[final_position]
+					if landed_tile and landed_tile.tile_type == "checkpoint":
+						GameLogger.info("Game", "net: P%d チェックポイント着地 → ダウン解除" % player)
+						if board_system_3d.has_method("clear_all_down_states_for_player"):
+							board_system_3d.clear_all_down_states_for_player(player)
 		"summon":
 			# 他プレイヤーの召喚結果反映: タイル所有権・クリーチャー配置・手札/EP更新
 			var card_id: int = int(payload.get("card_id", -1))
@@ -1371,6 +1385,15 @@ func on_server_action_broadcast(data: Dictionary) -> void:
 		"dominio_action":
 			# 他プレイヤーのドミニオコマンド結果反映（Phase 2で実装）
 			pass
+		"lap_complete":
+			# 他プレイヤーの周回完了を反映（ダウン解除 + HP回復+10）
+			var lap_player: int = int(payload.get("player_id", player))
+			if board_system_3d:
+				GameLogger.info("Game", "net: P%d 周回完了反映 → ダウン解除+HP回復" % lap_player)
+				if board_system_3d.has_method("clear_all_down_states_for_player"):
+					board_system_3d.clear_all_down_states_for_player(lap_player)
+				if board_system_3d.has_method("heal_all_creatures_for_player"):
+					board_system_3d.heal_all_creatures_for_player(lap_player, 10)
 		"spell_pass", "spell_cast", "pass":
 			# 何もしない（フェーズ遷移は turn_start で通知される）
 			pass

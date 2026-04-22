@@ -24,6 +24,7 @@ var team_system = null  # Phase 4: チーム合算TEP用
 var _ui_layer = null  # Phase B-2: ui_manager 依存解消、ui_layer 直接参照
 var _message_service = null  # サービス注入用
 var _show_dominio_order_button_cb: Callable = Callable()  # Phase B-2: ドミニオボタン表示 Callable
+var _net_action_cb: Callable = Callable()  # ネット対戦: サーバーへのアクション送信 Callable
 var is_game_ended_checker: Callable = func() -> bool: return false
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 
@@ -63,6 +64,10 @@ func set_game_ended_checker(checker: Callable) -> void:
 ## ドミニオコマンドボタン表示用の Callable を設定（Phase B-2）
 func set_show_dominio_order_button_cb(cb: Callable) -> void:
 	_show_dominio_order_button_cb = cb
+
+## ネット対戦用: サーバーへのアクション送信 Callable を設定
+func set_net_action_cb(cb: Callable) -> void:
+	_net_action_cb = cb
 
 ## game_3d参照を設定（チュートリアルモード判定用）
 func set_game_3d_ref(p_game_3d) -> void:
@@ -349,6 +354,10 @@ func calculate_total_assets(player_id: int) -> int:
 
 ## 周回完了処理
 func complete_lap(player_id: int):
+	# ネット対戦: 相手プレイヤー画面にも反映するためサーバーへ通知
+	if _net_action_cb.is_valid():
+		_net_action_cb.call("lap_complete", {"player_id": player_id})
+
 	# 現在の周回数を取得（ボーナス計算用）
 	var current_lap = player_lap_state[player_id]["lap_count"]
 	

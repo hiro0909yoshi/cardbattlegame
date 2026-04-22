@@ -142,6 +142,10 @@ func _on_ws_message(msg_type: String, data: Variant) -> void:
 			_handle_battle_result(data_dict)
 		"game_over":
 			_handle_game_over(data_dict)
+		"action_error":
+			var err_code: String = String(data_dict.get("code", "unknown"))
+			var err_msg: String = String(data_dict.get("message", ""))
+			GameLogger.warn(TAG, "action_error from server: [%s] %s" % [err_code, err_msg])
 		_:
 			GameLogger.info(TAG, "Unknown WS msg type: %s" % msg_type)
 

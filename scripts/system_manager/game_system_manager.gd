@@ -657,6 +657,11 @@ func _setup_lap_system() -> void:
 	var _show_dominio_btn_cb = func():
 		if ui_manager: ui_manager.show_dominio_order_button()
 	lap_system.set_show_dominio_order_button_cb(_show_dominio_btn_cb)
+	# ネット対戦用: 周回完了時にサーバーへ lap_complete を送信
+	var _net_action_cb = func(msg_type: String, data):
+		if game_flow_manager and game_flow_manager.is_net_battle:
+			game_flow_manager.net_action_requested.emit(msg_type, data)
+	lap_system.set_net_action_cb(_net_action_cb)
 
 	# board_system_3dを設定してシグナル接続
 	if board_system_3d:
