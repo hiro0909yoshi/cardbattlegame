@@ -300,6 +300,21 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 		})
 		return
 
+	case "lap_complete":
+		// 薄型リレー: クライアントが周回完了を検知した通知を他プレイヤーに配信
+		// ダウン解除・HP回復は各クライアントが自前で処理する
+		var req struct {
+			PlayerID int `json:"player_id"`
+		}
+		if err := json.Unmarshal(data, &req); err != nil {
+			s.sendTo(slotIndex, newMsg("action_error", &ActionError{Code: "bad_request", Message: "invalid JSON"}))
+			return
+		}
+		s.broadcastAction(slotIndex, "lap_complete", map[string]any{
+			"player_id": req.PlayerID,
+		})
+		return
+
 	default:
 		slog.Warn("unknown game action", "type", msgType, "player", slotIndex)
 		return
