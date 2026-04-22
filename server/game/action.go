@@ -183,55 +183,32 @@ func (gs *GameState) DominioAction(slotIndex int, command string, sourceTile, ta
 // 現在は最小限の所有権検証のみ実施し、フェーズ遷移で進行を止めないようにする。
 // 実際の EP 消費・タイル状態変更・レベル更新はクライアント報告受信時に反映予定。
 
+// 薄型リレー方式では Board の OwnerIndex / IsDown / Level 等はクライアント側が権威。
+// サーバーは状態を更新していないため所有権・ダウン状態の検証はできない。
+// タイル範囲のみを検証し、クライアント計算結果を信頼して PhaseEndTurn に遷移する。
 func (gs *GameState) levelUp(slotIndex, tileIdx int) *ActionError {
+	_ = slotIndex
 	if tileIdx < 0 || tileIdx >= len(gs.Board) {
 		return errInvalidTile()
 	}
-	tile := gs.Board[tileIdx]
-	if tile.OwnerIndex != slotIndex {
-		return errInvalidTile()
-	}
-	if tile.IsDown {
-		return &ActionError{Code: "tile_down", Message: "tile is down"}
-	}
-	// コスト検証・EP消費・レベル更新はクライアント計算結果を待つため削除。
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }
 
 func (gs *GameState) moveCreature(slotIndex, src, dst int) *ActionError {
+	_ = slotIndex
 	if src < 0 || src >= len(gs.Board) || dst < 0 || dst >= len(gs.Board) {
 		return errInvalidTile()
 	}
-	srcTile := gs.Board[src]
-	dstTile := gs.Board[dst]
-	if srcTile.OwnerIndex != slotIndex {
-		return errInvalidTile()
-	}
-	if dstTile.OwnerIndex >= 0 {
-		return errTileOccupied()
-	}
-	if srcTile.IsDown {
-		return &ActionError{Code: "tile_down", Message: "source tile is down"}
-	}
-	// タイル状態変更はクライアント計算結果を待つため削除。
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }
 
 func (gs *GameState) swapCreature(slotIndex, src, dst int) *ActionError {
+	_ = slotIndex
 	if src < 0 || src >= len(gs.Board) || dst < 0 || dst >= len(gs.Board) {
 		return errInvalidTile()
 	}
-	srcTile := gs.Board[src]
-	dstTile := gs.Board[dst]
-	if srcTile.OwnerIndex != slotIndex || dstTile.OwnerIndex != slotIndex {
-		return errInvalidTile()
-	}
-	if srcTile.IsDown || dstTile.IsDown {
-		return &ActionError{Code: "tile_down", Message: "cannot swap down tiles"}
-	}
-	// クリーチャー入れ替えはクライアント計算結果を待つため削除。
 	gs.TransitionTo(PhaseEndTurn)
 	return nil
 }
@@ -246,6 +223,11 @@ func (gs *GameState) Pass(slotIndex int) *ActionError {
 		gs.TransitionTo(PhaseDice)
 	case PhaseTileAction:
 		gs.TransitionTo(PhaseEndTurn)
+	case PhaseEndTurn:
+		// 薄型リレー: summon/dominio_action が server 側で既に PhaseEndTurn に
+		// 遷移させた後、クライアントから届く pass は no-op として扱う
+		// （旧設計では errWrongPhase になっていたが、クライアントの意図は
+		//  「タイル着地アクション完了」の通知なので冪等に許可する）
 	default:
 		return errWrongPhase(PhaseSpell, gs.Phase)
 	}
