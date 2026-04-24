@@ -245,6 +245,8 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 			TargetTile  int    `json:"target_tile"`
 			TargetLevel int    `json:"target_level"`
 			Cost        int    `json:"cost"`
+			NewElement  string `json:"new_element"`
+			CardID      int    `json:"card_id"`
 		}
 		if err := json.Unmarshal(data, &req); err != nil {
 			s.sendTo(slotIndex, newMsg("action_error", &ActionError{Code: "bad_request", Message: "invalid JSON"}))
@@ -252,13 +254,15 @@ func (s *Session) processAction(slotIndex int, msgType string, data json.RawMess
 		}
 		actionErr = s.state.DominioAction(slotIndex, req.Command, req.SourceTile, req.TargetTile)
 		if actionErr == nil {
-			// クライアント計算結果（target_level/cost 等）をそのまま他プレイヤーに配信
+			// クライアント計算結果（target_level/cost/new_element/card_id 等）をそのまま他プレイヤーに配信
 			s.broadcastAction(slotIndex, "dominio_action", map[string]any{
 				"command":      req.Command,
 				"source_tile":  req.SourceTile,
 				"target_tile":  req.TargetTile,
 				"target_level": req.TargetLevel,
 				"cost":         req.Cost,
+				"new_element":  req.NewElement,
+				"card_id":      req.CardID,
 			})
 			// 薄型リレー: phase 遷移通知
 			s.broadcastTurnStart()

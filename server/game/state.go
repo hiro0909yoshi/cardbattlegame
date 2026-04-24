@@ -171,7 +171,17 @@ func (gs *GameState) DrawCard(playerIdx int) int {
 }
 
 func (gs *GameState) RollDice() int {
-	result := gs.rng.IntN(6) + 1
+	// ローカル対戦 (player_system.roll_dice_double) と同じ仕様:
+	// ダイス1: 0-5、ダイス2: 0,2,3,4,5,6（1なし）、両方0なら12（特殊）
+	d1 := gs.rng.IntN(6) // 0..5
+	d2Faces := [6]int{0, 2, 3, 4, 5, 6}
+	d2 := d2Faces[gs.rng.IntN(6)]
+	var result int
+	if d1 == 0 && d2 == 0 {
+		result = 12
+	} else {
+		result = d1 + d2
+	}
 	gs.DiceResult = result
 	gs.StateVersion++
 	return result

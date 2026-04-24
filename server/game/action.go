@@ -173,9 +173,22 @@ func (gs *GameState) DominioAction(slotIndex int, command string, sourceTile, ta
 		return gs.moveCreature(slotIndex, sourceTile, targetTile)
 	case "swap":
 		return gs.swapCreature(slotIndex, sourceTile, targetTile)
+	case "terrain_change":
+		return gs.terrainChange(slotIndex, sourceTile)
 	default:
 		return &ActionError{Code: "invalid_command", Message: "unknown dominio command"}
 	}
+}
+
+// terrainChange: 薄型リレー方式ではクライアントが実計算するため、
+// タイル範囲のみ検証して PhaseEndTurn へ遷移する。
+func (gs *GameState) terrainChange(slotIndex, tileIdx int) *ActionError {
+	_ = slotIndex
+	if tileIdx < 0 || tileIdx >= len(gs.Board) {
+		return errInvalidTile()
+	}
+	gs.TransitionTo(PhaseEndTurn)
+	return nil
 }
 
 // levelUp / moveCreature / swapCreature: 薄型リレー方式ではクライアントが
