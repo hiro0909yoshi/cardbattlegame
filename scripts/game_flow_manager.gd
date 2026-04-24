@@ -55,8 +55,12 @@ var is_net_battle: bool = false
 # ネット対戦時の自分のスロット（_player_slot と同じ値を保持）
 var net_local_slot: int = 0
 
-# 直前に _setup_net_phase_ui で処理したフェーズ（重複回避）
-var _net_last_setup_phase: String = ""
+# ネット対戦: summon/dominio_action は サーバー側で自動的に PhaseEndTurn に
+# 遷移するため、ローカルの end_turn() による pass 送信は冗長（かつ有害:
+# pass も broadcastTurnStart を誘発し、end_turn が重複送信されて
+# not_your_turn エラーに至る）。この flag が true の時は pass送信をスキップする。
+# active_player が変わる（次ターン開始）タイミングでリセット。
+var _net_server_auto_end_turn: bool = false
 
 # システム参照
 var player_system: PlayerSystem = null
@@ -109,6 +113,7 @@ var _ui_show_card_selection_cb: Callable = Callable()
 var _ui_hide_card_selection_cb: Callable = Callable()
 var _ui_enable_navigation_cb: Callable = Callable()
 var _ui_disable_navigation_cb: Callable = Callable()
+var _ui_clear_confirm_cb: Callable = Callable()
 var _ui_show_action_prompt_cb: Callable = Callable()
 var _ui_show_big_dice_cb: Callable = Callable()
 
@@ -613,6 +618,24 @@ func end_turn():
 	# サーバー: pass → PhaseEndTurn → turn_start(phase=end_turn) broadcast
 	# クライアント: _setup_net_phase_ui("end_turn") で end_turn 送信
 	if is_net_battle:
+		# サーバー側が自動でPhaseEndTurnへ遷移するアクション（summon/dominio_action）の
+		# 後は、ローカルの end_turn() が pass を送るのは冗長。送信をスキップする。
+		# 典型的な問題: summon送信 → end_turn() → pass送信 → サーバーが summon処理して
+		#   turn_start(end_turn) 配信 → _setup_net_phase_ui が end_turn送信 → サーバーが
+		#   pass処理して turn_start(end_turn) 再配信 → 2回目の end_turn送信 →
+		#   サーバーは既に次ターンに遷移済みで not_your_turn エラー
+		if _net_server_auto_end_turn:
+			GameLogger.info("GFM", "net_battle: end_turn呼び出し → サーバー自動遷移中のため pass送信スキップ")
+			# cleanup は必要（UI残存防止）
+			if dominio_command_handler and dominio_command_handler.current_state != dominio_command_handler.State.CLOSED:
+				dominio_command_handler.close_dominio_order()
+			if _ui_hide_dominio_btn_cb.is_valid():
+				_ui_hide_dominio_btn_cb.call()
+			if _ui_hide_card_selection_cb.is_valid():
+				_ui_hide_card_selection_cb.call()
+			_is_ending_turn = false
+			return
+
 		var server_msg: String = "pass"
 		if current_phase == GamePhase.END_TURN:
 			server_msg = "end_turn"
@@ -987,6 +1010,7 @@ func inject_ui_callbacks(callbacks: Dictionary) -> void:
 	_ui_hide_card_selection_cb = callbacks.get("hide_card_selection", Callable())
 	_ui_enable_navigation_cb = callbacks.get("enable_navigation", Callable())
 	_ui_disable_navigation_cb = callbacks.get("disable_navigation", Callable())
+	_ui_clear_confirm_cb = callbacks.get("clear_confirm", Callable())
 	_ui_show_action_prompt_cb = callbacks.get("show_action_prompt", Callable())
 	_ui_show_big_dice_cb = callbacks.get("show_big_dice", Callable())
 
@@ -1197,6 +1221,13 @@ func on_server_turn_started(data: Dictionary) -> void:
 	if active_player_slot < 0:
 		return
 
+	# サーバー auto-transition flag: active_player が変わったらリセット（新ターン）
+	# summon送信 → サーバー処理 → turn_start(end_turn) の間は、同じactive_playerの
+	# 続きのフェーズなので flag を維持し、ローカルの end_turn() の pass重複送信を抑制。
+	var prev_active: int = player_system.current_player_index if player_system else -1
+	if prev_active != active_player_slot:
+		_net_server_auto_end_turn = false
+
 	# PlayerSystem の current_player_index を同期
 	if player_system:
 		player_system.current_player_index = active_player_slot
@@ -1224,18 +1255,9 @@ func on_server_turn_started(data: Dictionary) -> void:
 
 	# 自分のターンの場合、フェーズに応じたUIを起動
 	if active_player_slot == net_local_slot:
-		# 同一フェーズの重複turn_startを無視（summon後のpass broadcastで再発火するケース等）
-		# 例: summon → turn_start(end_turn) → end_turn送信 → pass処理→ turn_start(end_turn) 再発火
-		#     2回目の _setup_net_phase_ui("end_turn") で end_turn を重複送信してしまう
-		var phase_key: String = "%d:%s" % [active_player_slot, server_phase]
-		if _net_last_setup_phase == phase_key:
-			GameLogger.info("GFM", "net: turn_start 重複スキップ (%s)" % phase_key)
-		else:
-			_net_last_setup_phase = phase_key
-			_setup_net_phase_ui(server_phase)
+		_setup_net_phase_ui(server_phase)
 	else:
 		# 相手のターン: ナビゲーション無効化
-		_net_last_setup_phase = ""
 		_disable_net_phase_ui()
 
 
@@ -1261,8 +1283,10 @@ func _setup_net_phase_ui(server_phase: String) -> void:
 			GameLogger.info("GFM", "net: move phase (待機)")
 		"tile_action":
 			# ダイスフェーズで設定した ✓ボタン=roll_dice のバインディングを解除（誤発火防止）
-			if _ui_disable_navigation_cb.is_valid():
-				_ui_disable_navigation_cb.call()
+			# 注: back(×) は show_summon_ui → card_selection_ui.create_pass_button →
+			#     ui_manager.register_back_action で別途登録されるため、× は消さず ✓ のみクリア
+			if _ui_clear_confirm_cb.is_valid():
+				_ui_clear_confirm_cb.call()
 			# 既存のタイル着地処理を起動（空タイル=召喚UI、自タイル=ドミニオ、敵タイル=バトル）
 			# 既存の TileActionProcessor 経由で UI が自動で出る
 			var ctp_player = player_system.get_current_player()
@@ -1314,6 +1338,12 @@ func on_server_dice_result(data: Dictionary) -> void:
 	var player_id: int = int(data.get("player", net_local_slot))
 	last_dice_result = value
 	GameLogger.info("Game", "dice_result受信: player=%d value=%d" % [player_id, value])
+	# ダイス結果を受けた時点で ✓ボタンの roll_dice バインディングをクリアする。
+	# 以降 MOVING → TILE_ACTION と遷移する間、ユーザーが ✓ を押して roll_dice が
+	# 再発火しないようにする（tile_action フェーズで clear_confirm するのでは
+	# 間に合わず、tile_action 到着前のタップで誤発火していた）。
+	if _ui_clear_confirm_cb.is_valid():
+		_ui_clear_confirm_cb.call()
 	# 既存 dice_rolled シグナルを発火 → UIが演出再生
 	dice_rolled.emit(value)
 	# 大きなダイス結果を表示（両プレイヤー画面で視認性向上）
@@ -1466,6 +1496,60 @@ func on_server_action_broadcast(data: Dictionary) -> void:
 					board_system_3d.place_creature(dst, moving_creature, player)
 					if dst_tile.has_method("set_down_state") and not PlayerBuffSystem.has_unyielding(moving_creature):
 						dst_tile.set_down_state(true)
+				"terrain_change":
+					var tc_tile: int = int(payload.get("source_tile", -1))
+					var tc_elem: String = String(payload.get("new_element", ""))
+					var tc_cost: int = int(payload.get("cost", 0))
+					if tc_tile < 0 or tc_elem == "" or not board_system_3d:
+						GameLogger.warn("Game", "net: dominio terrain_change payload 不正")
+						return
+					GameLogger.info("Game", "net: P%d dominio terrain_change tile=%d → %s cost=%d" % [player, tc_tile, tc_elem, tc_cost])
+					if board_system_3d.has_method("change_tile_terrain"):
+						board_system_3d.change_tile_terrain(tc_tile, tc_elem)
+					# EP消費反映
+					if player_system and player >= 0 and player < player_system.players.size():
+						player_system.players[player].magic_power -= tc_cost
+					# ダウン状態設定（奮闘除く）
+					if board_system_3d.tile_nodes.has(tc_tile):
+						var tc_tile_node = board_system_3d.tile_nodes[tc_tile]
+						if tc_tile_node.has_method("set_down_state") and not tc_tile_node.creature_data.is_empty():
+							if not PlayerBuffSystem.has_unyielding(tc_tile_node.creature_data):
+								tc_tile_node.set_down_state(true)
+				"swap":
+					var sw_tile: int = int(payload.get("source_tile", -1))
+					var sw_card_id: int = int(payload.get("card_id", -1))
+					var sw_cost: int = int(payload.get("cost", 0))
+					if sw_tile < 0 or sw_card_id <= 0 or not board_system_3d:
+						GameLogger.warn("Game", "net: dominio swap payload 不正 tile=%d card=%d" % [sw_tile, sw_card_id])
+						return
+					if not board_system_3d.tile_nodes.has(sw_tile):
+						return
+					var sw_tile_node = board_system_3d.tile_nodes[sw_tile]
+					var new_creature: Dictionary = CardLoader.get_card_by_id(sw_card_id)
+					if new_creature.is_empty():
+						GameLogger.warn("Game", "net: swap カードID不明 card_id=%d" % sw_card_id)
+						return
+					# 旧クリーチャーを手札に戻す（acting player の手札）
+					var old_creature_on_tile: Dictionary = sw_tile_node.creature_data.duplicate(true) if not sw_tile_node.creature_data.is_empty() else {}
+					GameLogger.info("Game", "net: P%d dominio swap tile=%d %s→%s cost=%d" % [player, sw_tile, old_creature_on_tile.get("name", "?"), new_creature.get("name", "?"), sw_cost])
+					if card_system and not old_creature_on_tile.is_empty():
+						card_system.return_card_to_hand(player, old_creature_on_tile)
+					# 新クリーチャー配置（所有権は変わらず、同じ acting player のまま）
+					board_system_3d.place_creature(sw_tile, new_creature.duplicate(true), player)
+					# EP消費反映
+					if player_system and player >= 0 and player < player_system.players.size():
+						player_system.players[player].magic_power -= sw_cost
+					# 手札から新カード削除（card_id で検索）
+					if card_system and card_system.player_hands.has(player):
+						var sw_hand: Array = card_system.player_hands[player]["data"]
+						for i in range(sw_hand.size()):
+							if int(sw_hand[i].get("id", -1)) == sw_card_id:
+								card_system.remove_card_from_hand(player, i)
+								break
+					# ダウン状態設定（奮闘除く）
+					if sw_tile_node.has_method("set_down_state"):
+						if not PlayerBuffSystem.has_unyielding(new_creature):
+							sw_tile_node.set_down_state(true)
 				_:
 					GameLogger.info("Game", "net: 未実装ドミニオコマンド %s" % cmd)
 			# UI更新

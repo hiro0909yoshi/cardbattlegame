@@ -4,7 +4,7 @@ extends Node
 # user://net_config.json に保存、未存在ならDEFAULTを使用
 
 const CONFIG_PATH: String = "user://net_config.json"
-const DEFAULT_HOST: String = "192.168.3.17"
+const DEFAULT_HOST: String = "192.168.3.12"
 const DEFAULT_PORT: int = 8080
 
 var server_host: String = DEFAULT_HOST

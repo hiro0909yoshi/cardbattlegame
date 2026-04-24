@@ -768,6 +768,20 @@ func _execute_swap_final(card_index: int, tile_index: int, old_creature: Diction
 
 	GameLogger.info("Dominio", "コマンド確定: P%d swap_creature タイル%d %s→カード%d" % [current_player_index + 1, tile_index, old_creature.get("name", "?"), card_index])
 
+	# ネット対戦: 手札消費前に新カードID・コストを取得（execute_swap_action 後は取得不可）
+	var net_card_id: int = -1
+	var net_cost: int = 0
+	if game_flow_manager and game_flow_manager.is_net_battle:
+		var card_data: Dictionary = override_card_data
+		if card_data.is_empty() and board_system and board_system.card_system:
+			card_data = board_system.card_system.get_card_data_for_player(current_player_index, card_index)
+		net_card_id = int(card_data.get("id", -1))
+		var cost_data = card_data.get("cost", 1)
+		if typeof(cost_data) == TYPE_DICTIONARY:
+			net_cost = int(cost_data.get("ep", 0))
+		else:
+			net_cost = int(cost_data)
+
 	# TileActionProcessorの交換処理を呼び出す
 	if board_system and board_system.tile_action_processor:
 		board_system.execute_swap_action(
@@ -776,6 +790,21 @@ func _execute_swap_final(card_index: int, tile_index: int, old_creature: Diction
 			old_creature,
 			override_card_data
 		)
+
+	# ネット対戦: 相手プレイヤーに swap を通知
+	if game_flow_manager and game_flow_manager.is_net_battle and net_card_id > 0:
+		# サーバーは dominio_action 処理後に自動で PhaseEndTurn へ遷移するため、
+		# 後続の end_turn() による pass 送信は冗長。flag で抑制する。
+		game_flow_manager._net_server_auto_end_turn = true
+		game_flow_manager.net_action_requested.emit("dominio_action", {
+			"command": "swap",
+			"source_tile": tile_index,
+			"target_tile": tile_index,
+			"card_id": net_card_id,
+			"cost": net_cost,
+		})
+		GameLogger.info("Dominio", "net: swap 完了 → close_dominio_order 呼出")
+		close_dominio_order()
 
 ## カード選択を処理（GFMのルーティング用）
 ## 戻り値: true=処理済み, false=処理不要

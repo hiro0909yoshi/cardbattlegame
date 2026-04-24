@@ -299,6 +299,11 @@ func on_card_selected(card_index: int):
 				var card_id: int = int(hand_data[card_index].get("id", -1))
 				if card_id > 0:
 					GameLogger.info("TileAction", "net: summon送信 card_id=%d" % card_id)
+					# サーバーは summon を処理すると自動で PhaseEndTurn へ遷移するため、
+					# 後続の end_turn() による pass 送信は冗長。
+					# end_turn() は設計上「単一のターン終了起点」として保ち、
+					# 内部で flag を見て pass送信を抑制する。
+					game_flow_manager._net_server_auto_end_turn = true
 					game_flow_manager.net_action_requested.emit("summon", {"card_id": card_id})
 		summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
 	else:

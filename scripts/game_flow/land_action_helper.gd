@@ -77,6 +77,10 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 
 	# ネット対戦: 相手プレイヤーに level_up を通知
 	if handler.game_flow_manager and handler.game_flow_manager.is_net_battle:
+		# サーバーは dominio_action 処理後に自動で PhaseEndTurn へ遷移するため、
+		# 後続の end_turn() による pass 送信は冗長。end_turn() は単一の終了起点
+		# として保ち、内部で flag を見て pass送信を抑制する。
+		handler.game_flow_manager._net_server_auto_end_turn = true
 		handler.game_flow_manager.net_action_requested.emit("dominio_action", {
 			"command": "level_up",
 			"source_tile": handler.selected_tile_index,
@@ -443,6 +447,9 @@ static func confirm_move(handler, dest_tile_index: int):
 
 		# ネット対戦: 相手プレイヤーに move_creature を通知（空き地移動のみ）
 		if handler.game_flow_manager and handler.game_flow_manager.is_net_battle:
+			# サーバーは dominio_action 処理後に自動で PhaseEndTurn へ遷移するため、
+			# 後続の end_turn() による pass 送信は冗長。flag で抑制する。
+			handler.game_flow_manager._net_server_auto_end_turn = true
 			handler.game_flow_manager.net_action_requested.emit("dominio_action", {
 				"command": "move_creature",
 				"source_tile": _move_source_for_net,
@@ -725,6 +732,18 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 			var new_mhp = growth_result.get("new_mhp", 0)
 			var growth_comment = "【昇華】%s MHP+%d → MHP%d" % [creature_name, hp_bonus, new_mhp]
 			handler.board_system.tile_action_processor.add_pending_comment(growth_comment)
+
+	# ネット対戦: 相手プレイヤーに terrain_change を通知
+	if handler.game_flow_manager and handler.game_flow_manager.is_net_battle:
+		handler.game_flow_manager._net_server_auto_end_turn = true
+		handler.game_flow_manager.net_action_requested.emit("dominio_action", {
+			"command": "terrain_change",
+			"source_tile": tile_index,
+			"new_element": new_element,
+			"cost": cost,
+		})
+		GameLogger.info("Dominio", "net: terrain_change 完了 → close_dominio_order 呼出")
+		handler.close_dominio_order()
 
 	# アクション完了を通知（レベルアップと同様）
 	if handler.board_system and handler.board_system.tile_action_processor:
